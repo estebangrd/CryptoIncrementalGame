@@ -1,0 +1,455 @@
+import React, { useState, useRef } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  Alert,
+  PanResponder,
+} from 'react-native';
+
+import { useGame } from '../contexts/GameContext';
+import { formatCurrency, getPriceChangeColor } from '../utils/marketLogic';
+import {
+  getExchangePreview,
+  determineExchangeDirection,
+  getCurrencyBalance,
+  formatCurrencyAmount
+} from '../utils/exchangeLogic';
+import PriceChart from './PriceChart';
+
+const MarketScreen: React.FC = () => {
+  const { gameState, dispatch, t } = useGame();
+  const [amountPercent, setAmountPercent] = useState(50); // 1-100
+  const sliderRef = useRef<View>(null);
+
+  const handleSelectCurrency = (currencyId: string) => {
+    // Toggle selection: if already selected, deselect it
+    if (gameState.selectedCurrency === currencyId) {
+      dispatch({ type: 'SELECT_CURRENCY', payload: null });
+    } else {
+      dispatch({ type: 'SELECT_CURRENCY', payload: currencyId });
+      // Reset slider to 50% when selecting a new currency
+      setAmountPercent(50);
+    }
+  };
+
+  const getSelectedCurrency = () => {
+    if (!gameState.selectedCurrency) return null;
+    return gameState.cryptocurrencies.find(c => c.id === gameState.selectedCurrency);
+  };
+
+  const handleExchange = () => {
+    const selectedCurrency = getSelectedCurrency();
+    if (!selectedCurrency) return;
+
+    const preview = getExchangePreview(gameState, selectedCurrency.id, amountPercent);
+    if (!preview) return;
+
+    Alert.alert(
+      'Confirm Exchange',
+      `Exchange ${formatCurrencyAmount(preview.fromAmount, preview.fromSymbol)} for ${formatCurrencyAmount(
+        preview.toAmount,
+        preview.toSymbol
+      )}?\n\nFee: ${preview.fee.toFixed(1)}%`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Exchange',
+          onPress: () => {
+            dispatch({
+              type: 'EXCHANGE_CURRENCY',
+              payload: {
+                fromCurrency: preview.fromCurrency,
+                toCurrency: preview.toCurrency,
+                amount: preview.fromAmount,
+              },
+            });
+          },
+        },
+      ]
+    );
+  };
+
+  const getLocalExchangePreview = () => {
+    const selectedCurrency = getSelectedCurrency();
+    if (!selectedCurrency) return null;
+
+    return getExchangePreview(gameState, selectedCurrency.id, amountPercent);
+  };
+
+  const getBalance = (currencyId: string) => {
+    return getCurrencyBalance(gameState, currencyId);
+  };
+
+  const getCurrencyIcon = (currencyId: string) => {
+    const crypto = gameState.cryptocurrencies.find(c => c.id === currencyId);
+    return crypto ? crypto.icon : '🪙';
+  };
+
+  const getCurrencySymbol = (currencyId: string) => {
+    const crypto = gameState.cryptocurrencies.find(c => c.id === currencyId);
+    return crypto ? crypto.symbol : 'CC';
+  };
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: (evt) => {
+        if (sliderRef.current) {
+          sliderRef.current.measure((x, y, width, height, pageX, pageY) => {
+            const touchX = evt.nativeEvent.pageX - pageX;
+            const percentage = Math.max(1, Math.min(100, (touchX / width) * 100));
+            setAmountPercent(Math.round(percentage));
+          });
+        }
+      },
+      onPanResponderMove: (evt) => {
+        if (sliderRef.current) {
+          sliderRef.current.measure((x, y, width, height, pageX, pageY) => {
+            const touchX = evt.nativeEvent.pageX - pageX;
+            const percentage = Math.max(1, Math.min(100, (touchX / width) * 100));
+            setAmountPercent(Math.round(percentage));
+          });
+        }
+      },
+      onPanResponderRelease: () => {
+        // Optional: Add any logic when the user stops dragging
+      },
+    })
+  ).current;
+
+  return (
+    <View style={styles.container}>
+      <ScrollView style={styles.currencyList} showsVerticalScrollIndicator={false}>
+        {(gameState.cryptocurrencies || []).map((crypto) => {
+          const isSelected = crypto.id === gameState.selectedCurrency;
+          const priceChange = ((crypto.currentValue - crypto.baseValue) / crypto.baseValue) * 100;
+          
+          return (
+            <View key={crypto.id}>
+              <View style={[
+                styles.currencyContainer,
+                isSelected && styles.selectedCurrencyContainer
+              ]}>
+                <TouchableOpacity
+                  style={[
+                    styles.currencyItem,
+                    isSelected && styles.selectedCurrencyItem
+                  ]}
+                  onPress={() => handleSelectCurrency(crypto.id)}
+                >
+                  <View style={styles.currencyHeader}>
+                    <Text style={styles.currencyIcon}>{crypto.icon}</Text>
+                    <View style={styles.currencyInfo}>
+                      <Text style={styles.currencyName}>{crypto.name}</Text>
+                      <Text style={styles.currencySymbol}>{crypto.symbol}</Text>
+                    </View>
+                    <View style={styles.priceInfo}>
+                      <Text style={styles.currentPrice}>
+                        {formatCurrency(crypto.currentValue, crypto.symbol)}
+                      </Text>
+                      <Text style={[
+                        styles.priceChange,
+                        { color: getPriceChangeColor(crypto.baseValue, crypto.currentValue) }
+                      ]}>
+                        {priceChange >= 0 ? '+' : ''}{priceChange.toFixed(1)}%
+                      </Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+                
+                {/* Exchange Section - Only show for selected currency */}
+                {isSelected && (
+                  <View style={styles.expandedSection}>
+                    {/* Price Chart - Always show */}
+                    <PriceChart 
+                      cryptocurrency={getSelectedCurrency()!}
+                      priceHistory={[1.0, 1.1, 0.95, 1.05, 1.2, 1.15, 1.25, 1.3, 1.28, 1.35, 1.4, 1.38, 1.42, 1.45, 1.43, 1.47, 1.5, 1.48, 1.52, 1.55, 1.53, 1.57, 1.6, 1.58]}
+                    />
+                    
+                    {/* Exchange Section - Only for non-CryptoCoin currencies */}
+                    {crypto.id !== 'cryptocoin' && (
+                      <>
+                        <Text style={styles.exchangeTitle}>📊 Exchange</Text>
+                        
+                        {/* Amount Selection */}
+                        <View style={styles.amountSection}>
+                          <View style={styles.sliderContainer}>
+                            <View
+                              ref={sliderRef}
+                              style={styles.sliderTrack}
+                              {...panResponder.panHandlers}
+                            >
+                              <View 
+                                style={[
+                                  styles.sliderFill, 
+                                  { width: `${amountPercent}%` }
+                                ]} 
+                              />
+                              <View
+                                style={[
+                                  styles.sliderThumb,
+                                  { left: `${amountPercent}%` }
+                                ]}
+                              >
+                                <Text style={styles.thumbLabel}>{amountPercent}%</Text>
+                              </View>
+                            </View>
+                            <View style={styles.sliderLabels}>
+                              <Text style={styles.sliderLabel}>1%</Text>
+                              <Text style={styles.sliderLabel}>100%</Text>
+                            </View>
+                          </View>
+                        </View>
+                        
+                        {/* Exchange Direction */}
+                        {getLocalExchangePreview() && (
+                          <View style={styles.exchangeRow}>
+                            <View style={styles.currencyDisplay}>
+                              <Text style={styles.currencyIconSmall}>
+                                {getLocalExchangePreview()!.fromCurrency === 'cryptocoin' ? '🪙' : getSelectedCurrency()!.icon}
+                              </Text>
+                              <Text style={styles.currencyText}>
+                                {getLocalExchangePreview()!.fromCurrency === 'cryptocoin' ? 'CryptoCoin' : t(getSelectedCurrency()!.name)} → {getLocalExchangePreview()!.toCurrency === 'cryptocoin' ? 'CryptoCoin' : t(getSelectedCurrency()!.name)}
+                              </Text>
+                            </View>
+                          </View>
+                        )}
+                        
+                        {/* Exchange Preview */}
+                        {getLocalExchangePreview() && (
+                          <View style={styles.exchangePreview}>
+                            <Text style={styles.previewText}>
+                              You'll receive: {formatCurrencyAmount(getLocalExchangePreview()!.toAmount, getLocalExchangePreview()!.toSymbol)}
+                            </Text>
+                            <Text style={styles.feeText}>
+                              Fee: {getLocalExchangePreview()!.fee.toFixed(1)}%
+                            </Text>
+                          </View>
+                        )}
+                        
+                        {/* Exchange Button */}
+                        <TouchableOpacity
+                          style={styles.exchangeButton}
+                          onPress={handleExchange}
+                        >
+                          <Text style={styles.exchangeButtonText}>Exchange</Text>
+                        </TouchableOpacity>
+                      </>
+                    )}
+                  </View>
+                )}
+              </View>
+            </View>
+          );
+        })}
+      </ScrollView>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#1a1a1a',
+    padding: 20,
+  },
+  currencyList: {
+    flex: 1,
+  },
+  currencyContainer: {
+    marginBottom: 12,
+  },
+  currencyItem: {
+    backgroundColor: '#2a2a2a',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 0,
+  },
+  selectedCurrencyItem: {
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+  },
+  selectedCurrencyContainer: {
+    borderWidth: 2,
+    borderColor: '#00ff88',
+    borderRadius: 12,
+    marginBottom: 12,
+    overflow: 'hidden',
+  },
+  currencyHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  currencyIcon: {
+    fontSize: 32,
+    marginRight: 12,
+  },
+  currencyInfo: {
+    flex: 1,
+  },
+  currencyName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 4,
+  },
+  currencySymbol: {
+    fontSize: 14,
+    color: '#888',
+  },
+  priceInfo: {
+    alignItems: 'flex-end',
+  },
+  currentPrice: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 4,
+  },
+  priceChange: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  expandedSection: {
+    marginTop: 0,
+    paddingTop: 16,
+    backgroundColor: '#2a2a2a',
+    borderRadius: 0,
+    padding: 16,
+    marginHorizontal: -16,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
+  },
+  exchangeTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#00ff88',
+    marginBottom: 20,
+    marginTop: 8,
+    marginLeft: 8,
+  },
+  exchangeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  exchangeLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+    width: 60,
+  },
+  currencyDisplay: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#333',
+    borderRadius: 8,
+    padding: 12,
+  },
+  currencyIconSmall: {
+    fontSize: 20,
+    marginRight: 8,
+  },
+  currencyText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+    flex: 1,
+  },
+  balanceText: {
+    fontSize: 12,
+    color: '#888',
+  },
+  amountSection: {
+    marginBottom: 16,
+  },
+  sliderContainer: {
+    marginTop: 8,
+    marginHorizontal: 8,
+  },
+  sliderTrack: {
+    height: 8,
+    backgroundColor: '#333',
+    borderRadius: 4,
+    position: 'relative',
+    marginBottom: 8,
+  },
+  sliderFill: {
+    height: '100%',
+    backgroundColor: '#00ff88',
+    borderRadius: 4,
+    position: 'absolute',
+    left: 0,
+    top: 0,
+  },
+  sliderThumb: {
+    width: 20,
+    height: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    position: 'absolute',
+    top: -6,
+    marginLeft: -10,
+    borderWidth: 2,
+    borderColor: '#00ff88',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  thumbLabel: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#00ff88',
+    position: 'absolute',
+    top: -25,
+    left: -10,
+    width: 40,
+    textAlign: 'center',
+  },
+  sliderLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  sliderLabel: {
+    fontSize: 12,
+    color: '#888',
+  },
+  exchangePreview: {
+    backgroundColor: '#333',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  previewText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#00ff88',
+  },
+  feeText: {
+    fontSize: 12,
+    color: '#888',
+    marginTop: 4,
+  },
+  exchangeButton: {
+    backgroundColor: '#00ff88',
+    borderRadius: 8,
+    padding: 16,
+    alignItems: 'center',
+    marginHorizontal: 8,
+    marginTop: 8,
+  },
+  exchangeButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+});
+
+export default MarketScreen;

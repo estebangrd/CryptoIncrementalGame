@@ -1,97 +1,159 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Blockchain Tycoon
 
-# Getting Started
+Un juego incremental estilo Universal Paperclips pero con temática de criptomonedas. Construye tu imperio de minería de criptomonedas desde una simple CPU hasta un centro de datos masivo.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## 🎮 Características
 
-## Step 1: Start Metro
+### Fase 1 (MVP) - Implementado ✅
+- **Minería manual**: Toca la pantalla para generar CryptoCoins
+- **Sistema de hardware**: Compra CPUs, GPUs, rigs de minería y centros de datos
+- **Mejoras**: Desbloquea mejoras para aumentar tu producción y poder de clic
+- **Interfaz minimalista**: Diseño limpio y oscuro inspirado en juegos de criptomonedas
+- **Sistema de guardado**: Progreso automático guardado localmente
+- **Progreso offline**: Gana CryptoCoins incluso cuando no estés jugando
+- **Multiidioma**: Soporte para español, inglés y portugués
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+### Próximas Fases
+- **Fase 2**: Múltiples criptomonedas, mercado fluctuante, sistema de prestigio
+- **Fase 3**: Monetización con anuncios y compras in-app
+- **Fase 4**: Gráficos mejorados, efectos de sonido y optimizaciones
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+## 🚀 Instalación
 
-```sh
-# Using npm
+### Prerrequisitos
+- Node.js >= 18
+- React Native CLI
+- Android Studio (para Android)
+- Xcode (para iOS)
+
+### Pasos de instalación
+
+1. **Clonar el repositorio**
+   ```bash
+   git clone <repository-url>
+   cd CryptoIncrementalGame
+   ```
+
+2. **Instalar dependencias**
+   ```bash
+   npm install
+   ```
+
+3. **Ejecutar en Android**
+   ```bash
+   npm run android
+   ```
+
+4. **Ejecutar en iOS**
+   ```bash
+   npm run ios
+   ```
+
+## 🎯 Cómo jugar
+
+1. **Comienza minando manualmente**: Toca la pantalla para generar CryptoCoins
+2. **Compra hardware**: Invierte en CPUs, GPUs y otros equipos para automatizar la minería
+3. **Desbloquea mejoras**: Compra mejoras para aumentar tu eficiencia
+4. **Escala tu operación**: Construye un imperio de minería masivo
+
+## 🛠️ Tecnologías utilizadas
+
+- **React Native 0.81.0**: Framework principal
+- **TypeScript**: Tipado estático
+- **AsyncStorage**: Almacenamiento local
+- **React Context**: Gestión de estado global
+
+## 📱 Compatibilidad
+
+- **Android**: API 21+ (Android 5.0+)
+- **iOS**: iOS 12.0+
+- **Plataformas**: Android e iOS
+
+## 🎨 Diseño
+
+El juego utiliza un tema oscuro con acentos verdes (#00ff88) para mantener la estética de las criptomonedas. La interfaz es minimalista y fácil de usar, enfocándose en la jugabilidad.
+
+## 📊 Estructura del proyecto
+
+```
+src/
+├── components/          # Componentes de React Native
+│   ├── GameScreen.tsx   # Pantalla principal del juego
+│   ├── HardwareList.tsx # Lista de hardware disponible
+│   ├── UpgradeList.tsx  # Lista de mejoras
+│   └── SettingsModal.tsx # Modal de configuración
+├── contexts/            # Contextos de React
+│   └── GameContext.tsx  # Contexto principal del juego
+├── data/                # Datos del juego
+│   ├── gameData.ts      # Hardware y mejoras iniciales
+│   └── translations.ts  # Traducciones multiidioma
+├── types/               # Tipos TypeScript
+│   └── game.ts          # Interfaces del juego
+└── utils/               # Utilidades
+    ├── gameLogic.ts     # Lógica del juego
+    └── storage.ts       # Manejo de almacenamiento
+```
+
+## 🔧 Desarrollo
+
+### Comandos útiles
+
+```bash
+# Ejecutar tests
+npm test
+
+# Linting
+npm run lint
+
+# Metro bundler
 npm start
-
-# OR using Yarn
-yarn start
 ```
 
-## Step 2: Build and run your app
+### Estructura de datos
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+El juego utiliza un sistema de estado centralizado con las siguientes entidades principales:
 
-### Android
+- **GameState**: Estado global del juego
+- **Hardware**: Equipos de minería disponibles
+- **Upgrade**: Mejoras que se pueden comprar
+- **Translation**: Sistema de traducciones
 
-```sh
-# Using npm
-npm run android
+## 📈 Roadmap
 
-# OR using Yarn
-yarn android
-```
+### Fase 2 - Expansión
+- [ ] Sistema de múltiples criptomonedas
+- [ ] Mercado con fluctuación de precios
+- [ ] Mecánica de prestigio
+- [ ] Integración con AdMob
 
-### iOS
+### Fase 3 - Monetización
+- [ ] Anuncios optativos
+- [ ] Compras in-app
+- [ ] Sistema de logros
+- [ ] Misiones diarias
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+### Fase 4 - Polishing
+- [ ] Gráficos mejorados
+- [ ] Efectos de sonido
+- [ ] Animaciones
+- [ ] Optimización de rendimiento
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+## 🤝 Contribuir
 
-```sh
-bundle install
-```
+1. Fork el proyecto
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
 
-Then, and every time you update your native dependencies, run:
+## 📄 Licencia
 
-```sh
-bundle exec pod install
-```
+Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+## 📞 Contacto
 
-```sh
-# Using npm
-npm run ios
+Para preguntas o sugerencias sobre el juego, por favor abre un issue en el repositorio.
 
-# OR using Yarn
-yarn ios
-```
+---
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
-
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
-
-## Step 3: Modify your app
-
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+**¡Disfruta construyendo tu imperio de criptomonedas! 🚀💰**
