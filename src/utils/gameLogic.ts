@@ -23,11 +23,46 @@ export const calculateHardwareProduction = (hardware: Hardware, upgrades: Upgrad
   return production;
 };
 
+export const calculateHardwareElectricityCost = (hardware: Hardware): number => {
+  return hardware.electricityCost * hardware.owned;
+};
+
+export const calculateTotalElectricityCost = (hardware: Hardware[]): number => {
+  return hardware.reduce((total, h) => total + calculateHardwareElectricityCost(h), 0);
+};
+
+export const calculateHardwareMiningSpeed = (hardware: Hardware, upgrades: Upgrade[]): number => {
+  let speed = hardware.miningSpeed * hardware.owned;
+  
+  // Apply upgrades that affect this hardware
+  upgrades.forEach(upgrade => {
+    if (upgrade.purchased && upgrade.effect.type === 'production' && upgrade.effect.target === hardware.id) {
+      speed *= upgrade.effect.value;
+    }
+  });
+  
+  return speed;
+};
+
+export const calculateTotalMiningSpeed = (hardware: Hardware[], upgrades: Upgrade[]): number => {
+  return hardware.reduce((total, h) => total + calculateHardwareMiningSpeed(h, upgrades), 0);
+};
+
 export const calculateTotalProduction = (gameState: GameState): number => {
   let totalProduction = 0;
   
   gameState.hardware.forEach(hardware => {
-    totalProduction += calculateHardwareProduction(hardware, gameState.upgrades);
+    // Calculate mining speed (blocks per second)
+    let miningSpeed = hardware.miningSpeed * hardware.owned;
+    gameState.upgrades.forEach(upgrade => {
+      if (upgrade.purchased && upgrade.effect.type === 'production' && upgrade.effect.target === hardware.id) {
+        miningSpeed *= upgrade.effect.value;
+      }
+    });
+    
+    // Calculate coins per second from mining
+    const coinsPerSecond = miningSpeed * hardware.blockReward;
+    totalProduction += coinsPerSecond;
   });
   
   return totalProduction * gameState.prestigeMultiplier;
@@ -110,6 +145,7 @@ export const getInitialGameState = (): GameState => {
   return {
     cryptoCoins: 0,
     cryptoCoinsPerSecond: 0,
+    totalElectricityCost: 0,
     cryptocurrencies: [],
     selectedCurrency: null,
     hardware: [],

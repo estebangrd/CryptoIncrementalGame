@@ -67,6 +67,11 @@ const GameScreen: React.FC = () => {
           <Text style={styles.hashRateText}>
             {formatNumber(gameState.totalHashRate)} H/s
           </Text>
+          {gameState.totalElectricityCost > 0 && (
+            <Text style={styles.electricityText}>
+              -{formatNumber(gameState.totalElectricityCost)}/sec electricity
+            </Text>
+          )}
         </View>
       </View>
 
@@ -196,6 +201,11 @@ const styles = StyleSheet.create({
   hashRateText: {
     fontSize: 16,
     color: '#666',
+    textAlign: 'center',
+  },
+  electricityText: {
+    fontSize: 14,
+    color: '#ff6666',
     textAlign: 'center',
   },
   statsContainer: {

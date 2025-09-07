@@ -18,6 +18,7 @@ export interface PrestigeRequirement {
 export interface GameState {
   cryptoCoins: number;
   cryptoCoinsPerSecond: number;
+  totalElectricityCost: number; // Total electricity cost per second
   cryptocurrencies: Cryptocurrency[];
   selectedCurrency: string | null; // ID of the currently selected cryptocurrency
   hardware: Hardware[];
@@ -48,11 +49,15 @@ export interface Hardware {
   description: string;
   descriptionKey: string;
   baseCost: number;
-  baseProduction: number;
+  baseProduction: number; // Hash rate in H/s
+  blockReward: number; // Coins per block mined
+  miningSpeed: number; // Blocks per second
+  electricityCost: number; // Coins per second for electricity
   owned: number;
   costMultiplier: number;
   icon: string;
   currencyId: string; // Which cryptocurrency this hardware mines
+  level: number; // Technology level (1-8)
 }
 
 export interface Upgrade {

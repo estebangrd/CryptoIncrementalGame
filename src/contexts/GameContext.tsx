@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import { GameState } from '../types/game';
-import { initialHardware, initialUpgrades } from '../data/gameData';
+import { hardwareProgression } from '../data/hardwareData';
+import { initialUpgrades } from '../data/gameData';
 import { cryptocurrencies } from '../data/cryptocurrencies';
 import { getInitialGameState, updateOfflineProgress } from '../utils/gameLogic';
 import { updateMarketPrices } from '../utils/marketLogic';
@@ -14,6 +15,10 @@ import {
   mineBlock,
   canMineBlock 
 } from '../utils/blockLogic';
+import { 
+  calculateTotalElectricityCost,
+  calculateTotalMiningSpeed 
+} from '../utils/gameLogic';
 import { saveGameState, loadGameState, saveLanguage, loadLanguage } from '../utils/storage';
 import { translations } from '../data/translations';
 
@@ -57,9 +62,16 @@ const recalculateGameStats = (state: GameState): GameState => {
   // Calculate total hash rate from hardware
   const totalHashRate = calculateTotalHashRate(state);
   
+  // Calculate total electricity cost
+  const totalElectricityCost = calculateTotalElectricityCost(state.hardware);
+  
+  // Calculate net production (production - electricity cost)
+  const netProduction = Math.max(0, totalProduction * state.prestigeMultiplier - totalElectricityCost);
+  
   return {
     ...state,
-    cryptoCoinsPerSecond: totalProduction * state.prestigeMultiplier,
+    cryptoCoinsPerSecond: netProduction,
+    totalElectricityCost: totalElectricityCost,
     totalHashRate: totalHashRate,
     currentReward: calculateCurrentReward(state.blocksMined),
     nextHalving: calculateNextHalving(state.blocksMined),
@@ -120,7 +132,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         ...getInitialGameState(),
         cryptocurrencies: cryptocurrencies,
         selectedCurrency: null,
-        hardware: initialHardware,
+        hardware: hardwareProgression,
         upgrades: initialUpgrades,
         marketUpdateTime: Date.now(),
         currencyBalances: {},
@@ -166,7 +178,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     ...getInitialGameState(),
     cryptocurrencies: cryptocurrencies,
     selectedCurrency: 'cryptocoin',
-    hardware: initialHardware,
+    hardware: hardwareProgression,
     upgrades: initialUpgrades,
   });
   

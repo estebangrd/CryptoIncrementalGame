@@ -6,7 +6,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { useGame } from '../contexts/GameContext';
-import { formatNumber, calculateHardwareCost, canAffordHardware, calculateHardwareProduction } from '../utils/gameLogic';
+import { formatNumber, calculateHardwareCost, canAffordHardware, calculateHardwareProduction, calculateHardwareElectricityCost, calculateHardwareMiningSpeed } from '../utils/gameLogic';
 
 const HardwareList: React.FC = () => {
   const { gameState, dispatch, t } = useGame();
@@ -18,13 +18,8 @@ const HardwareList: React.FC = () => {
   };
 
   const getHardwareIcon = (iconName: string) => {
-    const icons: { [key: string]: string } = {
-      desktop: '🖥️',
-      gpu: '🎮',
-      server: '🖥️',
-      building: '🏢',
-    };
-    return icons[iconName] || '💻';
+    // Return the icon directly since it's already an emoji in the new system
+    return iconName;
   };
 
   return (
@@ -32,7 +27,10 @@ const HardwareList: React.FC = () => {
       {gameState.hardware.map((hardware) => {
         const cost = calculateHardwareCost(hardware);
         const canAfford = canAffordHardware(gameState, hardware.id);
-        const production = calculateHardwareProduction(hardware, gameState.upgrades);
+        const hashRate = calculateHardwareProduction(hardware, gameState.upgrades);
+        const electricityCost = calculateHardwareElectricityCost(hardware);
+        const miningSpeed = calculateHardwareMiningSpeed(hardware, gameState.upgrades);
+        const coinsPerSecond = miningSpeed * hardware.blockReward;
         
         return (
           <View key={hardware.id} style={styles.hardwareItem}>
@@ -46,19 +44,35 @@ const HardwareList: React.FC = () => {
             
             <View style={styles.hardwareStats}>
               <View style={styles.statRow}>
-                <Text style={styles.statLabel}>{t('ui.owned')}:</Text>
-                <Text style={styles.statValue}>{hardware.owned}</Text>
+                <Text style={styles.statLabel}>Level {hardware.level}:</Text>
+                <Text style={styles.statValue}>{hardware.owned} owned</Text>
               </View>
               <View style={styles.statRow}>
-                <Text style={styles.statLabel}>{t('ui.production')}:</Text>
-                <Text style={styles.statValue}>
-                  {formatNumber(production)} {t('game.perSecond')}
-                </Text>
+                <Text style={styles.statLabel}>Hash Rate:</Text>
+                <Text style={styles.statValue}>{formatNumber(hashRate)} H/s</Text>
               </View>
               <View style={styles.statRow}>
-                <Text style={styles.statLabel}>{t('ui.cost')}:</Text>
+                <Text style={styles.statLabel}>Mining Speed:</Text>
+                <Text style={styles.statValue}>{formatNumber(miningSpeed)} blocks/sec</Text>
+              </View>
+              <View style={styles.statRow}>
+                <Text style={styles.statLabel}>Block Reward:</Text>
+                <Text style={styles.statValue}>{formatNumber(hardware.blockReward)} coins</Text>
+              </View>
+              <View style={styles.statRow}>
+                <Text style={styles.statLabel}>Coins/sec:</Text>
+                <Text style={styles.statValue}>{formatNumber(coinsPerSecond)}</Text>
+              </View>
+              {electricityCost > 0 && (
+                <View style={styles.statRow}>
+                  <Text style={styles.statLabel}>Electricity:</Text>
+                  <Text style={styles.statValue}>-{formatNumber(electricityCost)}/sec</Text>
+                </View>
+              )}
+              <View style={styles.statRow}>
+                <Text style={styles.statLabel}>Cost:</Text>
                 <Text style={[styles.statValue, !canAfford && styles.cannotAfford]}>
-                  {formatNumber(cost)} {t('game.cryptoCoins')}
+                  {formatNumber(cost)} coins
                 </Text>
               </View>
             </View>
