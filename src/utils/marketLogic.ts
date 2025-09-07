@@ -52,6 +52,11 @@ export const calculateMarketPrice = (marketState: MarketState): number => {
 
 // Update market state
 export const updateMarketState = (marketState: MarketState): MarketState => {
+  // Safety check: if marketState is undefined, return initial state
+  if (!marketState) {
+    return getInitialMarketState();
+  }
+  
   const now = Date.now();
   const timeDiff = now - marketState.lastUpdate;
   
@@ -131,6 +136,10 @@ export const updateNPCs = (npcs: NPC[], marketState: MarketState): NPC[] => {
 
 // Get active NPCs that can make offers
 export const getActiveNPCs = (marketState: MarketState): NPC[] => {
+  if (!marketState || !marketState.npcs) {
+    return [];
+  }
+  
   const now = Date.now();
   return marketState.npcs.filter(npc => 
     npc.type === 'buyer' && 
@@ -189,6 +198,21 @@ export const updateMarketAfterTransaction = (marketState: MarketState, volume: n
 
 // Get market statistics
 export const getMarketStats = (marketState: MarketState) => {
+  if (!marketState) {
+    const initialState = getInitialMarketState();
+    return {
+      currentPrice: initialState.currentPrice,
+      priceChange: 0,
+      priceChangePercent: 0,
+      totalVolume: initialState.totalVolume,
+      dailyVolume: initialState.dailyVolume,
+      liquidity: initialState.liquidity,
+      fearGreedIndex: initialState.fearGreedIndex,
+      activeEvents: initialState.activeEvents,
+      activeNPCs: [],
+    };
+  }
+  
   const priceChange = marketState.priceHistory.length > 1 
     ? marketState.priceHistory[marketState.priceHistory.length - 1] - marketState.priceHistory[marketState.priceHistory.length - 2]
     : 0;

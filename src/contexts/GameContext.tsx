@@ -24,7 +24,8 @@ import {
   calculateNPCPurchaseAmount,
   processNPCPurchase,
   updateMarketAfterTransaction,
-  getMarketStats
+  getMarketStats,
+  getInitialMarketState
 } from '../utils/marketLogic';
 import { saveGameState, loadGameState, saveLanguage, loadLanguage } from '../utils/storage';
 import { translations } from '../data/translations';
@@ -134,6 +135,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         marketUpdateTime: action.payload.marketUpdateTime || Date.now(),
         currencyBalances: action.payload.currencyBalances || {},
         totalPrestigeGains: action.payload.totalPrestigeGains || 0,
+        marketState: action.payload.marketState || getInitialMarketState(),
       };
       return recalculateGameStats(loadedState);
     case 'RESET_GAME':
@@ -146,6 +148,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         marketUpdateTime: Date.now(),
         currencyBalances: {},
         totalPrestigeGains: 0,
+        marketState: getInitialMarketState(),
       };
       return recalculateGameStats(resetState);
     case 'UPDATE_OFFLINE_PROGRESS':
