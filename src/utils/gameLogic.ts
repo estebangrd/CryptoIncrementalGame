@@ -33,17 +33,6 @@ export const calculateTotalProduction = (gameState: GameState): number => {
   return totalProduction * gameState.prestigeMultiplier;
 };
 
-export const calculateClickPower = (gameState: GameState): number => {
-  let clickPower = 1;
-  
-  gameState.upgrades.forEach(upgrade => {
-    if (upgrade.purchased && upgrade.effect.type === 'clickPower') {
-      clickPower *= upgrade.effect.value;
-    }
-  });
-  
-  return clickPower * gameState.prestigeMultiplier;
-};
 
 export const canAffordHardware = (gameState: GameState, hardwareId: string): boolean => {
   const hardware = gameState.hardware.find(h => h.id === hardwareId);
@@ -88,19 +77,10 @@ export const buyUpgrade = (gameState: GameState, upgradeId: string): GameState =
   newGameState.cryptoCoins -= upgrade.cost;
   newGameState.upgrades[upgradeIndex] = { ...upgrade, purchased: true };
   newGameState.cryptoCoinsPerSecond = calculateTotalProduction(newGameState);
-  newGameState.cryptoCoinsPerClick = calculateClickPower(newGameState);
   
   return newGameState;
 };
 
-export const handleClick = (gameState: GameState): GameState => {
-  const newGameState = { ...gameState };
-  newGameState.cryptoCoins += gameState.cryptoCoinsPerClick;
-  newGameState.totalClicks += 1;
-  newGameState.totalCryptoCoins += gameState.cryptoCoinsPerClick;
-  
-  return newGameState;
-};
 
 export const updateOfflineProgress = (gameState: GameState): GameState => {
   const now = Date.now();
@@ -130,7 +110,6 @@ export const getInitialGameState = (): GameState => {
   return {
     cryptoCoins: 0,
     cryptoCoinsPerSecond: 0,
-    cryptoCoinsPerClick: 1,
     cryptocurrencies: [],
     selectedCurrency: null,
     hardware: [],

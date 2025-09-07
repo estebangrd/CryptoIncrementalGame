@@ -26,7 +26,6 @@ interface GameContextType {
 }
 
 type GameAction =
-  | { type: 'CLICK' }
   | { type: 'BUY_HARDWARE'; payload: string }
   | { type: 'BUY_UPGRADE'; payload: string }
   | { type: 'LOAD_GAME'; payload: GameState }
@@ -55,20 +54,12 @@ const recalculateGameStats = (state: GameState): GameState => {
     totalProduction += production;
   });
   
-  let clickPower = 1;
-  state.upgrades.forEach(upgrade => {
-    if (upgrade.purchased && upgrade.effect.type === 'clickPower') {
-      clickPower *= upgrade.effect.value;
-    }
-  });
-  
   // Calculate total hash rate from hardware
   const totalHashRate = calculateTotalHashRate(state);
   
   return {
     ...state,
     cryptoCoinsPerSecond: totalProduction * state.prestigeMultiplier,
-    cryptoCoinsPerClick: clickPower * state.prestigeMultiplier,
     totalHashRate: totalHashRate,
     currentReward: calculateCurrentReward(state.blocksMined),
     nextHalving: calculateNextHalving(state.blocksMined),
@@ -77,13 +68,6 @@ const recalculateGameStats = (state: GameState): GameState => {
 
 const gameReducer = (state: GameState, action: GameAction): GameState => {
   switch (action.type) {
-    case 'CLICK':
-      return {
-        ...state,
-        cryptoCoins: state.cryptoCoins + state.cryptoCoinsPerClick,
-        totalClicks: state.totalClicks + 1,
-        totalCryptoCoins: state.totalCryptoCoins + state.cryptoCoinsPerClick,
-      };
     case 'BUY_HARDWARE':
       const hardwareIndex = state.hardware.findIndex(h => h.id === action.payload);
       if (hardwareIndex === -1) return state;

@@ -23,10 +23,6 @@ const GameScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'hardware' | 'upgrades' | 'market' | 'prestige'>('hardware');
   const [showSettings, setShowSettings] = useState(false);
 
-  const handleClick = () => {
-    dispatch({ type: 'CLICK' });
-  };
-
   const handleMineBlock = () => {
     dispatch({ type: 'MINE_BLOCK' });
   };
@@ -59,28 +55,28 @@ const GameScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Main Click Area */}
-      <TouchableOpacity style={styles.clickArea} onPress={handleClick} activeOpacity={0.8}>
-        <View style={styles.clickContent}>
+      {/* Main Stats Area */}
+      <View style={styles.statsArea}>
+        <View style={styles.statsContent}>
           <Text style={styles.cryptoCoinsText}>
             {formatNumber(gameState.cryptoCoins)} {t('game.cryptoCoins')}
           </Text>
           <Text style={styles.productionText}>
             {formatNumber(gameState.cryptoCoinsPerSecond)} {t('game.perSecond')}
           </Text>
-          <Text style={styles.clickText}>
-            {formatNumber(gameState.cryptoCoinsPerClick)} {t('game.perClick')}
+          <Text style={styles.hashRateText}>
+            {formatNumber(gameState.totalHashRate)} H/s
           </Text>
         </View>
-      </TouchableOpacity>
+      </View>
 
       {/* Stats */}
       <View style={styles.statsContainer}>
         <Text style={styles.statsText}>
-          {t('game.totalClicks')}: {formatNumber(gameState.totalClicks)}
+          {t('game.totalCryptoCoins')}: {formatNumber(gameState.totalCryptoCoins)}
         </Text>
         <Text style={styles.statsText}>
-          {t('game.totalCryptoCoins')}: {formatNumber(gameState.totalCryptoCoins)}
+          Blocks Mined: {formatNumber(gameState.blocksMined)}
         </Text>
       </View>
 
@@ -175,13 +171,13 @@ const styles = StyleSheet.create({
   settingsButtonText: {
     fontSize: 24,
   },
-  clickArea: {
+  statsArea: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
   },
-  clickContent: {
+  statsContent: {
     alignItems: 'center',
   },
   cryptoCoinsText: {
@@ -197,7 +193,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 5,
   },
-  clickText: {
+  hashRateText: {
     fontSize: 16,
     color: '#666',
     textAlign: 'center',

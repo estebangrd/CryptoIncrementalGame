@@ -18,7 +18,6 @@ export interface PrestigeRequirement {
 export interface GameState {
   cryptoCoins: number;
   cryptoCoinsPerSecond: number;
-  cryptoCoinsPerClick: number;
   cryptocurrencies: Cryptocurrency[];
   selectedCurrency: string | null; // ID of the currently selected cryptocurrency
   hardware: Hardware[];
