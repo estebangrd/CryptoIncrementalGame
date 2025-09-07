@@ -7,6 +7,13 @@ import { getInitialGameState, updateOfflineProgress } from '../utils/gameLogic';
 import { updateMarketPrices } from '../utils/marketLogic';
 import { performPrestige } from '../utils/prestigeLogic';
 import { performExchange } from '../utils/exchangeLogic';
+import { 
+  calculateTotalHashRate, 
+  calculateCurrentReward, 
+  calculateNextHalving,
+  mineBlock,
+  canMineBlock 
+} from '../utils/blockLogic';
 import { saveGameState, loadGameState, saveLanguage, loadLanguage } from '../utils/storage';
 import { translations } from '../data/translations';
 
@@ -30,6 +37,7 @@ type GameAction =
   | { type: 'UPDATE_MARKET' }
   | { type: 'PERFORM_PRESTIGE' }
   | { type: 'EXCHANGE_CURRENCY'; payload: { fromCurrency: string; toCurrency: string; amount: number } }
+  | { type: 'MINE_BLOCK' }
   | { type: 'SET_LANGUAGE'; payload: string };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -54,10 +62,16 @@ const recalculateGameStats = (state: GameState): GameState => {
     }
   });
   
+  // Calculate total hash rate from hardware
+  const totalHashRate = calculateTotalHashRate(state);
+  
   return {
     ...state,
     cryptoCoinsPerSecond: totalProduction * state.prestigeMultiplier,
     cryptoCoinsPerClick: clickPower * state.prestigeMultiplier,
+    totalHashRate: totalHashRate,
+    currentReward: calculateCurrentReward(state.blocksMined),
+    nextHalving: calculateNextHalving(state.blocksMined),
   };
 };
 
@@ -152,6 +166,12 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       return performPrestige(state);
     case 'EXCHANGE_CURRENCY':
       return performExchange(state, action.payload.fromCurrency, action.payload.toCurrency, action.payload.amount);
+    case 'MINE_BLOCK':
+      if (canMineBlock(state)) {
+        const newState = mineBlock(state);
+        return recalculateGameStats(newState);
+      }
+      return state;
     default:
       return state;
   }

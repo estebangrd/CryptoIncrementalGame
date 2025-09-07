@@ -14,16 +14,21 @@ import HardwareList from './HardwareList';
 import UpgradeList from './UpgradeList';
 import MarketScreen from './MarketScreen';
 import PrestigeScreen from './PrestigeScreen';
+import { BlockInfo } from './BlockInfo';
 
 import SettingsModal from './SettingsModal';
 
 const GameScreen: React.FC = () => {
   const { gameState, dispatch, t } = useGame();
-  const [activeTab, setActiveTab] = useState<'hardware' | 'upgrades' | 'market' | 'prestige'>('hardware');
+  const [activeTab, setActiveTab] = useState<'hardware' | 'upgrades' | 'market' | 'prestige' | 'blocks'>('hardware');
   const [showSettings, setShowSettings] = useState(false);
 
   const handleClick = () => {
     dispatch({ type: 'CLICK' });
+  };
+
+  const handleMineBlock = () => {
+    dispatch({ type: 'MINE_BLOCK' });
   };
 
   const handleReset = () => {
@@ -113,6 +118,14 @@ const GameScreen: React.FC = () => {
             {t('game.prestige')}
           </Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'blocks' && styles.activeTab]}
+          onPress={() => setActiveTab('blocks')}
+        >
+          <Text style={[styles.tabText, activeTab === 'blocks' && styles.activeTabText]}>
+            Blocks
+          </Text>
+        </TouchableOpacity>
 
       </View>
 
@@ -124,8 +137,14 @@ const GameScreen: React.FC = () => {
           <UpgradeList />
         ) : activeTab === 'market' ? (
           <MarketScreen />
-        ) : (
+        ) : activeTab === 'prestige' ? (
           <PrestigeScreen />
+        ) : (
+          <BlockInfo 
+            gameState={gameState} 
+            onMineBlock={handleMineBlock} 
+            t={t} 
+          />
         )}
       </ScrollView>
 

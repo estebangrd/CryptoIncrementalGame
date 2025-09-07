@@ -32,6 +32,14 @@ export interface GameState {
   // Prestige system
   currencyBalances: { [currencyId: string]: number };
   totalPrestigeGains: number;
+  // Phase 1: Genesis - Block system
+  blocksMined: number;
+  totalBlocks: number;
+  currentReward: number;
+  nextHalving: number;
+  difficulty: number;
+  totalHashRate: number;
+  phase: 'genesis' | 'expansion' | 'institutional' | 'singularity' | 'multiverse';
 }
 
 export interface Hardware {

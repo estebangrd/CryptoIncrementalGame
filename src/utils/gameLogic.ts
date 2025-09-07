@@ -1,4 +1,10 @@
 import { GameState, Hardware, Upgrade } from '../types/game';
+import { 
+  calculateCurrentReward, 
+  calculateNextHalving, 
+  calculateTotalHashRate,
+  GENESIS_CONSTANTS 
+} from './blockLogic';
 
 export const calculateHardwareCost = (hardware: Hardware): number => {
   return Math.floor(hardware.baseCost * Math.pow(hardware.costMultiplier, hardware.owned));
@@ -137,5 +143,13 @@ export const getInitialGameState = (): GameState => {
     marketUpdateTime: Date.now(),
     currencyBalances: {},
     totalPrestigeGains: 0,
+    // Phase 1: Genesis - Block system
+    blocksMined: 0,
+    totalBlocks: GENESIS_CONSTANTS.TOTAL_BLOCKS,
+    currentReward: GENESIS_CONSTANTS.INITIAL_REWARD,
+    nextHalving: GENESIS_CONSTANTS.HALVING_INTERVAL,
+    difficulty: GENESIS_CONSTANTS.INITIAL_DIFFICULTY,
+    totalHashRate: 0,
+    phase: 'genesis',
   };
 };
