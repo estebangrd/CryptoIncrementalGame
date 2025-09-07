@@ -5,7 +5,6 @@ import { hardwareProgression } from '../data/hardwareData';
 import { initialUpgrades } from '../data/gameData';
 import { cryptocurrencies } from '../data/cryptocurrencies';
 import { getInitialGameState, updateOfflineProgress } from '../utils/gameLogic';
-import { updateMarketPrices } from '../utils/marketLogic';
 import { performPrestige } from '../utils/prestigeLogic';
 import { performExchange } from '../utils/exchangeLogic';
 import { 
@@ -19,6 +18,14 @@ import {
   calculateTotalElectricityCost,
   calculateTotalMiningSpeed 
 } from '../utils/gameLogic';
+import { 
+  updateMarketState,
+  getActiveNPCs,
+  calculateNPCPurchaseAmount,
+  processNPCPurchase,
+  updateMarketAfterTransaction,
+  getMarketStats
+} from '../utils/marketLogic';
 import { saveGameState, loadGameState, saveLanguage, loadLanguage } from '../utils/storage';
 import { translations } from '../data/translations';
 
@@ -42,6 +49,8 @@ type GameAction =
   | { type: 'PERFORM_PRESTIGE' }
   | { type: 'EXCHANGE_CURRENCY'; payload: { fromCurrency: string; toCurrency: string; amount: number } }
   | { type: 'MINE_BLOCK' }
+  | { type: 'UPDATE_MARKET_STATE' }
+  | { type: 'SELL_TO_NPC'; payload: { npcId: string; amount: number } }
   | { type: 'SET_LANGUAGE'; payload: string };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -155,7 +164,6 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     case 'UPDATE_MARKET':
       return {
         ...state,
-        cryptocurrencies: updateMarketPrices(state.cryptocurrencies),
         marketUpdateTime: Date.now(),
       };
     case 'PERFORM_PRESTIGE':
@@ -168,6 +176,26 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         return recalculateGameStats(newState);
       }
       return state;
+    case 'UPDATE_MARKET_STATE':
+      return {
+        ...state,
+        marketState: updateMarketState(state.marketState),
+      };
+    case 'SELL_TO_NPC':
+      const npc = state.marketState.npcs.find(n => n.id === action.payload.npcId);
+      if (!npc || npc.type !== 'buyer') return state;
+      
+      const amount = Math.min(action.payload.amount, state.cryptoCoins);
+      if (amount <= 0) return state;
+      
+      const transaction = processNPCPurchase(npc, amount, state.marketState.currentPrice);
+      const updatedMarketState = updateMarketAfterTransaction(state.marketState, transaction.coinsReceived);
+      
+      return {
+        ...state,
+        cryptoCoins: state.cryptoCoins - transaction.coinsSold,
+        marketState: updatedMarketState,
+      };
     default:
       return state;
   }
@@ -266,6 +294,15 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     const interval = setInterval(() => {
       dispatch({ type: 'UPDATE_MARKET' });
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Update market state every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      dispatch({ type: 'UPDATE_MARKET_STATE' });
     }, 30000);
 
     return () => clearInterval(interval);

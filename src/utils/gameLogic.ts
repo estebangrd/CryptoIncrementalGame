@@ -5,6 +5,7 @@ import {
   calculateTotalHashRate,
   GENESIS_CONSTANTS 
 } from './blockLogic';
+import { getInitialMarketState } from './marketLogic';
 
 export const calculateHardwareCost = (hardware: Hardware): number => {
   return Math.floor(hardware.baseCost * Math.pow(hardware.costMultiplier, hardware.owned));
@@ -166,5 +167,7 @@ export const getInitialGameState = (): GameState => {
     difficulty: GENESIS_CONSTANTS.INITIAL_DIFFICULTY,
     totalHashRate: 0,
     phase: 'genesis',
+    // Market system
+    marketState: getInitialMarketState(),
   };
 };

@@ -40,6 +40,8 @@ export interface GameState {
   difficulty: number;
   totalHashRate: number;
   phase: 'genesis' | 'expansion' | 'institutional' | 'singularity' | 'multiverse';
+  // Market system
+  marketState: MarketState;
 }
 
 export interface Hardware {
@@ -88,4 +90,50 @@ export interface Translation {
   [key: string]: {
     [languageCode: string]: string;
   };
+}
+
+// NPC (Non-Player Character) types
+export interface NPC {
+  id: string;
+  name: string;
+  nameKey: string;
+  type: 'buyer' | 'seller' | 'trader';
+  behavior: 'conservative' | 'aggressive' | 'speculative';
+  baseDemand: number; // Base demand for coins
+  priceSensitivity: number; // How much price affects demand
+  maxPurchaseAmount: number; // Maximum coins they can buy
+  minPurchaseAmount: number; // Minimum coins they will buy
+  priceMultiplier: number; // Multiplier for their offer price
+  lastActivity: number; // Last time they were active
+  cooldown: number; // Time between activities
+}
+
+// Market event types
+export interface MarketEvent {
+  id: string;
+  name: string;
+  nameKey: string;
+  description: string;
+  descriptionKey: string;
+  type: 'pizza' | 'regulation' | 'adoption' | 'crash' | 'boom';
+  duration: number; // Duration in milliseconds
+  priceMultiplier: number; // How it affects prices
+  demandMultiplier: number; // How it affects demand
+  probability: number; // Probability of occurring (0-1)
+  lastOccurred: number; // Last time this event occurred
+  cooldown: number; // Minimum time between occurrences
+}
+
+// Market state
+export interface MarketState {
+  basePrice: number; // Base price of the coin
+  currentPrice: number; // Current market price
+  priceHistory: number[]; // Price history for charts
+  totalVolume: number; // Total trading volume
+  dailyVolume: number; // Daily trading volume
+  liquidity: number; // Market liquidity (0-1)
+  fearGreedIndex: number; // Market sentiment (-1 to 1)
+  lastUpdate: number; // Last market update
+  activeEvents: MarketEvent[]; // Currently active events
+  npcs: NPC[]; // Active NPCs
 }
