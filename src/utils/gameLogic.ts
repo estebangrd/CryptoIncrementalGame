@@ -142,6 +142,43 @@ export const formatNumber = (num: number): string => {
   return (num / 1000000000000).toFixed(1) + 'T';
 };
 
+// Progressive unlock system
+export const UNLOCK_REQUIREMENTS = {
+  MARKET_BLOCKS: 15, // Unlock market after mining 15 blocks
+  HARDWARE_MONEY: 200, // Unlock hardware after earning $200
+  UPGRADES_HARDWARE: 1, // Unlock upgrades after buying 1 hardware
+  PRESTIGE_LEVEL: 1, // Unlock prestige after reaching level 1
+};
+
+export const checkAndUpdateUnlocks = (gameState: GameState): GameState => {
+  const newUnlockedTabs = { ...gameState.unlockedTabs };
+  
+  // Unlock Market: After mining enough blocks
+  if (!newUnlockedTabs.market && gameState.blocksMined >= UNLOCK_REQUIREMENTS.MARKET_BLOCKS) {
+    newUnlockedTabs.market = true;
+  }
+  
+  // Unlock Hardware: After earning enough real money
+  if (!newUnlockedTabs.hardware && gameState.totalRealMoneyEarned >= UNLOCK_REQUIREMENTS.HARDWARE_MONEY) {
+    newUnlockedTabs.hardware = true;
+  }
+  
+  // Unlock Upgrades: After buying hardware
+  if (!newUnlockedTabs.upgrades && gameState.hardware.some(h => h.owned > 0)) {
+    newUnlockedTabs.upgrades = true;
+  }
+  
+  // Unlock Prestige: After reaching certain level (future implementation)
+  if (!newUnlockedTabs.prestige && gameState.prestigeLevel >= UNLOCK_REQUIREMENTS.PRESTIGE_LEVEL) {
+    newUnlockedTabs.prestige = true;
+  }
+  
+  return {
+    ...gameState,
+    unlockedTabs: newUnlockedTabs,
+  };
+};
+
 export const getInitialGameState = (): GameState => {
   return {
     cryptoCoins: 0,
@@ -169,5 +206,15 @@ export const getInitialGameState = (): GameState => {
     phase: 'genesis',
     // Market system
     marketState: getInitialMarketState(),
+    // Progressive unlock system
+    unlockedTabs: {
+      market: false,
+      hardware: false,
+      upgrades: false,
+      prestige: false,
+    },
+    // Real money system
+    realMoney: 0,
+    totalRealMoneyEarned: 0,
   };
 };

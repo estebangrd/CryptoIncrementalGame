@@ -12,8 +12,13 @@ const HardwareList: React.FC = () => {
   const { gameState, dispatch, t } = useGame();
 
   const handleBuyHardware = (hardwareId: string) => {
-    if (canAffordHardware(gameState, hardwareId)) {
-      dispatch({ type: 'BUY_HARDWARE', payload: hardwareId });
+    const hardware = gameState.hardware.find(h => h.id === hardwareId);
+    if (!hardware) return;
+    
+    const cost = Math.floor(hardware.baseCost * Math.pow(hardware.costMultiplier, hardware.owned));
+    
+    if (gameState.realMoney >= cost) {
+      dispatch({ type: 'BUY_HARDWARE_WITH_MONEY', payload: hardwareId });
     }
   };
 
@@ -25,8 +30,8 @@ const HardwareList: React.FC = () => {
   return (
     <View style={styles.container}>
       {gameState.hardware.map((hardware) => {
-        const cost = calculateHardwareCost(hardware);
-        const canAfford = canAffordHardware(gameState, hardware.id);
+        const cost = Math.floor(hardware.baseCost * Math.pow(hardware.costMultiplier, hardware.owned));
+        const canAfford = gameState.realMoney >= cost;
         const hashRate = calculateHardwareProduction(hardware, gameState.upgrades);
         const electricityCost = calculateHardwareElectricityCost(hardware);
         const miningSpeed = calculateHardwareMiningSpeed(hardware, gameState.upgrades);
@@ -72,7 +77,7 @@ const HardwareList: React.FC = () => {
               <View style={styles.statRow}>
                 <Text style={styles.statLabel}>Cost:</Text>
                 <Text style={[styles.statValue, !canAfford && styles.cannotAfford]}>
-                  {formatNumber(cost)} coins
+                  ${formatNumber(cost)}
                 </Text>
               </View>
             </View>

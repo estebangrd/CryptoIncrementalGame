@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 
 import { useGame } from '../contexts/GameContext';
-import { formatCurrency, getPriceChangeColor } from '../utils/marketLogic';
+import { getPriceChangeColor } from '../utils/marketLogic';
 import {
   getExchangePreview,
   determineExchangeDirection,
@@ -64,6 +64,38 @@ const MarketScreen: React.FC = () => {
                 fromCurrency: preview.fromCurrency,
                 toCurrency: preview.toCurrency,
                 amount: preview.fromAmount,
+              },
+            });
+          },
+        },
+      ]
+    );
+  };
+
+  const handleSellForMoney = () => {
+    const selectedCurrency = getSelectedCurrency();
+    if (!selectedCurrency) return;
+
+    const amount = Math.floor((gameState.cryptoCoins * amountPercent) / 100);
+    if (amount <= 0) return;
+
+    // Use current market price for selling
+    const price = selectedCurrency.currentValue;
+    const moneyEarned = amount * price;
+
+    Alert.alert(
+      'Sell for Real Money',
+      `Sell ${formatCurrencyAmount(amount, 'CryptoCoin')} for $${moneyEarned.toFixed(2)}?\n\nCurrent price: $${price.toFixed(4)} per coin`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sell',
+          onPress: () => {
+            dispatch({
+              type: 'SELL_COINS_FOR_MONEY',
+              payload: {
+                amount: amount,
+                price: price,
               },
             });
           },
@@ -149,7 +181,7 @@ const MarketScreen: React.FC = () => {
                     </View>
                     <View style={styles.priceInfo}>
                       <Text style={styles.currentPrice}>
-                        {formatCurrency(crypto.currentValue, crypto.symbol)}
+                        {formatCurrencyAmount(crypto.currentValue, crypto.symbol)}
                       </Text>
                       <Text style={[
                         styles.priceChange,
@@ -231,13 +263,22 @@ const MarketScreen: React.FC = () => {
                           </View>
                         )}
                         
-                        {/* Exchange Button */}
-                        <TouchableOpacity
-                          style={styles.exchangeButton}
-                          onPress={handleExchange}
-                        >
-                          <Text style={styles.exchangeButtonText}>Exchange</Text>
-                        </TouchableOpacity>
+                        {/* Exchange Buttons */}
+                        <View style={styles.buttonContainer}>
+                          <TouchableOpacity
+                            style={styles.exchangeButton}
+                            onPress={handleExchange}
+                          >
+                            <Text style={styles.exchangeButtonText}>Exchange</Text>
+                          </TouchableOpacity>
+                          
+                          <TouchableOpacity
+                            style={styles.sellButton}
+                            onPress={handleSellForMoney}
+                          >
+                            <Text style={styles.sellButtonText}>Sell for $</Text>
+                          </TouchableOpacity>
+                        </View>
                       </>
                     )}
                   </View>
@@ -437,18 +478,36 @@ const styles = StyleSheet.create({
     color: '#888',
     marginTop: 4,
   },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
   exchangeButton: {
     backgroundColor: '#00ff88',
     borderRadius: 8,
     padding: 16,
     alignItems: 'center',
-    marginHorizontal: 8,
-    marginTop: 8,
+    flex: 1,
+    marginRight: 8,
   },
   exchangeButtonText: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#000',
+  },
+  sellButton: {
+    backgroundColor: '#ff6b35',
+    borderRadius: 8,
+    padding: 16,
+    alignItems: 'center',
+    flex: 1,
+    marginLeft: 8,
+  },
+  sellButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
   },
 });
 

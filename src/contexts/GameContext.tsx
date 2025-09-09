@@ -4,7 +4,7 @@ import { GameState } from '../types/game';
 import { hardwareProgression } from '../data/hardwareData';
 import { initialUpgrades } from '../data/gameData';
 import { cryptocurrencies } from '../data/cryptocurrencies';
-import { getInitialGameState, updateOfflineProgress } from '../utils/gameLogic';
+import { getInitialGameState, updateOfflineProgress, checkAndUpdateUnlocks } from '../utils/gameLogic';
 import { performPrestige } from '../utils/prestigeLogic';
 import { performExchange } from '../utils/exchangeLogic';
 import { 
@@ -52,6 +52,8 @@ type GameAction =
   | { type: 'MINE_BLOCK' }
   | { type: 'UPDATE_MARKET_STATE' }
   | { type: 'SELL_TO_NPC'; payload: { npcId: string; amount: number } }
+  | { type: 'SELL_COINS_FOR_MONEY'; payload: { amount: number; price: number } }
+  | { type: 'BUY_HARDWARE_WITH_MONEY'; payload: string }
   | { type: 'SET_LANGUAGE'; payload: string };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -78,7 +80,7 @@ const recalculateGameStats = (state: GameState): GameState => {
   // Calculate net production (production - electricity cost)
   const netProduction = Math.max(0, totalProduction * state.prestigeMultiplier - totalElectricityCost);
   
-  return {
+  const updatedState = {
     ...state,
     cryptoCoinsPerSecond: netProduction,
     totalElectricityCost: totalElectricityCost,
@@ -86,6 +88,9 @@ const recalculateGameStats = (state: GameState): GameState => {
     currentReward: calculateCurrentReward(state.blocksMined),
     nextHalving: calculateNextHalving(state.blocksMined),
   };
+  
+  // Check and update unlocks
+  return checkAndUpdateUnlocks(updatedState);
 };
 
 const gameReducer = (state: GameState, action: GameAction): GameState => {
@@ -136,6 +141,14 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         currencyBalances: action.payload.currencyBalances || {},
         totalPrestigeGains: action.payload.totalPrestigeGains || 0,
         marketState: action.payload.marketState || getInitialMarketState(),
+        unlockedTabs: action.payload.unlockedTabs || {
+          market: false,
+          hardware: false,
+          upgrades: false,
+          prestige: false,
+        },
+        realMoney: action.payload.realMoney || 0,
+        totalRealMoneyEarned: action.payload.totalRealMoneyEarned || 0,
       };
       return recalculateGameStats(loadedState);
     case 'RESET_GAME':
@@ -149,6 +162,14 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         currencyBalances: {},
         totalPrestigeGains: 0,
         marketState: getInitialMarketState(),
+        unlockedTabs: {
+          market: false,
+          hardware: false,
+          upgrades: false,
+          prestige: false,
+        },
+        realMoney: 0,
+        totalRealMoneyEarned: 0,
       };
       return recalculateGameStats(resetState);
     case 'UPDATE_OFFLINE_PROGRESS':
@@ -199,6 +220,37 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         cryptoCoins: state.cryptoCoins - transaction.coinsSold,
         marketState: updatedMarketState,
       };
+    case 'SELL_COINS_FOR_MONEY':
+      const coinsToSell = Math.min(action.payload.amount, state.cryptoCoins);
+      if (coinsToSell <= 0) return state;
+      
+      const moneyEarned = coinsToSell * action.payload.price;
+      
+      return {
+        ...state,
+        cryptoCoins: state.cryptoCoins - coinsToSell,
+        realMoney: state.realMoney + moneyEarned,
+        totalRealMoneyEarned: state.totalRealMoneyEarned + moneyEarned,
+      };
+    case 'BUY_HARDWARE_WITH_MONEY':
+      const moneyHardwareIndex = state.hardware.findIndex(h => h.id === action.payload);
+      if (moneyHardwareIndex === -1) return state;
+      
+      const moneyHardware = state.hardware[moneyHardwareIndex];
+      const moneyCost = Math.floor(moneyHardware.baseCost * Math.pow(moneyHardware.costMultiplier, moneyHardware.owned));
+      
+      if (state.realMoney < moneyCost) return state;
+      
+      const moneyNewHardware = [...state.hardware];
+      moneyNewHardware[moneyHardwareIndex] = { ...moneyHardware, owned: moneyHardware.owned + 1 };
+      
+      const moneyNewState = {
+        ...state,
+        realMoney: state.realMoney - moneyCost,
+        hardware: moneyNewHardware,
+      };
+      
+      return recalculateGameStats(moneyNewState);
     default:
       return state;
   }

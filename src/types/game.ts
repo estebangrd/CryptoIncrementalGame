@@ -42,6 +42,16 @@ export interface GameState {
   phase: 'genesis' | 'expansion' | 'institutional' | 'singularity' | 'multiverse';
   // Market system
   marketState: MarketState;
+  // Progressive unlock system
+  unlockedTabs: {
+    market: boolean;
+    hardware: boolean;
+    upgrades: boolean;
+    prestige: boolean;
+  };
+  // Real money system
+  realMoney: number; // Dollars earned from selling coins
+  totalRealMoneyEarned: number;
 }
 
 export interface Hardware {

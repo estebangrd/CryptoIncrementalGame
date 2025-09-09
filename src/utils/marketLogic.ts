@@ -233,3 +233,13 @@ export const getMarketStats = (marketState: MarketState) => {
     activeNPCs: getActiveNPCs(marketState),
   };
 };
+
+export const getPriceChangeColor = (baseValue: number, currentValue: number): string => {
+  if (currentValue > baseValue) {
+    return '#00ff88'; // Green for positive change
+  } else if (currentValue < baseValue) {
+    return '#ff6666'; // Red for negative change
+  } else {
+    return '#888'; // Gray for no change
+  }
+};
