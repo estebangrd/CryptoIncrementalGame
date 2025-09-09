@@ -250,13 +250,13 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
 };
 
 export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [gameState, dispatch] = useReducer(gameReducer, {
+  const [gameState, dispatch] = useReducer(gameReducer, recalculateGameStats({
     ...getInitialGameState(),
     cryptocurrencies: cryptocurrencies,
     selectedCurrency: 'cryptocoin',
     hardware: hardwareProgression,
     upgrades: initialUpgrades,
-  });
+  }));
 
   // Debug log for initial state
   React.useEffect(() => {
