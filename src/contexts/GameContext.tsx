@@ -257,6 +257,14 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     hardware: hardwareProgression,
     upgrades: initialUpgrades,
   });
+
+  // Debug log for initial state
+  React.useEffect(() => {
+    console.log('DEBUG: Initial game state loaded');
+    console.log('DEBUG: Initial cryptoCoinsPerSecond:', gameState.cryptoCoinsPerSecond);
+    console.log('DEBUG: Initial hardware:', gameState.hardware.map(h => ({ id: h.id, owned: h.owned, miningSpeed: h.miningSpeed, blockReward: h.blockReward })));
+    console.log('DEBUG: Initial upgrades:', gameState.upgrades.filter(u => u.purchased).map(u => ({ id: u.id, purchased: u.purchased })));
+  }, []);
   
   const [currentLanguage, setCurrentLanguage] = React.useState('en');
 
@@ -332,7 +340,8 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const interval = setInterval(() => {
       if (gameState.cryptoCoinsPerSecond > 0) {
         console.log('DEBUG: Adding production, cryptoCoinsPerSecond:', gameState.cryptoCoinsPerSecond);
-        console.log('DEBUG: Hardware owned:', gameState.hardware.map(h => ({ id: h.id, owned: h.owned, baseProduction: h.baseProduction })));
+        console.log('DEBUG: Hardware owned:', gameState.hardware.map(h => ({ id: h.id, owned: h.owned, baseProduction: h.baseProduction, miningSpeed: h.miningSpeed, blockReward: h.blockReward })));
+        console.log('DEBUG: Upgrades purchased:', gameState.upgrades.filter(u => u.purchased).map(u => ({ id: u.id, purchased: u.purchased, effect: u.effect })));
         dispatch({ type: 'ADD_PRODUCTION' });
       }
     }, 1000);
