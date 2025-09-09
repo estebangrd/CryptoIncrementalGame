@@ -6,15 +6,10 @@ import {
   StyleSheet,
   Dimensions,
   ScrollView,
+  Animated,
+  PanGestureHandler,
+  State,
 } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  withTiming,
-  runOnJS,
-} from 'react-native-reanimated';
-import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import { useGame } from '../contexts/GameContext';
 import HardwareList from './HardwareList';
 import UpgradeList from './UpgradeList';
@@ -38,7 +33,7 @@ const BottomSheetTabs: React.FC<BottomSheetTabsProps> = ({ onMineBlock, t }) => 
   const [tabState, setTabState] = useState<TabState>('minimized');
   const [isScrolling, setIsScrolling] = useState(false);
   
-  const translateY = useSharedValue(SCREEN_HEIGHT - 100);
+  const translateY = useRef(new Animated.Value(SCREEN_HEIGHT - 100)).current;
   const panGestureRef = useRef<PanGestureHandler>(null);
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -62,11 +57,12 @@ const BottomSheetTabs: React.FC<BottomSheetTabsProps> = ({ onMineBlock, t }) => 
   const animateToState = (newState: TabState) => {
     const targetY = getTargetHeight(newState);
     
-    translateY.value = withSpring(targetY, {
-      damping: 20,
-      stiffness: 300,
-      mass: 0.8,
-    });
+    Animated.spring(translateY, {
+      toValue: targetY,
+      useNativeDriver: true,
+      tension: 100,
+      friction: 8,
+    }).start();
     
     setTabState(newState);
   };
@@ -104,31 +100,30 @@ const BottomSheetTabs: React.FC<BottomSheetTabsProps> = ({ onMineBlock, t }) => 
     }
   };
 
-  const onPanGestureEvent = (event: any) => {
-    'worklet';
-    translateY.value = event.nativeEvent.translationY + getTargetHeight(tabState);
-  };
+  const onPanGestureEvent = Animated.event(
+    [{ nativeEvent: { translationY: translateY } }],
+    { useNativeDriver: true }
+  );
 
   const onPanHandlerStateChange = (event: any) => {
-    'worklet';
     if (event.nativeEvent.state === State.END) {
       const { translationY, velocityY } = event.nativeEvent;
       
       // If swiping up with enough velocity, maximize
       if (velocityY < -500) {
         if (activeTab === 'mining') {
-          runOnJS(animateToState)('mining-maximized');
+          animateToState('mining-maximized');
         } else {
-          runOnJS(animateToState)('full-maximized');
+          animateToState('full-maximized');
         }
       }
       // If swiping down with enough velocity, minimize
       else if (velocityY > 500) {
-        runOnJS(animateToState)('minimized');
+        animateToState('minimized');
       }
       // Otherwise, snap to current state
       else {
-        runOnJS(animateToState)(tabState);
+        animateToState(tabState);
       }
     }
   };
@@ -177,11 +172,6 @@ const BottomSheetTabs: React.FC<BottomSheetTabsProps> = ({ onMineBlock, t }) => 
     return content;
   };
 
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateY: translateY.value }],
-    };
-  });
 
   const renderMinimizedTabs = () => {
     const tabs = [
@@ -229,7 +219,9 @@ const BottomSheetTabs: React.FC<BottomSheetTabsProps> = ({ onMineBlock, t }) => 
         <Animated.View
           style={[
             styles.bottomSheet,
-            animatedStyle,
+            {
+              transform: [{ translateY }],
+            },
           ]}
         >
           {/* Handle bar */}
