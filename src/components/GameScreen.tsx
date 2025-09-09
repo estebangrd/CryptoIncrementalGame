@@ -166,20 +166,6 @@ const GameScreen: React.FC = () => {
               onMineBlock={handleMineBlock} 
               t={t} 
             />
-            
-            <View style={styles.progressInfo}>
-              <Text style={styles.progressText}>
-                Blocks mined: {gameState.blocksMined}
-              </Text>
-              <Text style={styles.progressText}>
-                Next unlock: Market (15 blocks)
-              </Text>
-              {gameState.unlockedTabs.market && (
-                <Text style={styles.unlockedText}>
-                  ✅ Market unlocked! You can now sell your coins for real money.
-                </Text>
-              )}
-            </View>
           </View>
         ) : activeTab === 'hardware' ? (
           <HardwareList />
@@ -302,23 +288,6 @@ const styles = StyleSheet.create({
   },
   miningContent: {
     padding: 20,
-  },
-  progressInfo: {
-    backgroundColor: '#2a2a2a',
-    padding: 15,
-    borderRadius: 8,
-    width: '100%',
-  },
-  progressText: {
-    fontSize: 16,
-    color: '#fff',
-    marginBottom: 8,
-  },
-  unlockedText: {
-    fontSize: 16,
-    color: '#00ff88',
-    fontWeight: 'bold',
-    marginTop: 10,
   },
 });
 
