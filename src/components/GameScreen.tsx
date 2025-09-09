@@ -4,23 +4,16 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  ScrollView,
   Alert,
 } from 'react-native';
 import { useGame } from '../contexts/GameContext';
 import { formatNumber } from '../utils/gameLogic';
 import { clearGameData } from '../utils/storage';
-import HardwareList from './HardwareList';
-import UpgradeList from './UpgradeList';
-import MarketScreen from './MarketScreen';
-import PrestigeScreen from './PrestigeScreen';
-import { BlockStatus } from './BlockStatus';
-
+import BottomSheetTabs from './BottomSheetTabs';
 import SettingsModal from './SettingsModal';
 
 const GameScreen: React.FC = () => {
   const { gameState, dispatch, t } = useGame();
-  const [activeTab, setActiveTab] = useState<'mining' | 'hardware' | 'upgrades' | 'market' | 'prestige'>('mining');
   const [showSettings, setShowSettings] = useState(false);
 
   const handleMineBlock = () => {
@@ -96,87 +89,8 @@ const GameScreen: React.FC = () => {
       </View>
 
 
-      {/* Tab Navigation */}
-      <View style={styles.tabContainer}>
-        {/* Mining Tab - Always visible */}
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'mining' && styles.activeTab]}
-          onPress={() => setActiveTab('mining')}
-        >
-          <Text style={[styles.tabText, activeTab === 'mining' && styles.activeTabText]}>
-            ⛏️ Mining
-          </Text>
-        </TouchableOpacity>
-        
-        {/* Market Tab - Unlocked after mining blocks */}
-        {gameState.unlockedTabs.market && (
-          <TouchableOpacity
-            style={[styles.tab, activeTab === 'market' && styles.activeTab]}
-            onPress={() => setActiveTab('market')}
-          >
-            <Text style={[styles.tabText, activeTab === 'market' && styles.activeTabText]}>
-              📈 {t('game.market')}
-            </Text>
-          </TouchableOpacity>
-        )}
-        
-        {/* Hardware Tab - Unlocked after earning money */}
-        {gameState.unlockedTabs.hardware && (
-          <TouchableOpacity
-            style={[styles.tab, activeTab === 'hardware' && styles.activeTab]}
-            onPress={() => setActiveTab('hardware')}
-          >
-            <Text style={[styles.tabText, activeTab === 'hardware' && styles.activeTabText]}>
-              💻 {t('ui.hardware')}
-            </Text>
-          </TouchableOpacity>
-        )}
-        
-        {/* Upgrades Tab - Unlocked after buying hardware */}
-        {gameState.unlockedTabs.upgrades && (
-          <TouchableOpacity
-            style={[styles.tab, activeTab === 'upgrades' && styles.activeTab]}
-            onPress={() => setActiveTab('upgrades')}
-          >
-            <Text style={[styles.tabText, activeTab === 'upgrades' && styles.activeTabText]}>
-              ⚡ {t('ui.upgrades')}
-            </Text>
-          </TouchableOpacity>
-        )}
-        
-        {/* Prestige Tab - Unlocked later */}
-        {gameState.unlockedTabs.prestige && (
-          <TouchableOpacity
-            style={[styles.tab, activeTab === 'prestige' && styles.activeTab]}
-            onPress={() => setActiveTab('prestige')}
-          >
-            <Text style={[styles.tabText, activeTab === 'prestige' && styles.activeTabText]}>
-              🌟 {t('game.prestige')}
-            </Text>
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {/* Content Area */}
-      <ScrollView style={styles.contentArea} showsVerticalScrollIndicator={false}>
-        {activeTab === 'mining' ? (
-          <View style={styles.miningContent}>
-            <BlockStatus 
-              gameState={gameState} 
-              onMineBlock={handleMineBlock} 
-              t={t} 
-            />
-          </View>
-        ) : activeTab === 'hardware' ? (
-          <HardwareList />
-        ) : activeTab === 'upgrades' ? (
-          <UpgradeList />
-        ) : activeTab === 'market' ? (
-          <MarketScreen />
-        ) : (
-          <PrestigeScreen />
-        )}
-      </ScrollView>
+      {/* Bottom Sheet Tabs */}
+      <BottomSheetTabs onMineBlock={handleMineBlock} t={t} />
 
       {/* Settings Modal */}
       <SettingsModal
@@ -259,35 +173,6 @@ const styles = StyleSheet.create({
     color: '#00ff88',
     marginBottom: 2,
     fontWeight: 'bold',
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#2a2a2a',
-    paddingHorizontal: 5,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: '#00ff88',
-  },
-  tabText: {
-    fontSize: 14,
-    color: '#888',
-    fontWeight: '500',
-  },
-  activeTabText: {
-    color: '#00ff88',
-  },
-  contentArea: {
-    flex: 1,
-    backgroundColor: '#1a1a1a',
-  },
-  miningContent: {
-    padding: 20,
   },
 });
 
