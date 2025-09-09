@@ -32,7 +32,7 @@ const BottomSheetTabs: React.FC<BottomSheetTabsProps> = ({ onMineBlock, t }) => 
   const [tabState, setTabState] = useState<TabState>('minimized');
   const [isScrolling, setIsScrolling] = useState(false);
   
-  const translateY = useRef(new Animated.Value(SCREEN_HEIGHT - 100)).current;
+  const translateY = useRef(new Animated.Value(SCREEN_HEIGHT - MINIMIZED_HEIGHT)).current;
   const panGestureRef = useRef<PanGestureHandler>(null);
   const scrollViewRef = useRef<ScrollView>(null);
 
