@@ -7,9 +7,8 @@ import {
   Dimensions,
   ScrollView,
   Animated,
-  PanGestureHandler,
-  State,
 } from 'react-native';
+import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import { useGame } from '../contexts/GameContext';
 import HardwareList from './HardwareList';
 import UpgradeList from './UpgradeList';
