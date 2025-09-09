@@ -69,6 +69,9 @@ const recalculateGameStats = (state: GameState): GameState => {
       }
     });
     totalProduction += production;
+    if (h.owned > 0) {
+      console.log('DEBUG: Hardware with owned > 0:', h.id, 'owned:', h.owned, 'baseProduction:', h.baseProduction, 'production:', production);
+    }
   });
   
   // Calculate total hash rate from hardware
@@ -338,6 +341,8 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     const interval = setInterval(() => {
       if (gameState.cryptoCoinsPerSecond > 0) {
+        console.log('DEBUG: Adding production, cryptoCoinsPerSecond:', gameState.cryptoCoinsPerSecond);
+        console.log('DEBUG: Hardware owned:', gameState.hardware.map(h => ({ id: h.id, owned: h.owned, baseProduction: h.baseProduction })));
         dispatch({ type: 'ADD_PRODUCTION' });
       }
     }, 1000);
