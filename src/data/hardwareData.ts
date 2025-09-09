@@ -14,7 +14,7 @@ export const hardwareProgression: Hardware[] = [
     blockReward: 50,
     miningSpeed: 0.1, // 0.1 blocks/sec (6/min)
     electricityCost: 0,
-    owned: 1, // Start with 1 manual miner
+    owned: 0, // Start with 0 manual miners (user must mine manually)
     costMultiplier: 1.15,
     icon: '👋',
     currencyId: 'cryptocoin',
