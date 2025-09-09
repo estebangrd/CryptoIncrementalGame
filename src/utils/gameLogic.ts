@@ -6,6 +6,9 @@ import {
   GENESIS_CONSTANTS 
 } from './blockLogic';
 import { getInitialMarketState } from './marketLogic';
+import { hardwareProgression } from '../data/hardwareData';
+import { initialUpgrades } from '../data/gameData';
+import { cryptocurrencies } from '../data/cryptocurrencies';
 
 export const calculateHardwareCost = (hardware: Hardware): number => {
   return Math.floor(hardware.baseCost * Math.pow(hardware.costMultiplier, hardware.owned));
@@ -184,10 +187,10 @@ export const getInitialGameState = (): GameState => {
     cryptoCoins: 0,
     cryptoCoinsPerSecond: 0,
     totalElectricityCost: 0,
-    cryptocurrencies: [],
+    cryptocurrencies: cryptocurrencies,
     selectedCurrency: null,
-    hardware: [],
-    upgrades: [],
+    hardware: hardwareProgression,
+    upgrades: initialUpgrades,
     lastSaveTime: Date.now(),
     totalClicks: 0,
     totalCryptoCoins: 0,
