@@ -16,7 +16,8 @@ import {
 } from '../utils/blockLogic';
 import { 
   calculateTotalElectricityCost,
-  calculateTotalMiningSpeed 
+  calculateTotalMiningSpeed,
+  calculateTotalProduction
 } from '../utils/gameLogic';
 import { 
   updateMarketState,
@@ -60,19 +61,8 @@ const GameContext = createContext<GameContextType | undefined>(undefined);
 
 // Helper function to recalculate all game stats
 const recalculateGameStats = (state: GameState): GameState => {
-  let totalProduction = 0;
-  state.hardware.forEach(h => {
-    let production = h.baseProduction * h.owned;
-    state.upgrades.forEach(upgrade => {
-      if (upgrade.purchased && upgrade.effect.type === 'production' && upgrade.effect.target === h.id) {
-        production *= upgrade.effect.value;
-      }
-    });
-    totalProduction += production;
-    if (h.owned > 0) {
-      console.log('DEBUG: Hardware with owned > 0:', h.id, 'owned:', h.owned, 'baseProduction:', h.baseProduction, 'production:', production);
-    }
-  });
+  // Calculate total production using the correct function
+  const totalProduction = calculateTotalProduction(state);
   
   // Calculate total hash rate from hardware
   const totalHashRate = calculateTotalHashRate(state);
@@ -81,7 +71,7 @@ const recalculateGameStats = (state: GameState): GameState => {
   const totalElectricityCost = calculateTotalElectricityCost(state.hardware);
   
   // Calculate net production (production - electricity cost)
-  const netProduction = Math.max(0, totalProduction * state.prestigeMultiplier - totalElectricityCost);
+  const netProduction = Math.max(0, totalProduction - totalElectricityCost);
   
   const updatedState = {
     ...state,
