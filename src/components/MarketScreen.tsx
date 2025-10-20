@@ -121,30 +121,6 @@ const MarketScreen: React.FC = () => {
 
     const moneyEarned = amount * price;
     
-    // Validar que el monto a recibir sea razonable
-    if (moneyEarned > 1000000) { // Más de $1M es sospechoso
-      Alert.alert(
-        'Warning',
-        `This transaction seems unusually large ($${moneyEarned.toFixed(2)}). Are you sure?`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Sell Anyway',
-            style: 'destructive',
-            onPress: () => {
-              dispatch({
-                type: 'SELL_COINS_FOR_MONEY',
-                payload: {
-                  amount: amount,
-                  price: price,
-                },
-              });
-            },
-          },
-        ]
-      );
-      return;
-    }
 
     Alert.alert(
       'Sell for Real Money',

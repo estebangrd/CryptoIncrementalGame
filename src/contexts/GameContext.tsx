@@ -227,8 +227,9 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       
       const moneyEarned = coinsToSell * action.payload.price;
       
-      // Validar que el monto no sea excesivamente grande (posible bug)
-      if (moneyEarned > 10000000) { // $10M como límite de seguridad
+      // Validar que el monto no sea excesivamente grande (posible bug de cálculo)
+      // Este límite previene errores numéricos o bugs que podrían generar valores anómalos
+      if (moneyEarned > 100000000) { // $100M como límite de seguridad extremo
         console.warn('Suspiciously large transaction amount:', moneyEarned);
         return state;
       }
