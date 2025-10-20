@@ -314,8 +314,67 @@ const MarketScreen: React.FC = () => {
                       priceHistory={priceHistories[getSelectedCurrency()!.id] || [1.0]}
                     />
                     
-                    {/* Exchange Section - Only for non-CryptoCoin currencies */}
-                    {crypto.id !== 'cryptocoin' && (
+                    {/* CryptoCoin Sell Section */}
+                    {crypto.id === 'cryptocoin' && (
+                      <>
+                        <Text style={styles.exchangeTitle}>💰 Sell Coins</Text>
+                        
+                        {/* Amount Selection */}
+                        <View style={styles.amountSection}>
+                          <View style={styles.sliderContainer}>
+                            <View
+                              ref={sliderRef}
+                              style={styles.sliderTrack}
+                              {...panResponder.panHandlers}
+                            >
+                              <View 
+                                style={[
+                                  styles.sliderFill, 
+                                  { width: `${amountPercent}%` }
+                                ]} 
+                              />
+                              <View
+                                style={[
+                                  styles.sliderThumb,
+                                  { left: `${amountPercent}%` }
+                                ]}
+                              >
+                                <Text style={styles.thumbLabel}>{amountPercent}%</Text>
+                              </View>
+                            </View>
+                            <View style={styles.sliderLabels}>
+                              <Text style={styles.sliderLabel}>1%</Text>
+                              <Text style={styles.sliderLabel}>100%</Text>
+                            </View>
+                          </View>
+                        </View>
+                        
+                        {/* Sell Preview */}
+                        {gameState.cryptoCoins > 0 && (
+                          <View style={styles.exchangePreview}>
+                            <Text style={styles.previewText}>
+                              You'll earn: ${((gameState.cryptoCoins * amountPercent) / 100 * getSelectedCurrency()!.currentValue).toFixed(2)}
+                            </Text>
+                            <Text style={styles.feeText}>
+                              Current price: ${getSelectedCurrency()!.currentValue.toFixed(4)} per coin
+                            </Text>
+                          </View>
+                        )}
+                        
+                        {/* Sell Button */}
+                        <View style={styles.buttonContainer}>
+                          <TouchableOpacity
+                            style={styles.sellButton}
+                            onPress={handleSellForMoney}
+                          >
+                            <Text style={styles.sellButtonText}>Sell for $</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </>
+                    )}
+                    
+                    {/* Exchange Section - Only for non-CryptoCoin currencies that are unlocked */}
+                    {crypto.id !== 'cryptocoin' && gameState.realMoney >= 100 && (
                       <>
                         <Text style={styles.exchangeTitle}>📊 Exchange</Text>
                         
