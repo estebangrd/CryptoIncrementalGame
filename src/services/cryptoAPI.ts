@@ -15,6 +15,8 @@ const COINGECKO_IDS: { [key: string]: string } = {
   ethereum: 'ethereum',
   dogecoin: 'dogecoin',
   cardano: 'cardano',
+  // CryptoCoin se basará en Litecoin para simulación
+  litecoin: 'litecoin',
 };
 
 // Precios de respaldo si la API falla
@@ -24,6 +26,7 @@ const FALLBACK_PRICES: { [key: string]: number } = {
   ethereum: 2500,
   dogecoin: 0.08,
   cardano: 0.45,
+  litecoin: 70, // Precio base para referencia de CryptoCoin
 };
 
 // Cache para evitar demasiadas llamadas a la API
@@ -40,11 +43,18 @@ export const fetchCryptoPrices = async (cryptocurrencies: Cryptocurrency[]): Pro
     // Filtrar solo las criptomonedas que tienen equivalente en CoinGecko (excluir cryptocoin)
     const realCryptos = cryptocurrencies.filter(crypto => crypto.id !== 'cryptocoin' && COINGECKO_IDS[crypto.id]);
     
-    if (realCryptos.length === 0) {
+    // También obtener Litecoin para simular CryptoCoin
+    const litecoinData = await fetchLitecoinPrice();
+    
+    if (realCryptos.length === 0 && !litecoinData) {
       return cryptocurrencies;
     }
 
-    const coinIds = realCryptos.map(crypto => COINGECKO_IDS[crypto.id]).join(',');
+    let coinIds = realCryptos.map(crypto => COINGECKO_IDS[crypto.id]).join(',');
+    if (litecoinData && !coinIds.includes('litecoin')) {
+      coinIds = coinIds ? `${coinIds},litecoin` : 'litecoin';
+    }
+    
     const url = `https://api.coingecko.com/api/v3/simple/price?ids=${coinIds}&vs_currencies=usd&include_24hr_change=true`;
     
     const response = await fetch(url);
@@ -59,8 +69,14 @@ export const fetchCryptoPrices = async (cryptocurrencies: Cryptocurrency[]): Pro
     // Actualizar las criptomonedas con los precios reales
     return cryptocurrencies.map(crypto => {
       if (crypto.id === 'cryptocoin') {
-        // CryptoCoin mantiene su valor base (1.0)
-        return crypto;
+        // Simular precio de CryptoCoin basado en Litecoin
+        const litecoinPrice = data.litecoin?.usd || litecoinData || FALLBACK_PRICES.litecoin;
+        const simulatedPrice = simulateCryptoCoinPrice(litecoinPrice, crypto.currentValue);
+        
+        return {
+          ...crypto,
+          currentValue: simulatedPrice,
+        };
       }
       
       const coinGeckoId = COINGECKO_IDS[crypto.id];
@@ -106,7 +122,12 @@ export const fetchCryptoPrices = async (cryptocurrencies: Cryptocurrency[]): Pro
     const now = Date.now();
     return cryptocurrencies.map(crypto => {
       if (crypto.id === 'cryptocoin') {
-        return crypto;
+        // Simular precio incluso en caso de error
+        const simulatedPrice = simulateCryptoCoinPrice(FALLBACK_PRICES.litecoin, crypto.currentValue);
+        return {
+          ...crypto,
+          currentValue: simulatedPrice,
+        };
       }
       
       const cached = priceCache[crypto.id];
@@ -123,6 +144,41 @@ export const fetchCryptoPrices = async (cryptocurrencies: Cryptocurrency[]): Pro
       };
     });
   }
+};
+
+// Función para obtener el precio de Litecoin (usado como referencia para CryptoCoin)
+const fetchLitecoinPrice = async (): Promise<number | null> => {
+  try {
+    const url = 'https://api.coingecko.com/api/v3/simple/price?ids=litecoin&vs_currencies=usd';
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      return null;
+    }
+    
+    const data = await response.json();
+    return data.litecoin?.usd || null;
+  } catch (error) {
+    return null;
+  }
+};
+
+// Algoritmo de simulación para CryptoCoin basado en Litecoin
+const simulateCryptoCoinPrice = (litecoinPrice: number, currentCryptoCoinPrice: number): number => {
+  // Factor base: CryptoCoin vale aproximadamente 1/70 del valor de Litecoin
+  const baseFactor = 1 / 70;
+  const targetPrice = litecoinPrice * baseFactor;
+  
+  // Agregar volatilidad controlada (±5%)
+  const volatility = 0.05;
+  const randomFactor = 1 + (Math.random() - 0.5) * 2 * volatility;
+  
+  // Suavizar la transición hacia el nuevo precio (80% nuevo, 20% anterior)
+  const smoothingFactor = 0.8;
+  const newPrice = targetPrice * randomFactor * smoothingFactor + currentCryptoCoinPrice * (1 - smoothingFactor);
+  
+  // Asegurar que el precio no sea negativo y tenga un mínimo razonable
+  return Math.max(0.01, newPrice);
 };
 
 /**

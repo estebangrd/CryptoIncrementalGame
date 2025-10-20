@@ -31,6 +31,7 @@ import {
 import { saveGameState, loadGameState, saveLanguage, loadLanguage } from '../utils/storage';
 import { translations } from '../data/translations';
 import { fetchCryptoPrices, shouldUpdatePrices } from '../services/cryptoAPI';
+import { initializePriceHistory, updateAllPriceHistory } from '../services/priceHistoryService';
 
 interface GameContextType {
   gameState: GameState;
@@ -385,6 +386,19 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return () => clearInterval(interval);
   }, []);
 
+  // Initialize price history when game loads
+  useEffect(() => {
+    const initializeHistory = async () => {
+      try {
+        await initializePriceHistory(gameState.cryptocurrencies);
+      } catch (error) {
+        console.warn('Failed to initialize price history:', error);
+      }
+    };
+    
+    initializeHistory();
+  }, []);
+
   // Update crypto prices when user enters market view
   useEffect(() => {
     const updateCryptoPrices = async () => {
@@ -395,6 +409,9 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (shouldUpdatePrices(lastUpdate) || lastUpdate === 0) {
         try {
           const updatedCryptos = await fetchCryptoPrices(gameState.cryptocurrencies);
+          
+          // Actualizar historial de precios
+          await updateAllPriceHistory(updatedCryptos);
           
           // Actualizar el estado con los nuevos precios
           dispatch({

@@ -52,6 +52,8 @@ export interface GameState {
   // Real money system
   realMoney: number; // Dollars earned from selling coins
   totalRealMoneyEarned: number;
+  // Price history system
+  priceHistory?: { [cryptoId: string]: { prices: number[]; lastUpdate: number } };
 }
 
 export interface Hardware {

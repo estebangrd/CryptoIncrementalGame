@@ -23,6 +23,7 @@ const MarketScreen: React.FC = () => {
   const { gameState, dispatch, t } = useGame();
   const [amountPercent, setAmountPercent] = useState(50); // 1-100
   const [isRefreshingPrices, setIsRefreshingPrices] = useState(false);
+  const [priceHistories, setPriceHistories] = useState<{ [key: string]: number[] }>({});
   const sliderRef = useRef<View>(null);
 
   const handleSelectCurrency = (currencyId: string) => {
@@ -42,7 +43,17 @@ const MarketScreen: React.FC = () => {
     setIsRefreshingPrices(true);
     try {
       const { fetchCryptoPrices } = await import('../services/cryptoAPI');
+      const { updateAllPriceHistory } = await import('../services/priceHistoryService');
+      
       const updatedCryptos = await fetchCryptoPrices(gameState.cryptocurrencies);
+      
+      // Actualizar historial de precios
+      await updateAllPriceHistory(updatedCryptos);
+      
+      // Recargar historiales para las monedas seleccionadas
+      if (gameState.selectedCurrency) {
+        await loadPriceHistory(gameState.selectedCurrency);
+      }
       
       dispatch({
         type: 'LOAD_GAME',
@@ -64,6 +75,45 @@ const MarketScreen: React.FC = () => {
     if (!gameState.selectedCurrency) return null;
     return gameState.cryptocurrencies.find(c => c.id === gameState.selectedCurrency);
   };
+
+  const loadPriceHistory = async (cryptoId: string) => {
+    try {
+      const { getPriceHistory } = await import('../services/priceHistoryService');
+      const history = await getPriceHistory(cryptoId);
+      setPriceHistories(prev => ({ ...prev, [cryptoId]: history }));
+    } catch (error) {
+      console.error('Error loading price history:', error);
+    }
+  };
+
+  // Cargar historial de precios cuando se selecciona una moneda
+  React.useEffect(() => {
+    if (gameState.selectedCurrency) {
+      loadPriceHistory(gameState.selectedCurrency);
+    }
+  }, [gameState.selectedCurrency]);
+
+  // Cargar historial inicial para todas las monedas
+  React.useEffect(() => {
+    const loadAllHistories = async () => {
+      try {
+        const { needsHistoryInitialization, initializePriceHistory } = await import('../services/priceHistoryService');
+        
+        if (await needsHistoryInitialization()) {
+          await initializePriceHistory(gameState.cryptocurrencies);
+        }
+        
+        // Cargar historial para cada moneda
+        for (const crypto of gameState.cryptocurrencies) {
+          await loadPriceHistory(crypto.id);
+        }
+      } catch (error) {
+        console.error('Error initializing price histories:', error);
+      }
+    };
+    
+    loadAllHistories();
+  }, []);
 
   const handleExchange = () => {
     const selectedCurrency = getSelectedCurrency();
@@ -250,7 +300,7 @@ const MarketScreen: React.FC = () => {
                     {/* Price Chart - Always show */}
                     <PriceChart
                       cryptocurrency={getSelectedCurrency()!}
-                      priceHistory={gameState.marketState?.priceHistory || [1.0]}
+                      priceHistory={priceHistories[getSelectedCurrency()!.id] || [1.0]}
                     />
                     
                     {/* Exchange Section - Only for non-CryptoCoin currencies */}
