@@ -22,6 +22,7 @@ import PriceChart from './PriceChart';
 const MarketScreen: React.FC = () => {
   const { gameState, dispatch, t } = useGame();
   const [amountPercent, setAmountPercent] = useState(50); // 1-100
+  const [isRefreshingPrices, setIsRefreshingPrices] = useState(false);
   const sliderRef = useRef<View>(null);
 
   const handleSelectCurrency = (currencyId: string) => {
@@ -32,6 +33,30 @@ const MarketScreen: React.FC = () => {
       dispatch({ type: 'SELECT_CURRENCY', payload: currencyId });
       // Reset slider to 50% when selecting a new currency
       setAmountPercent(50);
+    }
+  };
+
+  const handleRefreshPrices = async () => {
+    if (isRefreshingPrices) return;
+    
+    setIsRefreshingPrices(true);
+    try {
+      const { fetchCryptoPrices } = await import('../services/cryptoAPI');
+      const updatedCryptos = await fetchCryptoPrices(gameState.cryptocurrencies);
+      
+      dispatch({
+        type: 'LOAD_GAME',
+        payload: {
+          ...gameState,
+          cryptocurrencies: updatedCryptos,
+          marketUpdateTime: Date.now(),
+        }
+      });
+    } catch (error) {
+      console.warn('Failed to refresh prices:', error);
+      Alert.alert('Error', 'Failed to update prices. Please try again later.');
+    } finally {
+      setIsRefreshingPrices(false);
     }
   };
 
@@ -79,9 +104,47 @@ const MarketScreen: React.FC = () => {
     const amount = Math.floor((gameState.cryptoCoins * amountPercent) / 100);
     if (amount <= 0) return;
 
+    // Validar que el usuario tenga suficientes CryptoCoins
+    if (amount > gameState.cryptoCoins) {
+      Alert.alert('Error', 'Insufficient CryptoCoins to sell');
+      return;
+    }
+
     // Use current market price for selling
     const price = selectedCurrency.currentValue;
+    
+    // Validación adicional para evitar valores anómalos
+    if (price <= 0 || !isFinite(price)) {
+      Alert.alert('Error', 'Invalid price data');
+      return;
+    }
+
     const moneyEarned = amount * price;
+    
+    // Validar que el monto a recibir sea razonable
+    if (moneyEarned > 1000000) { // Más de $1M es sospechoso
+      Alert.alert(
+        'Warning',
+        `This transaction seems unusually large ($${moneyEarned.toFixed(2)}). Are you sure?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Sell Anyway',
+            style: 'destructive',
+            onPress: () => {
+              dispatch({
+                type: 'SELL_COINS_FOR_MONEY',
+                payload: {
+                  amount: amount,
+                  price: price,
+                },
+              });
+            },
+          },
+        ]
+      );
+      return;
+    }
 
     Alert.alert(
       'Sell for Real Money',
@@ -155,6 +218,18 @@ const MarketScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      <View style={styles.headerContainer}>
+        <Text style={styles.headerTitle}>📈 Crypto Market</Text>
+        <TouchableOpacity
+          style={[styles.refreshButton, isRefreshingPrices && styles.refreshButtonDisabled]}
+          onPress={handleRefreshPrices}
+          disabled={isRefreshingPrices}
+        >
+          <Text style={styles.refreshButtonText}>
+            {isRefreshingPrices ? '⟳' : '🔄'} Refresh
+          </Text>
+        </TouchableOpacity>
+      </View>
       <ScrollView style={styles.currencyList} showsVerticalScrollIndicator={false}>
         {(gameState.cryptocurrencies || []).map((crypto) => {
           const isSelected = crypto.id === gameState.selectedCurrency;
@@ -197,9 +272,9 @@ const MarketScreen: React.FC = () => {
                 {isSelected && (
                   <View style={styles.expandedSection}>
                     {/* Price Chart - Always show */}
-                    <PriceChart 
+                    <PriceChart
                       cryptocurrency={getSelectedCurrency()!}
-                      priceHistory={[1.0, 1.1, 0.95, 1.05, 1.2, 1.15, 1.25, 1.3, 1.28, 1.35, 1.4, 1.38, 1.42, 1.45, 1.43, 1.47, 1.5, 1.48, 1.52, 1.55, 1.53, 1.57, 1.6, 1.58]}
+                      priceHistory={gameState.marketState?.priceHistory || [1.0]}
                     />
                     
                     {/* Exchange Section - Only for non-CryptoCoin currencies */}
@@ -297,6 +372,31 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#1a1a1a',
     padding: 20,
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  refreshButton: {
+    backgroundColor: '#00ff88',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  refreshButtonDisabled: {
+    backgroundColor: '#666',
+  },
+  refreshButtonText: {
+    color: '#000',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
   currencyList: {
     flex: 1,

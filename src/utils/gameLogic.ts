@@ -67,9 +67,19 @@ export const calculateTotalProduction = (gameState: GameState): number => {
     // Calculate coins per second from mining
     const coinsPerSecond = miningSpeed * hardware.blockReward;
     totalProduction += coinsPerSecond;
+    
+    // Debug log for hardware with owned > 0
+    if (hardware.owned > 0) {
+      console.log(`DEBUG: Hardware ${hardware.id} has ${hardware.owned} owned, miningSpeed: ${miningSpeed}, blockReward: ${hardware.blockReward}, coinsPerSecond: ${coinsPerSecond}`);
+    }
   });
   
-  return totalProduction * gameState.prestigeMultiplier;
+  const finalProduction = totalProduction * gameState.prestigeMultiplier;
+  if (finalProduction > 0) {
+    console.log(`DEBUG: Total production calculated: ${finalProduction}, prestigeMultiplier: ${gameState.prestigeMultiplier}`);
+  }
+  
+  return finalProduction;
 };
 
 
@@ -148,6 +158,7 @@ export const formatNumber = (num: number): string => {
 // Progressive unlock system
 export const UNLOCK_REQUIREMENTS = {
   MARKET_BLOCKS: 15, // Unlock market after mining 15 blocks
+  MARKET_COINS: 1000, // Unlock market after earning 1000 cryptocoins
   HARDWARE_MONEY: 200, // Unlock hardware after earning $200
   UPGRADES_HARDWARE: 1, // Unlock upgrades after buying 1 hardware
   PRESTIGE_LEVEL: 1, // Unlock prestige after reaching level 1
@@ -156,8 +167,17 @@ export const UNLOCK_REQUIREMENTS = {
 export const checkAndUpdateUnlocks = (gameState: GameState): GameState => {
   const newUnlockedTabs = { ...gameState.unlockedTabs };
   
-  // Unlock Market: After mining enough blocks
-  if (!newUnlockedTabs.market && gameState.blocksMined >= UNLOCK_REQUIREMENTS.MARKET_BLOCKS) {
+  // Debug logs for market unlock
+  console.log('DEBUG: checkAndUpdateUnlocks - Market unlock check');
+  console.log('DEBUG: blocksMined:', gameState.blocksMined, 'required:', UNLOCK_REQUIREMENTS.MARKET_BLOCKS);
+  console.log('DEBUG: cryptoCoins:', gameState.cryptoCoins, 'required:', UNLOCK_REQUIREMENTS.MARKET_COINS);
+  console.log('DEBUG: market currently unlocked:', newUnlockedTabs.market);
+  
+  // Unlock Market: After mining enough blocks AND earning enough cryptocoins
+  if (!newUnlockedTabs.market &&
+      gameState.blocksMined >= UNLOCK_REQUIREMENTS.MARKET_BLOCKS &&
+      gameState.cryptoCoins >= UNLOCK_REQUIREMENTS.MARKET_COINS) {
+    console.log('DEBUG: Market should be unlocked now!');
     newUnlockedTabs.market = true;
   }
   

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,9 +6,7 @@ import {
   StyleSheet,
   Dimensions,
   ScrollView,
-  Animated,
 } from 'react-native';
-import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import { useGame } from '../contexts/GameContext';
 import HardwareList from './HardwareList';
 import UpgradeList from './UpgradeList';
@@ -18,7 +16,6 @@ import { BlockStatus } from './BlockStatus';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-type TabState = 'minimized' | 'mining-maximized' | 'full-maximized';
 type ActiveTab = 'mining' | 'market' | 'hardware' | 'upgrades' | 'prestige';
 
 interface BottomSheetTabsProps {
@@ -29,150 +26,58 @@ interface BottomSheetTabsProps {
 const BottomSheetTabs: React.FC<BottomSheetTabsProps> = ({ onMineBlock, t }) => {
   const { gameState } = useGame();
   const [activeTab, setActiveTab] = useState<ActiveTab>('mining');
-  const [tabState, setTabState] = useState<TabState>('minimized');
-  const [isScrolling, setIsScrolling] = useState(false);
   
-  const translateY = useRef(new Animated.Value(SCREEN_HEIGHT - MINIMIZED_HEIGHT)).current;
-  const panGestureRef = useRef<PanGestureHandler>(null);
-  const scrollViewRef = useRef<ScrollView>(null);
-
-  const MINIMIZED_HEIGHT = 100;
-  const MINING_MAXIMIZED_HEIGHT = SCREEN_HEIGHT * 0.5;
-  const FULL_MAXIMIZED_HEIGHT = SCREEN_HEIGHT - 50;
-
-  const getTargetHeight = (state: TabState): number => {
-    switch (state) {
-      case 'minimized':
-        return SCREEN_HEIGHT - MINIMIZED_HEIGHT;
-      case 'mining-maximized':
-        return SCREEN_HEIGHT - MINING_MAXIMIZED_HEIGHT;
-      case 'full-maximized':
-        return SCREEN_HEIGHT - FULL_MAXIMIZED_HEIGHT;
-      default:
-        return SCREEN_HEIGHT - MINIMIZED_HEIGHT;
-    }
-  };
-
-  const animateToState = (newState: TabState) => {
-    const targetY = getTargetHeight(newState);
-    
-    Animated.spring(translateY, {
-      toValue: targetY,
-      useNativeDriver: true,
-      tension: 100,
-      friction: 8,
-    }).start();
-    
-    setTabState(newState);
-  };
+  // Debug log for tab state
+  React.useEffect(() => {
+    console.log('DEBUG: BottomSheetTabs - activeTab:', activeTab);
+    console.log('DEBUG: BottomSheetTabs - unlockedTabs:', gameState.unlockedTabs);
+  }, [activeTab, gameState.unlockedTabs]);
 
   const handleTabPress = (tab: ActiveTab) => {
     setActiveTab(tab);
-    
-    if (tab === 'mining') {
-      animateToState('mining-maximized');
-    } else {
-      animateToState('full-maximized');
-    }
-  };
-
-  const handleMinimize = () => {
-    animateToState('minimized');
-  };
-
-  const handleScrollBegin = () => {
-    setIsScrolling(true);
-  };
-
-  const handleScrollEnd = (event: any) => {
-    setIsScrolling(false);
-    const { contentOffset } = event.nativeEvent;
-    
-    // If scrolled to top and user continues scrolling up, minimize
-    if (contentOffset.y <= 0 && tabState !== 'minimized') {
-      // Small delay to allow for natural scroll behavior
-      setTimeout(() => {
-        if (tabState !== 'minimized') {
-          animateToState('minimized');
-        }
-      }, 100);
-    }
-  };
-
-  const onPanGestureEvent = Animated.event(
-    [{ nativeEvent: { translationY: translateY } }],
-    { useNativeDriver: true }
-  );
-
-  const onPanHandlerStateChange = (event: any) => {
-    if (event.nativeEvent.state === State.END) {
-      const { translationY, velocityY } = event.nativeEvent;
-      
-      // If swiping up with enough velocity, maximize
-      if (velocityY < -500) {
-        if (activeTab === 'mining') {
-          animateToState('mining-maximized');
-        } else {
-          animateToState('full-maximized');
-        }
-      }
-      // If swiping down with enough velocity, minimize
-      else if (velocityY > 500) {
-        animateToState('minimized');
-      }
-      // Otherwise, snap to current state
-      else {
-        animateToState(tabState);
-      }
-    }
   };
 
   const renderContent = () => {
-    const content = (() => {
-      switch (activeTab) {
-        case 'mining':
-          return (
-            <BlockStatus 
-              gameState={gameState} 
-              onMineBlock={onMineBlock} 
-              t={t} 
-            />
-          );
-        case 'hardware':
-          return <HardwareList />;
-        case 'upgrades':
-          return <UpgradeList />;
-        case 'market':
-          return <MarketScreen />;
-        case 'prestige':
-          return <PrestigeScreen />;
-        default:
-          return null;
-      }
-    })();
-
-    // For full-maximized tabs, wrap in ScrollView with gesture handling
-    if (tabState === 'full-maximized') {
-      return (
-        <ScrollView
-          ref={scrollViewRef}
-          style={styles.scrollContent}
-          onScrollBeginDrag={handleScrollBegin}
-          onScrollEndDrag={handleScrollEnd}
-          showsVerticalScrollIndicator={true}
-          bounces={true}
-        >
-          {content}
-        </ScrollView>
-      );
+    switch (activeTab) {
+      case 'mining':
+        return (
+          <BlockStatus 
+            gameState={gameState} 
+            onMineBlock={onMineBlock} 
+            t={t} 
+          />
+        );
+      case 'hardware':
+        return (
+          <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={true}>
+            <HardwareList />
+          </ScrollView>
+        );
+      case 'upgrades':
+        return (
+          <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={true}>
+            <UpgradeList />
+          </ScrollView>
+        );
+      case 'market':
+        return (
+          <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={true}>
+            <MarketScreen />
+          </ScrollView>
+        );
+      case 'prestige':
+        return (
+          <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={true}>
+            <PrestigeScreen />
+          </ScrollView>
+        );
+      default:
+        return null;
     }
-
-    // For mining-maximized, no scroll needed
-    return content;
   };
 
 
-  const renderMinimizedTabs = () => {
+  const renderTabs = () => {
     const tabs = [
       { id: 'mining' as ActiveTab, icon: '⛏️', label: 'Mining', unlocked: true },
       { id: 'market' as ActiveTab, icon: '📈', label: 'Market', unlocked: gameState.unlockedTabs.market },
@@ -182,13 +87,13 @@ const BottomSheetTabs: React.FC<BottomSheetTabsProps> = ({ onMineBlock, t }) => 
     ];
 
     return (
-      <View style={styles.minimizedTabsContainer}>
+      <View style={styles.tabsContainer}>
         {tabs.map((tab) => (
           <TouchableOpacity
             key={tab.id}
             style={[
-              styles.minimizedTab,
-              activeTab === tab.id && styles.activeMinimizedTab,
+              styles.tab,
+              activeTab === tab.id && styles.activeTab,
               !tab.unlocked && styles.lockedTab,
             ]}
             onPress={() => tab.unlocked && handleTabPress(tab.id)}
@@ -210,44 +115,26 @@ const BottomSheetTabs: React.FC<BottomSheetTabsProps> = ({ onMineBlock, t }) => 
 
   return (
     <View style={styles.container}>
-      <PanGestureHandler
-        ref={panGestureRef}
-        onGestureEvent={onPanGestureEvent}
-        onHandlerStateChange={onPanHandlerStateChange}
-      >
-        <Animated.View
-          style={[
-            styles.bottomSheet,
-            {
-              transform: [{ translateY }],
-            },
-          ]}
-        >
-          {/* Handle bar */}
-          <View style={styles.handleBar} />
-          
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>
-              {activeTab === 'mining' ? '⛏️ Mining' :
-               activeTab === 'market' ? '📈 Market' :
-               activeTab === 'hardware' ? '💻 Hardware' :
-               activeTab === 'upgrades' ? '⚡ Upgrades' :
-               '🌟 Prestige'}
-            </Text>
-            {tabState !== 'minimized' && (
-              <TouchableOpacity onPress={handleMinimize} style={styles.minimizeButton}>
-                <Text style={styles.minimizeButtonText}>−</Text>
-              </TouchableOpacity>
-            )}
-          </View>
+      <View style={styles.bottomSheet}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>
+            {activeTab === 'mining' ? '⛏️ Mining' :
+             activeTab === 'market' ? '📈 Market' :
+             activeTab === 'hardware' ? '💻 Hardware' :
+             activeTab === 'upgrades' ? '⚡ Upgrades' :
+             '🌟 Prestige'}
+          </Text>
+        </View>
 
-          {/* Content */}
-          <View style={styles.content}>
-            {tabState === 'minimized' ? renderMinimizedTabs() : renderContent()}
-          </View>
-        </Animated.View>
-      </PanGestureHandler>
+        {/* Tabs */}
+        {renderTabs()}
+
+        {/* Content */}
+        <View style={styles.content}>
+          {renderContent()}
+        </View>
+      </View>
     </View>
   );
 };
@@ -258,14 +145,11 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    top: 0,
+    top: SCREEN_HEIGHT * 0.5, // Start from middle of screen
     backgroundColor: 'transparent',
   },
   bottomSheet: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
+    flex: 1,
     backgroundColor: '#2a2a2a',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
@@ -278,21 +162,12 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
-  handleBar: {
-    width: 40,
-    height: 4,
-    backgroundColor: '#666',
-    borderRadius: 2,
-    alignSelf: 'center',
-    marginTop: 8,
-    marginBottom: 8,
-  },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingVertical: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#333',
   },
@@ -301,38 +176,21 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#00ff88',
   },
-  minimizeButton: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: '#444',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  minimizeButtonText: {
-    fontSize: 20,
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  content: {
-    flex: 1,
-  },
-  scrollContent: {
-    flex: 1,
-  },
-  minimizedTabsContainer: {
+  tabsContainer: {
     flexDirection: 'row',
     paddingHorizontal: 10,
-    paddingVertical: 15,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
   },
-  minimizedTab: {
+  tab: {
     flex: 1,
     alignItems: 'center',
     paddingVertical: 8,
     borderRadius: 8,
     marginHorizontal: 2,
   },
-  activeMinimizedTab: {
+  activeTab: {
     backgroundColor: '#00ff88',
   },
   lockedTab: {
@@ -353,6 +211,12 @@ const styles = StyleSheet.create({
   },
   lockedTabLabel: {
     color: '#666',
+  },
+  content: {
+    flex: 1,
+  },
+  scrollContent: {
+    flex: 1,
   },
 });
 

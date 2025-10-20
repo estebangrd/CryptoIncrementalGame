@@ -40,56 +40,58 @@ const GameScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>{t('game.title')}</Text>
-        <TouchableOpacity style={styles.settingsButton} onPress={() => setShowSettings(true)}>
-          <Text style={styles.settingsButtonText}>⚙️</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Main Content Area - Top Half */}
+      <View style={styles.mainContent}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>{t('game.title')}</Text>
+          <TouchableOpacity style={styles.settingsButton} onPress={() => setShowSettings(true)}>
+            <Text style={styles.settingsButtonText}>⚙️</Text>
+          </TouchableOpacity>
+        </View>
 
-      {/* Main Stats Area */}
-      <View style={styles.statsArea}>
-        <View style={styles.statsContent}>
-          <Text style={styles.cryptoCoinsText}>
-            {formatNumber(gameState.cryptoCoins)} {t('game.cryptoCoins')}
+        {/* Main Stats Area */}
+        <View style={styles.statsArea}>
+          <View style={styles.statsContent}>
+            <Text style={styles.cryptoCoinsText}>
+              {formatNumber(gameState.cryptoCoins)} {t('game.cryptoCoins')}
+            </Text>
+            <Text style={styles.productionText}>
+              {formatNumber(gameState.cryptoCoinsPerSecond)} {t('game.perSecond')}
+            </Text>
+            <Text style={styles.hashRateText}>
+              {formatNumber(gameState.totalHashRate)} H/s
+            </Text>
+            {gameState.totalElectricityCost > 0 && (
+              <Text style={styles.electricityText}>
+                -{formatNumber(gameState.totalElectricityCost)}/sec electricity
+              </Text>
+            )}
+          </View>
+        </View>
+
+        {/* Stats */}
+        <View style={styles.statsContainer}>
+          <Text style={styles.statsText}>
+            {t('game.totalCryptoCoins')}: {formatNumber(gameState.totalCryptoCoins)}
           </Text>
-          <Text style={styles.productionText}>
-            {formatNumber(gameState.cryptoCoinsPerSecond)} {t('game.perSecond')}
+          <Text style={styles.statsText}>
+            Blocks Mined: {formatNumber(gameState.blocksMined)}
           </Text>
-          <Text style={styles.hashRateText}>
-            {formatNumber(gameState.totalHashRate)} H/s
-          </Text>
-          {gameState.totalElectricityCost > 0 && (
-            <Text style={styles.electricityText}>
-              -{formatNumber(gameState.totalElectricityCost)}/sec electricity
+          {gameState.realMoney > 0 && (
+            <Text style={styles.moneyText}>
+              💰 Real Money: ${formatNumber(gameState.realMoney)}
+            </Text>
+          )}
+          {gameState.totalRealMoneyEarned > 0 && (
+            <Text style={styles.moneyText}>
+              💵 Total Earned: ${formatNumber(gameState.totalRealMoneyEarned)}
             </Text>
           )}
         </View>
       </View>
 
-      {/* Stats */}
-      <View style={styles.statsContainer}>
-        <Text style={styles.statsText}>
-          {t('game.totalCryptoCoins')}: {formatNumber(gameState.totalCryptoCoins)}
-        </Text>
-        <Text style={styles.statsText}>
-          Blocks Mined: {formatNumber(gameState.blocksMined)}
-        </Text>
-        {gameState.realMoney > 0 && (
-          <Text style={styles.moneyText}>
-            💰 Real Money: ${formatNumber(gameState.realMoney)}
-          </Text>
-        )}
-        {gameState.totalRealMoneyEarned > 0 && (
-          <Text style={styles.moneyText}>
-            💵 Total Earned: ${formatNumber(gameState.totalRealMoneyEarned)}
-          </Text>
-        )}
-      </View>
-
-
-      {/* Bottom Sheet Tabs */}
+      {/* Bottom Sheet Tabs - Bottom Half */}
       <BottomSheetTabs onMineBlock={handleMineBlock} t={t} />
 
       {/* Settings Modal */}
@@ -107,13 +109,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#1a1a1a',
   },
+  mainContent: {
+    height: '45%',
+    backgroundColor: '#1a1a1a',
+    paddingTop: 30,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 10,
+    paddingTop: 0,
+    paddingBottom: 5,
   },
   title: {
     fontSize: 24,
@@ -128,9 +135,10 @@ const styles = StyleSheet.create({
   },
   statsArea: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     alignItems: 'center',
     paddingHorizontal: 20,
+    paddingTop: 5,
   },
   statsContent: {
     alignItems: 'center',
@@ -140,7 +148,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#00ff88',
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: 5,
   },
   productionText: {
     fontSize: 18,
@@ -160,8 +168,9 @@ const styles = StyleSheet.create({
   },
   statsContainer: {
     paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingVertical: 6,
     backgroundColor: '#2a2a2a',
+    marginBottom: 0,
   },
   statsText: {
     fontSize: 14,

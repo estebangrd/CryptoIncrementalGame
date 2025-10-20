@@ -6,9 +6,11 @@ import {
   StyleSheet,
   Modal,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { useGame } from '../contexts/GameContext';
 import { languages } from '../data/translations';
+import { clearAllGameData } from '../utils/storage';
 
 interface SettingsModalProps {
   visible: boolean;
@@ -17,10 +19,32 @@ interface SettingsModalProps {
 }
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose, onReset }) => {
-  const { currentLanguage, setLanguage, t } = useGame();
+  const { currentLanguage, setLanguage, t, dispatch } = useGame();
 
   const handleLanguageChange = async (languageCode: string) => {
     await setLanguage(languageCode);
+  };
+
+  const handleClearSavedData = () => {
+    Alert.alert(
+      'Clear Saved Data',
+      'This will completely clear all saved game data and reset the app to a fresh state. Are you sure?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Clear Data',
+          style: 'destructive',
+          onPress: async () => {
+            await clearAllGameData();
+            dispatch({ type: 'RESET_GAME' });
+            Alert.alert('Success', 'All saved data has been cleared. The app will now start fresh.');
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -73,6 +97,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose, onReset
               
               <TouchableOpacity style={styles.dangerButton} onPress={onReset}>
                 <Text style={styles.dangerButtonText}>{t('ui.reset')}</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={[styles.dangerButton, { marginTop: 8 }]} onPress={handleClearSavedData}>
+                <Text style={styles.dangerButtonText}>Clear Saved Data (Debug)</Text>
               </TouchableOpacity>
             </View>
 

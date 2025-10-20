@@ -50,8 +50,19 @@ export const loadLanguage = async (): Promise<string> => {
 export const clearGameData = async (): Promise<void> => {
   try {
     await AsyncStorage.removeItem(GAME_STATE_KEY);
+    await AsyncStorage.removeItem(LANGUAGE_KEY);
+    console.log('Game data cleared successfully');
   } catch (error) {
     console.error('Error clearing game data:', error);
+  }
+};
+
+export const clearAllGameData = async (): Promise<void> => {
+  try {
+    await AsyncStorage.clear();
+    console.log('All game data cleared successfully');
+  } catch (error) {
+    console.error('Error clearing all game data:', error);
   }
 };
 

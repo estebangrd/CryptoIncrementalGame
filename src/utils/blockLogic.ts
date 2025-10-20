@@ -70,10 +70,21 @@ export const mineBlock = (gameState: GameState): GameState => {
   const newGameState = { ...gameState };
   const reward = calculateCurrentReward(gameState.blocksMined);
   
+  // Debug logs for mining
+  console.log('DEBUG: mineBlock - Before mining');
+  console.log('DEBUG: blocksMined:', gameState.blocksMined);
+  console.log('DEBUG: cryptoCoins:', gameState.cryptoCoins);
+  console.log('DEBUG: reward for this block:', reward);
+  
   // Mine the block
   newGameState.blocksMined += 1;
   newGameState.cryptoCoins += reward;
   newGameState.totalCryptoCoins += reward;
+  
+  // Debug logs after mining
+  console.log('DEBUG: mineBlock - After mining');
+  console.log('DEBUG: new blocksMined:', newGameState.blocksMined);
+  console.log('DEBUG: new cryptoCoins:', newGameState.cryptoCoins);
   
   // Update current reward
   newGameState.currentReward = calculateCurrentReward(newGameState.blocksMined);

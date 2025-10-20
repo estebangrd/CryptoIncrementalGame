@@ -30,6 +30,7 @@ import {
 } from '../utils/marketLogic';
 import { saveGameState, loadGameState, saveLanguage, loadLanguage } from '../utils/storage';
 import { translations } from '../data/translations';
+import { fetchCryptoPrices, shouldUpdatePrices } from '../services/cryptoAPI';
 
 interface GameContextType {
   gameState: GameState;
@@ -55,7 +56,8 @@ type GameAction =
   | { type: 'SELL_TO_NPC'; payload: { npcId: string; amount: number } }
   | { type: 'SELL_COINS_FOR_MONEY'; payload: { amount: number; price: number } }
   | { type: 'BUY_HARDWARE_WITH_MONEY'; payload: string }
-  | { type: 'SET_LANGUAGE'; payload: string };
+  | { type: 'SET_LANGUAGE'; payload: string }
+  | { type: 'UPDATE_CRYPTO_PRICES' };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
@@ -217,7 +219,19 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       const coinsToSell = Math.min(action.payload.amount, state.cryptoCoins);
       if (coinsToSell <= 0) return state;
       
+      // Validaciones adicionales de seguridad
+      if (!action.payload.price || action.payload.price <= 0 || !isFinite(action.payload.price)) {
+        console.warn('Invalid price in SELL_COINS_FOR_MONEY:', action.payload.price);
+        return state;
+      }
+      
       const moneyEarned = coinsToSell * action.payload.price;
+      
+      // Validar que el monto no sea excesivamente grande (posible bug)
+      if (moneyEarned > 10000000) { // $10M como límite de seguridad
+        console.warn('Suspiciously large transaction amount:', moneyEarned);
+        return state;
+      }
       
       return {
         ...state,
@@ -244,6 +258,9 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       };
       
       return recalculateGameStats(moneyNewState);
+    case 'UPDATE_CRYPTO_PRICES':
+      // Esta acción se manejará de forma asíncrona en el useEffect
+      return state;
     default:
       return state;
   }
@@ -365,6 +382,36 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }, 30000);
 
     return () => clearInterval(interval);
+  }, []);
+
+  // Update crypto prices when user enters market view
+  useEffect(() => {
+    const updateCryptoPrices = async () => {
+      const now = Date.now();
+      const lastUpdate = gameState.marketUpdateTime || 0;
+      
+      // Solo actualizar si ha pasado suficiente tiempo o si es la primera vez
+      if (shouldUpdatePrices(lastUpdate) || lastUpdate === 0) {
+        try {
+          const updatedCryptos = await fetchCryptoPrices(gameState.cryptocurrencies);
+          
+          // Actualizar el estado con los nuevos precios
+          dispatch({
+            type: 'LOAD_GAME',
+            payload: {
+              ...gameState,
+              cryptocurrencies: updatedCryptos,
+              marketUpdateTime: now,
+            }
+          });
+        } catch (error) {
+          console.warn('Failed to update crypto prices:', error);
+        }
+      }
+    };
+
+    // Llamar a la función cuando el componente se monte o cuando el usuario entre a la vista market
+    updateCryptoPrices();
   }, []);
 
   return (
