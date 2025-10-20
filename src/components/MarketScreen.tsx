@@ -40,6 +40,12 @@ const MarketScreen: React.FC = () => {
   const handleRefreshPrices = async () => {
     if (isRefreshingPrices) return;
     
+    // Verificar que las criptomonedas estén disponibles
+    if (!gameState.cryptocurrencies || gameState.cryptocurrencies.length === 0) {
+      Alert.alert('Error', 'Cryptocurrencies not loaded yet. Please try again.');
+      return;
+    }
+    
     setIsRefreshingPrices(true);
     try {
       const { fetchCryptoPrices } = await import('../services/cryptoAPI');
@@ -97,6 +103,11 @@ const MarketScreen: React.FC = () => {
   React.useEffect(() => {
     const loadAllHistories = async () => {
       try {
+        // Verificar que las criptomonedas estén disponibles
+        if (!gameState.cryptocurrencies || gameState.cryptocurrencies.length === 0) {
+          return;
+        }
+        
         const { needsHistoryInitialization, initializePriceHistory } = await import('../services/priceHistoryService');
         
         if (await needsHistoryInitialization()) {
@@ -113,7 +124,7 @@ const MarketScreen: React.FC = () => {
     };
     
     loadAllHistories();
-  }, []);
+  }, [gameState.cryptocurrencies]);
 
   const handleExchange = () => {
     const selectedCurrency = getSelectedCurrency();

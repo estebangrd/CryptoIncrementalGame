@@ -386,24 +386,32 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return () => clearInterval(interval);
   }, []);
 
-  // Initialize price history when game loads
+  // Initialize price history when game loads and cryptocurrencies are available
   useEffect(() => {
     const initializeHistory = async () => {
       try {
-        await initializePriceHistory(gameState.cryptocurrencies);
+        // Solo inicializar si hay criptomonedas disponibles
+        if (gameState.cryptocurrencies && gameState.cryptocurrencies.length > 0) {
+          await initializePriceHistory(gameState.cryptocurrencies);
+        }
       } catch (error) {
         console.warn('Failed to initialize price history:', error);
       }
     };
     
     initializeHistory();
-  }, []);
+  }, [gameState.cryptocurrencies]);
 
   // Update crypto prices when user enters market view
   useEffect(() => {
     const updateCryptoPrices = async () => {
       const now = Date.now();
       const lastUpdate = gameState.marketUpdateTime || 0;
+      
+      // Solo actualizar si hay criptomonedas disponibles
+      if (!gameState.cryptocurrencies || gameState.cryptocurrencies.length === 0) {
+        return;
+      }
       
       // Solo actualizar si ha pasado suficiente tiempo o si es la primera vez
       if (shouldUpdatePrices(lastUpdate) || lastUpdate === 0) {
@@ -430,7 +438,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     // Llamar a la función cuando el componente se monte o cuando el usuario entre a la vista market
     updateCryptoPrices();
-  }, []);
+  }, [gameState.cryptocurrencies]);
 
   return (
     <GameContext.Provider value={{ gameState, currentLanguage, t, dispatch, setLanguage }}>
