@@ -6,8 +6,8 @@ export const cryptocurrencies: Cryptocurrency[] = [
     name: 'CryptoCoin',
     nameKey: 'cryptocoin',
     symbol: 'CC',
-    baseValue: 1,
-    currentValue: 1,
+    baseValue: 0.1, // Reducido a 1/10 del valor original
+    currentValue: 0.1,
     volatility: 0.1, // 10% volatility
     color: '#00ff88',
     icon: '🪙',
@@ -17,8 +17,8 @@ export const cryptocurrencies: Cryptocurrency[] = [
     name: 'Bitcoin',
     nameKey: 'bitcoin',
     symbol: 'BTC',
-    baseValue: 100,
-    currentValue: 100,
+    baseValue: 10, // Reducido a 1/10 del valor original
+    currentValue: 10,
     volatility: 0.15, // 15% volatility
     color: '#f7931a',
     icon: '₿',
@@ -28,8 +28,8 @@ export const cryptocurrencies: Cryptocurrency[] = [
     name: 'Ethereum',
     nameKey: 'ethereum',
     symbol: 'ETH',
-    baseValue: 50,
-    currentValue: 50,
+    baseValue: 5, // Reducido a 1/10 del valor original
+    currentValue: 5,
     volatility: 0.2, // 20% volatility
     color: '#627eea',
     icon: 'Ξ',
@@ -39,8 +39,8 @@ export const cryptocurrencies: Cryptocurrency[] = [
     name: 'Dogecoin',
     nameKey: 'dogecoin',
     symbol: 'DOGE',
-    baseValue: 0.1,
-    currentValue: 0.1,
+    baseValue: 0.01, // Reducido a 1/10 del valor original
+    currentValue: 0.01,
     volatility: 0.3, // 30% volatility
     color: '#c2a633',
     icon: '🐕',
@@ -50,8 +50,8 @@ export const cryptocurrencies: Cryptocurrency[] = [
     name: 'Cardano',
     nameKey: 'cardano',
     symbol: 'ADA',
-    baseValue: 0.5,
-    currentValue: 0.5,
+    baseValue: 0.05, // Reducido a 1/10 del valor original
+    currentValue: 0.05,
     volatility: 0.25, // 25% volatility
     color: '#0033ad',
     icon: '₳',

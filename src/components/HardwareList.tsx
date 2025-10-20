@@ -29,7 +29,9 @@ const HardwareList: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {gameState.hardware.map((hardware) => {
+      {gameState.hardware
+        .filter((hardware) => hardware.id !== 'manual_mining') // Ocultar manual mining permanentemente
+        .map((hardware) => {
         const cost = Math.floor(hardware.baseCost * Math.pow(hardware.costMultiplier, hardware.owned));
         const canAfford = gameState.realMoney >= cost;
         const hashRate = calculateHardwareProduction(hardware, gameState.upgrades);

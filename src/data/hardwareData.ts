@@ -25,10 +25,10 @@ export const hardwareProgression: Hardware[] = [
   {
     id: 'basic_cpu',
     name: 'Basic CPU',
-    nameKey: 'hardware.basicCpu',
+    nameKey: 'hardware.basicCPU',
     description: 'Basic CPU mining setup',
-    descriptionKey: 'hardware.basicCpuDesc',
-    baseCost: 100,
+    descriptionKey: 'hardware.basicCPUDesc',
+    baseCost: 500, // Multiplicado x5
     baseProduction: 30, // 30 H/s
     blockReward: 45,
     miningSpeed: 0.3, // 0.3 blocks/sec (18/min)
@@ -44,10 +44,10 @@ export const hardwareProgression: Hardware[] = [
   {
     id: 'advanced_cpu',
     name: 'Advanced CPU',
-    nameKey: 'hardware.advancedCpu',
+    nameKey: 'hardware.advancedCPU',
     description: 'High-performance CPU mining',
-    descriptionKey: 'hardware.advancedCpuDesc',
-    baseCost: 500,
+    descriptionKey: 'hardware.advancedCPUDesc',
+    baseCost: 2500, // Multiplicado x5
     baseProduction: 80, // 80 H/s
     blockReward: 42,
     miningSpeed: 0.8, // 0.8 blocks/sec (48/min)
@@ -63,10 +63,10 @@ export const hardwareProgression: Hardware[] = [
   {
     id: 'basic_gpu',
     name: 'Basic GPU',
-    nameKey: 'hardware.basicGpu',
+    nameKey: 'hardware.basicGPU',
     description: 'Entry-level GPU mining rig',
-    descriptionKey: 'hardware.basicGpuDesc',
-    baseCost: 2000,
+    descriptionKey: 'hardware.basicGPUDesc',
+    baseCost: 10000, // Multiplicado x5
     baseProduction: 250, // 250 H/s
     blockReward: 38,
     miningSpeed: 2.5, // 2.5 blocks/sec (150/min)
@@ -82,10 +82,10 @@ export const hardwareProgression: Hardware[] = [
   {
     id: 'advanced_gpu',
     name: 'Advanced GPU',
-    nameKey: 'hardware.advancedGpu',
+    nameKey: 'hardware.advancedGPU',
     description: 'High-end GPU mining setup',
-    descriptionKey: 'hardware.advancedGpuDesc',
-    baseCost: 8000,
+    descriptionKey: 'hardware.advancedGPUDesc',
+    baseCost: 40000, // Multiplicado x5
     baseProduction: 600, // 600 H/s
     blockReward: 35,
     miningSpeed: 6, // 6 blocks/sec (360/min)
@@ -104,7 +104,7 @@ export const hardwareProgression: Hardware[] = [
     nameKey: 'hardware.asicGen1',
     description: 'First generation ASIC miner',
     descriptionKey: 'hardware.asicGen1Desc',
-    baseCost: 25000,
+    baseCost: 125000, // Multiplicado x5
     baseProduction: 1500, // 1500 H/s
     blockReward: 30,
     miningSpeed: 15, // 15 blocks/sec (900/min)
@@ -123,7 +123,7 @@ export const hardwareProgression: Hardware[] = [
     nameKey: 'hardware.asicGen2',
     description: 'Second generation ASIC miner',
     descriptionKey: 'hardware.asicGen2Desc',
-    baseCost: 75000,
+    baseCost: 375000, // Multiplicado x5
     baseProduction: 4000, // 4000 H/s
     blockReward: 25,
     miningSpeed: 40, // 40 blocks/sec (2400/min)
@@ -142,7 +142,7 @@ export const hardwareProgression: Hardware[] = [
     nameKey: 'hardware.asicGen3',
     description: 'Third generation ASIC miner',
     descriptionKey: 'hardware.asicGen3Desc',
-    baseCost: 200000,
+    baseCost: 1000000, // Multiplicado x5
     baseProduction: 10000, // 10000 H/s
     blockReward: 20,
     miningSpeed: 100, // 100 blocks/sec (6000/min)
