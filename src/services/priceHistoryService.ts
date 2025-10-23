@@ -18,10 +18,14 @@ const HISTORY_UPDATE_INTERVAL = 3600000; // 1 hora en milisegundos
  */
 export const initializePriceHistory = async (cryptocurrencies: Cryptocurrency[]): Promise<void> => {
   try {
+    console.log('[DEBUG] initializePriceHistory called with', cryptocurrencies.length, 'cryptocurrencies');
     const gameState = await loadGameState();
     
+    console.log('[DEBUG] loadGameState result:', gameState ? 'State loaded' : 'State is NULL');
+    
     if (!gameState) {
-      console.error('Game state is null, cannot initialize price history');
+      console.error('[ERROR] Game state is null, cannot initialize price history');
+      console.error('[ERROR] This usually happens when initializePriceHistory is called before the game state is saved');
       return;
     }
     

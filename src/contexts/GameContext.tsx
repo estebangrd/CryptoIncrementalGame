@@ -447,12 +447,21 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     const initializeHistory = async () => {
       try {
+        console.log('[DEBUG] GameContext: Attempting to initialize price history');
+        console.log('[DEBUG] GameContext: cryptocurrencies available:', gameState.cryptocurrencies?.length || 0);
+        
         // Solo inicializar si hay criptomonedas disponibles
         if (gameState.cryptocurrencies && gameState.cryptocurrencies.length > 0) {
+          // Primero guardar el estado actual antes de inicializar el historial
+          console.log('[DEBUG] GameContext: Saving game state before initializing price history');
+          await saveGameState(gameState);
+          
+          console.log('[DEBUG] GameContext: Now calling initializePriceHistory');
           await initializePriceHistory(gameState.cryptocurrencies);
+          console.log('[DEBUG] GameContext: Price history initialized successfully');
         }
       } catch (error) {
-        console.warn('Failed to initialize price history:', error);
+        console.warn('[WARN] Failed to initialize price history:', error);
       }
     };
     

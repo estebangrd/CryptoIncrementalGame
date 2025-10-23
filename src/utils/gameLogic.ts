@@ -203,8 +203,8 @@ export const formatNumber = (num: number): string => {
 
 // Progressive unlock system
 export const UNLOCK_REQUIREMENTS = {
-  MARKET_BLOCKS: 15, // Unlock market after mining 15 blocks
-  MARKET_COINS: 1000, // Unlock market after earning 1000 cryptocoins
+  MARKET_BLOCKS: 10, // Unlock market after mining 10 blocks
+  MARKET_COINS: 500, // Unlock market after earning 500 cryptocoins
   HARDWARE_MONEY: 200, // Unlock hardware after earning $200
   UPGRADES_HARDWARE: 1, // Unlock upgrades after buying 1 hardware
   PRESTIGE_LEVEL: 1, // Unlock prestige after reaching level 1
