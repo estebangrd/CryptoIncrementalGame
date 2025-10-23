@@ -6,8 +6,8 @@ export const cryptocurrencies: Cryptocurrency[] = [
     name: 'CryptoCoin',
     nameKey: 'cryptocoin',
     symbol: 'CC',
-    baseValue: 0.1, // Reducido a 1/10 del valor original
-    currentValue: 0.1,
+    baseValue: 0.001, // Dividido entre 100 del valor anterior (0.1 / 100)
+    currentValue: 0.001,
     volatility: 0.1, // 10% volatility
     color: '#00ff88',
     icon: '🪙',

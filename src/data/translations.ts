@@ -77,65 +77,85 @@ export const translations: Translation = {
   },
 
   // Hardware
+  'hardware.manualMining': {
+    en: 'Manual Mining',
+    es: 'Minería Manual',
+    pt: 'Mineração Manual',
+  },
+  'hardware.manualMiningDesc': {
+    en: 'Mine blocks manually with your own hands',
+    es: 'Mina bloques manualmente con tus propias manos',
+    pt: 'Minere blocos manualmente com suas próprias mãos',
+  },
   'hardware.basicCPU': {
     en: 'Basic CPU',
     es: 'CPU Básica',
     pt: 'CPU Básica',
   },
-  'hardware.basicCPU.description': {
+  'hardware.basicCPUDesc': {
     en: 'A basic computer processor for mining CryptoCoins',
     es: 'Un procesador básico para minar CryptoCoins',
     pt: 'Um processador básico para minerar CryptoCoins',
   },
-  'hardware.graphicsCard': {
-    en: 'Graphics Card',
-    es: 'Tarjeta Gráfica',
-    pt: 'Placa de Vídeo',
+  'hardware.advancedCPU': {
+    en: 'Advanced CPU',
+    es: 'CPU Avanzada',
+    pt: 'CPU Avançada',
   },
-  'hardware.graphicsCard.description': {
-    en: 'A powerful graphics card for faster mining',
-    es: 'Una tarjeta gráfica potente para minería más rápida',
-    pt: 'Uma placa de vídeo potente para mineração mais rápida',
+  'hardware.advancedCPUDesc': {
+    en: 'High-performance CPU mining',
+    es: 'Minería de CPU de alto rendimiento',
+    pt: 'Mineração de CPU de alto desempenho',
   },
-  'hardware.miningRig': {
-    en: 'Mining Rig',
-    es: 'Rig de Minería',
-    pt: 'Rig de Mineração',
+  'hardware.basicGPU': {
+    en: 'Basic GPU',
+    es: 'GPU Básica',
+    pt: 'GPU Básica',
   },
-  'hardware.miningRig.description': {
-    en: 'A dedicated mining setup with multiple GPUs',
-    es: 'Una configuración dedicada de minería con múltiples GPUs',
-    pt: 'Uma configuração dedicada de mineração com múltiplas GPUs',
+  'hardware.basicGPUDesc': {
+    en: 'Entry-level GPU mining rig',
+    es: 'Equipo de minería de GPU de nivel de entrada',
+    pt: 'Equipamento de mineração de GPU de nível básico',
   },
-  'hardware.dataCenter': {
-    en: 'Data Center',
-    es: 'Centro de Datos',
-    pt: 'Centro de Dados',
+  'hardware.advancedGPU': {
+    en: 'Advanced GPU',
+    es: 'GPU Avanzada',
+    pt: 'GPU Avançada',
   },
-  'hardware.dataCenter.description': {
-    en: 'A massive data center for industrial-scale mining',
-    es: 'Un centro de datos masivo para minería a escala industrial',
-    pt: 'Um centro de dados massivo para mineração em escala industrial',
+  'hardware.advancedGPUDesc': {
+    en: 'High-end GPU mining setup',
+    es: 'Configuración de minería de GPU de alta gama',
+    pt: 'Configuração de mineração de GPU de alta qualidade',
   },
-  'hardware.asicMiner': {
-    en: 'ASIC Miner',
-    es: 'Minero ASIC',
-    pt: 'Minerador ASIC',
+  'hardware.asicGen1': {
+    en: 'ASIC Gen 1',
+    es: 'ASIC Gen 1',
+    pt: 'ASIC Gen 1',
   },
-  'hardware.asicMiner.description': {
-    en: 'Application-Specific Integrated Circuit for maximum efficiency',
-    es: 'Circuito integrado específico para máxima eficiencia',
-    pt: 'Circuito integrado específico para máxima eficiência',
+  'hardware.asicGen1Desc': {
+    en: 'First generation ASIC miner',
+    es: 'Minero ASIC de primera generación',
+    pt: 'Minerador ASIC de primeira geração',
   },
-  'hardware.gpuFarm': {
-    en: 'GPU Farm',
-    es: 'Granja de GPUs',
-    pt: 'Fazenda de GPUs',
+  'hardware.asicGen2': {
+    en: 'ASIC Gen 2',
+    es: 'ASIC Gen 2',
+    pt: 'ASIC Gen 2',
   },
-  'hardware.gpuFarm.description': {
-    en: 'A farm of high-end graphics cards',
-    es: 'Una granja de tarjetas gráficas de alta gama',
-    pt: 'Uma fazenda de placas de vídeo de alta qualidade',
+  'hardware.asicGen2Desc': {
+    en: 'Second generation ASIC miner',
+    es: 'Minero ASIC de segunda generación',
+    pt: 'Minerador ASIC de segunda geração',
+  },
+  'hardware.asicGen3': {
+    en: 'ASIC Gen 3',
+    es: 'ASIC Gen 3',
+    pt: 'ASIC Gen 3',
+  },
+  'hardware.asicGen3Desc': {
+    en: 'Third generation ASIC miner',
+    es: 'Minero ASIC de tercera generación',
+    pt: 'Minerador ASIC de terceira geração',
   },
 
   // Upgrades
@@ -165,9 +185,19 @@ export const translations: Translation = {
     pt: 'Otimização de GPU',
   },
   'upgrade.gpuOptimization.description': {
-    en: 'Double GPU mining speed',
-    es: 'Duplica la velocidad de minería de la GPU',
-    pt: 'Dobra a velocidade de mineração da GPU',
+    en: 'Double GPU mining speed (Basic GPU and Advanced GPU)',
+    es: 'Duplica la velocidad de minería de GPU (GPU Básica y GPU Avanzada)',
+    pt: 'Dobra a velocidade de mineração de GPU (GPU Básica e GPU Avançada)',
+  },
+  'upgrade.asicOptimization': {
+    en: 'ASIC Optimization',
+    es: 'Optimización de ASIC',
+    pt: 'Otimização de ASIC',
+  },
+  'upgrade.asicOptimization.description': {
+    en: 'Double ASIC mining speed (All ASIC generations)',
+    es: 'Duplica la velocidad de minería de ASIC (Todas las generaciones de ASIC)',
+    pt: 'Dobra a velocidade de mineração de ASIC (Todas as gerações de ASIC)',
   },
 
   // UI Elements
@@ -180,6 +210,11 @@ export const translations: Translation = {
     en: 'Owned',
     es: 'Poseídos',
     pt: 'Possuídos',
+  },
+  'ui.locked': {
+    en: 'Locked',
+    es: 'Bloqueado',
+    pt: 'Bloqueado',
   },
   'ui.cost': {
     en: 'Cost',

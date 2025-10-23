@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
-import { GameState } from '../types/game';
+import { GameState, Cryptocurrency } from '../types/game';
 import { hardwareProgression } from '../data/hardwareData';
 import { initialUpgrades } from '../data/gameData';
 import { cryptocurrencies } from '../data/cryptocurrencies';
@@ -58,7 +58,8 @@ type GameAction =
   | { type: 'SELL_COINS_FOR_MONEY'; payload: { amount: number; price: number } }
   | { type: 'BUY_HARDWARE_WITH_MONEY'; payload: string }
   | { type: 'SET_LANGUAGE'; payload: string }
-  | { type: 'UPDATE_CRYPTO_PRICES' };
+  | { type: 'UPDATE_CRYPTO_PRICES' }
+  | { type: 'UPDATE_CRYPTOCURRENCY_PRICES'; payload: Cryptocurrency[] };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
@@ -115,22 +116,49 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       if (upgradeIndex === -1) return state;
       
       const upgrade = state.upgrades[upgradeIndex];
-      if (upgrade.purchased || state.cryptoCoins < upgrade.cost) return state;
+      // Upgrades now cost real money ($) instead of CryptoCoins
+      if (upgrade.purchased || state.realMoney < upgrade.cost) return state;
       
       const newUpgrades = [...state.upgrades];
       newUpgrades[upgradeIndex] = { ...upgrade, purchased: true };
       
       const updatedState = {
         ...state,
-        cryptoCoins: state.cryptoCoins - upgrade.cost,
+        realMoney: state.realMoney - upgrade.cost,
         upgrades: newUpgrades,
       };
       
       return recalculateGameStats(updatedState);
     case 'LOAD_GAME':
+      // Migrate old hardware keys to new format
+      const migratedHardware = action.payload.hardware?.map(hw => {
+        // Create a mapping of old keys to new keys
+        const keyMigrations: { [key: string]: { nameKey: string; descriptionKey: string } } = {
+          'manual_mining': { nameKey: 'hardware.manualMining', descriptionKey: 'hardware.manualMiningDesc' },
+          'basic_cpu': { nameKey: 'hardware.basicCPU', descriptionKey: 'hardware.basicCPUDesc' },
+          'advanced_cpu': { nameKey: 'hardware.advancedCPU', descriptionKey: 'hardware.advancedCPUDesc' },
+          'basic_gpu': { nameKey: 'hardware.basicGPU', descriptionKey: 'hardware.basicGPUDesc' },
+          'advanced_gpu': { nameKey: 'hardware.advancedGPU', descriptionKey: 'hardware.advancedGPUDesc' },
+          'asic_gen1': { nameKey: 'hardware.asicGen1', descriptionKey: 'hardware.asicGen1Desc' },
+          'asic_gen2': { nameKey: 'hardware.asicGen2', descriptionKey: 'hardware.asicGen2Desc' },
+          'asic_gen3': { nameKey: 'hardware.asicGen3', descriptionKey: 'hardware.asicGen3Desc' },
+        };
+        
+        const migration = keyMigrations[hw.id];
+        if (migration) {
+          return {
+            ...hw,
+            nameKey: migration.nameKey,
+            descriptionKey: migration.descriptionKey,
+          };
+        }
+        return hw;
+      }) || hardwareProgression;
+      
       // Ensure cryptocurrencies are initialized when loading old saves
       const loadedState = {
         ...action.payload,
+        hardware: migratedHardware,
         cryptocurrencies: action.payload.cryptocurrencies || cryptocurrencies,
         selectedCurrency: action.payload.selectedCurrency || null,
         marketUpdateTime: action.payload.marketUpdateTime || Date.now(),
@@ -171,11 +199,32 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     case 'UPDATE_OFFLINE_PROGRESS':
       return updateOfflineProgress(state);
     case 'ADD_PRODUCTION':
-      return {
-        ...state,
-        cryptoCoins: state.cryptoCoins + state.cryptoCoinsPerSecond,
-        totalCryptoCoins: state.totalCryptoCoins + state.cryptoCoinsPerSecond,
-      };
+      // Calculate how many blocks should be mined based on hardware mining speed
+      const totalMiningSpeed = calculateTotalMiningSpeed(state.hardware, state.upgrades);
+      const blocksToMine = Math.floor(totalMiningSpeed); // Mine complete blocks only
+      
+      if (blocksToMine > 0 && canMineBlock(state)) {
+        // Mine blocks and get rewards
+        let newState = { ...state };
+        let totalReward = 0;
+        
+        for (let i = 0; i < blocksToMine && canMineBlock(newState); i++) {
+          const reward = calculateCurrentReward(newState.blocksMined);
+          newState.blocksMined += 1;
+          totalReward += reward;
+          
+          // Update current reward and next halving after each block
+          newState.currentReward = calculateCurrentReward(newState.blocksMined);
+          newState.nextHalving = calculateNextHalving(newState.blocksMined);
+        }
+        
+        newState.cryptoCoins += totalReward;
+        newState.totalCryptoCoins += totalReward;
+        
+        return recalculateGameStats(newState);
+      }
+      
+      return state;
     case 'SELECT_CURRENCY':
       return {
         ...state,
@@ -235,12 +284,13 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         return state;
       }
       
-      return {
+      return recalculateGameStats({
         ...state,
         cryptoCoins: state.cryptoCoins - coinsToSell,
         realMoney: state.realMoney + moneyEarned,
         totalRealMoneyEarned: state.totalRealMoneyEarned + moneyEarned,
-      };
+      });
+    
     case 'BUY_HARDWARE_WITH_MONEY':
       const moneyHardwareIndex = state.hardware.findIndex(h => h.id === action.payload);
       if (moneyHardwareIndex === -1) return state;
@@ -263,6 +313,13 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     case 'UPDATE_CRYPTO_PRICES':
       // Esta acción se manejará de forma asíncrona en el useEffect
       return state;
+    case 'UPDATE_CRYPTOCURRENCY_PRICES':
+      // Solo actualizar los precios de las criptomonedas sin tocar el resto del estado
+      return {
+        ...state,
+        cryptocurrencies: action.payload,
+        marketUpdateTime: Date.now(),
+      };
     default:
       return state;
   }

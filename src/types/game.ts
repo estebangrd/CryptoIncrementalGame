@@ -84,12 +84,21 @@ export interface Upgrade {
   purchased: boolean;
   effect: UpgradeEffect;
   icon: string;
+  unlockCondition?: UpgradeUnlockCondition;
 }
 
 export interface UpgradeEffect {
   type: 'clickPower' | 'production' | 'costReduction' | 'prestige';
   value: number;
-  target?: string; // For upgrades that affect specific hardware
+  target?: string; // For upgrades that affect specific hardware (e.g., 'cpu', 'gpu', 'asic')
+}
+
+export interface UpgradeUnlockCondition {
+  type: 'always' | 'hardware' | 'blocks' | 'money';
+  hardwareId?: string;
+  minOwned?: number;
+  minBlocks?: number;
+  minMoney?: number;
 }
 
 export interface Language {

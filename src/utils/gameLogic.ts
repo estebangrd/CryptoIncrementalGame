@@ -19,8 +19,21 @@ export const calculateHardwareProduction = (hardware: Hardware, upgrades: Upgrad
   
   // Apply upgrades that affect this hardware
   upgrades.forEach(upgrade => {
-    if (upgrade.purchased && upgrade.effect.type === 'production' && upgrade.effect.target === hardware.id) {
-      production *= upgrade.effect.value;
+    if (upgrade.purchased && upgrade.effect.type === 'production') {
+      // Check if upgrade affects this specific hardware
+      if (upgrade.effect.target === hardware.id) {
+        production *= upgrade.effect.value;
+      }
+      // Check if upgrade affects hardware category (cpu, gpu, asic)
+      else if (upgrade.effect.target === 'cpu' && (hardware.id === 'basic_cpu' || hardware.id === 'advanced_cpu')) {
+        production *= upgrade.effect.value;
+      }
+      else if (upgrade.effect.target === 'gpu' && (hardware.id === 'basic_gpu' || hardware.id === 'advanced_gpu')) {
+        production *= upgrade.effect.value;
+      }
+      else if (upgrade.effect.target === 'asic' && (hardware.id === 'asic_gen1' || hardware.id === 'asic_gen2' || hardware.id === 'asic_gen3')) {
+        production *= upgrade.effect.value;
+      }
     }
   });
   
@@ -40,8 +53,21 @@ export const calculateHardwareMiningSpeed = (hardware: Hardware, upgrades: Upgra
   
   // Apply upgrades that affect this hardware
   upgrades.forEach(upgrade => {
-    if (upgrade.purchased && upgrade.effect.type === 'production' && upgrade.effect.target === hardware.id) {
-      speed *= upgrade.effect.value;
+    if (upgrade.purchased && upgrade.effect.type === 'production') {
+      // Check if upgrade affects this specific hardware
+      if (upgrade.effect.target === hardware.id) {
+        speed *= upgrade.effect.value;
+      }
+      // Check if upgrade affects hardware category (cpu, gpu, asic)
+      else if (upgrade.effect.target === 'cpu' && (hardware.id === 'basic_cpu' || hardware.id === 'advanced_cpu')) {
+        speed *= upgrade.effect.value;
+      }
+      else if (upgrade.effect.target === 'gpu' && (hardware.id === 'basic_gpu' || hardware.id === 'advanced_gpu')) {
+        speed *= upgrade.effect.value;
+      }
+      else if (upgrade.effect.target === 'asic' && (hardware.id === 'asic_gen1' || hardware.id === 'asic_gen2' || hardware.id === 'asic_gen3')) {
+        speed *= upgrade.effect.value;
+      }
     }
   });
   
@@ -56,13 +82,8 @@ export const calculateTotalProduction = (gameState: GameState): number => {
   let totalProduction = 0;
   
   gameState.hardware.forEach(hardware => {
-    // Calculate mining speed (blocks per second)
-    let miningSpeed = hardware.miningSpeed * hardware.owned;
-    gameState.upgrades.forEach(upgrade => {
-      if (upgrade.purchased && upgrade.effect.type === 'production' && upgrade.effect.target === hardware.id) {
-        miningSpeed *= upgrade.effect.value;
-      }
-    });
+    // Calculate mining speed (blocks per second) using the helper function
+    const miningSpeed = calculateHardwareMiningSpeed(hardware, gameState.upgrades);
     
     // Calculate coins per second from mining
     const coinsPerSecond = miningSpeed * hardware.blockReward;
@@ -91,11 +112,36 @@ export const canAffordHardware = (gameState: GameState, hardwareId: string): boo
   return gameState.cryptoCoins >= cost;
 };
 
+export const isUpgradeUnlocked = (gameState: GameState, upgrade: Upgrade): boolean => {
+  if (!upgrade.unlockCondition) return true;
+  
+  const condition = upgrade.unlockCondition;
+  
+  switch (condition.type) {
+    case 'always':
+      return true;
+    case 'hardware':
+      if (!condition.hardwareId || !condition.minOwned) return false;
+      const hardware = gameState.hardware.find(h => h.id === condition.hardwareId);
+      return hardware ? hardware.owned >= condition.minOwned : false;
+    case 'blocks':
+      return condition.minBlocks ? gameState.blocksMined >= condition.minBlocks : false;
+    case 'money':
+      return condition.minMoney ? gameState.realMoney >= condition.minMoney : false;
+    default:
+      return false;
+  }
+};
+
 export const canAffordUpgrade = (gameState: GameState, upgradeId: string): boolean => {
   const upgrade = gameState.upgrades.find(u => u.id === upgradeId);
   if (!upgrade || upgrade.purchased) return false;
   
-  return gameState.cryptoCoins >= upgrade.cost;
+  // Check if upgrade is unlocked
+  if (!isUpgradeUnlocked(gameState, upgrade)) return false;
+  
+  // Upgrades now cost real money ($) instead of CryptoCoins
+  return gameState.realMoney >= upgrade.cost;
 };
 
 export const buyHardware = (gameState: GameState, hardwareId: string): GameState => {
@@ -200,6 +246,23 @@ export const checkAndUpdateUnlocks = (gameState: GameState): GameState => {
     ...gameState,
     unlockedTabs: newUnlockedTabs,
   };
+};
+
+// Check if hardware is unlocked based on previous hardware ownership
+export const isHardwareUnlocked = (gameState: GameState, hardware: Hardware): boolean => {
+  // Manual mining is always hidden
+  if (hardware.id === 'manual_mining') return false;
+  
+  // First hardware (basic_cpu) is always unlocked
+  if (hardware.level === 2) return true;
+  
+  // For other hardware, check if previous level has at least 5 units
+  const previousLevel = hardware.level - 1;
+  const previousHardware = gameState.hardware.find(h => h.level === previousLevel);
+  
+  if (!previousHardware) return false;
+  
+  return previousHardware.owned >= 5;
 };
 
 export const getInitialGameState = (): GameState => {

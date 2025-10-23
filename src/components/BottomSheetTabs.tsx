@@ -62,7 +62,7 @@ const BottomSheetTabs: React.FC<BottomSheetTabsProps> = ({ onMineBlock, t }) => 
       case 'market':
         return (
           <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={true}>
-            <MarketScreen />
+            <MarketScreen isActive={activeTab === 'market'} />
           </ScrollView>
         );
       case 'prestige':

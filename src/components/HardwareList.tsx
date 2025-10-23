@@ -6,7 +6,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { useGame } from '../contexts/GameContext';
-import { formatNumber, calculateHardwareCost, canAffordHardware, calculateHardwareProduction, calculateHardwareElectricityCost, calculateHardwareMiningSpeed } from '../utils/gameLogic';
+import { formatNumber, calculateHardwareCost, canAffordHardware, calculateHardwareProduction, calculateHardwareElectricityCost, calculateHardwareMiningSpeed, isHardwareUnlocked } from '../utils/gameLogic';
 
 const HardwareList: React.FC = () => {
   const { gameState, dispatch, t } = useGame();
@@ -30,7 +30,7 @@ const HardwareList: React.FC = () => {
   return (
     <View style={styles.container}>
       {gameState.hardware
-        .filter((hardware) => hardware.id !== 'manual_mining') // Ocultar manual mining permanentemente
+        .filter((hardware) => isHardwareUnlocked(gameState, hardware)) // Solo mostrar hardware desbloqueado
         .map((hardware) => {
         const cost = Math.floor(hardware.baseCost * Math.pow(hardware.costMultiplier, hardware.owned));
         const canAfford = gameState.realMoney >= cost;

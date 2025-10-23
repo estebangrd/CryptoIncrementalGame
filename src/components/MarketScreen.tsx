@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -19,10 +19,13 @@ import {
 } from '../utils/exchangeLogic';
 import PriceChart from './PriceChart';
 
-const MarketScreen: React.FC = () => {
+interface MarketScreenProps {
+  isActive?: boolean;
+}
+
+const MarketScreen: React.FC<MarketScreenProps> = ({ isActive = true }) => {
   const { gameState, dispatch, t } = useGame();
   const [amountPercent, setAmountPercent] = useState(50); // 1-100
-  const [isRefreshingPrices, setIsRefreshingPrices] = useState(false);
   const [priceHistories, setPriceHistories] = useState<{ [key: string]: number[] }>({});
   const sliderRef = useRef<View>(null);
 
@@ -34,46 +37,6 @@ const MarketScreen: React.FC = () => {
       dispatch({ type: 'SELECT_CURRENCY', payload: currencyId });
       // Reset slider to 50% when selecting a new currency
       setAmountPercent(50);
-    }
-  };
-
-  const handleRefreshPrices = async () => {
-    if (isRefreshingPrices) return;
-    
-    // Verificar que las criptomonedas estén disponibles
-    if (!gameState.cryptocurrencies || gameState.cryptocurrencies.length === 0) {
-      Alert.alert('Error', 'Cryptocurrencies not loaded yet. Please try again.');
-      return;
-    }
-    
-    setIsRefreshingPrices(true);
-    try {
-      const { fetchCryptoPrices } = await import('../services/cryptoAPI');
-      const { updateAllPriceHistory } = await import('../services/priceHistoryService');
-      
-      const updatedCryptos = await fetchCryptoPrices(gameState.cryptocurrencies);
-      
-      // Actualizar historial de precios
-      await updateAllPriceHistory(updatedCryptos);
-      
-      // Recargar historiales para las monedas seleccionadas
-      if (gameState.selectedCurrency) {
-        await loadPriceHistory(gameState.selectedCurrency);
-      }
-      
-      dispatch({
-        type: 'LOAD_GAME',
-        payload: {
-          ...gameState,
-          cryptocurrencies: updatedCryptos,
-          marketUpdateTime: Date.now(),
-        }
-      });
-    } catch (error) {
-      console.warn('Failed to refresh prices:', error);
-      Alert.alert('Error', 'Failed to update prices. Please try again later.');
-    } finally {
-      setIsRefreshingPrices(false);
     }
   };
 
@@ -125,6 +88,50 @@ const MarketScreen: React.FC = () => {
     
     loadAllHistories();
   }, [gameState.cryptocurrencies]);
+
+  // Auto-refresh prices every second - ONLY when tab is active
+  React.useEffect(() => {
+    // Solo ejecutar si la pestaña está activa
+    if (!isActive) return;
+    
+    const refreshPrices = async () => {
+      // Verificar que las criptomonedas estén disponibles
+      if (!gameState.cryptocurrencies || gameState.cryptocurrencies.length === 0) {
+        return;
+      }
+      
+      try {
+        const { fetchCryptoPrices } = await import('../services/cryptoAPI');
+        const { updateAllPriceHistory } = await import('../services/priceHistoryService');
+        
+        const updatedCryptos = await fetchCryptoPrices(gameState.cryptocurrencies);
+        
+        // Actualizar historial de precios
+        await updateAllPriceHistory(updatedCryptos);
+        
+        // Recargar historiales para las monedas seleccionadas
+        if (gameState.selectedCurrency) {
+          await loadPriceHistory(gameState.selectedCurrency);
+        }
+        
+        // Usar la nueva acción que solo actualiza las criptomonedas
+        dispatch({
+          type: 'UPDATE_CRYPTOCURRENCY_PRICES',
+          payload: updatedCryptos,
+        });
+      } catch (error) {
+        console.warn('Failed to refresh prices:', error);
+      }
+    };
+
+    // Refresh immediately on mount
+    refreshPrices();
+
+    // Then refresh every second
+    const interval = setInterval(refreshPrices, 1000);
+
+    return () => clearInterval(interval);
+  }, [gameState.selectedCurrency, isActive]); // Agregar isActive como dependencia
 
   const handleExchange = () => {
     const selectedCurrency = getSelectedCurrency();
@@ -253,22 +260,20 @@ const MarketScreen: React.FC = () => {
     })
   ).current;
 
+  const isCryptoUnlocked = (cryptoId: string) => {
+    if (cryptoId === 'cryptocoin') {
+      return true;
+    }
+    const purchasedUpgrades = gameState.upgrades.filter(u => u.purchased).length;
+    return purchasedUpgrades >= 4;
+  };
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
         <Text style={styles.headerTitle}>📈 Crypto Market</Text>
-        <TouchableOpacity
-          style={[styles.refreshButton, isRefreshingPrices && styles.refreshButtonDisabled]}
-          onPress={handleRefreshPrices}
-          disabled={isRefreshingPrices}
-        >
-          <Text style={styles.refreshButtonText}>
-            {isRefreshingPrices ? '⟳' : '🔄'} Refresh
-          </Text>
-        </TouchableOpacity>
       </View>
       <ScrollView style={styles.currencyList} showsVerticalScrollIndicator={false}>
-        {(gameState.cryptocurrencies || []).map((crypto) => {
+        {(gameState.cryptocurrencies || []).filter(c => isCryptoUnlocked(c.id)).map((crypto) => {
           const isSelected = crypto.id === gameState.selectedCurrency;
           const priceChange = ((crypto.currentValue - crypto.baseValue) / crypto.baseValue) * 100;
           
@@ -373,8 +378,8 @@ const MarketScreen: React.FC = () => {
                       </>
                     )}
                     
-                    {/* Exchange Section - Only for non-CryptoCoin currencies that are unlocked */}
-                    {crypto.id !== 'cryptocoin' && gameState.realMoney >= 100 && (
+                    {/* Exchange Section - Only for non-CryptoCoin currencies */}
+                    {crypto.id !== 'cryptocoin' && (
                       <>
                         <Text style={styles.exchangeTitle}>📊 Exchange</Text>
                         
@@ -479,20 +484,8 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#fff',
-  },
-  refreshButton: {
-    backgroundColor: '#00ff88',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  refreshButtonDisabled: {
-    backgroundColor: '#666',
-  },
-  refreshButtonText: {
-    color: '#000',
-    fontWeight: 'bold',
-    fontSize: 14,
+    textAlign: 'center',
+    flex: 1,
   },
   currencyList: {
     flex: 1,

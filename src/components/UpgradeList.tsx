@@ -6,7 +6,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { useGame } from '../contexts/GameContext';
-import { formatNumber, canAffordUpgrade } from '../utils/gameLogic';
+import { formatNumber, canAffordUpgrade, isUpgradeUnlocked } from '../utils/gameLogic';
 
 const UpgradeList: React.FC = () => {
   const { gameState, dispatch, t } = useGame();
@@ -28,9 +28,12 @@ const UpgradeList: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {gameState.upgrades.map((upgrade) => {
+      {gameState.upgrades
+        .filter((upgrade) => isUpgradeUnlocked(gameState, upgrade) || upgrade.purchased)
+        .map((upgrade) => {
         const canAfford = canAffordUpgrade(gameState, upgrade.id);
         const isPurchased = upgrade.purchased;
+        const isUnlocked = isUpgradeUnlocked(gameState, upgrade);
         
         return (
           <View key={upgrade.id} style={styles.upgradeItem}>
@@ -46,7 +49,7 @@ const UpgradeList: React.FC = () => {
               <View style={styles.statRow}>
                 <Text style={styles.statLabel}>{t('ui.cost')}:</Text>
                 <Text style={[styles.statValue, !canAfford && !isPurchased && styles.cannotAfford]}>
-                  {formatNumber(upgrade.cost)} {t('game.cryptoCoins')}
+                  ${formatNumber(upgrade.cost)}
                 </Text>
               </View>
               {isPurchased && (
