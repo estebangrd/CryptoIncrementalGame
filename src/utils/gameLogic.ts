@@ -201,13 +201,15 @@ export const formatNumber = (num: number): string => {
   return (num / 1000000000000).toFixed(1) + 'T';
 };
 
+import { UNLOCK_CONFIG, HARDWARE_CONFIG } from '../config/balanceConfig';
+
 // Progressive unlock system
 export const UNLOCK_REQUIREMENTS = {
-  MARKET_BLOCKS: 10, // Unlock market after mining 10 blocks
-  MARKET_COINS: 500, // Unlock market after earning 500 cryptocoins
-  HARDWARE_MONEY: 200, // Unlock hardware after earning $200
-  UPGRADES_HARDWARE: 1, // Unlock upgrades after buying 1 hardware
-  PRESTIGE_LEVEL: 1, // Unlock prestige after reaching level 1
+  MARKET_BLOCKS: UNLOCK_CONFIG.market.requiredBlocks,
+  MARKET_COINS: UNLOCK_CONFIG.market.requiredCoins,
+  HARDWARE_MONEY: UNLOCK_CONFIG.hardware.requiredMoney,
+  UPGRADES_HARDWARE: UNLOCK_CONFIG.upgrades.requiredHardware,
+  PRESTIGE_LEVEL: UNLOCK_CONFIG.prestige.requiredLevel,
 };
 
 export const checkAndUpdateUnlocks = (gameState: GameState): GameState => {
@@ -256,13 +258,13 @@ export const isHardwareUnlocked = (gameState: GameState, hardware: Hardware): bo
   // First hardware (basic_cpu) is always unlocked
   if (hardware.level === 2) return true;
   
-  // For other hardware, check if previous level has at least 5 units
+  // For other hardware, check if previous level has required units
   const previousLevel = hardware.level - 1;
   const previousHardware = gameState.hardware.find(h => h.level === previousLevel);
   
   if (!previousHardware) return false;
   
-  return previousHardware.owned >= 5;
+  return previousHardware.owned >= HARDWARE_CONFIG.UNLOCK_REQUIREMENT;
 };
 
 export const getInitialGameState = (): GameState => {

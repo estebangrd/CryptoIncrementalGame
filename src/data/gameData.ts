@@ -1,4 +1,5 @@
 import { Hardware, Upgrade } from '../types/game';
+import { UPGRADE_CONFIG } from '../config/balanceConfig';
 
 export const initialHardware: Hardware[] = [
   {
@@ -88,11 +89,11 @@ export const initialUpgrades: Upgrade[] = [
     nameKey: 'upgrade.clickPower',
     description: 'Increase CryptoCoins per click by 50%',
     descriptionKey: 'upgrade.clickPower.description',
-    cost: 1000,
+    cost: UPGRADE_CONFIG.clickPower.cost,
     purchased: false,
     effect: {
       type: 'clickPower',
-      value: 1.5,
+      value: UPGRADE_CONFIG.clickPower.multiplier,
     },
     icon: 'mouse-pointer',
     unlockCondition: {
@@ -105,18 +106,18 @@ export const initialUpgrades: Upgrade[] = [
     nameKey: 'upgrade.cpuEfficiency',
     description: 'Double CPU mining speed (Basic CPU and Advanced CPU)',
     descriptionKey: 'upgrade.cpuEfficiency.description',
-    cost: 5000,
+    cost: UPGRADE_CONFIG.cpuEfficiency.cost,
     purchased: false,
     effect: {
       type: 'production',
-      value: 2,
+      value: UPGRADE_CONFIG.cpuEfficiency.multiplier,
       target: 'cpu',
     },
     icon: 'cpu',
     unlockCondition: {
       type: 'hardware',
-      hardwareId: 'advanced_cpu',
-      minOwned: 10,
+      hardwareId: UPGRADE_CONFIG.cpuEfficiency.unlockRequirement.hardwareId,
+      minOwned: UPGRADE_CONFIG.cpuEfficiency.unlockRequirement.minOwned,
     },
   },
   {
@@ -125,18 +126,18 @@ export const initialUpgrades: Upgrade[] = [
     nameKey: 'upgrade.gpuOptimization',
     description: 'Double GPU mining speed (Basic GPU and Advanced GPU)',
     descriptionKey: 'upgrade.gpuOptimization.description',
-    cost: 25000,
+    cost: UPGRADE_CONFIG.gpuOptimization.cost,
     purchased: false,
     effect: {
       type: 'production',
-      value: 2,
+      value: UPGRADE_CONFIG.gpuOptimization.multiplier,
       target: 'gpu',
     },
     icon: 'gpu',
     unlockCondition: {
       type: 'hardware',
-      hardwareId: 'advanced_gpu',
-      minOwned: 10,
+      hardwareId: UPGRADE_CONFIG.gpuOptimization.unlockRequirement.hardwareId,
+      minOwned: UPGRADE_CONFIG.gpuOptimization.unlockRequirement.minOwned,
     },
   },
   {
@@ -145,18 +146,18 @@ export const initialUpgrades: Upgrade[] = [
     nameKey: 'upgrade.asicOptimization',
     description: 'Double ASIC mining speed (All ASIC generations)',
     descriptionKey: 'upgrade.asicOptimization.description',
-    cost: 100000,
+    cost: UPGRADE_CONFIG.asicOptimization.cost,
     purchased: false,
     effect: {
       type: 'production',
-      value: 2,
+      value: UPGRADE_CONFIG.asicOptimization.multiplier,
       target: 'asic',
     },
     icon: 'chip',
     unlockCondition: {
       type: 'hardware',
-      hardwareId: 'asic_gen3',
-      minOwned: 10,
+      hardwareId: UPGRADE_CONFIG.asicOptimization.unlockRequirement.hardwareId,
+      minOwned: UPGRADE_CONFIG.asicOptimization.unlockRequirement.minOwned,
     },
   },
 ];

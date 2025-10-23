@@ -1,11 +1,12 @@
 import { GameState } from '../types/game';
+import { BLOCK_CONFIG } from '../config/balanceConfig';
 
 // Phase 1: Genesis - Block system constants
 export const GENESIS_CONSTANTS = {
-  TOTAL_BLOCKS: 210000, // Total blocks in Phase 1 (like Bitcoin)
-  INITIAL_REWARD: 50, // Initial block reward (like Bitcoin)
-  HALVING_INTERVAL: 21000, // Blocks between halvings (like Bitcoin)
-  INITIAL_DIFFICULTY: 1, // Starting difficulty
+  TOTAL_BLOCKS: BLOCK_CONFIG.TOTAL_BLOCKS,
+  INITIAL_REWARD: BLOCK_CONFIG.INITIAL_REWARD,
+  HALVING_INTERVAL: BLOCK_CONFIG.HALVING_INTERVAL,
+  INITIAL_DIFFICULTY: BLOCK_CONFIG.INITIAL_DIFFICULTY,
   DIFFICULTY_ADJUSTMENT_INTERVAL: 2016, // Blocks between difficulty adjustments
   TARGET_BLOCK_TIME: 600, // Target time per block in seconds (10 minutes like Bitcoin)
   MAX_COINS: 21000000, // Maximum coins that can ever exist (21M like Bitcoin)
