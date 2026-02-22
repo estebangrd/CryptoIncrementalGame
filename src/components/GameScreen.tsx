@@ -14,6 +14,7 @@ import BottomSheetTabs from './BottomSheetTabs';
 import SettingsModal from './SettingsModal';
 import AdBanner from './AdBanner';
 import RewardedAdButton from './RewardedAdButton';
+import IAPBoosterBadges from './IAPBoosterBadges';
 import { REMOVE_ADS_CONFIG } from '../config/iapConfig';
 
 const GameScreen: React.FC = () => {
@@ -94,6 +95,7 @@ const GameScreen: React.FC = () => {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>{t('game.title')}</Text>
+          <IAPBoosterBadges />
           <RewardedAdButton />
           {gameState.iapState.removeAdsPurchased && (
             <Animated.View style={[styles.adFreeBadge, { opacity: adFreeBadgeOpacity }]}>
