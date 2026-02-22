@@ -32,6 +32,7 @@ import { saveGameState, loadGameState, saveLanguage, loadLanguage } from '../uti
 import { translations } from '../data/translations';
 import { fetchCryptoPrices, shouldUpdatePrices } from '../services/cryptoAPI';
 import { initializePriceHistory, updateAllPriceHistory } from '../services/priceHistoryService';
+import { initializeAdMob, loadInterstitial, showInterstitialIfEligible } from '../services/AdMobService';
 import { BOOSTER_CONFIG, STARTER_PACK_REWARDS } from '../config/balanceConfig';
 import { IAP_PRODUCT_IDS } from '../config/iapConfig';
 import { PurchaseRecord } from '../types/game';
@@ -590,6 +591,11 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     achievements: [] as Achievement[],
   }));
 
+  const gameStateRef = React.useRef(gameState);
+  React.useEffect(() => {
+    gameStateRef.current = gameState;
+  }, [gameState]);
+
   // Debug log for initial state
   React.useEffect(() => {
     console.log('DEBUG: Initial game state loaded');
@@ -723,6 +729,33 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     
     initializeHistory();
   }, [gameState.cryptocurrencies]);
+
+  // Initialize AdMob on mount
+  useEffect(() => {
+    const initAds = async () => {
+      const success = await initializeAdMob();
+      if (success) {
+        loadInterstitial();
+        dispatch({ type: 'INITIALIZE_AD_SYSTEM' });
+      }
+    };
+    initAds();
+  }, []);
+
+  // Handle interstitial and ad boost check on app foreground
+  useEffect(() => {
+    const handleAdAppOpen = (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'active') {
+        dispatch({ type: 'CHECK_AD_BOOST_EXPIRATION' });
+        const shown = showInterstitialIfEligible(gameStateRef.current);
+        if (shown) {
+          dispatch({ type: 'UPDATE_INTERSTITIAL_TIME' });
+        }
+      }
+    };
+    const subscription = AppState.addEventListener('change', handleAdAppOpen);
+    return () => subscription.remove();
+  }, []);
 
   // Update crypto prices when user enters market view
   useEffect(() => {

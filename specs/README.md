@@ -11,16 +11,16 @@ Este directorio contiene todas las especificaciones técnicas exhaustivas (Level
 | [Block Mining System](game-mechanics/block-mining-system.md) | ✅ Implemented | Phase 1 | Critical | Sistema central de minado con halvings tipo Bitcoin |
 | [Hardware Progression](game-mechanics/hardware-progression.md) | ✅ Implemented | Phase 1 | Critical | 8 niveles de hardware con desbloqueo progresivo |
 | [Market System](game-mechanics/market-system.md) | ✅ Implemented | Phase 2 | High | Venta de CryptoCoins por dinero real con API |
-| [Prestige System](game-mechanics/prestige-system.md) | ✅ Implemented | Phase 2 | High | Sistema de reinicio con bonos permanentes |
+| [Prestige System](game-mechanics/prestige-system.md) | ⚠️ Partial | Phase 2 | High | Sistema de reinicio con bonos permanentes |
 
 ### 💰 Monetization (Monetización)
 
 | Spec | Estado | Fase | Prioridad | Descripción |
 |------|--------|------|-----------|-------------|
-| [Ad System](monetization/ad-system.md) | 📝 Planned | Phase 3 | Critical | AdMob integration (Banner, Rewarded, Interstitial) |
-| [IAP System](monetization/iap-system.md) | 📝 Planned | Phase 3 | Critical | In-App Purchases (Google Play + App Store) |
-| [Remove Ads Product](monetization/remove-ads-product.md) | 📝 Planned | Phase 3 | High | Producto $0.99 para remover anuncios |
-| [Boosters Catalog](monetization/boosters-catalog.md) | 📝 Planned | Phase 3 | High | Aceleradores y starter packs |
+| [Ad System](monetization/ad-system.md) | ✅ Implemented | Phase 3 | Critical | AdMob integration (Banner, Rewarded, Interstitial) |
+| [IAP System](monetization/iap-system.md) | ⚠️ Partial | Phase 3 | Critical | In-App Purchases (Google Play + App Store) |
+| [Remove Ads Product](monetization/remove-ads-product.md) | ⚠️ Partial | Phase 3 | High | Producto $0.99 para remover anuncios |
+| [Boosters Catalog](monetization/boosters-catalog.md) | ⚠️ Partial | Phase 3 | High | Aceleradores y starter packs |
 
 ### 💵 Economy (Economía)
 
@@ -44,13 +44,14 @@ Este directorio contiene todas las especificaciones técnicas exhaustivas (Level
 
 - **Total de Specs**: 11
 - **Implementadas**: 4 (36%)
-- **Documentadas**: 3 (27%)
-- **Planeadas**: 4 (36%)
+- **Parciales**: 4 (36%)
+- **Documentadas**: 2 (18%)
+- **Planeadas**: 1 (9%)
 
 ### Por Fase
 - **Phase 1 (Genesis)**: 2/2 implementadas ✅
-- **Phase 2 (Expansion)**: 2/2 implementadas ✅
-- **Phase 3 (Monetization)**: 0/5 implementadas 📝
+- **Phase 2 (Expansion)**: 1/2 implementadas ✅ (Prestige parcial ⚠️)
+- **Phase 3 (Monetization)**: 0/5 implementadas — 4/5 parciales ⚠️
 
 ## 🎯 Roadmap de Implementación
 
@@ -222,6 +223,6 @@ Para preguntas sobre estas specs, consulta:
 
 ---
 
-**Última actualización**: 2026-02-21
+**Última actualización**: 2026-02-22
 **Versión del proyecto**: 0.0.1 (Phase 1-2 Complete)
 **Próxima fase**: Phase 3 - Monetization

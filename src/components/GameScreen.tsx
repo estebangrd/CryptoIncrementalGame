@@ -11,6 +11,8 @@ import { formatNumber } from '../utils/gameLogic';
 import { clearGameData } from '../utils/storage';
 import BottomSheetTabs from './BottomSheetTabs';
 import SettingsModal from './SettingsModal';
+import AdBanner from './AdBanner';
+import RewardedAdButton from './RewardedAdButton';
 
 const GameScreen: React.FC = () => {
   const { gameState, dispatch, t } = useGame();
@@ -45,6 +47,7 @@ const GameScreen: React.FC = () => {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>{t('game.title')}</Text>
+          <RewardedAdButton />
           <TouchableOpacity style={styles.settingsButton} onPress={() => setShowSettings(true)}>
             <Text style={styles.settingsButtonText}>⚙️</Text>
           </TouchableOpacity>
@@ -100,6 +103,9 @@ const GameScreen: React.FC = () => {
         onClose={() => setShowSettings(false)}
         onReset={handleReset}
       />
+
+      {/* Ad Banner - bottom of screen */}
+      <AdBanner />
     </View>
   );
 };

@@ -95,11 +95,17 @@ export const calculateTotalProduction = (gameState: GameState): number => {
     }
   });
   
-  const finalProduction = totalProduction * gameState.prestigeMultiplier;
-  if (finalProduction > 0) {
-    console.log(`DEBUG: Total production calculated: ${finalProduction}, prestigeMultiplier: ${gameState.prestigeMultiplier}`);
+  let adBoostMultiplier = 1.0;
+  if (gameState.adBoost?.isActive && gameState.adBoost.expiresAt !== null) {
+    if (Date.now() < gameState.adBoost.expiresAt) {
+      adBoostMultiplier = BOOSTER_CONFIG.REWARDED_AD_BOOST.multiplier;
+    }
   }
-  
+  const finalProduction = totalProduction * gameState.prestigeMultiplier * adBoostMultiplier;
+  if (finalProduction > 0) {
+    console.log(`DEBUG: Total production calculated: ${finalProduction}, prestigeMultiplier: ${gameState.prestigeMultiplier}, adBoostMultiplier: ${adBoostMultiplier}`);
+  }
+
   return finalProduction;
 };
 
@@ -201,7 +207,7 @@ export const formatNumber = (num: number): string => {
   return (num / 1000000000000).toFixed(1) + 'T';
 };
 
-import { UNLOCK_CONFIG, HARDWARE_CONFIG } from '../config/balanceConfig';
+import { UNLOCK_CONFIG, HARDWARE_CONFIG, BOOSTER_CONFIG } from '../config/balanceConfig';
 
 // Progressive unlock system
 export const UNLOCK_REQUIREMENTS = {
