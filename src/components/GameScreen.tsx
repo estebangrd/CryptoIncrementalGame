@@ -16,10 +16,15 @@ import AdBanner from './AdBanner';
 import RewardedAdButton from './RewardedAdButton';
 import IAPBoosterBadges from './IAPBoosterBadges';
 import { REMOVE_ADS_CONFIG } from '../config/iapConfig';
+import AchievementToast from './AchievementToast';
+import { getNewlyUnlockedAchievements } from '../utils/achievementLogic';
+import { Achievement } from '../types/game';
 
 const GameScreen: React.FC = () => {
   const { gameState, dispatch, t } = useGame();
   const [showSettings, setShowSettings] = useState(false);
+  const [toastAchievement, setToastAchievement] = useState<Achievement | null>(null);
+  const prevAchievementsRef = useRef(gameState.achievements);
 
   // "Ad Free" badge — shown 10s after Remove Ads purchase
   const adFreeBadgeOpacity = useRef(new Animated.Value(0)).current;
@@ -34,6 +39,19 @@ const GameScreen: React.FC = () => {
     }
     prevRemoveAds.current = gameState.iapState.removeAdsPurchased;
   }, [gameState.iapState.removeAdsPurchased, adFreeBadgeOpacity]);
+
+  // Achievement toast detection
+  useEffect(() => {
+    const newlyUnlocked = getNewlyUnlockedAchievements(
+      prevAchievementsRef.current || [],
+      gameState.achievements || []
+    );
+    if (newlyUnlocked.length > 0) {
+      setToastAchievement(newlyUnlocked[0]);
+      dispatch({ type: 'APPLY_ACHIEVEMENT_REWARD', payload: newlyUnlocked[0].id });
+    }
+    prevAchievementsRef.current = gameState.achievements;
+  }, [gameState.achievements, dispatch]);
 
   // Promotion dialog trigger — after reaching interstitialThreshold
   const promoShownRef = useRef(false);
@@ -160,6 +178,13 @@ const GameScreen: React.FC = () => {
 
       {/* Ad Banner - bottom of screen */}
       <AdBanner />
+
+      {/* Achievement Toast */}
+      <AchievementToast
+        achievement={toastAchievement}
+        displayName={toastAchievement?.name || toastAchievement?.nameKey || ''}
+        onDismiss={() => setToastAchievement(null)}
+      />
     </View>
   );
 };

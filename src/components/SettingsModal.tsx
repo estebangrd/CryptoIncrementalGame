@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import { languages } from '../data/translations';
 import { clearAllGameData } from '../utils/storage';
 import { restorePurchases } from '../services/IAPService';
 import { IAP_PRODUCT_IDS } from '../config/iapConfig';
+import AchievementsScreen from './AchievementsScreen';
 
 interface SettingsModalProps {
   visible: boolean;
@@ -22,6 +23,7 @@ interface SettingsModalProps {
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose, onReset }) => {
   const { gameState, currentLanguage, setLanguage, t, dispatch } = useGame();
+  const [showAchievements, setShowAchievements] = useState(false);
 
   const handleLanguageChange = async (languageCode: string) => {
     await setLanguage(languageCode);
@@ -76,6 +78,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose, onReset
   };
 
   return (
+    <>
     <Modal
       visible={visible}
       animationType="slide"
@@ -134,6 +137,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose, onReset
               <TouchableOpacity style={[styles.actionButton, { marginTop: 8 }]} onPress={handleRestorePurchases}>
                 <Text style={styles.actionButtonText}>🔄 Restore Purchases</Text>
               </TouchableOpacity>
+
+              <TouchableOpacity style={[styles.actionButton, { marginTop: 8 }]} onPress={() => setShowAchievements(true)}>
+                <Text style={styles.actionButtonText}>🏆 Achievements</Text>
+              </TouchableOpacity>
             </View>
 
             {/* Ads & Purchases */}
@@ -162,8 +169,45 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose, onReset
         </View>
       </View>
     </Modal>
+
+    {/* Achievements Modal */}
+    <Modal visible={showAchievements} animationType="slide" onRequestClose={() => setShowAchievements(false)}>
+      <View style={achievementsModalStyles.container}>
+        <View style={achievementsModalStyles.header}>
+          <TouchableOpacity onPress={() => setShowAchievements(false)} style={achievementsModalStyles.closeButton}>
+            <Text style={achievementsModalStyles.closeButtonText}>✕</Text>
+          </TouchableOpacity>
+        </View>
+        <AchievementsScreen />
+      </View>
+    </Modal>
+    </>
   );
 };
+
+const achievementsModalStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#1a1a1a',
+    paddingTop: 50,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+  },
+  closeButton: {
+    marginRight: 12,
+    padding: 4,
+  },
+  closeButtonText: {
+    color: '#888',
+    fontSize: 20,
+  },
+});
 
 const styles = StyleSheet.create({
   modalOverlay: {

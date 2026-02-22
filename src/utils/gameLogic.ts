@@ -9,6 +9,7 @@ import { getInitialMarketState } from './marketLogic';
 import { hardwareProgression } from '../data/hardwareData';
 import { initialUpgrades } from '../data/gameData';
 import { cryptocurrencies } from '../data/cryptocurrencies';
+import { ALL_ACHIEVEMENTS } from '../data/achievements';
 
 export const calculateHardwareCost = (hardware: Hardware): number => {
   return Math.floor(hardware.baseCost * Math.pow(hardware.costMultiplier, hardware.owned));
@@ -356,5 +357,7 @@ export const getInitialGameState = (): GameState => {
     // Real money system
     realMoney: 0,
     totalRealMoneyEarned: 0,
+    // Achievements
+    achievements: ALL_ACHIEVEMENTS,
   } as GameState;
 };

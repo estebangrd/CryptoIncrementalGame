@@ -500,4 +500,198 @@ export const translations: Translation = {
     es: 'Ganar $1,000,000,000 en total',
     pt: 'Ganhar $1.000.000.000 no total',
   },
+
+  // Achievement names
+  'achievement.firstBlock': {
+    en: 'First Block',
+    es: 'Primer Bloque',
+    pt: 'Primeiro Bloco',
+  },
+  'achievement.firstBlockDesc': {
+    en: 'Mine your first block',
+    es: 'Mina tu primer bloque',
+    pt: 'Mine seu primeiro bloco',
+  },
+  'achievement.century': {
+    en: 'Century',
+    es: 'Centenario',
+    pt: 'Centenário',
+  },
+  'achievement.centuryDesc': {
+    en: 'Mine 100 blocks',
+    es: 'Mina 100 bloques',
+    pt: 'Mine 100 blocos',
+  },
+  'achievement.millennium': {
+    en: 'Millennium',
+    es: 'Milenio',
+    pt: 'Milênio',
+  },
+  'achievement.millenniumDesc': {
+    en: 'Mine 1,000 blocks',
+    es: 'Mina 1.000 bloques',
+    pt: 'Mine 1.000 blocos',
+  },
+  'achievement.epicMiner': {
+    en: 'Epic Miner',
+    es: 'Minero Épico',
+    pt: 'Minerador Épico',
+  },
+  'achievement.epicMinerDesc': {
+    en: 'Mine 100,000 blocks',
+    es: 'Mina 100.000 bloques',
+    pt: 'Mine 100.000 blocos',
+  },
+  'achievement.halvingSurvivor': {
+    en: 'Halving Survivor',
+    es: 'Sobreviviente del Halving',
+    pt: 'Sobrevivente do Halving',
+  },
+  'achievement.halvingSurvivorDesc': {
+    en: 'Experience your first halving event',
+    es: 'Experimenta tu primer evento de halving',
+    pt: 'Experiencie seu primeiro evento de halving',
+  },
+  'achievement.firstSteps': {
+    en: 'First Steps',
+    es: 'Primeros Pasos',
+    pt: 'Primeiros Passos',
+  },
+  'achievement.firstStepsDesc': {
+    en: 'Buy your first hardware unit',
+    es: 'Compra tu primera unidad de hardware',
+    pt: 'Compre sua primeira unidade de hardware',
+  },
+  'achievement.upgrader': {
+    en: 'Upgrader',
+    es: 'Mejorador',
+    pt: 'Atualizador',
+  },
+  'achievement.upgraderDesc': {
+    en: 'Own 10 units of any hardware',
+    es: 'Posee 10 unidades de cualquier hardware',
+    pt: 'Possua 10 unidades de qualquer hardware',
+  },
+  'achievement.hardwareCollector': {
+    en: 'Hardware Collector',
+    es: 'Coleccionista de Hardware',
+    pt: 'Colecionador de Hardware',
+  },
+  'achievement.hardwareCollectorDesc': {
+    en: 'Own at least 1 of every hardware type',
+    es: 'Posee al menos 1 de cada tipo de hardware',
+    pt: 'Possua pelo menos 1 de cada tipo de hardware',
+  },
+  'achievement.asicMaster': {
+    en: 'ASIC Master',
+    es: 'Maestro ASIC',
+    pt: 'Mestre ASIC',
+  },
+  'achievement.asicMasterDesc': {
+    en: 'Own 100 ASIC Gen 3 miners',
+    es: 'Posee 100 mineros ASIC Gen 3',
+    pt: 'Possua 100 mineradores ASIC Gen 3',
+  },
+  'achievement.firstSale': {
+    en: 'First Sale',
+    es: 'Primera Venta',
+    pt: 'Primeira Venda',
+  },
+  'achievement.firstSaleDesc': {
+    en: 'Sell CryptoCoins for real money',
+    es: 'Vende CryptoCoins por dinero real',
+    pt: 'Venda CryptoCoins por dinheiro real',
+  },
+  'achievement.millionaire': {
+    en: 'Millionaire',
+    es: 'Millonario',
+    pt: 'Milionário',
+  },
+  'achievement.millionaireDesc': {
+    en: 'Accumulate $1,000,000 real money',
+    es: 'Acumula $1.000.000 en dinero real',
+    pt: 'Acumule $1.000.000 em dinheiro real',
+  },
+  'achievement.marketTrader': {
+    en: 'Market Trader',
+    es: 'Comerciante del Mercado',
+    pt: 'Trader do Mercado',
+  },
+  'achievement.marketTraderDesc': {
+    en: 'Make 100 market transactions',
+    es: 'Realiza 100 transacciones de mercado',
+    pt: 'Faça 100 transações de mercado',
+  },
+  'achievement.rebirth': {
+    en: 'Rebirth',
+    es: 'Renacimiento',
+    pt: 'Renascimento',
+  },
+  'achievement.rebirthDesc': {
+    en: 'Complete your first prestige',
+    es: 'Completa tu primer prestigio',
+    pt: 'Complete seu primeiro prestígio',
+  },
+  'achievement.veteran': {
+    en: 'Veteran',
+    es: 'Veterano',
+    pt: 'Veterano',
+  },
+  'achievement.veteranDesc': {
+    en: 'Complete 10 prestiges',
+    es: 'Completa 10 prestigios',
+    pt: 'Complete 10 prestígios',
+  },
+  'achievement.eternal': {
+    en: 'Eternal',
+    es: 'Eterno',
+    pt: 'Eterno',
+  },
+  'achievement.eternalDesc': {
+    en: 'Complete 100 prestiges',
+    es: 'Completa 100 prestigios',
+    pt: 'Complete 100 prestígios',
+  },
+  'achievement.pizzaDay': {
+    en: 'Pizza Day',
+    es: 'Día de la Pizza',
+    pt: 'Dia da Pizza',
+  },
+  'achievement.pizzaDayDesc': {
+    en: 'A legendary Bitcoin moment...',
+    es: 'Un momento legendario de Bitcoin...',
+    pt: 'Um momento lendário do Bitcoin...',
+  },
+  'achievement.hodlMaster': {
+    en: 'HODL Master',
+    es: 'Maestro del HODL',
+    pt: 'Mestre do HODL',
+  },
+  'achievement.hodlMasterDesc': {
+    en: 'Patience is a virtue...',
+    es: 'La paciencia es una virtud...',
+    pt: 'A paciência é uma virtude...',
+  },
+  'achievement.speedRunnerEco': {
+    en: 'Speed Runner',
+    es: 'Corredor Veloz',
+    pt: 'Corredor Veloz',
+  },
+  'achievement.speedRunnerEcoDesc': {
+    en: 'A need for speed...',
+    es: 'Una necesidad de velocidad...',
+    pt: 'Uma necessidade de velocidade...',
+  },
+
+  // Achievement UI
+  'achievement.unlocked': {
+    en: 'Achievement Unlocked!',
+    es: '¡Logro Desbloqueado!',
+    pt: 'Conquista Desbloqueada!',
+  },
+  'achievement.complete': {
+    en: '% Complete',
+    es: '% Completado',
+    pt: '% Completo',
+  },
 };

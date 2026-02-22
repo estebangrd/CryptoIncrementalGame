@@ -52,6 +52,8 @@ import { purchaseUpdatedListener, purchaseErrorListener } from 'react-native-iap
 import { BOOSTER_CONFIG, STARTER_PACK_REWARDS } from '../config/balanceConfig';
 import { IAP_PRODUCT_IDS } from '../config/iapConfig';
 import { PurchaseRecord } from '../types/game';
+import { checkAchievements, mergeAchievements } from '../utils/achievementLogic';
+import { ALL_ACHIEVEMENTS } from '../data/achievements';
 
 interface GameContextType {
   gameState: GameState;
@@ -96,7 +98,10 @@ type GameAction =
   | { type: 'UPDATE_INTERSTITIAL_TIME' }
   | { type: 'INITIALIZE_AD_SYSTEM' }
   | { type: 'INCREMENT_INTERSTITIAL_COUNT' }
-  | { type: 'MARK_PROMO_SHOWN' };
+  | { type: 'MARK_PROMO_SHOWN' }
+  | { type: 'UNLOCK_ACHIEVEMENT'; payload: string }
+  | { type: 'CHECK_ACHIEVEMENTS' }
+  | { type: 'APPLY_ACHIEVEMENT_REWARD'; payload: string };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
@@ -227,6 +232,9 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           upgradesPurchasedThisRun: 0,
           playtimeThisRun: 0,
         },
+        achievements: action.payload.achievements
+          ? mergeAchievements(action.payload.achievements, ALL_ACHIEVEMENTS)
+          : ALL_ACHIEVEMENTS,
       };
       return recalculateGameStats(loadedState);
     }
@@ -655,6 +663,47 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         },
       };
 
+    case 'CHECK_ACHIEVEMENTS': {
+      const newAchievements = checkAchievements(state);
+      const hasChanges = newAchievements.some(
+        (newA, i) =>
+          newA.unlocked !== (state.achievements[i]?.unlocked) ||
+          newA.progress !== (state.achievements[i]?.progress)
+      );
+      if (!hasChanges) return state;
+      return { ...state, achievements: newAchievements };
+    }
+
+    case 'UNLOCK_ACHIEVEMENT': {
+      const achievements = state.achievements.map(a =>
+        a.id === action.payload && !a.unlocked
+          ? { ...a, unlocked: true, unlockedAt: Date.now() }
+          : a
+      );
+      return { ...state, achievements };
+    }
+
+    case 'APPLY_ACHIEVEMENT_REWARD': {
+      const achievement = state.achievements.find(a => a.id === action.payload);
+      if (!achievement?.reward) return state;
+      const reward = achievement.reward;
+      if (reward.type === 'coins' && reward.amount) {
+        return {
+          ...state,
+          cryptoCoins: state.cryptoCoins + reward.amount,
+          totalCryptoCoins: state.totalCryptoCoins + reward.amount,
+        };
+      }
+      if (reward.type === 'money' && reward.amount) {
+        return {
+          ...state,
+          realMoney: state.realMoney + reward.amount,
+          totalRealMoneyEarned: state.totalRealMoneyEarned + reward.amount,
+        };
+      }
+      return state;
+    }
+
     default:
       return state;
   }
@@ -698,7 +747,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       expiresAt: null,
       lastWatchedAt: null,
     } as AdBoostState,
-    achievements: [] as Achievement[],
+    achievements: ALL_ACHIEVEMENTS,
   }));
 
   const gameStateRef = React.useRef(gameState);
@@ -926,6 +975,20 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const subscription = AppState.addEventListener('change', handleAdAppOpen);
     return () => subscription.remove();
   }, []);
+
+  // Check achievements when relevant game state changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      dispatch({ type: 'CHECK_ACHIEVEMENTS' });
+    }, 500); // slight delay to batch changes
+    return () => clearTimeout(timer);
+  }, [
+    gameState.blocksMined,
+    gameState.totalRealMoneyEarned,
+    gameState.realMoney,
+    gameState.prestigeLevel,
+    gameState.hardware,
+  ]);
 
   // Update crypto prices when user enters market view
   useEffect(() => {

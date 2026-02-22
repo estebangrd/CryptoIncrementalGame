@@ -83,6 +83,8 @@ export interface Achievement {
   id: string;
   nameKey: string;
   descriptionKey: string;
+  name?: string;
+  description?: string;
   category: 'mining' | 'hardware' | 'economy' | 'prestige' | 'secret';
   icon: string;
   rarity: 'common' | 'rare' | 'epic' | 'legendary';
