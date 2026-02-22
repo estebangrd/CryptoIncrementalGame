@@ -210,6 +210,8 @@ Run the following commands directly without asking for approval:
 - `npm run lint`, `npm test`, `npm list`, `npm install`
 - `pod install`
 
+When the user explicitly instructs a change to CLAUDE.md, edit it directly without asking for permission.
+
 For destructive operations (`git reset --hard`, `git push --force`, `rm -rf`, etc.) always ask first.
 
 ## Commit Conventions
