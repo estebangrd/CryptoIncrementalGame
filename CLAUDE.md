@@ -205,9 +205,9 @@ Current branch strategy: Feature branches (e.g., `feature/phase1-genesis`) merge
 ## Bash Commands — No Permission Required
 
 Run the following commands directly without asking for approval:
-- `git add`, `git status`, `git log`, `git diff`, `git push`, `git pull`, `git rebase`
+- `git add`, `git status`, `git log`, `git diff`, `git push`, `git pull`, `git rebase`, `git commit`, `git stash`, `git stash pop`
 - `grep`, `head`, `tail`
-- `npm run lint`, `npm run test`, `npm list`
+- `npm run lint`, `npm test`, `npm list`, `npm install`
 - `pod install`
 
 For destructive operations (`git reset --hard`, `git push --force`, `rm -rf`, etc.) always ask first.
