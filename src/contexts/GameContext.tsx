@@ -72,7 +72,13 @@ type GameAction =
   | { type: 'PURCHASE_PERMANENT_MULTIPLIER'; payload: PurchaseRecord }
   | { type: 'PURCHASE_STARTER_PACK'; payload: { packType: 'small' | 'medium' | 'large' | 'mega'; record: PurchaseRecord } }
   | { type: 'RESTORE_PURCHASES'; payload: string[] }
-  | { type: 'SET_IAP_PURCHASING'; payload: boolean };
+  | { type: 'SET_IAP_PURCHASING'; payload: boolean }
+  | { type: 'ACTIVATE_AD_BOOST' }
+  | { type: 'EXPIRE_AD_BOOST' }
+  | { type: 'CHECK_AD_BOOST_EXPIRATION' }
+  | { type: 'UPDATE_INTERSTITIAL_TIME' }
+  | { type: 'INITIALIZE_AD_SYSTEM' }
+  | { type: 'INCREMENT_INTERSTITIAL_COUNT' };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
@@ -473,6 +479,69 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       return {
         ...state,
         iapState: { ...state.iapState, isPurchasing: action.payload },
+      };
+
+    case 'ACTIVATE_AD_BOOST': {
+      const now = Date.now();
+      return {
+        ...state,
+        adBoost: {
+          isActive: true,
+          activatedAt: now,
+          expiresAt: now + BOOSTER_CONFIG.REWARDED_AD_BOOST.durationMs,
+          lastWatchedAt: now,
+        },
+      };
+    }
+
+    case 'EXPIRE_AD_BOOST':
+      if (!state.adBoost.isActive) return state;
+      return {
+        ...state,
+        adBoost: { ...state.adBoost, isActive: false },
+      };
+
+    case 'CHECK_AD_BOOST_EXPIRATION': {
+      if (!state.adBoost.isActive || state.adBoost.expiresAt === null) return state;
+      if (Date.now() < state.adBoost.expiresAt) return state;
+      return {
+        ...state,
+        adBoost: { ...state.adBoost, isActive: false },
+      };
+    }
+
+    case 'UPDATE_INTERSTITIAL_TIME':
+      return {
+        ...state,
+        adState: {
+          ...state.adState,
+          lastInterstitialShownAt: Date.now(),
+          totalInterstitialsShown: state.adState.totalInterstitialsShown + 1,
+          isFirstSession: false,
+        },
+      };
+
+    case 'INITIALIZE_AD_SYSTEM':
+      return {
+        ...state,
+        adState: {
+          ...state.adState,
+          adInitialized: true,
+          isFirstSession: false,
+        },
+      };
+
+    case 'INCREMENT_INTERSTITIAL_COUNT':
+      return {
+        ...state,
+        adState: {
+          ...state.adState,
+          totalInterstitialsShown: state.adState.totalInterstitialsShown + 1,
+          lastInterstitialShownAt: Date.now(),
+        },
+        iapState: state.iapState.removeAdsPurchased
+          ? state.iapState
+          : { ...state.iapState, adsSeenBeforePurchase: state.iapState.adsSeenBeforePurchase + 1 },
       };
 
     default:
