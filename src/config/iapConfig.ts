@@ -32,3 +32,22 @@ export const IAP_RECEIPT_VALIDATION = {
 } as const;
 
 export const ALL_PRODUCT_IDS = Object.values(IAP_PRODUCT_IDS);
+
+export const REMOVE_ADS_CONFIG = {
+  productId: IAP_PRODUCT_IDS.REMOVE_ADS,
+  price: IAP_PRICES.REMOVE_ADS,
+  currency: 'USD',
+  promotions: {
+    enabled: true,
+    interstitialThreshold: 50,   // Show promo after X interstitials seen
+    reminderThreshold: 25,       // Remind every X ads after first promo
+    discountEnabled: false,
+    discountPrice: 0.49,
+  },
+  badges: {
+    popular: true,
+    recommended: true,
+    adFreeIndicator: true,
+    adFreeIndicatorDurationMs: 10000,  // Show for 10 seconds after purchase
+  },
+} as const;

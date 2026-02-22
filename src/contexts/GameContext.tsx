@@ -90,7 +90,8 @@ type GameAction =
   | { type: 'CHECK_AD_BOOST_EXPIRATION' }
   | { type: 'UPDATE_INTERSTITIAL_TIME' }
   | { type: 'INITIALIZE_AD_SYSTEM' }
-  | { type: 'INCREMENT_INTERSTITIAL_COUNT' };
+  | { type: 'INCREMENT_INTERSTITIAL_COUNT' }
+  | { type: 'MARK_PROMO_SHOWN' };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
@@ -554,6 +555,15 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         iapState: state.iapState.removeAdsPurchased
           ? state.iapState
           : { ...state.iapState, adsSeenBeforePurchase: state.iapState.adsSeenBeforePurchase + 1 },
+      };
+
+    case 'MARK_PROMO_SHOWN':
+      return {
+        ...state,
+        adState: {
+          ...state.adState,
+          lastPromotionShownAt: state.adState.totalInterstitialsShown,
+        },
       };
 
     default:

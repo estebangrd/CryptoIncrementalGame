@@ -21,7 +21,7 @@ interface SettingsModalProps {
 }
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose, onReset }) => {
-  const { currentLanguage, setLanguage, t, dispatch } = useGame();
+  const { gameState, currentLanguage, setLanguage, t, dispatch } = useGame();
 
   const handleLanguageChange = async (languageCode: string) => {
     await setLanguage(languageCode);
@@ -136,6 +136,18 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose, onReset
               </TouchableOpacity>
             </View>
 
+            {/* Ads & Purchases */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Ads & Purchases</Text>
+              {gameState.iapState.removeAdsPurchased ? (
+                <View style={styles.adFreeStatus}>
+                  <Text style={styles.adFreeStatusText}>✓ Ad Free Mode: Active</Text>
+                </View>
+              ) : (
+                <Text style={styles.infoText}>Remove Ads — available in the Shop tab</Text>
+              )}
+            </View>
+
             {/* Game Info */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>About</Text>
@@ -241,6 +253,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#888',
     marginBottom: 4,
+  },
+  adFreeStatus: {
+    backgroundColor: '#1a3a28',
+    borderWidth: 1,
+    borderColor: '#00ff88',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+  },
+  adFreeStatusText: {
+    fontSize: 14,
+    color: '#00ff88',
+    fontWeight: 'bold',
   },
   actionButton: {
     backgroundColor: '#2a5c8a',

@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   Alert,
+  Animated,
 } from 'react-native';
 import { useGame } from '../contexts/GameContext';
 import { formatNumber } from '../utils/gameLogic';
@@ -13,10 +14,56 @@ import BottomSheetTabs from './BottomSheetTabs';
 import SettingsModal from './SettingsModal';
 import AdBanner from './AdBanner';
 import RewardedAdButton from './RewardedAdButton';
+import { REMOVE_ADS_CONFIG } from '../config/iapConfig';
 
 const GameScreen: React.FC = () => {
   const { gameState, dispatch, t } = useGame();
   const [showSettings, setShowSettings] = useState(false);
+
+  // "Ad Free" badge — shown 10s after Remove Ads purchase
+  const adFreeBadgeOpacity = useRef(new Animated.Value(0)).current;
+  const prevRemoveAds = useRef(gameState.iapState.removeAdsPurchased);
+  useEffect(() => {
+    if (!prevRemoveAds.current && gameState.iapState.removeAdsPurchased) {
+      Animated.sequence([
+        Animated.timing(adFreeBadgeOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+        Animated.delay(REMOVE_ADS_CONFIG.badges.adFreeIndicatorDurationMs),
+        Animated.timing(adFreeBadgeOpacity, { toValue: 0, duration: 400, useNativeDriver: true }),
+      ]).start();
+    }
+    prevRemoveAds.current = gameState.iapState.removeAdsPurchased;
+  }, [gameState.iapState.removeAdsPurchased, adFreeBadgeOpacity]);
+
+  // Promotion dialog trigger — after reaching interstitialThreshold
+  const promoShownRef = useRef(false);
+  useEffect(() => {
+    const { removeAdsPurchased } = gameState.iapState;
+    const { totalInterstitialsShown, lastPromotionShownAt } = gameState.adState;
+    const { enabled, interstitialThreshold, reminderThreshold } = REMOVE_ADS_CONFIG.promotions;
+
+    if (!enabled || removeAdsPurchased || promoShownRef.current) return;
+
+    const adsSinceLastPromo = lastPromotionShownAt !== null
+      ? totalInterstitialsShown - lastPromotionShownAt
+      : totalInterstitialsShown;
+
+    const shouldShow = lastPromotionShownAt === null
+      ? totalInterstitialsShown >= interstitialThreshold
+      : adsSinceLastPromo >= reminderThreshold;
+
+    if (shouldShow) {
+      promoShownRef.current = true;
+      dispatch({ type: 'MARK_PROMO_SHOWN' });
+      Alert.alert(
+        `You've seen ${totalInterstitialsShown} ads!`,
+        'Remove all ads for just $0.99 — support the game and enjoy ad-free gameplay.',
+        [
+          { text: 'Maybe Later', style: 'cancel', onPress: () => { promoShownRef.current = false; } },
+          { text: 'Remove Ads Now', onPress: () => { promoShownRef.current = false; } },
+        ],
+      );
+    }
+  }, [gameState.adState.totalInterstitialsShown, gameState.iapState.removeAdsPurchased, dispatch]);
 
   const handleMineBlock = () => {
     dispatch({ type: 'MINE_BLOCK' });
@@ -48,6 +95,11 @@ const GameScreen: React.FC = () => {
         <View style={styles.header}>
           <Text style={styles.title}>{t('game.title')}</Text>
           <RewardedAdButton />
+          {gameState.iapState.removeAdsPurchased && (
+            <Animated.View style={[styles.adFreeBadge, { opacity: adFreeBadgeOpacity }]}>
+              <Text style={styles.adFreeBadgeText}>✓ Ad Free</Text>
+            </Animated.View>
+          )}
           <TouchableOpacity style={styles.settingsButton} onPress={() => setShowSettings(true)}>
             <Text style={styles.settingsButtonText}>⚙️</Text>
           </TouchableOpacity>
@@ -188,6 +240,19 @@ const styles = StyleSheet.create({
     color: '#00ff88',
     marginBottom: 2,
     fontWeight: 'bold',
+  },
+  adFreeBadge: {
+    backgroundColor: '#1a6b3a',
+    borderWidth: 1,
+    borderColor: '#00ff88',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  adFreeBadgeText: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#00ff88',
   },
 });
 
