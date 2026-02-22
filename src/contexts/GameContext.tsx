@@ -33,6 +33,17 @@ import { translations } from '../data/translations';
 import { fetchCryptoPrices, shouldUpdatePrices } from '../services/cryptoAPI';
 import { initializePriceHistory, updateAllPriceHistory } from '../services/priceHistoryService';
 import { initializeAdMob, loadInterstitial, showInterstitialIfEligible } from '../services/AdMobService';
+import {
+  initializeIAP,
+  getProducts,
+  purchaseProduct as iapPurchaseProduct,
+  completePurchase,
+  restorePurchases as restoreIAPPurchases,
+  terminateIAP,
+  isNonConsumableProduct,
+  isStarterPack,
+} from '../services/IAPService';
+import { purchaseUpdatedListener, purchaseErrorListener } from 'react-native-iap';
 import { BOOSTER_CONFIG, STARTER_PACK_REWARDS } from '../config/balanceConfig';
 import { IAP_PRODUCT_IDS } from '../config/iapConfig';
 import { PurchaseRecord } from '../types/game';
@@ -742,11 +753,71 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     initAds();
   }, []);
 
-  // Handle interstitial and ad boost check on app foreground
+  // Initialize IAP and set up purchase listeners on mount
+  useEffect(() => {
+    let purchaseUpdateSub: ReturnType<typeof purchaseUpdatedListener> | null = null;
+    let purchaseErrorSub: ReturnType<typeof purchaseErrorListener> | null = null;
+
+    const setupIAP = async () => {
+      const success = await initializeIAP();
+      if (!success) return;
+
+      await getProducts();
+
+      // Listener for successful purchases
+      purchaseUpdateSub = purchaseUpdatedListener(async (purchase) => {
+        const record = await completePurchase(purchase);
+        if (!record) return;
+
+        const { productId } = purchase;
+
+        if (productId === IAP_PRODUCT_IDS.REMOVE_ADS) {
+          dispatch({ type: 'PURCHASE_REMOVE_ADS', payload: record });
+        } else if (productId === IAP_PRODUCT_IDS.PERMANENT_MULTIPLIER) {
+          dispatch({ type: 'PURCHASE_PERMANENT_MULTIPLIER', payload: record });
+        } else if (productId === IAP_PRODUCT_IDS.BOOSTER_2X) {
+          dispatch({ type: 'PURCHASE_BOOSTER_2X', payload: record });
+        } else if (productId === IAP_PRODUCT_IDS.BOOSTER_5X) {
+          dispatch({ type: 'PURCHASE_BOOSTER_5X', payload: record });
+        } else if (isStarterPack(productId)) {
+          // Derive packType from productId to match existing reducer shape
+          const packTypeMap: { [key: string]: 'small' | 'medium' | 'large' | 'mega' } = {
+            [IAP_PRODUCT_IDS.STARTER_SMALL]: 'small',
+            [IAP_PRODUCT_IDS.STARTER_MEDIUM]: 'medium',
+            [IAP_PRODUCT_IDS.STARTER_LARGE]: 'large',
+            [IAP_PRODUCT_IDS.STARTER_MEGA]: 'mega',
+          };
+          const packType = packTypeMap[productId];
+          if (packType) {
+            dispatch({ type: 'PURCHASE_STARTER_PACK', payload: { packType, record } });
+          }
+        }
+
+        dispatch({ type: 'SET_IAP_PURCHASING', payload: false });
+      });
+
+      // Listener for purchase errors
+      purchaseErrorSub = purchaseErrorListener((error) => {
+        console.warn('[IAP] Purchase error:', error.message);
+        dispatch({ type: 'SET_IAP_PURCHASING', payload: false });
+      });
+    };
+
+    setupIAP();
+
+    return () => {
+      purchaseUpdateSub?.remove();
+      purchaseErrorSub?.remove();
+      terminateIAP();
+    };
+  }, []);
+
+  // Handle interstitial and ad/booster check on app foreground
   useEffect(() => {
     const handleAdAppOpen = (nextAppState: AppStateStatus) => {
       if (nextAppState === 'active') {
         dispatch({ type: 'CHECK_AD_BOOST_EXPIRATION' });
+        dispatch({ type: 'CHECK_BOOSTER_EXPIRATION' });
         const shown = showInterstitialIfEligible(gameStateRef.current);
         if (shown) {
           dispatch({ type: 'UPDATE_INTERSTITIAL_TIME' });

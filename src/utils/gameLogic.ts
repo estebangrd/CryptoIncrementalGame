@@ -101,9 +101,32 @@ export const calculateTotalProduction = (gameState: GameState): number => {
       adBoostMultiplier = BOOSTER_CONFIG.REWARDED_AD_BOOST.multiplier;
     }
   }
-  const finalProduction = totalProduction * gameState.prestigeMultiplier * adBoostMultiplier;
+
+  // Permanent IAP multiplier (2x if purchased, else 1x)
+  const permanentMultiplier = gameState.iapState?.permanentMultiplierPurchased
+    ? BOOSTER_CONFIG.PERMANENT_MULTIPLIER.multiplier
+    : 1.0;
+
+  // Active IAP booster multiplier — booster5x takes priority over booster2x
+  let iapBoosterMultiplier = 1.0;
+  const now = Date.now();
+  if (
+    gameState.iapState?.booster5x?.isActive &&
+    gameState.iapState.booster5x.expiresAt !== null &&
+    now < gameState.iapState.booster5x.expiresAt
+  ) {
+    iapBoosterMultiplier = BOOSTER_CONFIG.BOOSTER_5X.multiplier;
+  } else if (
+    gameState.iapState?.booster2x?.isActive &&
+    gameState.iapState.booster2x.expiresAt !== null &&
+    now < gameState.iapState.booster2x.expiresAt
+  ) {
+    iapBoosterMultiplier = BOOSTER_CONFIG.BOOSTER_2X.multiplier;
+  }
+
+  const finalProduction = totalProduction * gameState.prestigeMultiplier * adBoostMultiplier * permanentMultiplier * iapBoosterMultiplier;
   if (finalProduction > 0) {
-    console.log(`DEBUG: Total production calculated: ${finalProduction}, prestigeMultiplier: ${gameState.prestigeMultiplier}, adBoostMultiplier: ${adBoostMultiplier}`);
+    console.log(`DEBUG: Total production calculated: ${finalProduction}, prestigeMultiplier: ${gameState.prestigeMultiplier}, adBoostMultiplier: ${adBoostMultiplier}, permanentMultiplier: ${permanentMultiplier}, iapBoosterMultiplier: ${iapBoosterMultiplier}`);
   }
 
   return finalProduction;

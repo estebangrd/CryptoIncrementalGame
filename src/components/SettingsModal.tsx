@@ -11,6 +11,8 @@ import {
 import { useGame } from '../contexts/GameContext';
 import { languages } from '../data/translations';
 import { clearAllGameData } from '../utils/storage';
+import { restorePurchases } from '../services/IAPService';
+import { IAP_PRODUCT_IDS } from '../config/iapConfig';
 
 interface SettingsModalProps {
   visible: boolean;
@@ -23,6 +25,32 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose, onReset
 
   const handleLanguageChange = async (languageCode: string) => {
     await setLanguage(languageCode);
+  };
+
+  const handleRestorePurchases = async () => {
+    Alert.alert('Restoring...', 'Please wait while we restore your purchases.');
+    const purchases = await restorePurchases();
+
+    if (purchases.length === 0) {
+      Alert.alert('Restore Purchases', 'No purchases to restore.');
+      return;
+    }
+
+    let restoredCount = 0;
+    for (const purchase of purchases) {
+      const id = purchase.productId;
+      if (id === IAP_PRODUCT_IDS.REMOVE_ADS) {
+        dispatch({ type: 'PURCHASE_REMOVE_ADS', payload: { productId: id, transactionId: purchase.transactionId ?? '', purchaseDate: Date.now(), price: 0, currency: '', platform: 'ios', receipt: '', validated: true, delivered: true } });
+        restoredCount++;
+      } else if (id === IAP_PRODUCT_IDS.PERMANENT_MULTIPLIER) {
+        dispatch({ type: 'PURCHASE_PERMANENT_MULTIPLIER', payload: { productId: id, transactionId: purchase.transactionId ?? '', purchaseDate: Date.now(), price: 0, currency: '', platform: 'ios', receipt: '', validated: true, delivered: true } });
+        restoredCount++;
+      }
+    }
+
+    Alert.alert('Restore Purchases', restoredCount > 0
+      ? `Successfully restored ${restoredCount} purchase(s).`
+      : 'No restorable purchases found (boosters and packs cannot be restored).');
   };
 
   const handleClearSavedData = () => {
@@ -101,6 +129,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose, onReset
               
               <TouchableOpacity style={[styles.dangerButton, { marginTop: 8 }]} onPress={handleClearSavedData}>
                 <Text style={styles.dangerButtonText}>Clear Saved Data (Debug)</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={[styles.actionButton, { marginTop: 8 }]} onPress={handleRestorePurchases}>
+                <Text style={styles.actionButtonText}>🔄 Restore Purchases</Text>
               </TouchableOpacity>
             </View>
 
@@ -209,6 +241,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#888',
     marginBottom: 4,
+  },
+  actionButton: {
+    backgroundColor: '#2a5c8a',
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  actionButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 
