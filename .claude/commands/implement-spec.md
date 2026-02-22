@@ -30,10 +30,23 @@ Usa el agente `react-native-game-dev` para la implementación. La implementació
 ### 5. Verificar criterios de aceptación
 Revisa cada checkbox de la sección "Criterios de Aceptación" de la spec y confirma cuáles están implementados.
 
-### 6. Actualizar specs/README.md
-Cambia el estado de la spec de `📝 Planned` a `🚧 In Progress` o `✅ Implemented` según corresponda.
+### 6. Correr tests y lint — OBLIGATORIO antes del commit
+```bash
+npm run lint
+npm test
+```
+- Si `npm test` falla: corregir antes de continuar. NUNCA commitear con tests rotos.
+- Si `npm run lint` introduce errores nuevos (no pre-existentes): corregirlos.
+- Si un test falla por configuración de Jest (mock faltante, transform, etc.): corregir la configuración primero.
+
+### 7. Actualizar specs/README.md
+Cambia el estado de la spec de `📝 Planned` a `✅ Implemented` (o `⚠️ Partial` si quedaron criterios sin implementar).
+
+### 8. Commitear
+Solo commitear cuando tests y lint pasan. Formato: `feat: descripción corta` (max 72 chars).
 
 ## Reglas invariables
+- **NUNCA** commitear si `npm test` falla
 - **NUNCA** hardcodear valores de balance fuera de `balanceConfig.ts`
 - **NUNCA** modificar la arquitectura sin pedirlo explícitamente
 - **SIEMPRE** leer los archivos existentes antes de modificarlos

@@ -214,6 +214,26 @@ When the user explicitly instructs a change to CLAUDE.md, edit it directly witho
 
 For destructive operations (`git reset --hard`, `git push --force`, `rm -rf`, etc.) always ask first.
 
+## Feature Implementation Workflow (OBLIGATORIO)
+
+Toda feature nueva DEBE seguir este orden. No saltear pasos.
+
+```
+Spec → Plan → Implement → Test → Commit
+```
+
+1. **Spec**: Leer la spec completa en `specs/` antes de tocar código. Si no existe spec, crearla primero.
+2. **Plan**: Identificar todos los archivos afectados. Leer cada uno antes de modificarlo. Detectar conflictos.
+3. **Implement**: Escribir código siguiendo exactamente las fórmulas y constantes de la spec.
+4. **Test**: Ejecutar `npm test` y `npm run lint` antes del commit. Los tests DEBEN pasar. Si fallan, corregir antes de continuar.
+5. **Commit**: Solo commitear cuando tests y lint pasan limpio.
+
+**Reglas adicionales:**
+- Nunca commitear si `npm test` falla
+- Nunca commitear si hay errores de lint nuevos introducidos por el cambio
+- Si un test falla por configuración (no por lógica), corregir la configuración primero
+- Actualizar el estado de la spec en `specs/README.md` al terminar
+
 ## Commit Conventions
 
 - Messages must be concise and short — one line, max 72 characters
