@@ -32,6 +32,9 @@ import { saveGameState, loadGameState, saveLanguage, loadLanguage } from '../uti
 import { translations } from '../data/translations';
 import { fetchCryptoPrices, shouldUpdatePrices } from '../services/cryptoAPI';
 import { initializePriceHistory, updateAllPriceHistory } from '../services/priceHistoryService';
+import { BOOSTER_CONFIG, STARTER_PACK_REWARDS } from '../config/balanceConfig';
+import { IAP_PRODUCT_IDS } from '../config/iapConfig';
+import { PurchaseRecord } from '../types/game';
 
 interface GameContextType {
   gameState: GameState;
@@ -59,7 +62,17 @@ type GameAction =
   | { type: 'BUY_HARDWARE_WITH_MONEY'; payload: string }
   | { type: 'SET_LANGUAGE'; payload: string }
   | { type: 'UPDATE_CRYPTO_PRICES' }
-  | { type: 'UPDATE_CRYPTOCURRENCY_PRICES'; payload: Cryptocurrency[] };
+  | { type: 'UPDATE_CRYPTOCURRENCY_PRICES'; payload: Cryptocurrency[] }
+  | { type: 'PURCHASE_REMOVE_ADS'; payload: PurchaseRecord }
+  | { type: 'PURCHASE_BOOSTER_2X'; payload: PurchaseRecord }
+  | { type: 'PURCHASE_BOOSTER_5X'; payload: PurchaseRecord }
+  | { type: 'EXPIRE_BOOSTER_2X' }
+  | { type: 'EXPIRE_BOOSTER_5X' }
+  | { type: 'CHECK_BOOSTER_EXPIRATION' }
+  | { type: 'PURCHASE_PERMANENT_MULTIPLIER'; payload: PurchaseRecord }
+  | { type: 'PURCHASE_STARTER_PACK'; payload: { packType: 'small' | 'medium' | 'large' | 'mega'; record: PurchaseRecord } }
+  | { type: 'RESTORE_PURCHASES'; payload: string[] }
+  | { type: 'SET_IAP_PURCHASING'; payload: boolean };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
@@ -320,6 +333,148 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         cryptocurrencies: action.payload,
         marketUpdateTime: Date.now(),
       };
+    case 'PURCHASE_REMOVE_ADS':
+      if (state.iapState.removeAdsPurchased) return state;
+      return {
+        ...state,
+        iapState: {
+          ...state.iapState,
+          removeAdsPurchased: true,
+          removeAdsPurchaseDate: Date.now(),
+          purchaseHistory: [...state.iapState.purchaseHistory, { ...action.payload, delivered: true }],
+          isPurchasing: false,
+        },
+      };
+
+    case 'PURCHASE_BOOSTER_2X': {
+      const now = Date.now();
+      return {
+        ...state,
+        iapState: {
+          ...state.iapState,
+          booster2x: {
+            isActive: true,
+            activatedAt: now,
+            expiresAt: now + BOOSTER_CONFIG.BOOSTER_2X.durationMs,
+          },
+          booster5x: { isActive: false, activatedAt: null, expiresAt: null }, // cancela 5x si activo
+          purchaseHistory: [...state.iapState.purchaseHistory, { ...action.payload, delivered: true }],
+          isPurchasing: false,
+        },
+      };
+    }
+
+    case 'PURCHASE_BOOSTER_5X': {
+      const now = Date.now();
+      return {
+        ...state,
+        iapState: {
+          ...state.iapState,
+          booster5x: {
+            isActive: true,
+            activatedAt: now,
+            expiresAt: now + BOOSTER_CONFIG.BOOSTER_5X.durationMs,
+          },
+          booster2x: { isActive: false, activatedAt: null, expiresAt: null }, // 5x reemplaza 2x
+          purchaseHistory: [...state.iapState.purchaseHistory, { ...action.payload, delivered: true }],
+          isPurchasing: false,
+        },
+      };
+    }
+
+    case 'EXPIRE_BOOSTER_2X':
+      if (!state.iapState.booster2x.isActive) return state;
+      return {
+        ...state,
+        iapState: {
+          ...state.iapState,
+          booster2x: { isActive: false, activatedAt: null, expiresAt: null },
+        },
+      };
+
+    case 'EXPIRE_BOOSTER_5X':
+      if (!state.iapState.booster5x.isActive) return state;
+      return {
+        ...state,
+        iapState: {
+          ...state.iapState,
+          booster5x: { isActive: false, activatedAt: null, expiresAt: null },
+        },
+      };
+
+    case 'CHECK_BOOSTER_EXPIRATION': {
+      const now = Date.now();
+      let newIapState = { ...state.iapState };
+      let changed = false;
+      if (state.iapState.booster2x.isActive && state.iapState.booster2x.expiresAt !== null && now >= state.iapState.booster2x.expiresAt) {
+        newIapState = { ...newIapState, booster2x: { isActive: false, activatedAt: null, expiresAt: null } };
+        changed = true;
+      }
+      if (state.iapState.booster5x.isActive && state.iapState.booster5x.expiresAt !== null && now >= state.iapState.booster5x.expiresAt) {
+        newIapState = { ...newIapState, booster5x: { isActive: false, activatedAt: null, expiresAt: null } };
+        changed = true;
+      }
+      if (!changed) return state;
+      return { ...state, iapState: newIapState };
+    }
+
+    case 'PURCHASE_PERMANENT_MULTIPLIER':
+      if (state.iapState.permanentMultiplierPurchased) return state;
+      return recalculateGameStats({
+        ...state,
+        iapState: {
+          ...state.iapState,
+          permanentMultiplierPurchased: true,
+          purchaseHistory: [...state.iapState.purchaseHistory, { ...action.payload, delivered: true }],
+          isPurchasing: false,
+        },
+      });
+
+    case 'PURCHASE_STARTER_PACK': {
+      const { packType, record } = action.payload;
+      if (state.iapState.starterPacksPurchased[packType]) return state;
+      const rewards = STARTER_PACK_REWARDS[packType];
+      return {
+        ...state,
+        cryptoCoins: state.cryptoCoins + rewards.cryptoCoins,
+        totalCryptoCoins: state.totalCryptoCoins + rewards.cryptoCoins,
+        realMoney: state.realMoney + rewards.realMoney,
+        totalRealMoneyEarned: state.totalRealMoneyEarned + rewards.realMoney,
+        iapState: {
+          ...state.iapState,
+          starterPacksPurchased: { ...state.iapState.starterPacksPurchased, [packType]: true },
+          purchaseHistory: [...state.iapState.purchaseHistory, { ...record, delivered: true }],
+          isPurchasing: false,
+        },
+      };
+    }
+
+    case 'RESTORE_PURCHASES': {
+      const productIds = action.payload;
+      let newIapState = { ...state.iapState };
+      if (productIds.includes(IAP_PRODUCT_IDS.REMOVE_ADS)) {
+        newIapState = { ...newIapState, removeAdsPurchased: true };
+      }
+      if (productIds.includes(IAP_PRODUCT_IDS.PERMANENT_MULTIPLIER)) {
+        newIapState = { ...newIapState, permanentMultiplierPurchased: true };
+      }
+      const packs = ['small', 'medium', 'large', 'mega'] as const;
+      const packIds = [IAP_PRODUCT_IDS.STARTER_SMALL, IAP_PRODUCT_IDS.STARTER_MEDIUM, IAP_PRODUCT_IDS.STARTER_LARGE, IAP_PRODUCT_IDS.STARTER_MEGA];
+      packs.forEach((pack, i) => {
+        if (productIds.includes(packIds[i])) {
+          newIapState = { ...newIapState, starterPacksPurchased: { ...newIapState.starterPacksPurchased, [pack]: true } };
+        }
+      });
+      const needsRecalc = newIapState.permanentMultiplierPurchased && !state.iapState.permanentMultiplierPurchased;
+      return needsRecalc ? recalculateGameStats({ ...state, iapState: newIapState }) : { ...state, iapState: newIapState };
+    }
+
+    case 'SET_IAP_PURCHASING':
+      return {
+        ...state,
+        iapState: { ...state.iapState, isPurchasing: action.payload },
+      };
+
     default:
       return state;
   }
