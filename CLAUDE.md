@@ -202,6 +202,16 @@ See `DEVELOPMENT_PLAN.md` for:
 
 Current branch strategy: Feature branches (e.g., `feature/phase1-genesis`) merged to main after completion.
 
+## Bash Commands — No Permission Required
+
+Run the following commands directly without asking for approval:
+- `git add`, `git status`, `git log`, `git diff`, `git push`, `git pull`, `git rebase`
+- `grep`, `head`, `tail`
+- `npm run lint`, `npm run test`, `npm list`
+- `pod install`
+
+For destructive operations (`git reset --hard`, `git push --force`, `rm -rf`, etc.) always ask first.
+
 ## Commit Conventions
 
 - Messages must be concise and short — one line, max 72 characters
