@@ -18,7 +18,7 @@ Este directorio contiene todas las especificaciones técnicas exhaustivas (Level
 | Spec | Estado | Fase | Prioridad | Descripción |
 |------|--------|------|-----------|-------------|
 | [Ad System](monetization/ad-system.md) | ✅ Implemented | Phase 3 | Critical | AdMob integration (Banner, Rewarded, Interstitial) |
-| [IAP System](monetization/iap-system.md) | ⚠️ Partial | Phase 3 | Critical | In-App Purchases (Google Play + App Store) |
+| [IAP System](monetization/iap-system.md) | ✅ Implemented | Phase 3 | Critical | In-App Purchases (Google Play + App Store) |
 | [Remove Ads Product](monetization/remove-ads-product.md) | ⚠️ Partial | Phase 3 | High | Producto $0.99 para remover anuncios |
 | [Boosters Catalog](monetization/boosters-catalog.md) | ⚠️ Partial | Phase 3 | High | Aceleradores y starter packs |
 
@@ -43,8 +43,8 @@ Este directorio contiene todas las especificaciones técnicas exhaustivas (Level
 ## 📊 Estado General
 
 - **Total de Specs**: 11
-- **Implementadas**: 4 (36%)
-- **Parciales**: 4 (36%)
+- **Implementadas**: 5 (45%)
+- **Parciales**: 3 (27%)
 - **Documentadas**: 2 (18%)
 - **Planeadas**: 1 (9%)
 
