@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
-import { GameState, Cryptocurrency } from '../types/game';
+import { GameState, Cryptocurrency, IAPState, AdState, AdBoostState, Achievement } from '../types/game';
 import { hardwareProgression } from '../data/hardwareData';
 import { initialUpgrades } from '../data/gameData';
 import { cryptocurrencies } from '../data/cryptocurrencies';
@@ -332,6 +332,38 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     selectedCurrency: 'cryptocoin',
     hardware: hardwareProgression,
     upgrades: initialUpgrades,
+    iapState: {
+      removeAdsPurchased: false,
+      removeAdsPurchaseDate: null,
+      adsSeenBeforePurchase: 0,
+      booster2x: { isActive: false, activatedAt: null, expiresAt: null },
+      booster5x: { isActive: false, activatedAt: null, expiresAt: null },
+      permanentMultiplierPurchased: false,
+      starterPacksPurchased: { small: false, medium: false, large: false, mega: false },
+      purchaseHistory: [],
+      isPurchasing: false,
+      lastPurchaseTime: null,
+    } as IAPState,
+    adState: {
+      adInitialized: false,
+      gdprConsentGiven: null,
+      bannerLoaded: false,
+      bannerVisible: false,
+      lastInterstitialShownAt: null,
+      interstitialLoaded: false,
+      isFirstSession: true,
+      rewardedAdLoaded: false,
+      totalInterstitialsShown: 0,
+      totalBannerImpressions: 0,
+      lastPromotionShownAt: null,
+    } as AdState,
+    adBoost: {
+      isActive: false,
+      activatedAt: null,
+      expiresAt: null,
+      lastWatchedAt: null,
+    } as AdBoostState,
+    achievements: [] as Achievement[],
   }));
 
   // Debug log for initial state

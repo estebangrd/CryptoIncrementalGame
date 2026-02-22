@@ -266,6 +266,38 @@ export const BALANCE_CONFIG = {
 };
 
 // ============================================================================
+// BOOSTERS Y MULTIPLICADORES IAP
+// ============================================================================
+export const BOOSTER_CONFIG = {
+  BOOSTER_2X: {
+    multiplier: 2.0,
+    durationMs: 4 * 60 * 60 * 1000,   // 4 horas
+  },
+  BOOSTER_5X: {
+    multiplier: 5.0,
+    durationMs: 24 * 60 * 60 * 1000,  // 24 horas
+  },
+  PERMANENT_MULTIPLIER: {
+    multiplier: 2.0,
+  },
+  REWARDED_AD_BOOST: {
+    multiplier: 2.0,
+    durationMs: 4 * 60 * 60 * 1000,   // 4 horas
+    cooldownMs: 5 * 60 * 1000,         // 5 minutos
+  },
+} as const;
+
+// ============================================================================
+// STARTER PACKS - RECOMPENSAS
+// ============================================================================
+export const STARTER_PACK_REWARDS = {
+  small:  { cryptoCoins: 10000,  realMoney: 500 },
+  medium: { cryptoCoins: 50000,  realMoney: 2500 },
+  large:  { cryptoCoins: 150000, realMoney: 10000 },
+  mega:   { cryptoCoins: 500000, realMoney: 50000 },
+} as const;
+
+// ============================================================================
 // NOTAS DE BALANCE
 // ============================================================================
 /*

@@ -15,6 +15,85 @@ export interface PrestigeRequirement {
   amount: number;
 }
 
+export interface PurchaseRecord {
+  productId: string;
+  transactionId: string;
+  purchaseDate: number;
+  price: number;
+  currency: string;
+  platform: 'ios' | 'android';
+  receipt: string;
+  validated: boolean;
+  delivered: boolean;
+}
+
+export interface IAPBoosterState {
+  isActive: boolean;
+  activatedAt: number | null;
+  expiresAt: number | null;
+}
+
+export interface IAPState {
+  removeAdsPurchased: boolean;
+  removeAdsPurchaseDate: number | null;
+  adsSeenBeforePurchase: number;
+  booster2x: IAPBoosterState;
+  booster5x: IAPBoosterState;
+  permanentMultiplierPurchased: boolean;
+  starterPacksPurchased: {
+    small: boolean;
+    medium: boolean;
+    large: boolean;
+    mega: boolean;
+  };
+  purchaseHistory: PurchaseRecord[];
+  isPurchasing: boolean;
+  lastPurchaseTime: number | null;
+}
+
+export interface AdState {
+  adInitialized: boolean;
+  gdprConsentGiven: boolean | null;
+  bannerLoaded: boolean;
+  bannerVisible: boolean;
+  lastInterstitialShownAt: number | null;
+  interstitialLoaded: boolean;
+  isFirstSession: boolean;
+  rewardedAdLoaded: boolean;
+  totalInterstitialsShown: number;
+  totalBannerImpressions: number;
+  lastPromotionShownAt: number | null;
+}
+
+export interface AdBoostState {
+  isActive: boolean;
+  activatedAt: number | null;
+  expiresAt: number | null;
+  lastWatchedAt: number | null;
+}
+
+export interface AchievementReward {
+  type: 'coins' | 'money' | 'multiplier' | 'cosmetic';
+  amount?: number;
+  multiplier?: number;
+  duration?: number;
+}
+
+export interface Achievement {
+  id: string;
+  nameKey: string;
+  descriptionKey: string;
+  category: 'mining' | 'hardware' | 'economy' | 'prestige' | 'secret';
+  icon: string;
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  unlocked: boolean;
+  unlockedAt?: number;
+  progress?: number;
+  target?: number;
+  reward?: AchievementReward;
+  hidden: boolean;
+}
+
 export interface GameState {
   cryptoCoins: number;
   cryptoCoinsPerSecond: number;
@@ -54,6 +133,11 @@ export interface GameState {
   totalRealMoneyEarned: number;
   // Price history system
   priceHistory?: { [cryptoId: string]: { prices: number[]; lastUpdate: number } };
+  // IAP, Ads and Achievements systems
+  iapState: IAPState;
+  adState: AdState;
+  adBoost: AdBoostState;
+  achievements: Achievement[];
 }
 
 export interface Hardware {
