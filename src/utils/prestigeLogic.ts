@@ -1,64 +1,68 @@
-import { GameState, Cryptocurrency } from '../types/game';
+import { GameState } from '../types/game';
+import { PRESTIGE_CONFIG } from '../config/balanceConfig';
+import { ALL_BADGES } from '../data/badges';
 
-export const calculatePrestigeGain = (gameState: GameState): number => {
-  let totalValue = 0;
-  
-  // Calculate total value of all cryptocurrencies
-  (gameState.cryptocurrencies || []).forEach(crypto => {
-    const balance = (gameState.currencyBalances && gameState.currencyBalances[crypto.id]) || 0;
-    totalValue += balance * crypto.currentValue;
-  });
-  
-  // Add CryptoCoins value
-  totalValue += gameState.cryptoCoins || 0;
-  
-  // Prestige gain is based on total value (simplified formula)
-  // You can adjust this formula to make prestige more or less frequent
-  const prestigeGain = Math.floor(Math.log10(totalValue / 1000) * 10);
-  
-  return Math.max(0, prestigeGain);
+export const calculateProductionMultiplier = (prestigeLevel: number): number => {
+  return 1 + (prestigeLevel * PRESTIGE_CONFIG.bonuses.productionBonus);
+};
+
+export const calculateClickMultiplier = (prestigeLevel: number): number => {
+  return 1 + (prestigeLevel * PRESTIGE_CONFIG.bonuses.clickBonus);
 };
 
 export const canPrestige = (gameState: GameState): boolean => {
-  return calculatePrestigeGain(gameState) > 0;
+  return gameState.blocksMined >= PRESTIGE_CONFIG.requirements.minBlocks;
 };
 
-export const performPrestige = (gameState: GameState): GameState => {
-  const prestigeGain = calculatePrestigeGain(gameState);
-  
-  if (prestigeGain <= 0) return gameState;
-  
-  // Calculate new prestige multiplier
-  const newPrestigeMultiplier = gameState.prestigeMultiplier + (prestigeGain * 0.1);
-  
-  return {
-    ...gameState,
-    // Reset all currencies
-    cryptoCoins: 0,
-    cryptoCoinsPerSecond: 0,
-    cryptoCoinsPerClick: 1,
-    currencyBalances: {},
-    hardware: gameState.hardware.map(h => ({ ...h, owned: 0 })),
-    upgrades: gameState.upgrades.map(u => ({ ...u, purchased: false })),
-    // Update prestige stats
-    prestigeLevel: gameState.prestigeLevel + 1,
-    prestigeMultiplier: newPrestigeMultiplier,
-    totalPrestigeGains: gameState.totalPrestigeGains + prestigeGain,
-    // Reset other stats
-    totalClicks: 0,
-    totalCryptoCoins: 0,
-    lastSaveTime: Date.now(),
-  };
+export const checkBadgeUnlocks = (gameState: GameState): string[] => {
+  const unlockedBadges = [...(gameState.unlockedBadges || [])];
+
+  for (const badge of ALL_BADGES) {
+    if (unlockedBadges.includes(badge.id)) {
+      continue;
+    }
+
+    let shouldUnlock = false;
+
+    switch (badge.unlockCondition.type) {
+      case 'prestige_level':
+        shouldUnlock = gameState.prestigeLevel >= (badge.unlockCondition.value as number);
+        break;
+      case 'speed': {
+        const history = gameState.prestigeHistory || [];
+        const lastRun = history[history.length - 1];
+        shouldUnlock = !!lastRun && lastRun.duration > 0 && lastRun.duration <= (badge.unlockCondition.value as number);
+        break;
+      }
+      case 'total_money': {
+        const totalMoney = (gameState.prestigeHistory || []).reduce(
+          (sum, run) => sum + run.totalMoneyEarned,
+          gameState.totalRealMoneyEarned || 0
+        );
+        shouldUnlock = totalMoney >= (badge.unlockCondition.value as number);
+        break;
+      }
+      case 'special': {
+        if (badge.unlockCondition.value === 'all_badges') {
+          const otherBadges = ALL_BADGES.filter(b => b.id !== badge.id);
+          shouldUnlock = otherBadges.every(b => unlockedBadges.includes(b.id));
+        }
+        break;
+      }
+      default:
+        break;
+    }
+
+    if (shouldUnlock) {
+      unlockedBadges.push(badge.id);
+    }
+  }
+
+  return unlockedBadges;
 };
 
+// Keep for backwards compat (old screens might call this)
 export const getPrestigeBonus = (prestigeLevel: number): string => {
-  const bonus = prestigeLevel * 10; // 10% per prestige level
-  return `+${bonus}% to all production`;
-};
-
-export const formatPrestigeGain = (gain: number): string => {
-  if (gain < 1000) return gain.toString();
-  if (gain < 1000000) return `${(gain / 1000).toFixed(1)}K`;
-  if (gain < 1000000000) return `${(gain / 1000000).toFixed(1)}M`;
-  return `${(gain / 1000000000).toFixed(1)}B`;
+  const productionPct = Math.round(prestigeLevel * PRESTIGE_CONFIG.bonuses.productionBonus * 100);
+  return `+${productionPct}% production`;
 };

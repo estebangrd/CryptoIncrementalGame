@@ -1,6 +1,6 @@
 /**
  * CONFIGURACIÓN DE BALANCE DEL JUEGO
- * 
+ *
  * Este archivo centraliza todos los valores de balance del juego.
  * Modifica estos valores para ajustar la dificultad y progresión.
  */
@@ -11,16 +11,16 @@
 export const BLOCK_CONFIG = {
   // Total de bloques disponibles para minar
   TOTAL_BLOCKS: 21000000,
-  
+
   // Recompensa inicial por bloque (CryptoCoins)
   INITIAL_REWARD: 50,
-  
+
   // Cada cuántos bloques se reduce la recompensa a la mitad
   HALVING_INTERVAL: 210000,
-  
+
   // Dificultad inicial de minado
   INITIAL_DIFFICULTY: 1,
-  
+
   // Multiplicador de dificultad por bloque minado
   DIFFICULTY_INCREASE_RATE: 0.00001,
 };
@@ -31,10 +31,10 @@ export const BLOCK_CONFIG = {
 export const HARDWARE_CONFIG = {
   // Multiplicador de costo al comprar múltiples unidades
   COST_MULTIPLIER: 1.15,
-  
+
   // Requisito de unidades del nivel anterior para desbloquear siguiente
   UNLOCK_REQUIREMENT: 5,
-  
+
   // Configuración por nivel de hardware
   levels: {
     // Nivel 1: Manual Mining (oculto, solo para mecánica interna)
@@ -45,7 +45,7 @@ export const HARDWARE_CONFIG = {
       miningSpeed: 0.1,          // Bloques/segundo
       electricityCost: 0,        // $/segundo
     },
-    
+
     // Nivel 2: Basic CPU
     basic_cpu: {
       baseCost: 100,             // CryptoCoins
@@ -119,22 +119,22 @@ export const CRYPTO_CONFIG = {
     baseValue: 0.001,          // Valor base en $ por CryptoCoin
     volatility: 0.1,           // 10% de volatilidad
   },
-  
+
   bitcoin: {
     baseValue: 10,             // Valor base en $ por Bitcoin
     volatility: 0.15,          // 15% de volatilidad
   },
-  
+
   ethereum: {
     baseValue: 5,              // Valor base en $ por Ethereum
     volatility: 0.2,           // 20% de volatilidad
   },
-  
+
   dogecoin: {
     baseValue: 0.01,           // Valor base en $ por Dogecoin
     volatility: 0.3,           // 30% de volatilidad
   },
-  
+
   cardano: {
     baseValue: 0.05,           // Valor base en $ por Cardano
     volatility: 0.25,          // 25% de volatilidad
@@ -150,7 +150,7 @@ export const UPGRADE_CONFIG = {
     cost: 1000,                // Costo en $ (dinero real)
     multiplier: 1.5,           // Multiplicador (1.5 = +50%)
   },
-  
+
   // CPU Efficiency - Duplica velocidad de CPUs
   cpuEfficiency: {
     cost: 5000,
@@ -160,7 +160,7 @@ export const UPGRADE_CONFIG = {
       minOwned: 10,
     },
   },
-  
+
   // GPU Optimization - Duplica velocidad de GPUs
   gpuOptimization: {
     cost: 25000,
@@ -170,7 +170,7 @@ export const UPGRADE_CONFIG = {
       minOwned: 10,
     },
   },
-  
+
   // ASIC Optimization - Duplica velocidad de ASICs
   asicOptimization: {
     cost: 100000,
@@ -191,20 +191,20 @@ export const UNLOCK_CONFIG = {
     requiredBlocks: 10,        // Bloques minados necesarios
     requiredCoins: 500,        // CryptoCoins necesarios
   },
-  
+
   // Desbloquear Hardware
   hardware: {
     requiredMoney: 200,        // $ (dinero real) necesarios
   },
-  
+
   // Desbloquear Upgrades (Mejoras)
   upgrades: {
     requiredHardware: 1,       // Cantidad de hardware comprado
   },
-  
-  // Desbloquear Prestige
+
+  // Desbloquear Prestige (legacy field kept for backwards compat)
   prestige: {
-    requiredLevel: 1,          // Nivel de prestigio necesario
+    requiredLevel: 1,
   },
 };
 
@@ -214,10 +214,10 @@ export const UNLOCK_CONFIG = {
 export const MARKET_CONFIG = {
   // Intervalo de actualización de precios (milisegundos)
   UPDATE_INTERVAL: 5000,       // 5 segundos
-  
+
   // Comisión por transacción (porcentaje)
   TRANSACTION_FEE: 0.01,       // 1% de comisión
-  
+
   // Rango de fluctuación de precios
   PRICE_FLUCTUATION: {
     min: 0.8,                  // -20% del valor base
@@ -229,21 +229,30 @@ export const MARKET_CONFIG = {
 // SISTEMA DE PRESTIGIO
 // ============================================================================
 export const PRESTIGE_CONFIG = {
-  // Multiplicador base por nivel de prestigio
-  BASE_MULTIPLIER: 1.1,        // +10% por nivel
-  
   // Requisitos para hacer prestigio
   requirements: {
-    minBlocks: 100000,         // Bloques mínimos minados
-    minMoney: 1000000,         // $ mínimo acumulado
+    minBlocks: 21000000,       // Debe completar el juego completo (21M bloques)
   },
-  
+
+  // Texto que el jugador debe escribir para confirmar el prestige
+  confirmationText: 'PRESTIGE',
+
   // Bonificaciones por prestigio
   bonuses: {
     productionBonus: 0.1,      // +10% producción por nivel
     clickBonus: 0.05,          // +5% por click por nivel
   },
-};
+
+  // Recompensas de insignias
+  badgeRewards: {
+    speedRunner: { type: 'production' as const, value: 1.05 },
+    prestigeMaster: { type: 'click' as const, value: 1.1 },
+    dedication: { type: 'production' as const, value: 1.2 },
+    infiniteLoop: { type: 'production' as const, value: 1.5 },
+    theCollector: { type: 'production' as const, value: 2.0 },
+    billionaire: { type: 'click' as const, value: 1.5 },
+  },
+} as const;
 
 // ============================================================================
 // AJUSTES GENERALES DE BALANCE
@@ -251,16 +260,16 @@ export const PRESTIGE_CONFIG = {
 export const BALANCE_CONFIG = {
   // Velocidad del juego (1 = normal, 2 = doble velocidad, etc.)
   GAME_SPEED: 1,
-  
+
   // Multiplicador de ganancias offline (0-1, donde 1 = 100%)
   OFFLINE_EARNINGS_MULTIPLIER: 0.5,  // 50% de ganancias offline
-  
+
   // Tiempo máximo de ganancias offline (horas)
   MAX_OFFLINE_TIME: 24,
-  
+
   // Multiplicador de click manual inicial
   MANUAL_CLICK_REWARD: 1,    // CryptoCoins por click
-  
+
   // Intervalo de guardado automático (milisegundos)
   AUTO_SAVE_INTERVAL: 30000, // 30 segundos
 };

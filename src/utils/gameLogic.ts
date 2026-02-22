@@ -1,9 +1,9 @@
 import { GameState, Hardware, Upgrade } from '../types/game';
-import { 
-  calculateCurrentReward, 
-  calculateNextHalving, 
+import {
+  calculateCurrentReward,
+  calculateNextHalving,
   calculateTotalHashRate,
-  GENESIS_CONSTANTS 
+  GENESIS_CONSTANTS
 } from './blockLogic';
 import { getInitialMarketState } from './marketLogic';
 import { hardwareProgression } from '../data/hardwareData';
@@ -16,7 +16,7 @@ export const calculateHardwareCost = (hardware: Hardware): number => {
 
 export const calculateHardwareProduction = (hardware: Hardware, upgrades: Upgrade[]): number => {
   let production = hardware.baseProduction * hardware.owned;
-  
+
   // Apply upgrades that affect this hardware
   upgrades.forEach(upgrade => {
     if (upgrade.purchased && upgrade.effect.type === 'production') {
@@ -36,7 +36,7 @@ export const calculateHardwareProduction = (hardware: Hardware, upgrades: Upgrad
       }
     }
   });
-  
+
   return production;
 };
 
@@ -50,7 +50,7 @@ export const calculateTotalElectricityCost = (hardware: Hardware[]): number => {
 
 export const calculateHardwareMiningSpeed = (hardware: Hardware, upgrades: Upgrade[]): number => {
   let speed = hardware.miningSpeed * hardware.owned;
-  
+
   // Apply upgrades that affect this hardware
   upgrades.forEach(upgrade => {
     if (upgrade.purchased && upgrade.effect.type === 'production') {
@@ -70,7 +70,7 @@ export const calculateHardwareMiningSpeed = (hardware: Hardware, upgrades: Upgra
       }
     }
   });
-  
+
   return speed;
 };
 
@@ -80,21 +80,21 @@ export const calculateTotalMiningSpeed = (hardware: Hardware[], upgrades: Upgrad
 
 export const calculateTotalProduction = (gameState: GameState): number => {
   let totalProduction = 0;
-  
+
   gameState.hardware.forEach(hardware => {
     // Calculate mining speed (blocks per second) using the helper function
     const miningSpeed = calculateHardwareMiningSpeed(hardware, gameState.upgrades);
-    
+
     // Calculate coins per second from mining
     const coinsPerSecond = miningSpeed * hardware.blockReward;
     totalProduction += coinsPerSecond;
-    
+
     // Debug log for hardware with owned > 0
     if (hardware.owned > 0) {
       console.log(`DEBUG: Hardware ${hardware.id} has ${hardware.owned} owned, miningSpeed: ${miningSpeed}, blockReward: ${hardware.blockReward}, coinsPerSecond: ${coinsPerSecond}`);
     }
   });
-  
+
   let adBoostMultiplier = 1.0;
   if (gameState.adBoost?.isActive && gameState.adBoost.expiresAt !== null) {
     if (Date.now() < gameState.adBoost.expiresAt) {
@@ -124,9 +124,12 @@ export const calculateTotalProduction = (gameState: GameState): number => {
     iapBoosterMultiplier = BOOSTER_CONFIG.BOOSTER_2X.multiplier;
   }
 
-  const finalProduction = totalProduction * gameState.prestigeMultiplier * adBoostMultiplier * permanentMultiplier * iapBoosterMultiplier;
+  // Use prestigeProductionMultiplier when available, fall back to prestigeMultiplier for old saves
+  const prestigeMultiplier = (gameState.prestigeProductionMultiplier ?? gameState.prestigeMultiplier ?? 1);
+
+  const finalProduction = totalProduction * prestigeMultiplier * adBoostMultiplier * permanentMultiplier * iapBoosterMultiplier;
   if (finalProduction > 0) {
-    console.log(`DEBUG: Total production calculated: ${finalProduction}, prestigeMultiplier: ${gameState.prestigeMultiplier}, adBoostMultiplier: ${adBoostMultiplier}, permanentMultiplier: ${permanentMultiplier}, iapBoosterMultiplier: ${iapBoosterMultiplier}`);
+    console.log(`DEBUG: Total production calculated: ${finalProduction}, prestigeMultiplier: ${prestigeMultiplier}, adBoostMultiplier: ${adBoostMultiplier}, permanentMultiplier: ${permanentMultiplier}, iapBoosterMultiplier: ${iapBoosterMultiplier}`);
   }
 
   return finalProduction;
@@ -136,16 +139,16 @@ export const calculateTotalProduction = (gameState: GameState): number => {
 export const canAffordHardware = (gameState: GameState, hardwareId: string): boolean => {
   const hardware = gameState.hardware.find(h => h.id === hardwareId);
   if (!hardware) return false;
-  
+
   const cost = calculateHardwareCost(hardware);
   return gameState.cryptoCoins >= cost;
 };
 
 export const isUpgradeUnlocked = (gameState: GameState, upgrade: Upgrade): boolean => {
   if (!upgrade.unlockCondition) return true;
-  
+
   const condition = upgrade.unlockCondition;
-  
+
   switch (condition.type) {
     case 'always':
       return true;
@@ -165,10 +168,10 @@ export const isUpgradeUnlocked = (gameState: GameState, upgrade: Upgrade): boole
 export const canAffordUpgrade = (gameState: GameState, upgradeId: string): boolean => {
   const upgrade = gameState.upgrades.find(u => u.id === upgradeId);
   if (!upgrade || upgrade.purchased) return false;
-  
+
   // Check if upgrade is unlocked
   if (!isUpgradeUnlocked(gameState, upgrade)) return false;
-  
+
   // Upgrades now cost real money ($) instead of CryptoCoins
   return gameState.realMoney >= upgrade.cost;
 };
@@ -176,32 +179,32 @@ export const canAffordUpgrade = (gameState: GameState, upgradeId: string): boole
 export const buyHardware = (gameState: GameState, hardwareId: string): GameState => {
   const hardwareIndex = gameState.hardware.findIndex(h => h.id === hardwareId);
   if (hardwareIndex === -1) return gameState;
-  
+
   const hardware = gameState.hardware[hardwareIndex];
   const cost = calculateHardwareCost(hardware);
-  
+
   if (gameState.cryptoCoins < cost) return gameState;
-  
+
   const newGameState = { ...gameState };
   newGameState.cryptoCoins -= cost;
   newGameState.hardware[hardwareIndex] = { ...hardware, owned: hardware.owned + 1 };
   newGameState.cryptoCoinsPerSecond = calculateTotalProduction(newGameState);
-  
+
   return newGameState;
 };
 
 export const buyUpgrade = (gameState: GameState, upgradeId: string): GameState => {
   const upgradeIndex = gameState.upgrades.findIndex(u => u.id === upgradeId);
   if (upgradeIndex === -1) return gameState;
-  
+
   const upgrade = gameState.upgrades[upgradeIndex];
   if (upgrade.purchased || gameState.cryptoCoins < upgrade.cost) return gameState;
-  
+
   const newGameState = { ...gameState };
   newGameState.cryptoCoins -= upgrade.cost;
   newGameState.upgrades[upgradeIndex] = { ...upgrade, purchased: true };
   newGameState.cryptoCoinsPerSecond = calculateTotalProduction(newGameState);
-  
+
   return newGameState;
 };
 
@@ -209,16 +212,16 @@ export const buyUpgrade = (gameState: GameState, upgradeId: string): GameState =
 export const updateOfflineProgress = (gameState: GameState): GameState => {
   const now = Date.now();
   const timeDiff = (now - gameState.lastSaveTime) / 1000; // Convert to seconds
-  
+
   if (timeDiff <= 0) return gameState;
-  
+
   const newGameState = { ...gameState };
   const offlineEarnings = gameState.cryptoCoinsPerSecond * timeDiff;
-  
+
   newGameState.cryptoCoins += offlineEarnings;
   newGameState.totalCryptoCoins += offlineEarnings;
   newGameState.lastSaveTime = now;
-  
+
   return newGameState;
 };
 
@@ -243,13 +246,13 @@ export const UNLOCK_REQUIREMENTS = {
 
 export const checkAndUpdateUnlocks = (gameState: GameState): GameState => {
   const newUnlockedTabs = { ...gameState.unlockedTabs };
-  
+
   // Debug logs for market unlock
   console.log('DEBUG: checkAndUpdateUnlocks - Market unlock check');
   console.log('DEBUG: blocksMined:', gameState.blocksMined, 'required:', UNLOCK_REQUIREMENTS.MARKET_BLOCKS);
   console.log('DEBUG: cryptoCoins:', gameState.cryptoCoins, 'required:', UNLOCK_REQUIREMENTS.MARKET_COINS);
   console.log('DEBUG: market currently unlocked:', newUnlockedTabs.market);
-  
+
   // Unlock Market: After mining enough blocks AND earning enough cryptocoins
   if (!newUnlockedTabs.market &&
       gameState.blocksMined >= UNLOCK_REQUIREMENTS.MARKET_BLOCKS &&
@@ -257,22 +260,28 @@ export const checkAndUpdateUnlocks = (gameState: GameState): GameState => {
     console.log('DEBUG: Market should be unlocked now!');
     newUnlockedTabs.market = true;
   }
-  
+
   // Unlock Hardware: After earning enough real money
   if (!newUnlockedTabs.hardware && gameState.totalRealMoneyEarned >= UNLOCK_REQUIREMENTS.HARDWARE_MONEY) {
     newUnlockedTabs.hardware = true;
   }
-  
+
   // Unlock Upgrades: After buying hardware
   if (!newUnlockedTabs.upgrades && gameState.hardware.some(h => h.owned > 0)) {
     newUnlockedTabs.upgrades = true;
   }
-  
-  // Unlock Prestige: After reaching certain level (future implementation)
-  if (!newUnlockedTabs.prestige && gameState.prestigeLevel >= UNLOCK_REQUIREMENTS.PRESTIGE_LEVEL) {
+
+  // Unlock Prestige: when blocksMined reaches 21M (total supply)
+  // Once unlocked it stays unlocked
+  if (!newUnlockedTabs.prestige &&
+      gameState.blocksMined >= GENESIS_CONSTANTS.TOTAL_BLOCKS) {
     newUnlockedTabs.prestige = true;
   }
-  
+  // Also keep it unlocked if already unlocked
+  if (gameState.unlockedTabs?.prestige) {
+    newUnlockedTabs.prestige = true;
+  }
+
   return {
     ...gameState,
     unlockedTabs: newUnlockedTabs,
@@ -283,16 +292,16 @@ export const checkAndUpdateUnlocks = (gameState: GameState): GameState => {
 export const isHardwareUnlocked = (gameState: GameState, hardware: Hardware): boolean => {
   // Manual mining is always hidden
   if (hardware.id === 'manual_mining') return false;
-  
+
   // First hardware (basic_cpu) is always unlocked
   if (hardware.level === 2) return true;
-  
+
   // For other hardware, check if previous level has required units
   const previousLevel = hardware.level - 1;
   const previousHardware = gameState.hardware.find(h => h.level === previousLevel);
-  
+
   if (!previousHardware) return false;
-  
+
   return previousHardware.owned >= HARDWARE_CONFIG.UNLOCK_REQUIREMENT;
 };
 
@@ -313,6 +322,20 @@ export const getInitialGameState = (): GameState => {
     marketUpdateTime: Date.now(),
     currencyBalances: {},
     totalPrestigeGains: 0,
+    // New prestige fields
+    prestigeProductionMultiplier: 1,
+    prestigeClickMultiplier: 1,
+    prestigeHistory: [],
+    unlockedBadges: [],
+    currentRunStartTime: Date.now(),
+    currentRunStats: {
+      blocksMinedThisRun: 0,
+      coinsEarnedThisRun: 0,
+      moneyEarnedThisRun: 0,
+      hardwarePurchasedThisRun: 0,
+      upgradesPurchasedThisRun: 0,
+      playtimeThisRun: 0,
+    },
     // Phase 1: Genesis - Block system
     blocksMined: 0,
     totalBlocks: GENESIS_CONSTANTS.TOTAL_BLOCKS,
@@ -333,5 +356,5 @@ export const getInitialGameState = (): GameState => {
     // Real money system
     realMoney: 0,
     totalRealMoneyEarned: 0,
-  };
+  } as GameState;
 };

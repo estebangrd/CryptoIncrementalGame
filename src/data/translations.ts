@@ -316,4 +316,188 @@ export const translations: Translation = {
     es: '¿Estás seguro de que quieres reiniciar tu progreso? Esta acción no se puede deshacer.',
     pt: 'Tem certeza de que deseja reiniciar seu progresso? Esta ação não pode ser desfeita.',
   },
+
+  // Prestige System
+  'prestige.system': {
+    en: 'Prestige System',
+    es: 'Sistema de Prestigio',
+    pt: 'Sistema de Prestígio',
+  },
+  'prestige.level': {
+    en: 'Prestige Level',
+    es: 'Nivel de Prestigio',
+    pt: 'Nível de Prestígio',
+  },
+  'prestige.nextLevel': {
+    en: 'Next Level',
+    es: 'Próximo Nivel',
+    pt: 'Próximo Nível',
+  },
+  'prestige.currentBonuses': {
+    en: 'Current Bonuses',
+    es: 'Bonificaciones Actuales',
+    pt: 'Bônus Atuais',
+  },
+  'prestige.nextBonuses': {
+    en: 'Next Bonuses',
+    es: 'Próximas Bonificaciones',
+    pt: 'Próximos Bônus',
+  },
+  'prestige.productionBoost': {
+    en: 'Production Boost',
+    es: 'Aumento de Producción',
+    pt: 'Bônus de Produção',
+  },
+  'prestige.clickBoost': {
+    en: 'Click Boost',
+    es: 'Aumento de Click',
+    pt: 'Bônus de Click',
+  },
+  'prestige.willKeep': {
+    en: "What You'll Keep",
+    es: 'Qué Conservarás',
+    pt: 'O que Você Manterá',
+  },
+  'prestige.willLose': {
+    en: "What You'll Lose",
+    es: 'Qué Perderás',
+    pt: 'O que Você Perderá',
+  },
+  'prestige.prestigeNow': {
+    en: 'PRESTIGE NOW',
+    es: 'HACER PRESTIGIO',
+    pt: 'FAZER PRESTÍGIO',
+  },
+  'prestige.notAvailable': {
+    en: 'Not Available',
+    es: 'No Disponible',
+    pt: 'Não Disponível',
+  },
+  'prestige.requireBlocks': {
+    en: 'Mine 21M blocks to unlock',
+    es: 'Necesitas minar 21M bloques',
+    pt: 'Mine 21M blocos para desbloquear',
+  },
+  'prestige.confirmTitle': {
+    en: 'Are you absolutely sure?',
+    es: '¿Estás absolutamente seguro?',
+    pt: 'Tem certeza absoluta?',
+  },
+  'prestige.confirmWarning': {
+    en: 'You will lose ALL progress except Prestige bonuses',
+    es: 'Perderás TODO el progreso excepto el nivel de prestigio',
+    pt: 'Você perderá TODO o progresso exceto bônus de prestígio',
+  },
+  'prestige.typeToConfirm': {
+    en: "Type 'PRESTIGE' to confirm",
+    es: "Escribe 'PRESTIGE' para confirmar",
+    pt: "Digite 'PRESTIGE' para confirmar",
+  },
+  'prestige.cancel': {
+    en: 'Cancel',
+    es: 'Cancelar',
+    pt: 'Cancelar',
+  },
+  'prestige.confirmButton': {
+    en: 'CONFIRM PRESTIGE',
+    es: 'CONFIRMAR PRESTIGIO',
+    pt: 'CONFIRMAR PRESTÍGIO',
+  },
+  'prestige.statsTab': {
+    en: 'Stats',
+    es: 'Estadísticas',
+    pt: 'Estatísticas',
+  },
+  'prestige.historyTab': {
+    en: 'History',
+    es: 'Historial',
+    pt: 'Histórico',
+  },
+  'prestige.badgesTab': {
+    en: 'Badges',
+    es: 'Insignias',
+    pt: 'Medalhas',
+  },
+  'prestige.currentRun': {
+    en: 'Current Run',
+    es: 'Run Actual',
+    pt: 'Run Atual',
+  },
+  'prestige.noHistory': {
+    en: 'No prestige history yet',
+    es: 'Aún no has hecho prestige',
+    pt: 'Sem histórico de prestígio ainda',
+  },
+
+  // Badges
+  'badge.firstPrestige': {
+    en: 'First Prestige',
+    es: 'Primer Prestigio',
+    pt: 'Primeiro Prestígio',
+  },
+  'badge.firstPrestigeDesc': {
+    en: 'Complete your first prestige',
+    es: 'Completar el primer prestige',
+    pt: 'Complete seu primeiro prestígio',
+  },
+  'badge.speedRunner': {
+    en: 'Speed Runner',
+    es: 'Corredor Veloz',
+    pt: 'Corredor Veloz',
+  },
+  'badge.speedRunnerDesc': {
+    en: 'Complete a run in under 2 hours',
+    es: 'Completar un run en menos de 2 horas',
+    pt: 'Complete um run em menos de 2 horas',
+  },
+  'badge.prestigeMaster': {
+    en: 'Prestige Master',
+    es: 'Maestro del Prestigio',
+    pt: 'Mestre do Prestígio',
+  },
+  'badge.prestigeMasterDesc': {
+    en: 'Reach Prestige Level 10',
+    es: 'Alcanzar nivel 10 de prestigio',
+    pt: 'Alcançar nível 10 de prestígio',
+  },
+  'badge.dedication': {
+    en: 'Dedication',
+    es: 'Dedicación',
+    pt: 'Dedicação',
+  },
+  'badge.dedicationDesc': {
+    en: 'Reach Prestige Level 50',
+    es: 'Alcanzar nivel 50 de prestigio',
+    pt: 'Alcançar nível 50 de prestígio',
+  },
+  'badge.infiniteLoop': {
+    en: 'Infinite Loop',
+    es: 'Bucle Infinito',
+    pt: 'Loop Infinito',
+  },
+  'badge.infiniteLoopDesc': {
+    en: 'Reach Prestige Level 100',
+    es: 'Alcanzar nivel 100 de prestigio',
+    pt: 'Alcançar nível 100 de prestígio',
+  },
+  'badge.theCollector': {
+    en: 'The Collector',
+    es: 'El Coleccionista',
+    pt: 'O Colecionador',
+  },
+  'badge.theCollectorDesc': {
+    en: 'Unlock all badges',
+    es: 'Desbloquear todas las insignias',
+    pt: 'Desbloquear todas as medalhas',
+  },
+  'badge.billionaire': {
+    en: 'Billionaire',
+    es: 'Billonario',
+    pt: 'Bilionário',
+  },
+  'badge.billionaireDesc': {
+    en: 'Earn $1,000,000,000 total',
+    es: 'Ganar $1,000,000,000 en total',
+    pt: 'Ganhar $1.000.000.000 no total',
+  },
 };

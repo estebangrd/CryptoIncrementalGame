@@ -1,0 +1,67 @@
+import { Badge } from '../types/game';
+
+export const ALL_BADGES: Badge[] = [
+  {
+    id: 'first_prestige',
+    nameKey: 'badge.firstPrestige',
+    descriptionKey: 'badge.firstPrestigeDesc',
+    icon: '⭐',
+    unlockCondition: { type: 'prestige_level', value: 1 },
+    reward: { type: 'none', value: 1 },
+    hidden: false,
+  },
+  {
+    id: 'speed_runner',
+    nameKey: 'badge.speedRunner',
+    descriptionKey: 'badge.speedRunnerDesc',
+    icon: '⚡',
+    unlockCondition: { type: 'speed', value: 7200 }, // 2 hours in seconds
+    reward: { type: 'production', value: 1.05 },
+    hidden: false,
+  },
+  {
+    id: 'prestige_master',
+    nameKey: 'badge.prestigeMaster',
+    descriptionKey: 'badge.prestigeMasterDesc',
+    icon: '🏆',
+    unlockCondition: { type: 'prestige_level', value: 10 },
+    reward: { type: 'click', value: 1.1 },
+    hidden: false,
+  },
+  {
+    id: 'dedication',
+    nameKey: 'badge.dedication',
+    descriptionKey: 'badge.dedicationDesc',
+    icon: '🎖️',
+    unlockCondition: { type: 'prestige_level', value: 50 },
+    reward: { type: 'production', value: 1.2 },
+    hidden: false,
+  },
+  {
+    id: 'infinite_loop',
+    nameKey: 'badge.infiniteLoop',
+    descriptionKey: 'badge.infiniteLoopDesc',
+    icon: '♾️',
+    unlockCondition: { type: 'prestige_level', value: 100 },
+    reward: { type: 'production', value: 1.5 },
+    hidden: true,
+  },
+  {
+    id: 'the_collector',
+    nameKey: 'badge.theCollector',
+    descriptionKey: 'badge.theCollectorDesc',
+    icon: '💼',
+    unlockCondition: { type: 'special', value: 'all_badges' },
+    reward: { type: 'production', value: 2.0 },
+    hidden: true,
+  },
+  {
+    id: 'billionaire',
+    nameKey: 'badge.billionaire',
+    descriptionKey: 'badge.billionaireDesc',
+    icon: '💰',
+    unlockCondition: { type: 'total_money', value: 1000000000 },
+    reward: { type: 'click', value: 1.5 },
+    hidden: true,
+  },
+];

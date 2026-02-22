@@ -1,25 +1,30 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
-import { GameState, Cryptocurrency, IAPState, AdState, AdBoostState, Achievement } from '../types/game';
+import { GameState, Cryptocurrency, IAPState, AdState, AdBoostState, Achievement, PrestigeRun, RunStats } from '../types/game';
 import { hardwareProgression } from '../data/hardwareData';
 import { initialUpgrades } from '../data/gameData';
 import { cryptocurrencies } from '../data/cryptocurrencies';
 import { getInitialGameState, updateOfflineProgress, checkAndUpdateUnlocks } from '../utils/gameLogic';
-import { performPrestige } from '../utils/prestigeLogic';
+import {
+  canPrestige,
+  calculateProductionMultiplier,
+  calculateClickMultiplier,
+  checkBadgeUnlocks,
+} from '../utils/prestigeLogic';
 import { performExchange } from '../utils/exchangeLogic';
-import { 
-  calculateTotalHashRate, 
-  calculateCurrentReward, 
+import {
+  calculateTotalHashRate,
+  calculateCurrentReward,
   calculateNextHalving,
   mineBlock,
-  canMineBlock 
+  canMineBlock
 } from '../utils/blockLogic';
-import { 
+import {
   calculateTotalElectricityCost,
   calculateTotalMiningSpeed,
   calculateTotalProduction
 } from '../utils/gameLogic';
-import { 
+import {
   updateMarketState,
   getActiveNPCs,
   calculateNPCPurchaseAmount,
@@ -65,7 +70,7 @@ type GameAction =
   | { type: 'ADD_PRODUCTION' }
   | { type: 'SELECT_CURRENCY'; payload: string | null }
   | { type: 'UPDATE_MARKET' }
-  | { type: 'PERFORM_PRESTIGE' }
+  | { type: 'DO_PRESTIGE' }
   | { type: 'EXCHANGE_CURRENCY'; payload: { fromCurrency: string; toCurrency: string; amount: number } }
   | { type: 'MINE_BLOCK' }
   | { type: 'UPDATE_MARKET_STATE' }
@@ -99,16 +104,16 @@ const GameContext = createContext<GameContextType | undefined>(undefined);
 const recalculateGameStats = (state: GameState): GameState => {
   // Calculate total production using the correct function
   const totalProduction = calculateTotalProduction(state);
-  
+
   // Calculate total hash rate from hardware
   const totalHashRate = calculateTotalHashRate(state);
-  
+
   // Calculate total electricity cost
   const totalElectricityCost = calculateTotalElectricityCost(state.hardware);
-  
+
   // Calculate net production (production - electricity cost)
   const netProduction = Math.max(0, totalProduction - totalElectricityCost);
-  
+
   const updatedState = {
     ...state,
     cryptoCoinsPerSecond: netProduction,
@@ -117,7 +122,7 @@ const recalculateGameStats = (state: GameState): GameState => {
     currentReward: calculateCurrentReward(state.blocksMined),
     nextHalving: calculateNextHalving(state.blocksMined),
   };
-  
+
   // Check and update unlocks
   return checkAndUpdateUnlocks(updatedState);
 };
@@ -127,41 +132,41 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     case 'BUY_HARDWARE':
       const hardwareIndex = state.hardware.findIndex(h => h.id === action.payload);
       if (hardwareIndex === -1) return state;
-      
+
       const hardware = state.hardware[hardwareIndex];
       const cost = Math.floor(hardware.baseCost * Math.pow(hardware.costMultiplier, hardware.owned));
-      
+
       if (state.cryptoCoins < cost) return state;
-      
+
       const newHardware = [...state.hardware];
       newHardware[hardwareIndex] = { ...hardware, owned: hardware.owned + 1 };
-      
+
       const newState = {
         ...state,
         cryptoCoins: state.cryptoCoins - cost,
         hardware: newHardware,
       };
-      
+
       return recalculateGameStats(newState);
     case 'BUY_UPGRADE':
       const upgradeIndex = state.upgrades.findIndex(u => u.id === action.payload);
       if (upgradeIndex === -1) return state;
-      
+
       const upgrade = state.upgrades[upgradeIndex];
       // Upgrades now cost real money ($) instead of CryptoCoins
       if (upgrade.purchased || state.realMoney < upgrade.cost) return state;
-      
+
       const newUpgrades = [...state.upgrades];
       newUpgrades[upgradeIndex] = { ...upgrade, purchased: true };
-      
+
       const updatedState = {
         ...state,
         realMoney: state.realMoney - upgrade.cost,
         upgrades: newUpgrades,
       };
-      
+
       return recalculateGameStats(updatedState);
-    case 'LOAD_GAME':
+    case 'LOAD_GAME': {
       // Migrate old hardware keys to new format
       const migratedHardware = action.payload.hardware?.map(hw => {
         // Create a mapping of old keys to new keys
@@ -175,7 +180,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           'asic_gen2': { nameKey: 'hardware.asicGen2', descriptionKey: 'hardware.asicGen2Desc' },
           'asic_gen3': { nameKey: 'hardware.asicGen3', descriptionKey: 'hardware.asicGen3Desc' },
         };
-        
+
         const migration = keyMigrations[hw.id];
         if (migration) {
           return {
@@ -186,9 +191,10 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         }
         return hw;
       }) || hardwareProgression;
-      
-      // Ensure cryptocurrencies are initialized when loading old saves
-      const loadedState = {
+
+      // Merge defaults first so new fields get default values for old saves
+      const loadedState: GameState = {
+        ...getInitialGameState(),
         ...action.payload,
         hardware: migratedHardware,
         cryptocurrencies: action.payload.cryptocurrencies || cryptocurrencies,
@@ -205,8 +211,25 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         },
         realMoney: action.payload.realMoney || 0,
         totalRealMoneyEarned: action.payload.totalRealMoneyEarned || 0,
+        // Ensure new prestige fields exist if missing from old saves
+        prestigeProductionMultiplier: action.payload.prestigeProductionMultiplier
+          ?? calculateProductionMultiplier(action.payload.prestigeLevel ?? 0),
+        prestigeClickMultiplier: action.payload.prestigeClickMultiplier
+          ?? calculateClickMultiplier(action.payload.prestigeLevel ?? 0),
+        prestigeHistory: action.payload.prestigeHistory ?? [],
+        unlockedBadges: action.payload.unlockedBadges ?? [],
+        currentRunStartTime: action.payload.currentRunStartTime ?? Date.now(),
+        currentRunStats: action.payload.currentRunStats ?? {
+          blocksMinedThisRun: 0,
+          coinsEarnedThisRun: 0,
+          moneyEarnedThisRun: 0,
+          hardwarePurchasedThisRun: 0,
+          upgradesPurchasedThisRun: 0,
+          playtimeThisRun: 0,
+        },
       };
       return recalculateGameStats(loadedState);
+    }
     case 'RESET_GAME':
       const resetState = {
         ...getInitialGameState(),
@@ -234,28 +257,28 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       // Calculate how many blocks should be mined based on hardware mining speed
       const totalMiningSpeed = calculateTotalMiningSpeed(state.hardware, state.upgrades);
       const blocksToMine = Math.floor(totalMiningSpeed); // Mine complete blocks only
-      
+
       if (blocksToMine > 0 && canMineBlock(state)) {
         // Mine blocks and get rewards
         let newState = { ...state };
         let totalReward = 0;
-        
+
         for (let i = 0; i < blocksToMine && canMineBlock(newState); i++) {
           const reward = calculateCurrentReward(newState.blocksMined);
           newState.blocksMined += 1;
           totalReward += reward;
-          
+
           // Update current reward and next halving after each block
           newState.currentReward = calculateCurrentReward(newState.blocksMined);
           newState.nextHalving = calculateNextHalving(newState.blocksMined);
         }
-        
+
         newState.cryptoCoins += totalReward;
         newState.totalCryptoCoins += totalReward;
-        
+
         return recalculateGameStats(newState);
       }
-      
+
       return state;
     case 'SELECT_CURRENCY':
       return {
@@ -267,8 +290,74 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         ...state,
         marketUpdateTime: Date.now(),
       };
-    case 'PERFORM_PRESTIGE':
-      return performPrestige(state);
+    case 'DO_PRESTIGE': {
+      if (!canPrestige(state)) {
+        return state;
+      }
+      const now = Date.now();
+      const currentRun: PrestigeRun = {
+        runNumber: (state.prestigeHistory || []).length + 1,
+        prestigeLevel: state.prestigeLevel,
+        blocksMined: state.blocksMined,
+        totalCoinsEarned: state.totalCryptoCoins || 0,
+        totalMoneyEarned: state.totalRealMoneyEarned || 0,
+        duration: (now - (state.currentRunStartTime || now)) / 1000,
+        startTime: state.currentRunStartTime || now,
+        endTime: now,
+        hardwarePurchased: state.hardware.reduce((sum, hw) => sum + hw.owned, 0),
+        upgradesPurchased: state.upgrades.filter(u => u.purchased).length,
+      };
+      const newPrestigeLevel = state.prestigeLevel + 1;
+      const newProductionMultiplier = calculateProductionMultiplier(newPrestigeLevel);
+      const newClickMultiplier = calculateClickMultiplier(newPrestigeLevel);
+      const resetHardware = state.hardware.map(hw => ({
+        ...hw,
+        owned: hw.id === 'manual_mining' ? 1 : 0,
+      }));
+      const resetUpgrades = state.upgrades.map(upg => ({ ...upg, purchased: false }));
+      const newHistory = [...(state.prestigeHistory || []), currentRun];
+      const stateForBadges: GameState = {
+        ...state,
+        prestigeLevel: newPrestigeLevel,
+        prestigeHistory: newHistory,
+        totalRealMoneyEarned: state.totalRealMoneyEarned || 0,
+      };
+      const newUnlockedBadges = checkBadgeUnlocks(stateForBadges);
+      const resetRunStats: RunStats = {
+        blocksMinedThisRun: 0,
+        coinsEarnedThisRun: 0,
+        moneyEarnedThisRun: 0,
+        hardwarePurchasedThisRun: 0,
+        upgradesPurchasedThisRun: 0,
+        playtimeThisRun: 0,
+      };
+      const prestigedState: GameState = {
+        ...state,
+        prestigeLevel: newPrestigeLevel,
+        prestigeProductionMultiplier: newProductionMultiplier,
+        prestigeClickMultiplier: newClickMultiplier,
+        prestigeMultiplier: newProductionMultiplier, // backwards compat
+        prestigeHistory: newHistory,
+        unlockedBadges: newUnlockedBadges,
+        blocksMined: 0,
+        cryptoCoins: 0,
+        realMoney: 0,
+        totalRealMoneyEarned: 0,
+        totalCryptoCoins: 0,
+        hardware: resetHardware,
+        upgrades: resetUpgrades,
+        phase: 'genesis' as const,
+        currentRunStartTime: now,
+        currentRunStats: resetRunStats,
+        unlockedTabs: {
+          market: false,
+          hardware: false,
+          upgrades: false,
+          prestige: false,
+        },
+      };
+      return recalculateGameStats(prestigedState);
+    }
     case 'EXCHANGE_CURRENCY':
       return performExchange(state, action.payload.fromCurrency, action.payload.toCurrency, action.payload.amount);
     case 'MINE_BLOCK':
@@ -285,13 +374,13 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     case 'SELL_TO_NPC':
       const npc = state.marketState.npcs.find(n => n.id === action.payload.npcId);
       if (!npc || npc.type !== 'buyer') return state;
-      
+
       const amount = Math.min(action.payload.amount, state.cryptoCoins);
       if (amount <= 0) return state;
-      
+
       const transaction = processNPCPurchase(npc, amount, state.marketState.currentPrice);
       const updatedMarketState = updateMarketAfterTransaction(state.marketState, transaction.coinsReceived);
-      
+
       return {
         ...state,
         cryptoCoins: state.cryptoCoins - transaction.coinsSold,
@@ -300,47 +389,47 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     case 'SELL_COINS_FOR_MONEY':
       const coinsToSell = Math.min(action.payload.amount, state.cryptoCoins);
       if (coinsToSell <= 0) return state;
-      
+
       // Validaciones adicionales de seguridad
       if (!action.payload.price || action.payload.price <= 0 || !isFinite(action.payload.price)) {
         console.warn('Invalid price in SELL_COINS_FOR_MONEY:', action.payload.price);
         return state;
       }
-      
+
       const moneyEarned = coinsToSell * action.payload.price;
-      
+
       // Validar que el monto no sea excesivamente grande (posible bug de cálculo)
       // Este límite previene errores numéricos o bugs que podrían generar valores anómalos
       if (moneyEarned > 100000000) { // $100M como límite de seguridad extremo
         console.warn('Suspiciously large transaction amount:', moneyEarned);
         return state;
       }
-      
+
       return recalculateGameStats({
         ...state,
         cryptoCoins: state.cryptoCoins - coinsToSell,
         realMoney: state.realMoney + moneyEarned,
         totalRealMoneyEarned: state.totalRealMoneyEarned + moneyEarned,
       });
-    
+
     case 'BUY_HARDWARE_WITH_MONEY':
       const moneyHardwareIndex = state.hardware.findIndex(h => h.id === action.payload);
       if (moneyHardwareIndex === -1) return state;
-      
+
       const moneyHardware = state.hardware[moneyHardwareIndex];
       const moneyCost = Math.floor(moneyHardware.baseCost * Math.pow(moneyHardware.costMultiplier, moneyHardware.owned));
-      
+
       if (state.realMoney < moneyCost) return state;
-      
+
       const moneyNewHardware = [...state.hardware];
       moneyNewHardware[moneyHardwareIndex] = { ...moneyHardware, owned: moneyHardware.owned + 1 };
-      
+
       const moneyNewState = {
         ...state,
         realMoney: state.realMoney - moneyCost,
         hardware: moneyNewHardware,
       };
-      
+
       return recalculateGameStats(moneyNewState);
     case 'UPDATE_CRYPTO_PRICES':
       // Esta acción se manejará de forma asíncrona en el useEffect
@@ -624,7 +713,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     console.log('DEBUG: Initial hardware:', gameState.hardware.map(h => ({ id: h.id, owned: h.owned, miningSpeed: h.miningSpeed, blockReward: h.blockReward })));
     console.log('DEBUG: Initial upgrades:', gameState.upgrades.filter(u => u.purchased).map(u => ({ id: u.id, purchased: u.purchased })));
   }, []);
-  
+
   const [currentLanguage, setCurrentLanguage] = React.useState('en');
 
   const t = (key: string): string => {
@@ -641,14 +730,14 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const loadSavedGame = async () => {
       const savedState = await loadGameState();
       const savedLanguage = await loadLanguage();
-      
+
       if (savedState) {
         dispatch({ type: 'LOAD_GAME', payload: savedState });
       }
-      
+
       setCurrentLanguage(savedLanguage);
     };
-    
+
     loadSavedGame();
   }, []);
 
@@ -670,7 +759,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     const subscription = AppState.addEventListener('change', handleAppStateChange);
-    
+
     return () => {
       subscription?.remove();
     };
@@ -685,7 +774,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     const subscription = AppState.addEventListener('change', handleAppStateChange);
-    
+
     // Update on mount
     dispatch({ type: 'UPDATE_OFFLINE_PROGRESS' });
 
@@ -732,13 +821,13 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       try {
         console.log('[DEBUG] GameContext: Attempting to initialize price history');
         console.log('[DEBUG] GameContext: cryptocurrencies available:', gameState.cryptocurrencies?.length || 0);
-        
+
         // Solo inicializar si hay criptomonedas disponibles
         if (gameState.cryptocurrencies && gameState.cryptocurrencies.length > 0) {
           // Primero guardar el estado actual antes de inicializar el historial
           console.log('[DEBUG] GameContext: Saving game state before initializing price history');
           await saveGameState(gameState);
-          
+
           console.log('[DEBUG] GameContext: Now calling initializePriceHistory');
           await initializePriceHistory(gameState.cryptocurrencies);
           console.log('[DEBUG] GameContext: Price history initialized successfully');
@@ -747,7 +836,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         console.warn('[WARN] Failed to initialize price history:', error);
       }
     };
-    
+
     initializeHistory();
   }, [gameState.cryptocurrencies]);
 
@@ -843,20 +932,20 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const updateCryptoPrices = async () => {
       const now = Date.now();
       const lastUpdate = gameState.marketUpdateTime || 0;
-      
+
       // Solo actualizar si hay criptomonedas disponibles
       if (!gameState.cryptocurrencies || gameState.cryptocurrencies.length === 0) {
         return;
       }
-      
+
       // Solo actualizar si ha pasado suficiente tiempo o si es la primera vez
       if (shouldUpdatePrices(lastUpdate) || lastUpdate === 0) {
         try {
           const updatedCryptos = await fetchCryptoPrices(gameState.cryptocurrencies);
-          
+
           // Actualizar historial de precios
           await updateAllPriceHistory(updatedCryptos);
-          
+
           // Actualizar el estado con los nuevos precios
           dispatch({
             type: 'LOAD_GAME',

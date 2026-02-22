@@ -94,6 +94,47 @@ export interface Achievement {
   hidden: boolean;
 }
 
+// Prestige run history record
+export interface PrestigeRun {
+  runNumber: number;
+  prestigeLevel: number;
+  blocksMined: number;
+  totalCoinsEarned: number;
+  totalMoneyEarned: number;
+  duration: number;           // seconds
+  startTime: number;
+  endTime: number;
+  hardwarePurchased: number;
+  upgradesPurchased: number;
+}
+
+// Stats tracked during the current run
+export interface RunStats {
+  blocksMinedThisRun: number;
+  coinsEarnedThisRun: number;
+  moneyEarnedThisRun: number;
+  hardwarePurchasedThisRun: number;
+  upgradesPurchasedThisRun: number;
+  playtimeThisRun: number;    // seconds
+}
+
+// Badge definition
+export interface Badge {
+  id: string;
+  nameKey: string;
+  descriptionKey: string;
+  icon: string;
+  unlockCondition: {
+    type: 'prestige_level' | 'speed' | 'total_blocks' | 'total_money' | 'special';
+    value: number | string;
+  };
+  reward?: {
+    type: 'production' | 'click' | 'none';
+    value: number;
+  };
+  hidden: boolean;
+}
+
 export interface GameState {
   cryptoCoins: number;
   cryptoCoinsPerSecond: number;
@@ -106,11 +147,18 @@ export interface GameState {
   totalClicks: number;
   totalCryptoCoins: number;
   prestigeLevel: number;
-  prestigeMultiplier: number;
+  prestigeMultiplier: number;       // backwards compat — equals prestigeProductionMultiplier
   marketUpdateTime: number;
-  // Prestige system
+  // Prestige system (legacy, kept for backwards compat)
   currencyBalances: { [currencyId: string]: number };
   totalPrestigeGains: number;
+  // New prestige fields
+  prestigeProductionMultiplier: number;
+  prestigeClickMultiplier: number;
+  prestigeHistory: PrestigeRun[];
+  unlockedBadges: string[];
+  currentRunStartTime: number;
+  currentRunStats: RunStats;
   // Phase 1: Genesis - Block system
   blocksMined: number;
   totalBlocks: number;
