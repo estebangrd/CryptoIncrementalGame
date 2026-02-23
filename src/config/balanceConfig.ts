@@ -30,7 +30,7 @@ export const BLOCK_CONFIG = {
 // ============================================================================
 export const HARDWARE_CONFIG = {
   // Multiplicador de costo al comprar múltiples unidades
-  COST_MULTIPLIER: 1.15,
+  COST_MULTIPLIER: 1.20,
 
   // Requisito de unidades del nivel anterior para desbloquear siguiente
   UNLOCK_REQUIREMENT: 5,
@@ -48,7 +48,7 @@ export const HARDWARE_CONFIG = {
 
     // Nivel 2: Basic CPU
     basic_cpu: {
-      baseCost: 100,             // CryptoCoins
+      baseCost: 500,             // CryptoCoins
       baseProduction: 30,        // Hash/s
       blockReward: 45,           // CryptoCoins por bloque
       miningSpeed: 0.3,          // Bloques/segundo
@@ -57,7 +57,7 @@ export const HARDWARE_CONFIG = {
 
     // Nivel 3: Advanced CPU
     advanced_cpu: {
-      baseCost: 400,
+      baseCost: 2500,
       baseProduction: 80,
       blockReward: 42,
       miningSpeed: 0.8,
@@ -66,7 +66,7 @@ export const HARDWARE_CONFIG = {
 
     // Nivel 4: Basic GPU
     basic_gpu: {
-      baseCost: 1500,
+      baseCost: 12000,
       baseProduction: 250,
       blockReward: 38,
       miningSpeed: 2.5,
@@ -75,7 +75,7 @@ export const HARDWARE_CONFIG = {
 
     // Nivel 5: Advanced GPU
     advanced_gpu: {
-      baseCost: 5000,
+      baseCost: 45000,
       baseProduction: 600,
       blockReward: 35,
       miningSpeed: 6,
@@ -84,29 +84,56 @@ export const HARDWARE_CONFIG = {
 
     // Nivel 6: ASIC Gen 1
     asic_gen1: {
-      baseCost: 15000,
+      baseCost: 180000,
       baseProduction: 1500,
       blockReward: 30,
-      miningSpeed: 15,
+      miningSpeed: 12,
       electricityCost: 20,
     },
 
     // Nivel 7: ASIC Gen 2
     asic_gen2: {
-      baseCost: 50000,
+      baseCost: 600000,
       baseProduction: 4000,
       blockReward: 25,
-      miningSpeed: 40,
+      miningSpeed: 30,
       electricityCost: 45,
     },
 
     // Nivel 8: ASIC Gen 3
     asic_gen3: {
-      baseCost: 150000,
+      baseCost: 2000000,
       baseProduction: 10000,
       blockReward: 20,
-      miningSpeed: 100,
+      miningSpeed: 60,
       electricityCost: 100,
+    },
+
+    // Nivel 9: Mining Farm
+    mining_farm: {
+      baseCost: 8000000,
+      baseProduction: 50000,
+      blockReward: 15,
+      miningSpeed: 150,
+      electricityCost: 300,
+    },
+
+    // Nivel 10: Quantum Miner
+    quantum_miner: {
+      baseCost: 50000000,
+      baseProduction: 200000,
+      blockReward: 10,
+      miningSpeed: 400,
+      electricityCost: 900,
+    },
+
+    // Nivel 11: Supercomputer
+    supercomputer: {
+      baseCost: 300000000,
+      baseProduction: 1000000,
+      blockReward: 5,
+      miningSpeed: 1000,
+      electricityCost: 3000,
     },
   },
 };

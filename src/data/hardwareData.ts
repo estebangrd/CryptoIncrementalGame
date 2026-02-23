@@ -154,6 +154,63 @@ export const hardwareProgression: Hardware[] = [
     currencyId: 'cryptocoin',
     level: 8,
   },
+
+  // Level 9: Mining Farm
+  {
+    id: 'mining_farm',
+    name: 'Mining Farm',
+    nameKey: 'hardware.miningFarm',
+    description: 'An industrial facility consuming an entire city power grid',
+    descriptionKey: 'hardware.miningFarmDesc',
+    baseCost: HARDWARE_CONFIG.levels.mining_farm.baseCost,
+    baseProduction: HARDWARE_CONFIG.levels.mining_farm.baseProduction,
+    blockReward: HARDWARE_CONFIG.levels.mining_farm.blockReward,
+    miningSpeed: HARDWARE_CONFIG.levels.mining_farm.miningSpeed,
+    electricityCost: HARDWARE_CONFIG.levels.mining_farm.electricityCost,
+    owned: 0,
+    costMultiplier: HARDWARE_CONFIG.COST_MULTIPLIER,
+    icon: '🏗️',
+    currencyId: 'cryptocoin',
+    level: 9,
+  },
+
+  // Level 10: Quantum Miner
+  {
+    id: 'quantum_miner',
+    name: 'Quantum Miner',
+    nameKey: 'hardware.quantumMiner',
+    description: 'Quantum computers exploiting superposition to mine at impossible speeds',
+    descriptionKey: 'hardware.quantumMinerDesc',
+    baseCost: HARDWARE_CONFIG.levels.quantum_miner.baseCost,
+    baseProduction: HARDWARE_CONFIG.levels.quantum_miner.baseProduction,
+    blockReward: HARDWARE_CONFIG.levels.quantum_miner.blockReward,
+    miningSpeed: HARDWARE_CONFIG.levels.quantum_miner.miningSpeed,
+    electricityCost: HARDWARE_CONFIG.levels.quantum_miner.electricityCost,
+    owned: 0,
+    costMultiplier: HARDWARE_CONFIG.COST_MULTIPLIER,
+    icon: '⚛️',
+    currencyId: 'cryptocoin',
+    level: 10,
+  },
+
+  // Level 11: Supercomputer
+  {
+    id: 'supercomputer',
+    name: 'Supercomputer',
+    nameKey: 'hardware.supercomputer',
+    description: 'A planetary megastructure converting Earth core energy into compute power',
+    descriptionKey: 'hardware.supercomputerDesc',
+    baseCost: HARDWARE_CONFIG.levels.supercomputer.baseCost,
+    baseProduction: HARDWARE_CONFIG.levels.supercomputer.baseProduction,
+    blockReward: HARDWARE_CONFIG.levels.supercomputer.blockReward,
+    miningSpeed: HARDWARE_CONFIG.levels.supercomputer.miningSpeed,
+    electricityCost: HARDWARE_CONFIG.levels.supercomputer.electricityCost,
+    owned: 0,
+    costMultiplier: HARDWARE_CONFIG.COST_MULTIPLIER,
+    icon: '🌍',
+    currencyId: 'cryptocoin',
+    level: 11,
+  },
 ];
 
 // Helper function to get hardware by level

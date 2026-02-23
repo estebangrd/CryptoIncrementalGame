@@ -157,6 +157,36 @@ export const translations: Translation = {
     es: 'Minero ASIC de tercera generación',
     pt: 'Minerador ASIC de terceira geração',
   },
+  'hardware.miningFarm': {
+    en: 'Mining Farm',
+    es: 'Granja de Minería',
+    pt: 'Fazenda de Mineração',
+  },
+  'hardware.miningFarmDesc': {
+    en: 'An industrial facility consuming an entire city\'s power grid. The newspapers call it "the crypto blackout".',
+    es: 'Una instalación industrial que consume la red eléctrica de una ciudad entera. Los diarios hablan del "apagón cripto".',
+    pt: 'Uma instalação industrial que consome a rede elétrica de uma cidade inteira. Os jornais falam do "apagão cripto".',
+  },
+  'hardware.quantumMiner': {
+    en: 'Quantum Miner',
+    es: 'Minero Cuántico',
+    pt: 'Minerador Quântico',
+  },
+  'hardware.quantumMinerDesc': {
+    en: 'Quantum computers exploiting superposition to explore millions of nonces at once. Physicists say it\'s impossible.',
+    es: 'Computadoras cuánticas que explotan la superposición para explorar millones de nonces a la vez. Los físicos dicen que es imposible.',
+    pt: 'Computadores quânticos explorando superposição para testar milhões de nonces ao mesmo tempo. Físicos dizem que é impossível.',
+  },
+  'hardware.supercomputer': {
+    en: 'Supercomputer',
+    es: 'Supercomputadora',
+    pt: 'Supercomputador',
+  },
+  'hardware.supercomputerDesc': {
+    en: 'A planetary megastructure converting Earth\'s core energy into raw compute power. The lights of cities are going out.',
+    es: 'Una megaestructura planetaria que convierte la energía del núcleo terrestre en poder de cómputo. Las luces de las ciudades se están apagando.',
+    pt: 'Uma megaestrutura planetária convertendo a energia do núcleo terrestre em poder computacional. As luzes das cidades estão se apagando.',
+  },
 
   // Upgrades
   'upgrade.clickPower': {
