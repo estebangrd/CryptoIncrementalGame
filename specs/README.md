@@ -12,6 +12,10 @@ Este directorio contiene todas las especificaciones técnicas exhaustivas (Level
 | [Hardware Progression](game-mechanics/hardware-progression.md) | ✅ Implemented | Phase 1 | Critical | 8 niveles de hardware con desbloqueo progresivo |
 | [Market System](game-mechanics/market-system.md) | ✅ Implemented | Phase 2 | High | Venta de CryptoCoins por dinero real con API |
 | [Prestige System](game-mechanics/prestige-system.md) | ✅ Implemented | Phase 2 | High | Sistema de reinicio con bonos permanentes |
+| [Energy System](game-mechanics/energy-system.md) | 📋 Planned | Phase 4 | High | Generación energética: renovables/no-renovables, balance MW, control de IA |
+| [AI System](game-mechanics/ai-system.md) | 📋 Planned | Phase 5 | High | IA con 3 niveles de autonomía, cryptos exclusivas, control irreversible |
+| [Narrative Events](game-mechanics/narrative-events.md) | 📋 Planned | Phase 6 | High | Medidor de Recursos del Planeta, 5 hitos narrativos, pestaña Crónica |
+| [Endgame Collapse](game-mechanics/endgame-collapse.md) | 📋 Planned | Phase 7 | High | Colapso planetario, buen ending alternativo, bonos de prestige diferenciados |
 
 ### 💰 Monetization (Monetización)
 
@@ -46,11 +50,11 @@ Este directorio contiene todas las especificaciones técnicas exhaustivas (Level
 
 ## 📊 Estado General
 
-- **Total de Specs**: 15
-- **Implementadas**: 9 (60%)
+- **Total de Specs**: 19
+- **Implementadas**: 9 (47%)
 - **Parciales**: 0 (0%)
-- **Documentadas**: 2 (13%)
-- **Planeadas**: 4 (27%)
+- **Documentadas**: 2 (11%)
+- **Planeadas**: 8 (42%)
 
 ### Por Fase
 - **Phase 1 (Genesis)**: 2/2 implementadas ✅
@@ -72,7 +76,13 @@ Este directorio contiene todas las especificaciones técnicas exhaustivas (Level
 8. Boosters Catalog
 9. Achievement System
 
-### 📅 Futuro (Phase 4+)
+### 📅 Futuro (Phase 4-7 — Narrativa Completa)
+10. Energy System (Renovables / No-renovables)
+11. AI System (Niveles de autonomía + Cryptos de IA)
+12. Narrative Events (Medidor de Recursos del Planeta)
+13. Endgame Collapse (Colapso y Buen Ending)
+
+### 📅 Post-narrativa
 - Daily Missions System
 - Market Events
 - Animations & Polish
