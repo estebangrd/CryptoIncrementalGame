@@ -137,6 +137,27 @@ export interface Badge {
   hidden: boolean;
 }
 
+export interface EnergySource {
+  id: string;
+  nameKey: string;
+  descriptionKey: string;
+  mwPerUnit: number;
+  costPerUnit: number; // $ (real money)
+  isRenewable: boolean;
+  depletionPerMwPerSecond: number; // % planet per MW per second
+  icon: string;
+  quantity: number; // units built
+  unlockedByAI: boolean; // true = built by AI at Level 3
+}
+
+export interface EnergyState {
+  sources: Record<string, EnergySource>;
+  totalGeneratedMW: number;       // calculated
+  totalRequiredMW: number;        // calculated
+  nonRenewableActiveMW: number;   // calculated, for planet depletion
+  aiControlled: boolean;          // true when AI Level 3 is active
+}
+
 export interface GameState {
   cryptoCoins: number;
   cryptoCoinsPerSecond: number;
@@ -177,6 +198,7 @@ export interface GameState {
     hardware: boolean;
     upgrades: boolean;
     prestige: boolean;
+    energy: boolean;
   };
   // Real money system
   realMoney: number; // Dollars earned from selling coins
@@ -188,6 +210,9 @@ export interface GameState {
   adState: AdState;
   adBoost: AdBoostState;
   achievements: Achievement[];
+  // Energy system (Phase 4)
+  energy: EnergyState;
+  planetResources: number; // 0-100, starts at 100
 }
 
 export interface Hardware {
@@ -201,11 +226,12 @@ export interface Hardware {
   blockReward: number; // Coins per block mined
   miningSpeed: number; // Blocks per second
   electricityCost: number; // Coins per second for electricity
+  energyRequired: number; // MW required per unit (0 for tiers 1-8)
   owned: number;
   costMultiplier: number;
   icon: string;
   currencyId: string; // Which cryptocurrency this hardware mines
-  level: number; // Technology level (1-8)
+  level: number; // Technology level (1-11)
 }
 
 export interface Upgrade {

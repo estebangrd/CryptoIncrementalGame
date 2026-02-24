@@ -302,6 +302,73 @@ export const BALANCE_CONFIG = {
 };
 
 // ============================================================================
+// SISTEMA DE ENERGÍA (PHASE 4)
+// ============================================================================
+export const ENERGY_CONFIG = {
+  RENEWABLE_CAP_MW: 8_000,
+
+  NON_RENEWABLE_UNLOCK_THRESHOLD: 0.8, // 80% del cap renovable
+
+  SOURCES: {
+    solar_farm: {
+      mwPerUnit: 200,
+      costPerUnit: 5_000,
+      isRenewable: true,
+      depletionPerMwPerSecond: 0,
+      icon: '☀️',
+    },
+    wind_farm: {
+      mwPerUnit: 800,
+      costPerUnit: 20_000,
+      isRenewable: true,
+      depletionPerMwPerSecond: 0,
+      icon: '💨',
+    },
+    hydroelectric_dam: {
+      mwPerUnit: 3_000,
+      costPerUnit: 150_000,
+      isRenewable: true,
+      depletionPerMwPerSecond: 0,
+      icon: '💧',
+    },
+    geothermal_plant: {
+      mwPerUnit: 5_000,
+      costPerUnit: 800_000,
+      isRenewable: true,
+      depletionPerMwPerSecond: 0,
+      icon: '🌋',
+    },
+    coal_plant: {
+      mwPerUnit: 1_000,
+      costPerUnit: 2_000,
+      isRenewable: false,
+      depletionPerMwPerSecond: 0.0001,
+      icon: '🏭',
+    },
+    oil_refinery: {
+      mwPerUnit: 5_000,
+      costPerUnit: 8_000,
+      isRenewable: false,
+      depletionPerMwPerSecond: 0.00008,
+      icon: '🛢️',
+    },
+    nuclear_reactor: {
+      mwPerUnit: 20_000,
+      costPerUnit: 300_000,
+      isRenewable: false,
+      depletionPerMwPerSecond: 0.00005,
+      icon: '☢️',
+    },
+  },
+
+  HARDWARE_ENERGY_REQUIREMENTS: {
+    mining_farm: 500,
+    quantum_miner: 2_000,
+    supercomputer: 10_000,
+  },
+};
+
+// ============================================================================
 // BOOSTERS Y MULTIPLICADORES IAP
 // ============================================================================
 export const BOOSTER_CONFIG = {

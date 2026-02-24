@@ -2,7 +2,7 @@
 
 ## Estado
 - **Fase**: Phase 4 — La Crisis Energética (narrativa)
-- **Estado**: Planned
+- **Estado**: Implemented
 - **Prioridad**: High
 - **Última actualización**: 2026-02-22
 - **Depende de**: Hardware tiers 9-11 implementados (Opción B)

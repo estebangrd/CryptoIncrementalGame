@@ -6,6 +6,7 @@ import {
   GENESIS_CONSTANTS
 } from './blockLogic';
 import { getInitialMarketState } from './marketLogic';
+import { getInitialEnergyState, getActiveHardwareWithEnergyConstraint } from './energyLogic';
 import { hardwareProgression } from '../data/hardwareData';
 import { initialUpgrades } from '../data/gameData';
 import { cryptocurrencies } from '../data/cryptocurrencies';
@@ -82,9 +83,31 @@ export const calculateTotalMiningSpeed = (hardware: Hardware[], upgrades: Upgrad
 export const calculateTotalProduction = (gameState: GameState): number => {
   let totalProduction = 0;
 
+  // For energy-constrained hardware (tiers 9-11), compute active units based on energy
+  const energyState = gameState.energy;
+  const totalGeneratedMW = energyState?.totalGeneratedMW ?? 0;
+  const activeEnergyHardware = getActiveHardwareWithEnergyConstraint(
+    gameState.hardware,
+    totalGeneratedMW
+  );
+  const activeUnitsMap: Record<string, number> = {};
+  for (const hw of activeEnergyHardware) {
+    activeUnitsMap[hw.id] = hw.activeUnits;
+  }
+
   gameState.hardware.forEach(hardware => {
-    // Calculate mining speed (blocks per second) using the helper function
-    const miningSpeed = calculateHardwareMiningSpeed(hardware, gameState.upgrades);
+    let effectiveOwned = hardware.owned;
+
+    // For hardware requiring energy, use the constrained active units
+    if (hardware.energyRequired > 0) {
+      effectiveOwned = activeUnitsMap[hardware.id] ?? 0;
+    }
+
+    if (effectiveOwned === 0) return;
+
+    // Calculate mining speed using effective owned count
+    const hardwareWithEffectiveOwned = { ...hardware, owned: effectiveOwned };
+    const miningSpeed = calculateHardwareMiningSpeed(hardwareWithEffectiveOwned, gameState.upgrades);
 
     // Calculate coins per second from mining
     const coinsPerSecond = miningSpeed * hardware.blockReward;
@@ -92,7 +115,7 @@ export const calculateTotalProduction = (gameState: GameState): number => {
 
     // Debug log for hardware with owned > 0
     if (hardware.owned > 0) {
-      console.log(`DEBUG: Hardware ${hardware.id} has ${hardware.owned} owned, miningSpeed: ${miningSpeed}, blockReward: ${hardware.blockReward}, coinsPerSecond: ${coinsPerSecond}`);
+      console.log(`DEBUG: Hardware ${hardware.id} has ${hardware.owned} owned (${effectiveOwned} active), miningSpeed: ${miningSpeed}, blockReward: ${hardware.blockReward}, coinsPerSecond: ${coinsPerSecond}`);
     }
   });
 
@@ -246,7 +269,7 @@ export const UNLOCK_REQUIREMENTS = {
 };
 
 export const checkAndUpdateUnlocks = (gameState: GameState): GameState => {
-  const newUnlockedTabs = { ...gameState.unlockedTabs };
+  const newUnlockedTabs = { ...gameState.unlockedTabs, energy: gameState.unlockedTabs?.energy ?? false };
 
   // Debug logs for market unlock
   console.log('DEBUG: checkAndUpdateUnlocks - Market unlock check');
@@ -281,6 +304,12 @@ export const checkAndUpdateUnlocks = (gameState: GameState): GameState => {
   // Also keep it unlocked if already unlocked
   if (gameState.unlockedTabs?.prestige) {
     newUnlockedTabs.prestige = true;
+  }
+
+  // Unlock Energy tab: when player has >= 1 hardware of tier 9+
+  if (!newUnlockedTabs.energy &&
+      gameState.hardware.some(h => h.energyRequired > 0 && h.owned > 0)) {
+    newUnlockedTabs.energy = true;
   }
 
   return {
@@ -353,11 +382,15 @@ export const getInitialGameState = (): GameState => {
       hardware: false,
       upgrades: false,
       prestige: false,
+      energy: false,
     },
     // Real money system
     realMoney: 0,
     totalRealMoneyEarned: 0,
     // Achievements
     achievements: ALL_ACHIEVEMENTS,
+    // Energy system
+    energy: getInitialEnergyState(),
+    planetResources: 100,
   } as GameState;
 };

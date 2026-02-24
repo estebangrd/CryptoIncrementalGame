@@ -115,6 +115,15 @@ const GameScreen: React.FC = () => {
           <Text style={styles.title}>{t('game.title')}</Text>
           <IAPBoosterBadges />
           <RewardedAdButton />
+          {gameState.unlockedTabs?.energy && gameState.energy && (
+            <Text style={
+              gameState.energy.totalGeneratedMW >= gameState.energy.totalRequiredMW
+                ? styles.energyOk
+                : styles.energyWarn
+            }>
+              ⚡ {gameState.energy.totalGeneratedMW}/{gameState.energy.totalRequiredMW}MW
+            </Text>
+          )}
           {gameState.iapState.removeAdsPurchased && (
             <Animated.View style={[styles.adFreeBadge, { opacity: adFreeBadgeOpacity }]}>
               <Text style={styles.adFreeBadgeText}>✓ Ad Free</Text>
@@ -280,6 +289,16 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: 'bold',
     color: '#00ff88',
+  },
+  energyOk: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#00ff88',
+  },
+  energyWarn: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#ff4444',
   },
 });
 

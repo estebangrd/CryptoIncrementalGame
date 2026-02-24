@@ -713,6 +713,128 @@ export const translations: Translation = {
     pt: 'Uma necessidade de velocidade...',
   },
 
+  // Energy System
+  'energy.tab': {
+    en: 'Energy',
+    es: 'Energía',
+    pt: 'Energia',
+  },
+  'energy.generated': {
+    en: 'Generation',
+    es: 'Generación',
+    pt: 'Geração',
+  },
+  'energy.required': {
+    en: 'Required',
+    es: 'Requerido',
+    pt: 'Necessário',
+  },
+  'energy.surplus': {
+    en: 'Surplus',
+    es: 'Excedente',
+    pt: 'Excedente',
+  },
+  'energy.deficit': {
+    en: 'Deficit',
+    es: 'Déficit',
+    pt: 'Déficit',
+  },
+  'energy.status.operational': {
+    en: 'OPERATIONAL',
+    es: 'OPERATIVO',
+    pt: 'OPERACIONAL',
+  },
+  'energy.status.blackout': {
+    en: 'BLACKOUT',
+    es: 'APAGÓN TOTAL',
+    pt: 'APAGÃO TOTAL',
+  },
+  'energy.status.partialBlackout': {
+    en: 'PARTIAL BLACKOUT',
+    es: 'APAGÓN PARCIAL',
+    pt: 'APAGÃO PARCIAL',
+  },
+  'energy.renewables': {
+    en: 'RENEWABLES',
+    es: 'RENOVABLES',
+    pt: 'RENOVÁVEIS',
+  },
+  'energy.nonRenewables': {
+    en: 'NON-RENEWABLES',
+    es: 'NO-RENOVABLES',
+    pt: 'NÃO-RENOVÁVEIS',
+  },
+  'energy.cap': {
+    en: 'max',
+    es: 'máx',
+    pt: 'máx',
+  },
+  'energy.lockedHint': {
+    en: 'Unlock when renewables reach 80% capacity',
+    es: 'Desbloquear cuando renovables lleguen al 80%',
+    pt: 'Desbloquear quando renováveis chegarem a 80%',
+  },
+  'energy.aiControlled': {
+    en: 'AI-controlled',
+    es: 'Controlado por IA',
+    pt: 'Controlado pela IA',
+  },
+  'energy.build': {
+    en: 'Build',
+    es: 'Construir',
+    pt: 'Construir',
+  },
+  'energy.demolish': {
+    en: 'Demolish',
+    es: 'Demoler',
+    pt: 'Demolir',
+  },
+  'energy.noEnergyHint': {
+    en: 'This hardware requires energy. Build generators in the Energy tab.',
+    es: 'Este hardware requiere energía. Construye generadores en la pestaña Energía.',
+    pt: 'Este hardware requer energia. Construa geradores na aba Energia.',
+  },
+  'energy.solar_farm': {
+    en: 'Solar Farm',
+    es: 'Granja Solar',
+    pt: 'Fazenda Solar',
+  },
+  'energy.wind_farm': {
+    en: 'Wind Farm',
+    es: 'Parque Eólico',
+    pt: 'Parque Eólico',
+  },
+  'energy.hydroelectric_dam': {
+    en: 'Hydroelectric Dam',
+    es: 'Presa Hidroeléctrica',
+    pt: 'Barragem Hidrelétrica',
+  },
+  'energy.geothermal_plant': {
+    en: 'Geothermal Plant',
+    es: 'Planta Geotérmica',
+    pt: 'Planta Geotérmica',
+  },
+  'energy.coal_plant': {
+    en: 'Coal Plant',
+    es: 'Central de Carbón',
+    pt: 'Usina de Carvão',
+  },
+  'energy.oil_refinery': {
+    en: 'Oil Refinery',
+    es: 'Refinería de Petróleo',
+    pt: 'Refinaria de Petróleo',
+  },
+  'energy.nuclear_reactor': {
+    en: 'Nuclear Reactor',
+    es: 'Reactor Nuclear',
+    pt: 'Reator Nuclear',
+  },
+  'energy.planetResources': {
+    en: 'Planet Resources',
+    es: 'Recursos del Planeta',
+    pt: 'Recursos do Planeta',
+  },
+
   // Achievement UI
   'achievement.unlocked': {
     en: 'Achievement Unlocked!',

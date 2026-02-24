@@ -54,6 +54,15 @@ import { IAP_PRODUCT_IDS } from '../config/iapConfig';
 import { PurchaseRecord } from '../types/game';
 import { checkAchievements, mergeAchievements } from '../utils/achievementLogic';
 import { ALL_ACHIEVEMENTS } from '../data/achievements';
+import {
+  getInitialEnergyState,
+  buildEnergySource,
+  demolishEnergySource,
+  canBuildEnergySource,
+  calculatePlanetDepletion,
+  recalculateEnergyTotals,
+  calculateTotalRequiredMW,
+} from '../utils/energyLogic';
 
 interface GameContextType {
   gameState: GameState;
@@ -101,31 +110,44 @@ type GameAction =
   | { type: 'MARK_PROMO_SHOWN' }
   | { type: 'UNLOCK_ACHIEVEMENT'; payload: string }
   | { type: 'CHECK_ACHIEVEMENTS' }
-  | { type: 'APPLY_ACHIEVEMENT_REWARD'; payload: string };
+  | { type: 'APPLY_ACHIEVEMENT_REWARD'; payload: string }
+  | { type: 'BUILD_ENERGY_SOURCE'; payload: string }
+  | { type: 'DEMOLISH_ENERGY_SOURCE'; payload: string }
+  | { type: 'UPDATE_ENERGY_REQUIRED'; payload: number };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
 // Helper function to recalculate all game stats
 const recalculateGameStats = (state: GameState): GameState => {
+  // Update energy required based on current hardware ownership
+  const energyWithRequired = state.energy
+    ? {
+        ...state.energy,
+        totalRequiredMW: calculateTotalRequiredMW(state.hardware),
+      }
+    : getInitialEnergyState();
+
+  const stateWithEnergy = { ...state, energy: energyWithRequired };
+
   // Calculate total production using the correct function
-  const totalProduction = calculateTotalProduction(state);
+  const totalProduction = calculateTotalProduction(stateWithEnergy);
 
   // Calculate total hash rate from hardware
-  const totalHashRate = calculateTotalHashRate(state);
+  const totalHashRate = calculateTotalHashRate(stateWithEnergy);
 
   // Calculate total electricity cost
-  const totalElectricityCost = calculateTotalElectricityCost(state.hardware);
+  const totalElectricityCost = calculateTotalElectricityCost(stateWithEnergy.hardware);
 
   // Calculate net production (production - electricity cost)
   const netProduction = Math.max(0, totalProduction - totalElectricityCost);
 
   const updatedState = {
-    ...state,
+    ...stateWithEnergy,
     cryptoCoinsPerSecond: netProduction,
     totalElectricityCost: totalElectricityCost,
     totalHashRate: totalHashRate,
-    currentReward: calculateCurrentReward(state.blocksMined),
-    nextHalving: calculateNextHalving(state.blocksMined),
+    currentReward: calculateCurrentReward(stateWithEnergy.blocksMined),
+    nextHalving: calculateNextHalving(stateWithEnergy.blocksMined),
   };
 
   // Check and update unlocks
@@ -208,12 +230,6 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         currencyBalances: action.payload.currencyBalances || {},
         totalPrestigeGains: action.payload.totalPrestigeGains || 0,
         marketState: action.payload.marketState || getInitialMarketState(),
-        unlockedTabs: action.payload.unlockedTabs || {
-          market: false,
-          hardware: false,
-          upgrades: false,
-          prestige: false,
-        },
         realMoney: action.payload.realMoney || 0,
         totalRealMoneyEarned: action.payload.totalRealMoneyEarned || 0,
         // Ensure new prestige fields exist if missing from old saves
@@ -235,6 +251,18 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         achievements: action.payload.achievements
           ? mergeAchievements(action.payload.achievements, ALL_ACHIEVEMENTS)
           : ALL_ACHIEVEMENTS,
+        // Energy system migration: provide defaults for old saves
+        energy: action.payload.energy
+          ? recalculateEnergyTotals(action.payload.energy)
+          : getInitialEnergyState(),
+        planetResources: action.payload.planetResources ?? 100,
+        unlockedTabs: {
+          market: action.payload.unlockedTabs?.market ?? false,
+          hardware: action.payload.unlockedTabs?.hardware ?? false,
+          upgrades: action.payload.unlockedTabs?.upgrades ?? false,
+          prestige: action.payload.unlockedTabs?.prestige ?? false,
+          energy: action.payload.unlockedTabs?.energy ?? false,
+        },
       };
       return recalculateGameStats(loadedState);
     }
@@ -254,9 +282,12 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           hardware: false,
           upgrades: false,
           prestige: false,
+          energy: false,
         },
         realMoney: 0,
         totalRealMoneyEarned: 0,
+        energy: getInitialEnergyState(),
+        planetResources: 100,
       };
       return recalculateGameStats(resetState);
     case 'UPDATE_OFFLINE_PROGRESS':
@@ -283,6 +314,12 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
 
         newState.cryptoCoins += totalReward;
         newState.totalCryptoCoins += totalReward;
+
+        // Planet resource depletion from non-renewable energy sources
+        if (newState.energy?.nonRenewableActiveMW > 0) {
+          const depletion = calculatePlanetDepletion(newState.energy.sources);
+          newState.planetResources = Math.max(0, (newState.planetResources ?? 100) - depletion);
+        }
 
         return recalculateGameStats(newState);
       }
@@ -362,7 +399,10 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           hardware: false,
           upgrades: false,
           prestige: false,
+          energy: false,
         },
+        energy: getInitialEnergyState(),
+        planetResources: 100,
       };
       return recalculateGameStats(prestigedState);
     }
@@ -702,6 +742,43 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         };
       }
       return state;
+    }
+
+    case 'BUILD_ENERGY_SOURCE': {
+      const sourceId = action.payload;
+      const energy = state.energy ?? getInitialEnergyState();
+      if (!canBuildEnergySource(energy, sourceId, state.realMoney)) return state;
+      const source = energy.sources[sourceId];
+      if (!source) return state;
+      const newEnergy = buildEnergySource(energy, sourceId);
+      return recalculateGameStats({
+        ...state,
+        realMoney: state.realMoney - source.costPerUnit,
+        energy: newEnergy,
+      });
+    }
+
+    case 'DEMOLISH_ENERGY_SOURCE': {
+      const sourceId = action.payload;
+      const energy = state.energy ?? getInitialEnergyState();
+      const source = energy.sources[sourceId];
+      if (!source || !source.isRenewable || source.quantity <= 0) return state;
+      if (energy.aiControlled) return state;
+      const refund = source.costPerUnit * 0.5;
+      const newEnergy = demolishEnergySource(energy, sourceId);
+      return recalculateGameStats({
+        ...state,
+        realMoney: state.realMoney + refund,
+        energy: newEnergy,
+      });
+    }
+
+    case 'UPDATE_ENERGY_REQUIRED': {
+      const energy = state.energy ?? getInitialEnergyState();
+      return {
+        ...state,
+        energy: { ...energy, totalRequiredMW: action.payload },
+      };
     }
 
     default:

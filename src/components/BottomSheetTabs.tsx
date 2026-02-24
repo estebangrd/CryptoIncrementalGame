@@ -13,11 +13,12 @@ import UpgradeList from './UpgradeList';
 import MarketScreen from './MarketScreen';
 import PrestigeScreen from './PrestigeScreen';
 import ShopScreen from './ShopScreen';
+import EnergyScreen from './EnergyScreen';
 import { BlockStatus } from './BlockStatus';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-type ActiveTab = 'mining' | 'market' | 'hardware' | 'upgrades' | 'prestige' | 'shop';
+type ActiveTab = 'mining' | 'market' | 'hardware' | 'upgrades' | 'prestige' | 'shop' | 'energy';
 
 interface BottomSheetTabsProps {
   onMineBlock: () => void;
@@ -78,6 +79,8 @@ const BottomSheetTabs: React.FC<BottomSheetTabsProps> = ({ onMineBlock, t }) => 
             <ShopScreen />
           </ScrollView>
         );
+      case 'energy':
+        return <EnergyScreen />;
       default:
         return null;
     }
@@ -91,6 +94,7 @@ const BottomSheetTabs: React.FC<BottomSheetTabsProps> = ({ onMineBlock, t }) => 
       { id: 'hardware' as ActiveTab, icon: '💻', label: 'Hardware', unlocked: gameState.unlockedTabs.hardware },
       { id: 'upgrades' as ActiveTab, icon: '⚡', label: 'Upgrades', unlocked: gameState.unlockedTabs.upgrades },
       { id: 'prestige' as ActiveTab, icon: '🌟', label: 'Prestige', unlocked: gameState.unlockedTabs.prestige },
+      { id: 'energy' as ActiveTab, icon: '⚡', label: t('energy.tab'), unlocked: gameState.unlockedTabs.energy ?? false },
       { id: 'shop' as ActiveTab, icon: '🛒', label: 'Shop', unlocked: true },
     ];
 
@@ -132,6 +136,7 @@ const BottomSheetTabs: React.FC<BottomSheetTabsProps> = ({ onMineBlock, t }) => 
              activeTab === 'hardware' ? '💻 Hardware' :
              activeTab === 'upgrades' ? '⚡ Upgrades' :
              activeTab === 'shop' ? '🛒 Shop' :
+             activeTab === 'energy' ? `⚡ ${t('energy.tab')}` :
              '🌟 Prestige'}
           </Text>
         </View>

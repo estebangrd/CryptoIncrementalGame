@@ -12,7 +12,7 @@ Este directorio contiene todas las especificaciones técnicas exhaustivas (Level
 | [Hardware Progression](game-mechanics/hardware-progression.md) | ✅ Implemented | Phase 1 | Critical | 8 niveles de hardware con desbloqueo progresivo |
 | [Market System](game-mechanics/market-system.md) | ✅ Implemented | Phase 2 | High | Venta de CryptoCoins por dinero real con API |
 | [Prestige System](game-mechanics/prestige-system.md) | ✅ Implemented | Phase 2 | High | Sistema de reinicio con bonos permanentes |
-| [Energy System](game-mechanics/energy-system.md) | 📋 Planned | Phase 4 | High | Generación energética: renovables/no-renovables, balance MW, control de IA |
+| [Energy System](game-mechanics/energy-system.md) | ✅ Implemented | Phase 4 | High | Generación energética: renovables/no-renovables, balance MW, control de IA |
 | [AI System](game-mechanics/ai-system.md) | 📋 Planned | Phase 5 | High | IA con 3 niveles de autonomía, cryptos exclusivas, control irreversible |
 | [Narrative Events](game-mechanics/narrative-events.md) | 📋 Planned | Phase 6 | High | Medidor de Recursos del Planeta, 5 hitos narrativos, pestaña Crónica |
 | [Endgame Collapse](game-mechanics/endgame-collapse.md) | 📋 Planned | Phase 7 | High | Colapso planetario, buen ending alternativo, bonos de prestige diferenciados |
@@ -51,15 +51,15 @@ Este directorio contiene todas las especificaciones técnicas exhaustivas (Level
 ## 📊 Estado General
 
 - **Total de Specs**: 19
-- **Implementadas**: 9 (47%)
+- **Implementadas**: 10 (53%)
 - **Parciales**: 0 (0%)
 - **Documentadas**: 2 (11%)
-- **Planeadas**: 8 (42%)
+- **Planeadas**: 7 (37%)
 
 ### Por Fase
 - **Phase 1 (Genesis)**: 2/2 implementadas ✅
 - **Phase 2 (Expansion)**: 2/2 implementadas ✅
-- **Phase 3 (Monetization)**: 5/5 implementadas ✅
+- **Phase 3 (Monetization)**: 5/5 specs implementadas ✅ (misiones diarias/XP/leaderboards pendientes, sin spec aún)
 
 ## 🎯 Roadmap de Implementación
 
@@ -237,6 +237,6 @@ Para preguntas sobre estas specs, consulta:
 
 ---
 
-**Última actualización**: 2026-02-22
-**Versión del proyecto**: 0.0.1 (Phase 1-2 Complete)
-**Próxima fase**: Phase 3 - Monetization
+**Última actualización**: 2026-02-24
+**Versión del proyecto**: 0.0.1 (Phase 1-3 Partial)
+**Próxima fase**: Phase 3 completar (misiones diarias/XP) → Phase 4 (Energy System)
