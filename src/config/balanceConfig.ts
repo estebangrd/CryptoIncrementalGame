@@ -369,6 +369,65 @@ export const ENERGY_CONFIG = {
 };
 
 // ============================================================================
+// SISTEMA DE INTELIGENCIA ARTIFICIAL (PHASE 5)
+// ============================================================================
+export const AI_CONFIG = {
+  LEVELS: {
+    1: {
+      name: 'Asistente',
+      cost: 500_000,
+      productionMultiplier: 1.20,
+      unlockCrypto: 'neural_coin',
+      isIrreversible: false,
+    },
+    2: {
+      name: 'Copiloto',
+      cost: 5_000_000,
+      productionMultiplier: 1.50,
+      unlockCrypto: 'quantum_bit',
+      isIrreversible: false,
+    },
+    3: {
+      name: 'Autónomo',
+      cost: 50_000_000,
+      productionMultiplier: 2.50,
+      unlockCrypto: 'singularity_coin',
+      isIrreversible: true,
+    },
+  },
+
+  SUGGESTION_INTERVAL_MS: 30_000,
+  AI_ENERGY_RETRY_INTERVAL_MS: 10_000,
+
+  AI_CRYPTOS: {
+    neural_coin: {
+      productionMultiplier: 8,
+      energyMultiplier: 3,
+      symbol: 'NC',
+      icon: '🧠',
+      baseValue: 0.5,
+      volatility: 0.35,
+    },
+    quantum_bit: {
+      productionMultiplier: 25,
+      energyMultiplier: 8,
+      symbol: 'QB',
+      icon: '⚛️',
+      baseValue: 5.0,
+      volatility: 0.40,
+    },
+    singularity_coin: {
+      productionMultiplier: 100,
+      energyMultiplier: 30,
+      symbol: 'SC',
+      icon: '🌌',
+      baseValue: 50.0,
+      volatility: 0.50,
+    },
+  },
+} as const;
+
+// ============================================================================
 // BOOSTERS Y MULTIPLICADORES IAP
 // ============================================================================
 export const BOOSTER_CONFIG = {

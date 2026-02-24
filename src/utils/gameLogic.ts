@@ -7,6 +7,7 @@ import {
 } from './blockLogic';
 import { getInitialMarketState } from './marketLogic';
 import { getInitialEnergyState, getActiveHardwareWithEnergyConstraint } from './energyLogic';
+import { getAIProductionMultiplier, getInitialAIState } from './aiLogic';
 import { hardwareProgression } from '../data/hardwareData';
 import { initialUpgrades } from '../data/gameData';
 import { cryptocurrencies } from '../data/cryptocurrencies';
@@ -151,7 +152,10 @@ export const calculateTotalProduction = (gameState: GameState): number => {
   // Use prestigeProductionMultiplier when available, fall back to prestigeMultiplier for old saves
   const prestigeMultiplier = (gameState.prestigeProductionMultiplier ?? gameState.prestigeMultiplier ?? 1);
 
-  const finalProduction = totalProduction * prestigeMultiplier * adBoostMultiplier * permanentMultiplier * iapBoosterMultiplier;
+  // AI production multiplier (Phase 5)
+  const aiMultiplier = getAIProductionMultiplier(gameState.ai?.level ?? 0);
+
+  const finalProduction = totalProduction * prestigeMultiplier * adBoostMultiplier * permanentMultiplier * iapBoosterMultiplier * aiMultiplier;
   if (finalProduction > 0) {
     console.log(`DEBUG: Total production calculated: ${finalProduction}, prestigeMultiplier: ${prestigeMultiplier}, adBoostMultiplier: ${adBoostMultiplier}, permanentMultiplier: ${permanentMultiplier}, iapBoosterMultiplier: ${iapBoosterMultiplier}`);
   }
@@ -392,5 +396,8 @@ export const getInitialGameState = (): GameState => {
     // Energy system
     energy: getInitialEnergyState(),
     planetResources: 100,
+    // AI system (Phase 5)
+    ai: getInitialAIState(),
+    aiCryptosUnlocked: [],
   } as GameState;
 };

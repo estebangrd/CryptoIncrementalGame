@@ -13,7 +13,7 @@ Este directorio contiene todas las especificaciones técnicas exhaustivas (Level
 | [Market System](game-mechanics/market-system.md) | ✅ Implemented | Phase 2 | High | Venta de CryptoCoins por dinero real con API |
 | [Prestige System](game-mechanics/prestige-system.md) | ✅ Implemented | Phase 2 | High | Sistema de reinicio con bonos permanentes |
 | [Energy System](game-mechanics/energy-system.md) | ✅ Implemented | Phase 4 | High | Generación energética: renovables/no-renovables, balance MW, control de IA |
-| [AI System](game-mechanics/ai-system.md) | 📋 Planned | Phase 5 | High | IA con 3 niveles de autonomía, cryptos exclusivas, control irreversible |
+| [AI System](game-mechanics/ai-system.md) | ✅ Implemented | Phase 5 | High | IA con 3 niveles de autonomía, cryptos exclusivas, control irreversible |
 | [Narrative Events](game-mechanics/narrative-events.md) | 📋 Planned | Phase 6 | High | Medidor de Recursos del Planeta, 5 hitos narrativos, pestaña Crónica |
 | [Endgame Collapse](game-mechanics/endgame-collapse.md) | 📋 Planned | Phase 7 | High | Colapso planetario, buen ending alternativo, bonos de prestige diferenciados |
 

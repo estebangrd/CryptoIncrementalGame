@@ -8,6 +8,24 @@ export interface Cryptocurrency {
   volatility: number; // How much the price can fluctuate
   color: string;
   icon: string;
+  aiLevelRequired?: number; // 1, 2, or 3 — only visible when AI is at this level+
+}
+
+// ─── AI System types (Phase 5) ────────────────────────────────────────────────
+
+export type AILevel = 0 | 1 | 2 | 3;
+
+export interface AILogEntry {
+  timestamp: number;
+  message: string;
+  type: 'suggestion' | 'action' | 'warning' | 'autonomous';
+}
+
+export interface AIState {
+  level: AILevel;
+  isAutonomous: boolean;       // true when level === 3
+  logEntries: AILogEntry[];    // last 50 entries, most recent first
+  lastSuggestionAt: number;    // timestamp
 }
 
 export interface PrestigeRequirement {
@@ -213,6 +231,9 @@ export interface GameState {
   // Energy system (Phase 4)
   energy: EnergyState;
   planetResources: number; // 0-100, starts at 100
+  // AI system (Phase 5)
+  ai: AIState;
+  aiCryptosUnlocked: string[]; // e.g. ['neural_coin', 'quantum_bit']
 }
 
 export interface Hardware {

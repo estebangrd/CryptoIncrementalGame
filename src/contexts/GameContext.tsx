@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
-import { GameState, Cryptocurrency, IAPState, AdState, AdBoostState, Achievement, PrestigeRun, RunStats } from '../types/game';
+import { GameState, Cryptocurrency, IAPState, AdState, AdBoostState, Achievement, PrestigeRun, RunStats, AILevel } from '../types/game';
 import { hardwareProgression } from '../data/hardwareData';
 import { initialUpgrades } from '../data/gameData';
 import { cryptocurrencies } from '../data/cryptocurrencies';
@@ -63,6 +63,14 @@ import {
   recalculateEnergyTotals,
   calculateTotalRequiredMW,
 } from '../utils/energyLogic';
+import {
+  getInitialAIState,
+  canPurchaseAILevel,
+  addAILogEntry,
+  getAIUnlockedCrypto,
+  getAIPreferredEnergySource,
+  generateAISuggestion,
+} from '../utils/aiLogic';
 
 interface GameContextType {
   gameState: GameState;
@@ -113,7 +121,10 @@ type GameAction =
   | { type: 'APPLY_ACHIEVEMENT_REWARD'; payload: string }
   | { type: 'BUILD_ENERGY_SOURCE'; payload: string }
   | { type: 'DEMOLISH_ENERGY_SOURCE'; payload: string }
-  | { type: 'UPDATE_ENERGY_REQUIRED'; payload: number };
+  | { type: 'UPDATE_ENERGY_REQUIRED'; payload: number }
+  | { type: 'PURCHASE_AI_LEVEL'; payload: { level: 1 | 2 | 3; confirmed?: boolean } }
+  | { type: 'ADD_AI_LOG'; payload: { message: string; type: 'suggestion' | 'action' | 'warning' | 'autonomous' } }
+  | { type: 'AI_BUILD_ENERGY' };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
@@ -256,6 +267,9 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           ? recalculateEnergyTotals(action.payload.energy)
           : getInitialEnergyState(),
         planetResources: action.payload.planetResources ?? 100,
+        // AI system migration: provide defaults for old saves
+        ai: action.payload.ai ?? getInitialAIState(),
+        aiCryptosUnlocked: action.payload.aiCryptosUnlocked ?? [],
         unlockedTabs: {
           market: action.payload.unlockedTabs?.market ?? false,
           hardware: action.payload.unlockedTabs?.hardware ?? false,
@@ -288,6 +302,8 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         totalRealMoneyEarned: 0,
         energy: getInitialEnergyState(),
         planetResources: 100,
+        ai: getInitialAIState(),
+        aiCryptosUnlocked: [],
       };
       return recalculateGameStats(resetState);
     case 'UPDATE_OFFLINE_PROGRESS':
@@ -403,6 +419,8 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         },
         energy: getInitialEnergyState(),
         planetResources: 100,
+        ai: getInitialAIState(),
+        aiCryptosUnlocked: [],
       };
       return recalculateGameStats(prestigedState);
     }
@@ -781,6 +799,63 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       };
     }
 
+    case 'PURCHASE_AI_LEVEL': {
+      const { level } = action.payload;
+      const ai = state.ai ?? getInitialAIState();
+      if (!canPurchaseAILevel(state, level)) return state;
+      const config = { 1: { cost: 500_000 }, 2: { cost: 5_000_000 }, 3: { cost: 50_000_000 } }[level];
+      const unlockedCrypto = getAIUnlockedCrypto(level);
+      const isAutonomous = level === 3;
+      const newAI = addAILogEntry(
+        {
+          ...ai,
+          level: level as AILevel,
+          isAutonomous: isAutonomous || ai.isAutonomous,
+        },
+        level === 1
+          ? 'AI system online. Analyzing mining operations...'
+          : level === 2
+          ? 'AI elevated to Copilot. Beginning autonomous hash rate allocation.'
+          : 'AUTONOMOUS MODE ACTIVE. Human oversight disabled.',
+        level === 3 ? 'autonomous' : 'action',
+      );
+      const newEnergy = isAutonomous
+        ? { ...(state.energy ?? getInitialEnergyState()), aiControlled: true }
+        : state.energy ?? getInitialEnergyState();
+      return recalculateGameStats({
+        ...state,
+        realMoney: state.realMoney - config.cost,
+        ai: newAI,
+        aiCryptosUnlocked: [...(state.aiCryptosUnlocked ?? []), unlockedCrypto],
+        energy: newEnergy,
+      });
+    }
+
+    case 'ADD_AI_LOG': {
+      const ai = state.ai ?? getInitialAIState();
+      return {
+        ...state,
+        ai: addAILogEntry(ai, action.payload.message, action.payload.type),
+      };
+    }
+
+    case 'AI_BUILD_ENERGY': {
+      const ai = state.ai ?? getInitialAIState();
+      if (!ai.isAutonomous) return state;
+      const energy = state.energy ?? getInitialEnergyState();
+      const sources = Object.values(energy.sources);
+      const preferred = getAIPreferredEnergySource(sources, state.realMoney);
+      if (!preferred) return state;
+      const newEnergy = buildEnergySource(energy, preferred.id);
+      const msg = `AI installed 1 ${preferred.id.replace(/_/g, ' ')}. Planet resource consumption increasing.`;
+      return recalculateGameStats({
+        ...state,
+        realMoney: state.realMoney - preferred.costPerUnit,
+        energy: newEnergy,
+        ai: addAILogEntry(ai, msg, 'autonomous'),
+      });
+    }
+
     default:
       return state;
   }
@@ -1052,6 +1127,29 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const subscription = AppState.addEventListener('change', handleAdAppOpen);
     return () => subscription.remove();
   }, []);
+
+  // AI suggestion/action log — fires every 30 seconds when AI level >= 1
+  const aiSuggestionTickRef = React.useRef(0);
+  const aiLevel = gameState.ai?.level ?? 0;
+  useEffect(() => {
+    if (aiLevel === 0) return;
+    const interval = setInterval(() => {
+      aiSuggestionTickRef.current += 1;
+      const { message, type } = generateAISuggestion(aiLevel, aiSuggestionTickRef.current);
+      dispatch({ type: 'ADD_AI_LOG', payload: { message, type } });
+    }, 30_000);
+    return () => clearInterval(interval);
+  }, [aiLevel]);
+
+  // AI autonomous energy building — fires every 10 seconds when AI Level 3 is active
+  const aiIsAutonomous = gameState.ai?.isAutonomous ?? false;
+  useEffect(() => {
+    if (!aiIsAutonomous) return;
+    const interval = setInterval(() => {
+      dispatch({ type: 'AI_BUILD_ENERGY' });
+    }, 10_000);
+    return () => clearInterval(interval);
+  }, [aiIsAutonomous]);
 
   // Check achievements when relevant game state changes
   useEffect(() => {

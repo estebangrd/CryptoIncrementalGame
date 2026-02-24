@@ -835,6 +835,114 @@ export const translations: Translation = {
     pt: 'Recursos do Planeta',
   },
 
+  // AI System (Phase 5)
+  'ai.section.title': {
+    en: '🤖 ARTIFICIAL INTELLIGENCE',
+    es: '🤖 INTELIGENCIA ARTIFICIAL',
+    pt: '🤖 INTELIGÊNCIA ARTIFICIAL',
+  },
+  'ai.level1.name': {
+    en: 'AI Level 1 — Assistant',
+    es: 'IA Nivel 1 — Asistente',
+    pt: 'IA Nível 1 — Assistente',
+  },
+  'ai.level2.name': {
+    en: 'AI Level 2 — Copilot',
+    es: 'IA Nivel 2 — Copiloto',
+    pt: 'IA Nível 2 — Copiloto',
+  },
+  'ai.level3.name': {
+    en: 'AI Level 3 — Autonomous',
+    es: 'IA Nivel 3 — Autónomo',
+    pt: 'IA Nível 3 — Autônomo',
+  },
+  'ai.level1.description': {
+    en: 'A team of researchers offers to integrate AI into your operation. The system analyzes your mining and suggests optimizations.',
+    es: 'Un equipo de investigadores ofrece integrar IA en tu operación. El sistema analizará tu minería y sugerirá optimizaciones.',
+    pt: 'Uma equipe de pesquisadores oferece integrar IA à sua operação. O sistema analisará sua mineração e sugerirá otimizações.',
+  },
+  'ai.level2.description': {
+    en: 'The AI takes operational decisions automatically. Reallocates hash rate between cryptos to maximize profit. You can override any decision.',
+    es: 'La IA toma decisiones operativas automáticamente. Reasigna hashrate entre cryptos para maximizar profit. Puedes hacer override de sus decisiones.',
+    pt: 'A IA toma decisões operacionais automaticamente. Realoca hash rate entre cryptos para maximizar lucro. Você pode substituir qualquer decisão.',
+  },
+  'ai.level3.description': {
+    en: 'Full autonomous control. The AI operates without your approval, including energy management. IRREVERSIBLE.',
+    es: 'Control autónomo total. La IA opera sin tu aprobación, incluyendo gestión de energía. IRREVERSIBLE.',
+    pt: 'Controle autônomo total. A IA opera sem sua aprovação, incluindo gestão de energia. IRREVERSÍVEL.',
+  },
+  'ai.production.bonus': {
+    en: '+{{pct}}% global production',
+    es: '+{{pct}}% producción global',
+    pt: '+{{pct}}% produção global',
+  },
+  'ai.requires.level': {
+    en: 'Requires: AI Level {{level}}',
+    es: 'Requiere: IA Nivel {{level}}',
+    pt: 'Requer: IA Nível {{level}}',
+  },
+  'ai.requires.hardware': {
+    en: 'Requires: 1 Quantum Miner',
+    es: 'Requiere: 1 Quantum Miner',
+    pt: 'Requer: 1 Quantum Miner',
+  },
+  'ai.irreversible.badge': {
+    en: '⚠️ IRREVERSIBLE',
+    es: '⚠️ IRREVERSIBLE',
+    pt: '⚠️ IRREVERSÍVEL',
+  },
+  'ai.log.title': {
+    en: '🤖 AI Log',
+    es: '🤖 Log de IA',
+    pt: '🤖 Log de IA',
+  },
+  'ai.confirm.title': {
+    en: '⚠️ WARNING',
+    es: '⚠️ ADVERTENCIA',
+    pt: '⚠️ AVISO',
+  },
+  'ai.confirm.message': {
+    en: 'Transferring autonomous control to the AI is permanent. The AI will make operational decisions without your approval, including energy source management. You cannot revert this action.',
+    es: 'Transferir control autónomo a la IA es permanente. La IA tomará decisiones operativas sin requerir tu aprobación, incluyendo gestión de fuentes de energía. No podrás revertir esta acción.',
+    pt: 'Transferir o controle autônomo para a IA é permanente. A IA tomará decisões operacionais sem sua aprovação, incluindo gestão de fontes de energia. Você não poderá reverter esta ação.',
+  },
+  'ai.confirm.button': {
+    en: 'TRANSFER CONTROL',
+    es: 'TRANSFERIR CONTROL',
+    pt: 'TRANSFERIR CONTROLE',
+  },
+  'ai.confirm.cancel': {
+    en: 'Cancel',
+    es: 'Cancelar',
+    pt: 'Cancelar',
+  },
+  'ai.active.level': {
+    en: 'Level {{level}} — {{name}}',
+    es: 'Nivel {{level}} — {{name}}',
+    pt: 'Nível {{level}} — {{name}}',
+  },
+  'ai.log.empty': {
+    en: 'Awaiting AI analysis...',
+    es: 'Esperando análisis de IA...',
+    pt: 'Aguardando análise da IA...',
+  },
+  // AI crypto names
+  'neural_coin': {
+    en: 'NeuralCoin',
+    es: 'NeuralCoin',
+    pt: 'NeuralCoin',
+  },
+  'quantum_bit': {
+    en: 'QuantumBit',
+    es: 'QuantumBit',
+    pt: 'QuantumBit',
+  },
+  'singularity_coin': {
+    en: 'SingularityCoin',
+    es: 'SingularityCoin',
+    pt: 'SingularityCoin',
+  },
+
   // Achievement UI
   'achievement.unlocked': {
     en: 'Achievement Unlocked!',
