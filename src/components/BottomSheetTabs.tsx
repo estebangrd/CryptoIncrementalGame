@@ -14,11 +14,12 @@ import MarketScreen from './MarketScreen';
 import PrestigeScreen from './PrestigeScreen';
 import ShopScreen from './ShopScreen';
 import EnergyScreen from './EnergyScreen';
+import ChronicleScreen from './ChronicleScreen';
 import { BlockStatus } from './BlockStatus';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-type ActiveTab = 'mining' | 'market' | 'hardware' | 'upgrades' | 'prestige' | 'shop' | 'energy';
+type ActiveTab = 'mining' | 'market' | 'hardware' | 'upgrades' | 'prestige' | 'shop' | 'energy' | 'chronicle';
 
 interface BottomSheetTabsProps {
   onMineBlock: () => void;
@@ -81,6 +82,8 @@ const BottomSheetTabs: React.FC<BottomSheetTabsProps> = ({ onMineBlock, t }) => 
         );
       case 'energy':
         return <EnergyScreen />;
+      case 'chronicle':
+        return <ChronicleScreen />;
       default:
         return null;
     }
@@ -96,6 +99,7 @@ const BottomSheetTabs: React.FC<BottomSheetTabsProps> = ({ onMineBlock, t }) => 
       { id: 'prestige' as ActiveTab, icon: '🌟', label: 'Prestige', unlocked: gameState.unlockedTabs.prestige },
       { id: 'energy' as ActiveTab, icon: '⚡', label: t('energy.tab'), unlocked: gameState.unlockedTabs.energy ?? false },
       { id: 'shop' as ActiveTab, icon: '🛒', label: 'Shop', unlocked: true },
+      { id: 'chronicle' as ActiveTab, icon: '📖', label: t('narrative.tab'), unlocked: gameState.unlockedTabs.chronicle ?? false },
     ];
 
     return (
@@ -137,6 +141,7 @@ const BottomSheetTabs: React.FC<BottomSheetTabsProps> = ({ onMineBlock, t }) => 
              activeTab === 'upgrades' ? '⚡ Upgrades' :
              activeTab === 'shop' ? '🛒 Shop' :
              activeTab === 'energy' ? `⚡ ${t('energy.tab')}` :
+             activeTab === 'chronicle' ? `📖 ${t('narrative.tab')}` :
              '🌟 Prestige'}
           </Text>
         </View>

@@ -14,7 +14,7 @@ Este directorio contiene todas las especificaciones técnicas exhaustivas (Level
 | [Prestige System](game-mechanics/prestige-system.md) | ✅ Implemented | Phase 2 | High | Sistema de reinicio con bonos permanentes |
 | [Energy System](game-mechanics/energy-system.md) | ✅ Implemented | Phase 4 | High | Generación energética: renovables/no-renovables, balance MW, control de IA |
 | [AI System](game-mechanics/ai-system.md) | ✅ Implemented | Phase 5 | High | IA con 3 niveles de autonomía, cryptos exclusivas, control irreversible |
-| [Narrative Events](game-mechanics/narrative-events.md) | 📋 Planned | Phase 6 | High | Medidor de Recursos del Planeta, 5 hitos narrativos, pestaña Crónica |
+| [Narrative Events](game-mechanics/narrative-events.md) | ✅ Implemented | Phase 6 | High | Medidor de Recursos del Planeta, 5 hitos narrativos, pestaña Crónica |
 | [Endgame Collapse](game-mechanics/endgame-collapse.md) | 📋 Planned | Phase 7 | High | Colapso planetario, buen ending alternativo, bonos de prestige diferenciados |
 
 ### 💰 Monetization (Monetización)
@@ -51,10 +51,10 @@ Este directorio contiene todas las especificaciones técnicas exhaustivas (Level
 ## 📊 Estado General
 
 - **Total de Specs**: 19
-- **Implementadas**: 10 (53%)
+- **Implementadas**: 11 (58%)
 - **Parciales**: 0 (0%)
 - **Documentadas**: 2 (11%)
-- **Planeadas**: 7 (37%)
+- **Planeadas**: 6 (32%)
 
 ### Por Fase
 - **Phase 1 (Genesis)**: 2/2 implementadas ✅

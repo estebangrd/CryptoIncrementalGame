@@ -71,6 +71,7 @@ import {
   getAIPreferredEnergySource,
   generateAISuggestion,
 } from '../utils/aiLogic';
+import { checkNarrativeThresholds } from '../utils/narrativeLogic';
 
 interface GameContextType {
   gameState: GameState;
@@ -124,7 +125,8 @@ type GameAction =
   | { type: 'UPDATE_ENERGY_REQUIRED'; payload: number }
   | { type: 'PURCHASE_AI_LEVEL'; payload: { level: 1 | 2 | 3; confirmed?: boolean } }
   | { type: 'ADD_AI_LOG'; payload: { message: string; type: 'suggestion' | 'action' | 'warning' | 'autonomous' } }
-  | { type: 'AI_BUILD_ENERGY' };
+  | { type: 'AI_BUILD_ENERGY' }
+  | { type: 'DISMISS_NARRATIVE_EVENT'; payload: number };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
@@ -270,12 +272,17 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         // AI system migration: provide defaults for old saves
         ai: action.payload.ai ?? getInitialAIState(),
         aiCryptosUnlocked: action.payload.aiCryptosUnlocked ?? [],
+        // Narrative Events migration: provide defaults for old saves
+        narrativeEvents: action.payload.narrativeEvents ?? [],
+        planetResourcesVisible: action.payload.planetResourcesVisible ?? false,
+        collapseTriggered: action.payload.collapseTriggered ?? false,
         unlockedTabs: {
           market: action.payload.unlockedTabs?.market ?? false,
           hardware: action.payload.unlockedTabs?.hardware ?? false,
           upgrades: action.payload.unlockedTabs?.upgrades ?? false,
           prestige: action.payload.unlockedTabs?.prestige ?? false,
           energy: action.payload.unlockedTabs?.energy ?? false,
+          chronicle: action.payload.unlockedTabs?.chronicle ?? false,
         },
       };
       return recalculateGameStats(loadedState);
@@ -297,6 +304,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           upgrades: false,
           prestige: false,
           energy: false,
+          chronicle: false,
         },
         realMoney: 0,
         totalRealMoneyEarned: 0,
@@ -304,11 +312,17 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         planetResources: 100,
         ai: getInitialAIState(),
         aiCryptosUnlocked: [],
+        narrativeEvents: [],
+        planetResourcesVisible: false,
+        collapseTriggered: false,
       };
       return recalculateGameStats(resetState);
     case 'UPDATE_OFFLINE_PROGRESS':
       return updateOfflineProgress(state);
-    case 'ADD_PRODUCTION':
+    case 'ADD_PRODUCTION': {
+      // If collapse already triggered, stop all production
+      if (state.collapseTriggered) return state;
+
       // Calculate how many blocks should be mined based on hardware mining speed
       const totalMiningSpeed = calculateTotalMiningSpeed(state.hardware, state.upgrades);
       const blocksToMine = Math.floor(totalMiningSpeed); // Mine complete blocks only
@@ -333,14 +347,38 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
 
         // Planet resource depletion from non-renewable energy sources
         if (newState.energy?.nonRenewableActiveMW > 0) {
+          const prevResources = newState.planetResources ?? 100;
           const depletion = calculatePlanetDepletion(newState.energy.sources);
-          newState.planetResources = Math.max(0, (newState.planetResources ?? 100) - depletion);
+          const newResources = Math.max(0, prevResources - depletion);
+          newState.planetResources = newResources;
+
+          // Make meter visible on first non-renewable activation
+          if (!newState.planetResourcesVisible) {
+            newState.planetResourcesVisible = true;
+          }
+
+          // Check narrative event thresholds
+          const newNarrativeEvents = checkNarrativeThresholds(
+            prevResources,
+            newResources,
+            newState.narrativeEvents ?? [],
+            newState.ai?.level ?? 0,
+          );
+          if (newNarrativeEvents.length > 0) {
+            newState.narrativeEvents = [...(newState.narrativeEvents ?? []), ...newNarrativeEvents];
+          }
+
+          // Trigger collapse when planet reaches 0%
+          if (newResources === 0 && !newState.collapseTriggered) {
+            newState.collapseTriggered = true;
+          }
         }
 
         return recalculateGameStats(newState);
       }
 
       return state;
+    }
     case 'SELECT_CURRENCY':
       return {
         ...state,
@@ -421,6 +459,9 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         planetResources: 100,
         ai: getInitialAIState(),
         aiCryptosUnlocked: [],
+        narrativeEvents: [],
+        planetResourcesVisible: false,
+        collapseTriggered: false,
       };
       return recalculateGameStats(prestigedState);
     }
@@ -854,6 +895,16 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         energy: newEnergy,
         ai: addAILogEntry(ai, msg, 'autonomous'),
       });
+    }
+
+    case 'DISMISS_NARRATIVE_EVENT': {
+      const threshold = action.payload;
+      return {
+        ...state,
+        narrativeEvents: (state.narrativeEvents ?? []).map(e =>
+          e.threshold === threshold ? { ...e, dismissed: true } : e
+        ),
+      };
     }
 
     default:

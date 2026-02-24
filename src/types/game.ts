@@ -176,6 +176,16 @@ export interface EnergyState {
   aiControlled: boolean;          // true when AI Level 3 is active
 }
 
+// ─── Narrative Events (Phase 6) ───────────────────────────────────────────────
+
+export interface NarrativeEvent {
+  threshold: number;                  // 80 | 60 | 40 | 20 | 5
+  triggeredAt: number;                // timestamp
+  planetResourcesAtTrigger: number;   // exact value at the moment
+  aiActiveAtTrigger: boolean;         // whether AI Level 3 was active (for variant text)
+  dismissed: boolean;                 // player closed the modal
+}
+
 export interface GameState {
   cryptoCoins: number;
   cryptoCoinsPerSecond: number;
@@ -217,6 +227,7 @@ export interface GameState {
     upgrades: boolean;
     prestige: boolean;
     energy: boolean;
+    chronicle: boolean;
   };
   // Real money system
   realMoney: number; // Dollars earned from selling coins
@@ -234,6 +245,10 @@ export interface GameState {
   // AI system (Phase 5)
   ai: AIState;
   aiCryptosUnlocked: string[]; // e.g. ['neural_coin', 'quantum_bit']
+  // Narrative Events system (Phase 6)
+  narrativeEvents: NarrativeEvent[];
+  planetResourcesVisible: boolean; // false until first non-renewable activated
+  collapseTriggered: boolean;      // true when planetResources reaches 0
 }
 
 export interface Hardware {

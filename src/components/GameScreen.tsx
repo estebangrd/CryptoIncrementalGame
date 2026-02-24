@@ -17,14 +17,38 @@ import RewardedAdButton from './RewardedAdButton';
 import IAPBoosterBadges from './IAPBoosterBadges';
 import { REMOVE_ADS_CONFIG } from '../config/iapConfig';
 import AchievementToast from './AchievementToast';
+import NarrativeEventModal from './NarrativeEventModal';
 import { getNewlyUnlockedAchievements } from '../utils/achievementLogic';
+import { getPendingNarrativeEvent } from '../utils/narrativeLogic';
 import { Achievement } from '../types/game';
+
+const getPlanetResourceColor = (pct: number): string => {
+  if (pct > 59) return '#22c55e';
+  if (pct > 39) return '#eab308';
+  if (pct > 19) return '#f97316';
+  return '#ef4444';
+};
 
 const GameScreen: React.FC = () => {
   const { gameState, dispatch, t } = useGame();
   const [showSettings, setShowSettings] = useState(false);
   const [toastAchievement, setToastAchievement] = useState<Achievement | null>(null);
   const prevAchievementsRef = useRef(gameState.achievements);
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  // Pulsing animation for critical resource level (<5%)
+  useEffect(() => {
+    if (gameState.planetResourcesVisible && gameState.planetResources < 5) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, { toValue: 0.4, duration: 600, useNativeDriver: true }),
+          Animated.timing(pulseAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
+        ])
+      ).start();
+    } else {
+      pulseAnim.setValue(1);
+    }
+  }, [gameState.planetResourcesVisible, gameState.planetResources, pulseAnim]);
 
   // "Ad Free" badge — shown 10s after Remove Ads purchase
   const adFreeBadgeOpacity = useRef(new Animated.Value(0)).current;
@@ -86,6 +110,14 @@ const GameScreen: React.FC = () => {
 
   const handleMineBlock = () => {
     dispatch({ type: 'MINE_BLOCK' });
+  };
+
+  const pendingNarrativeEvent = getPendingNarrativeEvent(gameState.narrativeEvents ?? []);
+
+  const handleDismissNarrativeEvent = () => {
+    if (pendingNarrativeEvent) {
+      dispatch({ type: 'DISMISS_NARRATIVE_EVENT', payload: pendingNarrativeEvent.threshold });
+    }
   };
 
   const handleReset = () => {
@@ -154,6 +186,32 @@ const GameScreen: React.FC = () => {
           </View>
         </View>
 
+        {/* Planet Resources Meter — only visible after first non-renewable activated */}
+        {gameState.planetResourcesVisible && (
+          <Animated.View style={[styles.planetMeterContainer, { opacity: pulseAnim }]}>
+            <View style={styles.planetMeterRow}>
+              <Text style={styles.planetMeterLabel}>
+                {t('narrative.planetMeter.label')}:
+              </Text>
+              <Text style={[
+                styles.planetMeterPct,
+                { color: getPlanetResourceColor(gameState.planetResources) },
+              ]}>
+                {Math.round(gameState.planetResources)}%
+              </Text>
+            </View>
+            <View style={styles.planetMeterBarBg}>
+              <View style={[
+                styles.planetMeterBarFill,
+                {
+                  width: `${Math.max(0, Math.round(gameState.planetResources))}%` as any,
+                  backgroundColor: getPlanetResourceColor(gameState.planetResources),
+                },
+              ]} />
+            </View>
+          </Animated.View>
+        )}
+
         {/* Stats */}
         <View style={styles.statsContainer}>
           <Text style={styles.statsText}>
@@ -193,6 +251,12 @@ const GameScreen: React.FC = () => {
         achievement={toastAchievement}
         displayName={toastAchievement?.name || toastAchievement?.nameKey || ''}
         onDismiss={() => setToastAchievement(null)}
+      />
+
+      {/* Narrative Event Modal */}
+      <NarrativeEventModal
+        event={pendingNarrativeEvent}
+        onDismiss={handleDismissNarrativeEvent}
       />
     </View>
   );
@@ -276,6 +340,34 @@ const styles = StyleSheet.create({
     color: '#00ff88',
     marginBottom: 2,
     fontWeight: 'bold',
+  },
+  planetMeterContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 6,
+    backgroundColor: '#111a11',
+  },
+  planetMeterRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  planetMeterLabel: {
+    fontSize: 12,
+    color: '#888',
+  },
+  planetMeterPct: {
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  planetMeterBarBg: {
+    height: 6,
+    backgroundColor: '#333',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  planetMeterBarFill: {
+    height: '100%',
+    borderRadius: 3,
   },
   adFreeBadge: {
     backgroundColor: '#1a6b3a',

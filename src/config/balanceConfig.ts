@@ -428,6 +428,46 @@ export const AI_CONFIG = {
 } as const;
 
 // ============================================================================
+// SISTEMA DE EVENTOS NARRATIVOS (PHASE 6)
+// ============================================================================
+export const NARRATIVE_CONFIG = {
+  PLANET_RESOURCES_INITIAL: 100,
+
+  EVENT_THRESHOLDS: [80, 60, 40, 20, 5] as const,
+
+  EVENTS: {
+    80: {
+      titleKey: 'narrative.event80.title',
+      textKey: 'narrative.event80.text',
+      hasAIVariant: false,
+    },
+    60: {
+      titleKey: 'narrative.event60.title',
+      textKey: 'narrative.event60.text',
+      hasAIVariant: false,
+    },
+    40: {
+      titleKey: 'narrative.event40.title',
+      textKeyDefault: 'narrative.event40.textDefault',
+      textKeyWithAI: 'narrative.event40.textWithAI',
+      hasAIVariant: true,
+    },
+    20: {
+      titleKey: 'narrative.event20.title',
+      textKey: 'narrative.event20.text',
+      hasAIVariant: false,
+    },
+    5: {
+      titleKey: 'narrative.event5.title',
+      textKey: 'narrative.event5.text',
+      hasAIVariant: false,
+    },
+  },
+
+  CHRONICLE_MAX_ENTRIES: 20,
+};
+
+// ============================================================================
 // BOOSTERS Y MULTIPLICADORES IAP
 // ============================================================================
 export const BOOSTER_CONFIG = {

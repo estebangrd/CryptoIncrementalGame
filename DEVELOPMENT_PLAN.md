@@ -30,60 +30,68 @@
 - [x] Autoguardado mejorado (10s + al cerrar app)
 - [x] Hardware especializado por criptomoneda
 
+### 🔄 **Fase 3 - Monetización (EN PROGRESO)**
+- [x] AdMob: banners, rewarded ads, interstitials, cooldown
+- [x] IAP: remove ads, boosters, starter packs
+- [x] Sistema de logros con notificaciones toast
+- [ ] Misiones diarias y semanales
+- [ ] Sistema de XP y leaderboards
+
 ---
 
-## 🎮 **Fase 3 - Monetización (PRÓXIMA)**
+### ✅ **Fase 3 - Monetización (COMPLETADA PARCIALMENTE)**
 
 ### 📱 **3.1 Sistema de Anuncios**
 **Objetivo**: Implementar anuncios no intrusivos que generen ingresos
 
 **Tareas**:
-- [ ] Integrar AdMob/Google AdSense
-- [ ] Anuncios de recompensa (2x ganancias por 4 horas)
-- [ ] Anuncios optativos por bonificaciones temporales
-- [ ] Banner en parte inferior (removible con compra)
-- [ ] Anuncios intersticiales cada ciertos minutos
-- [ ] Sistema de cooldown para evitar spam
+- [x] Integrar AdMob/Google AdSense (`src/services/AdMobService.ts`)
+- [x] Anuncios de recompensa (2x ganancias por 4 horas) (`src/components/RewardedAdButton.tsx`)
+- [x] Anuncios optativos por bonificaciones temporales
+- [x] Banner en parte inferior (removible con compra) (`src/components/AdBanner.tsx`)
+- [x] Anuncios intersticiales cada ciertos minutos
+- [x] Sistema de cooldown para evitar spam (`AD_TIMING` en `src/config/adConfig.ts`)
 
-**Archivos a crear/modificar**:
-- `src/services/adsService.ts`
-- `src/components/AdRewardModal.tsx`
-- `src/components/BannerAd.tsx`
-- `src/contexts/AdContext.tsx`
+**Archivos creados**:
+- `src/services/AdMobService.ts`
+- `src/components/AdBanner.tsx`
+- `src/components/RewardedAdButton.tsx`
+- `src/config/adConfig.ts`
 
 ### 💰 **3.2 Compras In-App**
 **Objetivo**: Implementar sistema de compras para monetización
 
 **Tareas**:
-- [ ] Integrar Google Play Billing (Android)
-- [ ] Integrar StoreKit (iOS)
-- [ ] Productos: Remover anuncios ($2.99)
-- [ ] Productos: Paquetes de monedas iniciales
-- [ ] Productos: Acceleradores temporales
-- [ ] Productos: Skins cosméticos para hardware
+- [x] Integrar Google Play Billing (Android) + StoreKit (iOS) (`react-native-iap`)
+- [x] Productos: Remover anuncios ($0.99) (`REMOVE_ADS`)
+- [x] Productos: Paquetes de monedas iniciales (`STARTER_SMALL/MEDIUM/LARGE/MEGA`)
+- [x] Productos: Aceleradores temporales (`BOOSTER_2X`, `BOOSTER_5X`)
+- [ ] Productos: Skins cosméticos para hardware _(descartado, no en spec)_
 
-**Archivos a crear/modificar**:
-- `src/services/billingService.ts`
-- `src/components/ShopModal.tsx`
-- `src/components/ProductCard.tsx`
-- `src/contexts/ShopContext.tsx`
+**Archivos creados**:
+- `src/services/IAPService.ts`
+- `src/components/ShopScreen.tsx`
+- `src/components/IAPBoosterBadges.tsx`
+- `src/config/iapConfig.ts`
 
 ### 🏆 **3.3 Sistema de Logros y Misiones**
 **Objetivo**: Aumentar engagement y retención
 
 **Tareas**:
-- [ ] Logros por milestones (primer Bitcoin, 1000 clicks, etc.)
+- [x] Logros por milestones (primer Bitcoin, 1000 clicks, etc.) (`src/data/achievements.ts`)
 - [ ] Misiones diarias con recompensas
 - [ ] Misiones semanales más complejas
 - [ ] Sistema de puntos de experiencia
 - [ ] Rankings y leaderboards locales
 
-**Archivos a crear/modificar**:
+**Archivos creados**:
 - `src/data/achievements.ts`
-- `src/data/missions.ts`
 - `src/components/AchievementsScreen.tsx`
-- `src/components/MissionsScreen.tsx`
 - `src/utils/achievementLogic.ts`
+
+**Pendiente**:
+- `src/data/missions.ts`
+- `src/components/MissionsScreen.tsx`
 
 ---
 

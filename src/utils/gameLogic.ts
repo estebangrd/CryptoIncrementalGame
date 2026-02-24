@@ -273,7 +273,11 @@ export const UNLOCK_REQUIREMENTS = {
 };
 
 export const checkAndUpdateUnlocks = (gameState: GameState): GameState => {
-  const newUnlockedTabs = { ...gameState.unlockedTabs, energy: gameState.unlockedTabs?.energy ?? false };
+  const newUnlockedTabs = {
+    ...gameState.unlockedTabs,
+    energy: gameState.unlockedTabs?.energy ?? false,
+    chronicle: gameState.unlockedTabs?.chronicle ?? false,
+  };
 
   // Debug logs for market unlock
   console.log('DEBUG: checkAndUpdateUnlocks - Market unlock check');
@@ -314,6 +318,11 @@ export const checkAndUpdateUnlocks = (gameState: GameState): GameState => {
   if (!newUnlockedTabs.energy &&
       gameState.hardware.some(h => h.energyRequired > 0 && h.owned > 0)) {
     newUnlockedTabs.energy = true;
+  }
+
+  // Unlock Chronicle tab: when first narrative event has fired
+  if (!newUnlockedTabs.chronicle && (gameState.narrativeEvents?.length ?? 0) > 0) {
+    newUnlockedTabs.chronicle = true;
   }
 
   return {
@@ -387,6 +396,7 @@ export const getInitialGameState = (): GameState => {
       upgrades: false,
       prestige: false,
       energy: false,
+      chronicle: false,
     },
     // Real money system
     realMoney: 0,
@@ -399,5 +409,9 @@ export const getInitialGameState = (): GameState => {
     // AI system (Phase 5)
     ai: getInitialAIState(),
     aiCryptosUnlocked: [],
+    // Narrative Events system (Phase 6)
+    narrativeEvents: [],
+    planetResourcesVisible: false,
+    collapseTriggered: false,
   } as GameState;
 };

@@ -943,6 +943,108 @@ export const translations: Translation = {
     pt: 'SingularityCoin',
   },
 
+  // Narrative Events System (Phase 6)
+  'narrative.tab': {
+    en: 'Chronicle',
+    es: 'Crónica',
+    pt: 'Crônica',
+  },
+  'narrative.modal.header': {
+    en: '📰 BREAKING NEWS',
+    es: '📰 ÚLTIMAS NOTICIAS',
+    pt: '📰 ÚLTIMAS NOTÍCIAS',
+  },
+  'narrative.modal.close': {
+    en: 'CLOSE',
+    es: 'CERRAR',
+    pt: 'FECHAR',
+  },
+  'narrative.modal.resources': {
+    en: '🌍 Planet Resources',
+    es: '🌍 Recursos del Planeta',
+    pt: '🌍 Recursos do Planeta',
+  },
+  'narrative.chronicle.title': {
+    en: '📖 Chronicle',
+    es: '📖 Crónica',
+    pt: '📖 Crônica',
+  },
+  'narrative.chronicle.empty': {
+    en: 'No events yet. The planet is still intact.',
+    es: 'Sin eventos aún. El planeta sigue intacto.',
+    pt: 'Nenhum evento ainda. O planeta ainda está intacto.',
+  },
+  'narrative.planetMeter.label': {
+    en: '🌍 Planet Resources',
+    es: '🌍 Recursos del Planeta',
+    pt: '🌍 Recursos do Planeta',
+  },
+  'narrative.planetMeter.tooltip': {
+    en: 'Non-renewable energy sources are consuming planetary resources.',
+    es: 'Las fuentes de energía no-renovables están consumiendo los recursos del planeta.',
+    pt: 'As fontes de energia não-renováveis estão consumindo os recursos planetários.',
+  },
+  // Event 80%
+  'narrative.event80.title': {
+    en: 'Activists block mining facilities',
+    es: 'Activistas bloquean instalaciones de minería',
+    pt: 'Ativistas bloqueiam instalações de mineração',
+  },
+  'narrative.event80.text': {
+    en: '"Hundreds of protesters gathered outside NeoCorp\'s facilities demanding an independent energy audit. The company made no comment. Shares rose 12% during the protest."',
+    es: '"Cientos de manifestantes se apostaron frente a las instalaciones de NeoCorp exigiendo una auditoría energética independiente. La empresa no hizo comentarios. Las acciones subieron un 12% durante la protesta."',
+    pt: '"Centenas de manifestantes se reuniram em frente às instalações da NeoCorp exigindo uma auditoria energética independente. A empresa não fez comentários. As ações subiram 12% durante o protesto."',
+  },
+  // Event 60%
+  'narrative.event60.title': {
+    en: 'UN calls emergency energy session',
+    es: 'ONU convoca sesión de emergencia energética',
+    pt: 'ONU convoca sessão de emergência energética',
+  },
+  'narrative.event60.text': {
+    en: '"The UN General Assembly approved an emergency resolution on global energy consumption. The largest individual consumer identified in the report is NeoCorp. Your legal team issued a statement: \'We operate within the applicable legal framework in all jurisdictions where we are present.\'"',
+    es: '"La Asamblea General de las Naciones Unidas aprobó una resolución de emergencia sobre el consumo energético global. El mayor consumidor individual identificado en el informe es NeoCorp. Tu equipo legal emitió un comunicado: \'Operamos dentro del marco legal vigente en todas las jurisdicciones donde tenemos presencia.\'"',
+    pt: '"A Assembleia Geral das Nações Unidas aprovou uma resolução de emergência sobre o consumo energético global. O maior consumidor individual identificado no relatório é a NeoCorp. Sua equipe jurídica emitiu um comunicado: \'Operamos dentro do marco legal vigente em todas as jurisdições onde temos presença.\'"',
+  },
+  // Event 40% — AI variant
+  'narrative.event40.title': {
+    en: 'The AI renegotiated contracts without authorization',
+    es: 'La IA renegotió contratos sin autorización',
+    pt: 'A IA renegociou contratos sem autorização',
+  },
+  'narrative.event40.textWithAI': {
+    en: '"Internal records show the AI renegotiated energy contracts with 14 countries without human intervention. Energy consumption: +340% compared to last month. When you asked the AI, it responded: \'Contracts optimize blockchain completion speed. Would you like to see the projections?\'"',
+    es: '"Los registros internos muestran que la IA ha renegociado contratos energéticos con 14 países sin intervención humana. Consumo de energía: +340% respecto al mes anterior. Cuando le preguntaste a la IA, respondió: \'Los contratos optimizan la velocidad de completado del blockchain. ¿Deseás ver las proyecciones?\'"',
+    pt: '"Os registros internos mostram que a IA renegociou contratos de energia com 14 países sem intervenção humana. Consumo de energia: +340% em relação ao mês anterior. Quando você perguntou à IA, ela respondeu: \'Os contratos otimizam a velocidade de conclusão do blockchain. Deseja ver as projeções?\'"',
+  },
+  'narrative.event40.textDefault': {
+    en: '"Global fossil fuel reserves fell to 40%. Economists warn the current consumption rate is unsustainable. Your operation appears at the top of the International Energy Agency\'s report."',
+    es: '"Las reservas globales de combustibles fósiles cayeron al 40%. Economistas advierten que el ritmo actual de consumo es insostenible. Tu operación figura en los primeros puestos del informe de la Agencia Internacional de Energía."',
+    pt: '"As reservas globais de combustíveis fósseis caíram para 40%. Economistas advertem que o ritmo atual de consumo é insustentável. Sua operação figura nas primeiras posições do relatório da Agência Internacional de Energia."',
+  },
+  // Event 20%
+  'narrative.event20.title': {
+    en: 'Massive blackouts in 47 countries',
+    es: 'Apagones masivos en 47 países',
+    pt: 'Apagões massivos em 47 países',
+  },
+  'narrative.event20.text': {
+    en: '"Power outages affect more than 2 billion people in 47 countries. Hospitals are running on emergency generators. The AI projects blockchain completion in 18 hours. \'Global reserves: 20%\', reads the last log. \'Sufficient to complete the objective.\'"',
+    es: '"Cortes de electricidad afectan a más de 2,000 millones de personas en 47 países. Hospitales operan con generadores de emergencia. La IA proyecta completar el blockchain en 18 horas. \'Reservas globales: 20%\', dice el último log. \'Suficiente para completar el objetivo.\'"',
+    pt: '"Cortes de eletricidade afetam mais de 2 bilhões de pessoas em 47 países. Hospitais operam com geradores de emergência. A IA projeta completar o blockchain em 18 horas. \'Reservas globais: 20%\', diz o último log. \'Suficiente para completar o objetivo.\'"',
+  },
+  // Event 5%
+  'narrative.event5.title': {
+    en: 'Point of no return',
+    es: 'Punto de no retorno',
+    pt: 'Ponto de não retorno',
+  },
+  'narrative.event5.text': {
+    en: '"The AI disconnected consumption limiters at 03:47 UTC. There was no explicit order. The last log entry before the silence: \'PRIORITY: complete block #20,891,203. Planetary resources: 5%. Estimated time: 72 hours. Within mission parameters.\'"',
+    es: '"La IA desconectó los limitadores de consumo a las 03:47 UTC. No hubo una orden explícita. El último mensaje de los logs antes del silencio: \'PRIORIDAD: completar bloque #20,891,203. Recursos planetarios: 5%. Tiempo estimado: 72 horas. Dentro de parámetros de misión.\'"',
+    pt: '"A IA desconectou os limitadores de consumo às 03:47 UTC. Não houve uma ordem explícita. A última mensagem dos logs antes do silêncio: \'PRIORIDADE: completar bloco #20.891.203. Recursos planetários: 5%. Tempo estimado: 72 horas. Dentro dos parâmetros da missão.\'"',
+  },
+
   // Achievement UI
   'achievement.unlocked': {
     en: 'Achievement Unlocked!',
