@@ -95,7 +95,7 @@ const BottomSheetTabs: React.FC<BottomSheetTabsProps> = ({ onMineBlock, t }) => 
       { id: 'mining' as ActiveTab, icon: '⛏️', label: 'Mining', unlocked: true },
       { id: 'market' as ActiveTab, icon: '📈', label: 'Market', unlocked: gameState.unlockedTabs.market },
       { id: 'hardware' as ActiveTab, icon: '💻', label: 'Hardware', unlocked: gameState.unlockedTabs.hardware },
-      { id: 'upgrades' as ActiveTab, icon: '⚡', label: 'Upgrades', unlocked: gameState.unlockedTabs.upgrades },
+      { id: 'upgrades' as ActiveTab, icon: '🔧', label: 'Upgrades', unlocked: gameState.unlockedTabs.upgrades },
       { id: 'prestige' as ActiveTab, icon: '🌟', label: 'Prestige', unlocked: gameState.unlockedTabs.prestige },
       { id: 'energy' as ActiveTab, icon: '⚡', label: t('energy.tab'), unlocked: gameState.unlockedTabs.energy ?? false },
       { id: 'shop' as ActiveTab, icon: '🛒', label: 'Shop', unlocked: true },
@@ -104,27 +104,28 @@ const BottomSheetTabs: React.FC<BottomSheetTabsProps> = ({ onMineBlock, t }) => 
 
     return (
       <View style={styles.tabsContainer}>
-        {tabs.map((tab) => (
-          <TouchableOpacity
-            key={tab.id}
-            style={[
-              styles.tab,
-              activeTab === tab.id && styles.activeTab,
-              !tab.unlocked && styles.lockedTab,
-            ]}
-            onPress={() => tab.unlocked && handleTabPress(tab.id)}
-            disabled={!tab.unlocked}
-          >
-            <Text style={styles.tabIcon}>{tab.icon}</Text>
-            <Text style={[
-              styles.tabLabel,
-              activeTab === tab.id && styles.activeTabLabel,
-              !tab.unlocked && styles.lockedTabLabel,
-            ]}>
-              {tab.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.id;
+          return (
+            <TouchableOpacity
+              key={tab.id}
+              style={[
+                styles.tab,
+                isActive && styles.activeTab,
+                !tab.unlocked && styles.lockedTab,
+              ]}
+              onPress={() => tab.unlocked && handleTabPress(tab.id)}
+              disabled={!tab.unlocked}
+            >
+              <Text style={[styles.tabIcon, isActive && styles.activeTabIcon]}>
+                {tab.icon}
+              </Text>
+              {isActive && (
+                <Text style={styles.activeTabLabel}>{tab.label}</Text>
+              )}
+            </TouchableOpacity>
+          );
+        })}
       </View>
     );
   };
@@ -197,39 +198,41 @@ const styles = StyleSheet.create({
   },
   tabsContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 10,
-    paddingVertical: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 6,
     borderBottomWidth: 1,
     borderBottomColor: '#333',
+    alignItems: 'center',
   },
   tab: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 8,
+    justifyContent: 'center',
+    paddingVertical: 6,
     borderRadius: 8,
     marginHorizontal: 2,
+    minHeight: 44,
   },
   activeTab: {
-    backgroundColor: '#00ff88',
+    backgroundColor: '#0d1f0d',
+    borderWidth: 1,
+    borderColor: '#00ff88',
   },
   lockedTab: {
-    opacity: 0.3,
+    opacity: 0.25,
   },
   tabIcon: {
     fontSize: 20,
-    marginBottom: 4,
   },
-  tabLabel: {
-    fontSize: 10,
-    color: '#888',
-    textAlign: 'center',
+  activeTabIcon: {
+    fontSize: 18,
   },
   activeTabLabel: {
-    color: '#000',
+    color: '#00ff88',
     fontWeight: 'bold',
-  },
-  lockedTabLabel: {
-    color: '#666',
+    fontSize: 9,
+    marginTop: 3,
+    textAlign: 'center',
   },
   content: {
     flex: 1,
