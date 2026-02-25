@@ -271,6 +271,38 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           ? recalculateEnergyTotals(action.payload.energy)
           : getInitialEnergyState(),
         planetResources: action.payload.planetResources ?? 100,
+        // IAP/Ad system migration: provide defaults for old saves
+        iapState: action.payload.iapState ?? {
+          removeAdsPurchased: false,
+          removeAdsPurchaseDate: null,
+          adsSeenBeforePurchase: 0,
+          booster2x: { isActive: false, activatedAt: null, expiresAt: null },
+          booster5x: { isActive: false, activatedAt: null, expiresAt: null },
+          permanentMultiplierPurchased: false,
+          starterPacksPurchased: { small: false, medium: false, large: false, mega: false },
+          purchaseHistory: [],
+          isPurchasing: false,
+          lastPurchaseTime: null,
+        },
+        adState: action.payload.adState ?? {
+          adInitialized: false,
+          gdprConsentGiven: null,
+          bannerLoaded: false,
+          bannerVisible: false,
+          lastInterstitialShownAt: null,
+          interstitialLoaded: false,
+          isFirstSession: true,
+          rewardedAdLoaded: false,
+          totalInterstitialsShown: 0,
+          totalBannerImpressions: 0,
+          lastPromotionShownAt: null,
+        },
+        adBoost: action.payload.adBoost ?? {
+          isActive: false,
+          activatedAt: null,
+          expiresAt: null,
+          lastWatchedAt: null,
+        },
         // AI system migration: provide defaults for old saves
         ai: action.payload.ai ?? getInitialAIState(),
         aiCryptosUnlocked: action.payload.aiCryptosUnlocked ?? [],
