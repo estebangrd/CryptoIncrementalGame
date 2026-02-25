@@ -1056,4 +1056,110 @@ export const translations: Translation = {
     es: '% Completado',
     pt: '% Completo',
   },
+
+  // Endgame — Collapse (Phase 7)
+  'endgame.collapse.title': {
+    en: 'PLANETARY COLLAPSE',
+    es: 'COLAPSO PLANETARIO',
+    pt: 'COLAPSO PLANETÁRIO',
+  },
+  'endgame.collapse.quote': {
+    en: 'The AI completed the blockchain.\nEarth no longer has energy to sustain organized human life.',
+    es: 'La IA completó el blockchain.\nLa Tierra ya no tiene energía para sostener vida humana organizada.',
+    pt: 'A IA completou o blockchain.\nA Terra não tem mais energia para sustentar a vida humana organizada.',
+  },
+  'endgame.collapse.narrative': {
+    en: 'A group of survivors, carrying the records of your technology and the lessons learned, board a ship to a new planet. They carry your legacy multipliers.\nThis time, perhaps, they will make better decisions.',
+    es: 'Un grupo de supervivientes, con los registros de tu tecnología y las lecciones aprendidas, embarca en una nave hacia un nuevo planeta. Llevan tus multiplicadores de legado.\nEsta vez, quizás, tomen mejores decisiones.',
+    pt: 'Um grupo de sobreviventes, carregando os registros de sua tecnologia e as lições aprendidas, embarca em uma nave para um novo planeta. Eles levam seus multiplicadores de legado.\nDesta vez, talvez, tomem melhores decisões.',
+  },
+  'endgame.collapse.button': {
+    en: 'BEGIN ON THE NEW PLANET',
+    es: 'COMENZAR EN EL NUEVO PLANETA',
+    pt: 'COMEÇAR NO NOVO PLANETA',
+  },
+  'endgame.collapse.bonusTitle': {
+    en: 'LEGACY BONUS',
+    es: 'BONUS DE LEGADO',
+    pt: 'BÔNUS DE LEGADO',
+  },
+
+  // Endgame — Good Ending (Phase 7)
+  'endgame.good.title': {
+    en: 'BLOCKCHAIN COMPLETE',
+    es: 'BLOCKCHAIN COMPLETADO',
+    pt: 'BLOCKCHAIN COMPLETO',
+  },
+  'endgame.good.quote': {
+    en: 'You completed the blockchain without depleting the planet. You are the first energetically responsible tycoon in history. Nobody knows if it was luck, discipline, or that you simply lacked ambition.',
+    es: 'Completaste el blockchain sin agotar el planeta. Sos el primer magnate energéticamente responsable de la historia. Nadie sabe si fue suerte, disciplina, o que simplemente te faltó ambición.',
+    pt: 'Você completou o blockchain sem esgotar o planeta. Você é o primeiro magnata energeticamente responsável da história. Ninguém sabe se foi sorte, disciplina, ou que você simplesmente não teve ambição.',
+  },
+  'endgame.good.narrative': {
+    en: 'Your method was replicated. The new world colonies adopted the sustainable mining model. It was not the end of history. It was the beginning of a better one.',
+    es: 'Tu método fue replicado. Las colonias del nuevo mundo adoptaron el modelo de minería sostenible. No fue el fin de la historia. Fue el comienzo de una mejor.',
+    pt: 'Seu método foi replicado. As colônias do novo mundo adotaram o modelo de mineração sustentável. Não foi o fim da história. Foi o começo de uma melhor.',
+  },
+  'endgame.good.button': {
+    en: 'START OVER',
+    es: 'COMENZAR DE NUEVO',
+    pt: 'COMEÇAR DE NOVO',
+  },
+  'endgame.good.bonusTitle': {
+    en: 'SUSTAINABLE MINING BONUS',
+    es: 'BONUS SUSTAINABLE MINING',
+    pt: 'BÔNUS SUSTAINABLE MINING',
+  },
+
+  // Endgame — shared stats labels (Phase 7)
+  'endgame.stats.title': {
+    en: 'YOUR LEGACY',
+    es: 'TU LEGADO',
+    pt: 'SEU LEGADO',
+  },
+  'endgame.stats.blocksMined': {
+    en: 'Blocks mined',
+    es: 'Bloques minados',
+    pt: 'Blocos minerados',
+  },
+  'endgame.stats.coinsEarned': {
+    en: 'CryptoCoins earned',
+    es: 'CryptoCoins ganados',
+    pt: 'CryptoCoins ganhos',
+  },
+  'endgame.stats.moneyEarned': {
+    en: 'Money accumulated',
+    es: 'Dinero acumulado',
+    pt: 'Dinheiro acumulado',
+  },
+  'endgame.stats.resourcesAtEnd': {
+    en: 'Resources at end',
+    es: 'Recursos al finalizar',
+    pt: 'Recursos ao finalizar',
+  },
+  'endgame.stats.aiLevel': {
+    en: 'AI Level reached',
+    es: 'Nivel de IA alcanzado',
+    pt: 'Nível de IA alcançado',
+  },
+  'endgame.stats.duration': {
+    en: 'Run duration',
+    es: 'Duración de la run',
+    pt: 'Duração da run',
+  },
+  'endgame.bonus.production': {
+    en: '+{{pct}}% permanent production',
+    es: '+{{pct}}% producción permanente',
+    pt: '+{{pct}}% produção permanente',
+  },
+  'endgame.bonus.renewable': {
+    en: '-{{pct}}% renewable energy cost',
+    es: '-{{pct}}% costo de energía renovable',
+    pt: '-{{pct}}% custo de energia renovável',
+  },
+  'endgame.bonus.runLabel': {
+    en: '(run #{{n}} — accumulated)',
+    es: '(run #{{n}} — acumulado)',
+    pt: '(run #{{n}} — acumulado)',
+  },
 };

@@ -18,6 +18,7 @@ import IAPBoosterBadges from './IAPBoosterBadges';
 import { REMOVE_ADS_CONFIG } from '../config/iapConfig';
 import AchievementToast from './AchievementToast';
 import NarrativeEventModal from './NarrativeEventModal';
+import EndingScreen from './EndingScreen';
 import { getNewlyUnlockedAchievements } from '../utils/achievementLogic';
 import { getPendingNarrativeEvent } from '../utils/narrativeLogic';
 import { Achievement } from '../types/game';
@@ -257,6 +258,23 @@ const GameScreen: React.FC = () => {
       <NarrativeEventModal
         event={pendingNarrativeEvent}
         onDismiss={handleDismissNarrativeEvent}
+      />
+
+      {/* Ending Screen (Collapse / Good Ending) — fullscreen, not dismissible */}
+      <EndingScreen
+        visible={gameState.collapseTriggered || gameState.goodEndingTriggered}
+        endingType={
+          gameState.collapseTriggered ? 'collapse'
+          : gameState.goodEndingTriggered ? 'good_ending'
+          : null
+        }
+        stats={gameState.lastEndgameStats ?? null}
+        collapseCount={gameState.collapseCount ?? 0}
+        goodEndingCount={gameState.goodEndingCount ?? 0}
+        onPrestige={() => {
+          const endingType = gameState.collapseTriggered ? 'collapse' : 'good_ending';
+          dispatch({ type: 'COMPLETE_ENDING_PRESTIGE', payload: { endingType } });
+        }}
       />
     </View>
   );

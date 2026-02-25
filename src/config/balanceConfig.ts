@@ -468,6 +468,19 @@ export const NARRATIVE_CONFIG = {
 };
 
 // ============================================================================
+// SISTEMA DE ENDGAME — COLAPSO Y BUEN ENDING (PHASE 7)
+// ============================================================================
+export const ENDGAME_CONFIG = {
+  // Colapso
+  COLLAPSE_PRODUCTION_BONUS_PER_PRESTIGE: 0.15,
+
+  // Buen ending
+  GOOD_ENDING_PRODUCTION_BONUS_PER_PRESTIGE: 0.10,
+  GOOD_ENDING_RENEWABLE_DISCOUNT_PER_RUN: 0.30,
+  GOOD_ENDING_RENEWABLE_DISCOUNT_CAP: 0.80,
+};
+
+// ============================================================================
 // BOOSTERS Y MULTIPLICADORES IAP
 // ============================================================================
 export const BOOSTER_CONFIG = {

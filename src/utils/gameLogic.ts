@@ -413,5 +413,10 @@ export const getInitialGameState = (): GameState => {
     narrativeEvents: [],
     planetResourcesVisible: false,
     collapseTriggered: false,
+    // Endgame system (Phase 7)
+    goodEndingTriggered: false,
+    collapseCount: 0,
+    goodEndingCount: 0,
+    lastEndgameStats: null,
   } as GameState;
 };

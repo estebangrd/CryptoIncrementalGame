@@ -178,6 +178,20 @@ export interface EnergyState {
 
 // ─── Narrative Events (Phase 6) ───────────────────────────────────────────────
 
+// ─── Endgame (Phase 7) ────────────────────────────────────────────────────────
+
+export type EndingType = 'collapse' | 'good_ending' | null;
+
+export interface EndgameStats {
+  blocksMined: number;
+  totalCryptoCoinsEarned: number;
+  totalMoneyEarned: number;
+  planetResourcesAtEnd: number;
+  aiLevelReached: AILevel;
+  runDurationMs: number;
+  endingType: EndingType;
+}
+
 export interface NarrativeEvent {
   threshold: number;                  // 80 | 60 | 40 | 20 | 5
   triggeredAt: number;                // timestamp
@@ -249,6 +263,11 @@ export interface GameState {
   narrativeEvents: NarrativeEvent[];
   planetResourcesVisible: boolean; // false until first non-renewable activated
   collapseTriggered: boolean;      // true when planetResources reaches 0
+  // Endgame system (Phase 7)
+  goodEndingTriggered: boolean;    // true when 21M blocks mined with resources > 0
+  collapseCount: number;           // total collapse endings
+  goodEndingCount: number;         // total good endings
+  lastEndgameStats: EndgameStats | null;
 }
 
 export interface Hardware {

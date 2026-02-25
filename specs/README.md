@@ -15,7 +15,7 @@ Este directorio contiene todas las especificaciones técnicas exhaustivas (Level
 | [Energy System](game-mechanics/energy-system.md) | ✅ Implemented | Phase 4 | High | Generación energética: renovables/no-renovables, balance MW, control de IA |
 | [AI System](game-mechanics/ai-system.md) | ✅ Implemented | Phase 5 | High | IA con 3 niveles de autonomía, cryptos exclusivas, control irreversible |
 | [Narrative Events](game-mechanics/narrative-events.md) | ✅ Implemented | Phase 6 | High | Medidor de Recursos del Planeta, 5 hitos narrativos, pestaña Crónica |
-| [Endgame Collapse](game-mechanics/endgame-collapse.md) | 📋 Planned | Phase 7 | High | Colapso planetario, buen ending alternativo, bonos de prestige diferenciados |
+| [Endgame Collapse](game-mechanics/endgame-collapse.md) | ✅ Implemented | Phase 7 | High | Colapso planetario, buen ending alternativo, bonos de prestige diferenciados |
 
 ### 💰 Monetization (Monetización)
 
@@ -238,5 +238,5 @@ Para preguntas sobre estas specs, consulta:
 ---
 
 **Última actualización**: 2026-02-24
-**Versión del proyecto**: 0.0.1 (Phase 1-3 Partial)
-**Próxima fase**: Phase 3 completar (misiones diarias/XP) → Phase 4 (Energy System)
+**Versión del proyecto**: 0.0.1 (Phase 1-7)
+**Próxima fase**: Post-narrativa (Daily Missions, Market Events, Polish)

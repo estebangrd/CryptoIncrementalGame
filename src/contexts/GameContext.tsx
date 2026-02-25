@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
-import { GameState, Cryptocurrency, IAPState, AdState, AdBoostState, Achievement, PrestigeRun, RunStats, AILevel } from '../types/game';
+import { GameState, Cryptocurrency, IAPState, AdState, AdBoostState, Achievement, PrestigeRun, RunStats, AILevel, EndingType } from '../types/game';
 import { hardwareProgression } from '../data/hardwareData';
 import { initialUpgrades } from '../data/gameData';
 import { cryptocurrencies } from '../data/cryptocurrencies';
@@ -50,6 +50,7 @@ import {
 } from '../services/IAPService';
 import { purchaseUpdatedListener, purchaseErrorListener } from 'react-native-iap';
 import { BOOSTER_CONFIG, STARTER_PACK_REWARDS } from '../config/balanceConfig';
+import { buildEndgameStats, calculateTotalEndgameProductionMultiplier, calculateRenewableDiscount } from '../utils/endgameLogic';
 import { IAP_PRODUCT_IDS } from '../config/iapConfig';
 import { PurchaseRecord } from '../types/game';
 import { checkAchievements, mergeAchievements } from '../utils/achievementLogic';
@@ -126,7 +127,8 @@ type GameAction =
   | { type: 'PURCHASE_AI_LEVEL'; payload: { level: 1 | 2 | 3; confirmed?: boolean } }
   | { type: 'ADD_AI_LOG'; payload: { message: string; type: 'suggestion' | 'action' | 'warning' | 'autonomous' } }
   | { type: 'AI_BUILD_ENERGY' }
-  | { type: 'DISMISS_NARRATIVE_EVENT'; payload: number };
+  | { type: 'DISMISS_NARRATIVE_EVENT'; payload: number }
+  | { type: 'COMPLETE_ENDING_PRESTIGE'; payload: { endingType: EndingType } };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
@@ -276,6 +278,10 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         narrativeEvents: action.payload.narrativeEvents ?? [],
         planetResourcesVisible: action.payload.planetResourcesVisible ?? false,
         collapseTriggered: action.payload.collapseTriggered ?? false,
+        goodEndingTriggered: action.payload.goodEndingTriggered ?? false,
+        collapseCount: action.payload.collapseCount ?? 0,
+        goodEndingCount: action.payload.goodEndingCount ?? 0,
+        lastEndgameStats: action.payload.lastEndgameStats ?? null,
         unlockedTabs: {
           market: action.payload.unlockedTabs?.market ?? false,
           hardware: action.payload.unlockedTabs?.hardware ?? false,
@@ -315,13 +321,17 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         narrativeEvents: [],
         planetResourcesVisible: false,
         collapseTriggered: false,
+        goodEndingTriggered: false,
+        collapseCount: 0,
+        goodEndingCount: 0,
+        lastEndgameStats: null,
       };
       return recalculateGameStats(resetState);
     case 'UPDATE_OFFLINE_PROGRESS':
       return updateOfflineProgress(state);
     case 'ADD_PRODUCTION': {
-      // If collapse already triggered, stop all production
-      if (state.collapseTriggered) return state;
+      // If collapse or good ending already triggered, stop all production
+      if (state.collapseTriggered || state.goodEndingTriggered) return state;
 
       // Calculate how many blocks should be mined based on hardware mining speed
       const totalMiningSpeed = calculateTotalMiningSpeed(state.hardware, state.upgrades);
@@ -368,10 +378,23 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
             newState.narrativeEvents = [...(newState.narrativeEvents ?? []), ...newNarrativeEvents];
           }
 
-          // Trigger collapse when planet reaches 0%
+          // Trigger collapse when planet reaches 0% (collapse takes priority)
           if (newResources === 0 && !newState.collapseTriggered) {
             newState.collapseTriggered = true;
+            newState.lastEndgameStats = buildEndgameStats(newState, 'collapse');
           }
+        }
+
+        // Trigger good ending when 21M blocks mined with resources > 0
+        // Collapse has priority — only trigger good ending if no collapse
+        if (
+          !newState.collapseTriggered &&
+          !newState.goodEndingTriggered &&
+          newState.blocksMined >= 21_000_000 &&
+          (newState.planetResources ?? 100) > 0
+        ) {
+          newState.goodEndingTriggered = true;
+          newState.lastEndgameStats = buildEndgameStats(newState, 'good_ending');
         }
 
         return recalculateGameStats(newState);
@@ -454,6 +477,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           upgrades: false,
           prestige: false,
           energy: false,
+          chronicle: false,
         },
         energy: getInitialEnergyState(),
         planetResources: 100,
@@ -462,6 +486,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         narrativeEvents: [],
         planetResourcesVisible: false,
         collapseTriggered: false,
+        goodEndingTriggered: false,
       };
       return recalculateGameStats(prestigedState);
     }
@@ -905,6 +930,96 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           e.threshold === threshold ? { ...e, dismissed: true } : e
         ),
       };
+    }
+
+    case 'COMPLETE_ENDING_PRESTIGE': {
+      const { endingType } = action.payload;
+      const now = Date.now();
+      const isCollapse = endingType === 'collapse';
+      const newCollapseCount = (state.collapseCount ?? 0) + (isCollapse ? 1 : 0);
+      const newGoodEndingCount = (state.goodEndingCount ?? 0) + (isCollapse ? 0 : 1);
+      const newPrestigeLevel = state.prestigeLevel + 1;
+
+      // Base prestige multipliers (same as DO_PRESTIGE)
+      const baseProductionMultiplier = calculateProductionMultiplier(newPrestigeLevel);
+      const newClickMultiplier = calculateClickMultiplier(newPrestigeLevel);
+
+      // Apply endgame production bonus on top of base multiplier
+      const endgameMultiplier = calculateTotalEndgameProductionMultiplier(newCollapseCount, newGoodEndingCount);
+      const newProductionMultiplier = baseProductionMultiplier * endgameMultiplier;
+
+      const currentRun: PrestigeRun = {
+        runNumber: (state.prestigeHistory || []).length + 1,
+        prestigeLevel: state.prestigeLevel,
+        blocksMined: state.blocksMined,
+        totalCoinsEarned: state.totalCryptoCoins || 0,
+        totalMoneyEarned: state.totalRealMoneyEarned || 0,
+        duration: (now - (state.currentRunStartTime || now)) / 1000,
+        startTime: state.currentRunStartTime || now,
+        endTime: now,
+        hardwarePurchased: state.hardware.reduce((sum, hw) => sum + hw.owned, 0),
+        upgradesPurchased: state.upgrades.filter(u => u.purchased).length,
+      };
+      const newHistory = [...(state.prestigeHistory || []), currentRun];
+      const stateForBadges: GameState = {
+        ...state,
+        prestigeLevel: newPrestigeLevel,
+        prestigeHistory: newHistory,
+        totalRealMoneyEarned: state.totalRealMoneyEarned || 0,
+      };
+      const newUnlockedBadges = checkBadgeUnlocks(stateForBadges);
+      const resetRunStats: RunStats = {
+        blocksMinedThisRun: 0,
+        coinsEarnedThisRun: 0,
+        moneyEarnedThisRun: 0,
+        hardwarePurchasedThisRun: 0,
+        upgradesPurchasedThisRun: 0,
+        playtimeThisRun: 0,
+      };
+      const resetHardware = state.hardware.map(hw => ({
+        ...hw,
+        owned: hw.id === 'manual_mining' ? 1 : 0,
+      }));
+      const resetUpgrades = state.upgrades.map(upg => ({ ...upg, purchased: false }));
+      const prestigedState: GameState = {
+        ...state,
+        prestigeLevel: newPrestigeLevel,
+        prestigeProductionMultiplier: newProductionMultiplier,
+        prestigeClickMultiplier: newClickMultiplier,
+        prestigeMultiplier: newProductionMultiplier,
+        prestigeHistory: newHistory,
+        unlockedBadges: newUnlockedBadges,
+        blocksMined: 0,
+        cryptoCoins: 0,
+        realMoney: 0,
+        totalRealMoneyEarned: 0,
+        totalCryptoCoins: 0,
+        hardware: resetHardware,
+        upgrades: resetUpgrades,
+        phase: 'genesis' as const,
+        currentRunStartTime: now,
+        currentRunStats: resetRunStats,
+        unlockedTabs: {
+          market: false,
+          hardware: false,
+          upgrades: false,
+          prestige: false,
+          energy: false,
+          chronicle: false,
+        },
+        energy: getInitialEnergyState(),
+        planetResources: 100,
+        ai: getInitialAIState(),
+        aiCryptosUnlocked: [],
+        narrativeEvents: [],
+        planetResourcesVisible: false,
+        collapseTriggered: false,
+        goodEndingTriggered: false,
+        collapseCount: newCollapseCount,
+        goodEndingCount: newGoodEndingCount,
+        lastEndgameStats: state.lastEndgameStats,
+      };
+      return recalculateGameStats(prestigedState);
     }
 
     default:
