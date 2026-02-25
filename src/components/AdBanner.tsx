@@ -31,9 +31,13 @@ const AdBanner: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     alignItems: 'center',
     backgroundColor: '#111',
+    zIndex: 50,
   },
 });
 

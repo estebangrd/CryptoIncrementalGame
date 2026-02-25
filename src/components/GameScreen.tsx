@@ -147,7 +147,6 @@ const GameScreen: React.FC = () => {
         <View style={styles.header}>
           <Text style={styles.title}>{t('game.title')}</Text>
           <IAPBoosterBadges />
-          <RewardedAdButton />
           {gameState.unlockedTabs?.energy && gameState.energy && (
             <Text style={
               gameState.energy.totalGeneratedMW >= gameState.energy.totalRequiredMW
@@ -211,6 +210,13 @@ const GameScreen: React.FC = () => {
               ]} />
             </View>
           </Animated.View>
+        )}
+
+        {/* 2x Boost button — above the stats box */}
+        {!gameState.iapState.removeAdsPurchased && (
+          <View style={styles.boostRow}>
+            <RewardedAdButton />
+          </View>
         )}
 
         {/* Stats */}
@@ -341,6 +347,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#ff6666',
     textAlign: 'center',
+  },
+  boostRow: {
+    paddingHorizontal: 20,
+    paddingVertical: 4,
+    alignItems: 'flex-end',
   },
   statsContainer: {
     paddingHorizontal: 20,

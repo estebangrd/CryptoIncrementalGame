@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { TouchableOpacity, Text, View, StyleSheet, Alert } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, Alert } from 'react-native';
 import { useGame } from '../contexts/GameContext';
 import { showRewardedAd, isRewardedAdReady } from '../services/AdMobService';
 import { BOOSTER_CONFIG } from '../config/balanceConfig';
@@ -103,22 +103,12 @@ const RewardedAdButton: React.FC = () => {
 
   const renderContent = () => {
     if (gameState.adBoost.isActive) {
-      return (
-        <View style={styles.content}>
-          <Text style={styles.label}>⚡ 2x Boost</Text>
-          <Text style={styles.timer}>{formatTime(boostRemaining())}</Text>
-        </View>
-      );
+      return <Text style={styles.label}>⚡ 2x · {formatTime(boostRemaining())}</Text>;
     }
     if (isInCooldown()) {
-      return (
-        <View style={styles.content}>
-          <Text style={styles.label}>🎬 Next ad in</Text>
-          <Text style={styles.timer}>{formatTime(cooldownRemaining())}</Text>
-        </View>
-      );
+      return <Text style={styles.label}>⏳ {formatTime(cooldownRemaining())}</Text>;
     }
-    return <Text style={styles.label}>🎬 2x Boost (Watch Ad)</Text>;
+    return <Text style={styles.label}>📺 2x</Text>;
   };
 
   return (
@@ -134,9 +124,9 @@ const RewardedAdButton: React.FC = () => {
 
 const styles = StyleSheet.create({
   button: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -151,22 +141,14 @@ const styles = StyleSheet.create({
     borderColor: '#FFD700',
   },
   buttonCooldown: {
-    backgroundColor: '#333',
+    backgroundColor: '#2a2a2a',
     borderWidth: 1,
-    borderColor: '#555',
-  },
-  content: {
-    alignItems: 'center',
+    borderColor: '#444',
   },
   label: {
     color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  timer: {
-    color: '#FFD700',
     fontSize: 11,
-    marginTop: 1,
+    fontWeight: 'bold',
   },
 });
 
