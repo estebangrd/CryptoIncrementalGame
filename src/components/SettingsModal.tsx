@@ -19,9 +19,10 @@ interface SettingsModalProps {
   visible: boolean;
   onClose: () => void;
   onReset: () => void;
+  onOpenShop: () => void;
 }
 
-const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose, onReset }) => {
+const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose, onReset, onOpenShop }) => {
   const { gameState, currentLanguage, setLanguage, t, dispatch } = useGame();
   const [showAchievements, setShowAchievements] = useState(false);
 
@@ -146,13 +147,17 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose, onReset
             {/* Ads & Purchases */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Ads & Purchases</Text>
-              {gameState.iapState.removeAdsPurchased ? (
-                <View style={styles.adFreeStatus}>
+              {gameState.iapState.removeAdsPurchased && (
+                <View style={[styles.adFreeStatus, { marginBottom: 8 }]}>
                   <Text style={styles.adFreeStatusText}>✓ Ad Free Mode: Active</Text>
                 </View>
-              ) : (
-                <Text style={styles.infoText}>Remove Ads — available in the Shop tab</Text>
               )}
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: '#2a1a3e', borderWidth: 1, borderColor: '#a855f7' }]}
+                onPress={() => { onClose(); onOpenShop(); }}
+              >
+                <Text style={styles.actionButtonText}>💎 Open Shop</Text>
+              </TouchableOpacity>
             </View>
 
             {/* Game Info */}

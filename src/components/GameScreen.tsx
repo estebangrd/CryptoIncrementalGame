@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Alert,
   Animated,
+  Modal,
 } from 'react-native';
 import { useGame } from '../contexts/GameContext';
 import { formatNumber } from '../utils/gameLogic';
@@ -19,6 +20,7 @@ import { REMOVE_ADS_CONFIG } from '../config/iapConfig';
 import AchievementToast from './AchievementToast';
 import NarrativeEventModal from './NarrativeEventModal';
 import EndingScreen from './EndingScreen';
+import ShopScreen from './ShopScreen';
 import { getNewlyUnlockedAchievements } from '../utils/achievementLogic';
 import { getPendingNarrativeEvent } from '../utils/narrativeLogic';
 import { Achievement } from '../types/game';
@@ -33,6 +35,7 @@ const getPlanetResourceColor = (pct: number): string => {
 const GameScreen: React.FC = () => {
   const { gameState, dispatch, t } = useGame();
   const [showSettings, setShowSettings] = useState(false);
+  const [showShop, setShowShop] = useState(false);
   const [toastAchievement, setToastAchievement] = useState<Achievement | null>(null);
   const prevAchievementsRef = useRef(gameState.achievements);
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -113,6 +116,15 @@ const GameScreen: React.FC = () => {
     dispatch({ type: 'MINE_BLOCK' });
   };
 
+  // Show shop button when there are un-purchased one-time offers
+  const hasPermanentOffers =
+    !gameState.iapState.removeAdsPurchased ||
+    !gameState.iapState.permanentMultiplierPurchased ||
+    !gameState.iapState.starterPacksPurchased.small ||
+    !gameState.iapState.starterPacksPurchased.medium ||
+    !gameState.iapState.starterPacksPurchased.large ||
+    !gameState.iapState.starterPacksPurchased.mega;
+
   const pendingNarrativeEvent = getPendingNarrativeEvent(gameState.narrativeEvents ?? []);
 
   const handleDismissNarrativeEvent = () => {
@@ -147,6 +159,11 @@ const GameScreen: React.FC = () => {
         <View style={styles.header}>
           <Text style={styles.title}>{t('game.title')}</Text>
           <IAPBoosterBadges />
+          {hasPermanentOffers && (
+            <TouchableOpacity style={styles.shopButton} onPress={() => setShowShop(true)}>
+              <Text style={styles.shopButtonText}>💎</Text>
+            </TouchableOpacity>
+          )}
           {gameState.unlockedTabs?.energy && gameState.energy && (
             <Text style={
               gameState.energy.totalGeneratedMW >= gameState.energy.totalRequiredMW
@@ -248,6 +265,7 @@ const GameScreen: React.FC = () => {
         visible={showSettings}
         onClose={() => setShowSettings(false)}
         onReset={handleReset}
+        onOpenShop={() => setShowShop(true)}
       />
 
       {/* Ad Banner - bottom of screen */}
@@ -265,6 +283,24 @@ const GameScreen: React.FC = () => {
         event={pendingNarrativeEvent}
         onDismiss={handleDismissNarrativeEvent}
       />
+
+      {/* Shop Modal */}
+      <Modal
+        visible={showShop}
+        animationType="slide"
+        transparent={false}
+        onRequestClose={() => setShowShop(false)}
+      >
+        <View style={styles.shopModal}>
+          <View style={styles.shopModalHeader}>
+            <Text style={styles.shopModalTitle}>💎 Shop</Text>
+            <TouchableOpacity onPress={() => setShowShop(false)} style={styles.shopModalClose}>
+              <Text style={styles.shopModalCloseText}>✕</Text>
+            </TouchableOpacity>
+          </View>
+          <ShopScreen />
+        </View>
+      </Modal>
 
       {/* Ending Screen (Collapse / Good Ending) — fullscreen, not dismissible */}
       <EndingScreen
@@ -410,6 +446,42 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: 'bold',
     color: '#00ff88',
+  },
+  shopButton: {
+    padding: 6,
+    borderRadius: 16,
+    backgroundColor: '#1a1a2e',
+    borderWidth: 1,
+    borderColor: '#a855f7',
+  },
+  shopButtonText: {
+    fontSize: 16,
+  },
+  shopModal: {
+    flex: 1,
+    backgroundColor: '#1a1a1a',
+    paddingTop: 50,
+  },
+  shopModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+  },
+  shopModalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  shopModalClose: {
+    padding: 4,
+  },
+  shopModalCloseText: {
+    fontSize: 20,
+    color: '#888',
   },
   energyOk: {
     fontSize: 11,
