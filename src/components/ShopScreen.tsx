@@ -4,6 +4,7 @@ import {
   StyleSheet, ActivityIndicator,
 } from 'react-native';
 import { useGame } from '../contexts/GameContext';
+
 import { purchaseProduct } from '../services/IAPService';
 import { IAP_PRODUCT_IDS, IAP_PRICES } from '../config/iapConfig';
 import { BOOSTER_CONFIG, STARTER_PACK_REWARDS } from '../config/balanceConfig';
@@ -30,17 +31,14 @@ const Badge: React.FC<BadgeProps> = ({ label, color }) => (
 type ShopTab = 'removeAds' | 'boosters' | 'packs';
 
 const ShopScreen: React.FC = () => {
-  const { gameState, dispatch } = useGame();
+  const { gameState, dispatch, showToast } = useGame();
   const [activeTab, setActiveTab] = useState<ShopTab>('removeAds');
   const [purchasing, setPurchasing] = useState<string | null>(null);
 
   const iapState = gameState.iapState;
 
   const doPurchase = useCallback(async (productId: string) => {
-    if (iapState.isPurchasing || purchasing) {
-      Alert.alert('Please wait', 'A purchase is already being processed.');
-      return;
-    }
+    if (iapState.isPurchasing || purchasing) return;
     try {
       setPurchasing(productId);
       dispatch({ type: 'SET_IAP_PURCHASING', payload: true });
@@ -48,13 +46,13 @@ const ShopScreen: React.FC = () => {
       // Result handled via purchaseUpdatedListener in GameContext
     } catch (error: any) {
       if (error?.code !== 'E_USER_CANCELLED') {
-        Alert.alert('Purchase Failed', error?.message || 'Could not process purchase.');
+        showToast(error?.message || 'Purchase failed', 'error');
       }
       dispatch({ type: 'SET_IAP_PURCHASING', payload: false });
     } finally {
       setPurchasing(null);
     }
-  }, [iapState.isPurchasing, purchasing, dispatch]);
+  }, [iapState.isPurchasing, purchasing, dispatch, showToast]);
 
   const confirmPurchase = useCallback((productId: string) => {
     doPurchase(productId);

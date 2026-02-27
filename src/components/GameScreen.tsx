@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   Animated,
   Modal,
 } from 'react-native';
@@ -81,36 +80,6 @@ const GameScreen: React.FC = () => {
     prevAchievementsRef.current = gameState.achievements;
   }, [gameState.achievements, dispatch]);
 
-  // Promotion dialog trigger — after reaching interstitialThreshold
-  const promoShownRef = useRef(false);
-  useEffect(() => {
-    const { removeAdsPurchased } = gameState.iapState;
-    const { totalInterstitialsShown, lastPromotionShownAt } = gameState.adState;
-    const { enabled, interstitialThreshold, reminderThreshold } = REMOVE_ADS_CONFIG.promotions;
-
-    if (!enabled || removeAdsPurchased || promoShownRef.current) return;
-
-    const adsSinceLastPromo = lastPromotionShownAt !== null
-      ? totalInterstitialsShown - lastPromotionShownAt
-      : totalInterstitialsShown;
-
-    const shouldShow = lastPromotionShownAt === null
-      ? totalInterstitialsShown >= interstitialThreshold
-      : adsSinceLastPromo >= reminderThreshold;
-
-    if (shouldShow) {
-      promoShownRef.current = true;
-      dispatch({ type: 'MARK_PROMO_SHOWN' });
-      Alert.alert(
-        `You've seen ${totalInterstitialsShown} ads!`,
-        'Remove all ads for just $0.99 — support the game and enjoy ad-free gameplay.',
-        [
-          { text: 'Maybe Later', style: 'cancel', onPress: () => { promoShownRef.current = false; } },
-          { text: 'Remove Ads Now', onPress: () => { promoShownRef.current = false; } },
-        ],
-      );
-    }
-  }, [gameState.adState.totalInterstitialsShown, gameState.iapState.removeAdsPurchased, dispatch]);
 
   const handleMineBlock = () => {
     dispatch({ type: 'MINE_BLOCK' });

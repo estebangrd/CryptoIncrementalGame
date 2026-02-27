@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useGame } from '../contexts/GameContext';
 import { BOOSTER_CONFIG } from '../config/balanceConfig';
 
@@ -34,28 +34,6 @@ const IAPBoosterBadges: React.FC = () => {
   const b5xRemaining = b5xActive ? booster5x.expiresAt! - now : 0;
   const b2xRemaining = b2xActive ? booster2x.expiresAt! - now : 0;
 
-  const handleBadgePress = (type: '2x' | '5x' | 'permanent') => {
-    if (type === 'permanent') {
-      Alert.alert(
-        '♾️ Permanent 2x Multiplier',
-        'Your production is permanently doubled. This boost stacks with all other multipliers.',
-        [{ text: 'Nice!' }],
-      );
-    } else if (type === '5x') {
-      Alert.alert(
-        '🚀 5x Production Boost Active',
-        `Time remaining: ${formatTimer(b5xRemaining)}\n\nYour production is multiplied by ${BOOSTER_CONFIG.BOOSTER_5X.multiplier}x! This stacks with prestige and ad boosts.`,
-        [{ text: 'OK' }],
-      );
-    } else {
-      Alert.alert(
-        '⚡ 2x Production Boost Active',
-        `Time remaining: ${formatTimer(b2xRemaining)}\n\nYour production is multiplied by ${BOOSTER_CONFIG.BOOSTER_2X.multiplier}x! This stacks with prestige and ad boosts.`,
-        [{ text: 'OK' }],
-      );
-    }
-  };
-
   if (!permanentMultiplierPurchased && !b5xActive && !b2xActive) {
     return null;
   }
@@ -63,33 +41,21 @@ const IAPBoosterBadges: React.FC = () => {
   return (
     <View style={styles.container}>
       {permanentMultiplierPurchased && (
-        <TouchableOpacity
-          style={[styles.badge, styles.badgePermanent]}
-          onPress={() => handleBadgePress('permanent')}
-          activeOpacity={0.8}
-        >
+        <View style={[styles.badge, styles.badgePermanent]}>
           <Text style={styles.badgeText}>♾️ 2x</Text>
-        </TouchableOpacity>
+        </View>
       )}
       {b5xActive && (
-        <TouchableOpacity
-          style={[styles.badge, styles.badge5x]}
-          onPress={() => handleBadgePress('5x')}
-          activeOpacity={0.8}
-        >
+        <View style={[styles.badge, styles.badge5x]}>
           <Text style={styles.badgeText}>🚀 5x</Text>
           <Text style={styles.timerText}>{formatTimer(b5xRemaining)}</Text>
-        </TouchableOpacity>
+        </View>
       )}
       {b2xActive && !b5xActive && (
-        <TouchableOpacity
-          style={[styles.badge, styles.badge2x]}
-          onPress={() => handleBadgePress('2x')}
-          activeOpacity={0.8}
-        >
+        <View style={[styles.badge, styles.badge2x]}>
           <Text style={styles.badgeText}>⚡ 2x</Text>
           <Text style={styles.timerText}>{formatTimer(b2xRemaining)}</Text>
-        </TouchableOpacity>
+        </View>
       )}
     </View>
   );

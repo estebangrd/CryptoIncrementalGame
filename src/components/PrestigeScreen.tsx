@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   Modal,
   TextInput,
   ScrollView,
@@ -19,7 +18,7 @@ import { PrestigeRun } from '../types/game';
 type SubTab = 'prestige' | 'history' | 'badges';
 
 const PrestigeScreen: React.FC = () => {
-  const { gameState, dispatch, t } = useGame();
+  const { gameState, dispatch, t, showToast } = useGame();
   const [activeSubTab, setActiveSubTab] = useState<SubTab>('prestige');
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [confirmText, setConfirmText] = useState('');
@@ -43,11 +42,7 @@ const PrestigeScreen: React.FC = () => {
     dispatch({ type: 'DO_PRESTIGE' });
     setConfirmModalVisible(false);
     setConfirmText('');
-    Alert.alert(
-      'Prestige Complete!',
-      `You are now Prestige Level ${gameState.prestigeLevel + 1}!\n\nNew Production Boost: +${Math.round((gameState.prestigeLevel + 1) * 10)}%\nNew Click Boost: +${Math.round((gameState.prestigeLevel + 1) * 5)}%`,
-      [{ text: 'Start New Run!' }]
-    );
+    showToast(`✨ Prestige Level ${gameState.prestigeLevel + 1}! +${Math.round((gameState.prestigeLevel + 1) * 10)}% production`, 'success');
   };
 
   const handleCancelConfirm = () => {

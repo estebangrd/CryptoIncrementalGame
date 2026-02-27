@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useState, useCallback, ReactNode } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import { GameState, Cryptocurrency, IAPState, AdState, AdBoostState, Achievement, PrestigeRun, RunStats, AILevel, EndingType } from '../types/game';
 import { hardwareProgression } from '../data/hardwareData';
@@ -51,6 +51,7 @@ import {
 import { purchaseUpdatedListener, purchaseErrorListener } from 'react-native-iap';
 import { BOOSTER_CONFIG, STARTER_PACK_REWARDS } from '../config/balanceConfig';
 import { buildEndgameStats, calculateTotalEndgameProductionMultiplier, calculateRenewableDiscount } from '../utils/endgameLogic';
+import Toast, { ToastInfo } from '../components/Toast';
 import { IAP_PRODUCT_IDS } from '../config/iapConfig';
 import { PurchaseRecord } from '../types/game';
 import { checkAchievements, mergeAchievements } from '../utils/achievementLogic';
@@ -80,6 +81,7 @@ interface GameContextType {
   t: (key: string) => string;
   dispatch: React.Dispatch<GameAction>;
   setLanguage: (languageCode: string) => void;
+  showToast: (message: string, type?: ToastInfo['type']) => void;
 }
 
 type GameAction =
@@ -1114,6 +1116,10 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const [currentLanguage, setCurrentLanguage] = React.useState('en');
+  const [toastInfo, setToastInfo] = useState<ToastInfo | null>(null);
+  const showToast = useCallback((message: string, type: ToastInfo['type'] = 'info') => {
+    setToastInfo({ message, type });
+  }, []);
 
   const t = (key: string): string => {
     return translations[key]?.[currentLanguage] || key;
@@ -1402,8 +1408,9 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [gameState.cryptocurrencies]);
 
   return (
-    <GameContext.Provider value={{ gameState, currentLanguage, t, dispatch, setLanguage }}>
+    <GameContext.Provider value={{ gameState, currentLanguage, t, dispatch, setLanguage, showToast }}>
       {children}
+      <Toast toast={toastInfo} onDismiss={() => setToastInfo(null)} />
     </GameContext.Provider>
   );
 };

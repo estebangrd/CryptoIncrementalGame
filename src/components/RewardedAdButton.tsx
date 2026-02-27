@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { TouchableOpacity, Text, StyleSheet, Alert } from 'react-native';
 import { useGame } from '../contexts/GameContext';
+
 import { showRewardedAd, isRewardedAdReady } from '../services/AdMobService';
 import { BOOSTER_CONFIG } from '../config/balanceConfig';
 
@@ -16,7 +17,7 @@ const formatTime = (ms: number): string => {
 };
 
 const RewardedAdButton: React.FC = () => {
-  const { gameState, dispatch } = useGame();
+  const { gameState, dispatch, showToast } = useGame();
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
@@ -55,27 +56,18 @@ const RewardedAdButton: React.FC = () => {
     const inCooldown = gameState.adBoost.lastWatchedAt
       ? now - gameState.adBoost.lastWatchedAt < cooldownMs
       : false;
-    const cooldownLeft = gameState.adBoost.lastWatchedAt
-      ? Math.max(0, cooldownMs - (now - gameState.adBoost.lastWatchedAt))
-      : 0;
     const boostLeft = gameState.adBoost.expiresAt
       ? Math.max(0, gameState.adBoost.expiresAt - now)
       : 0;
 
-    if (inCooldown) {
-      Alert.alert('Cooldown activo', `Próximo ad disponible en ${formatTime(cooldownLeft)}`);
-      return;
-    }
+    if (inCooldown) return;
 
     const doShowAd = () => {
-      if (!isRewardedAdReady()) {
-        Alert.alert('Ad no disponible', 'Intenta de nuevo en un momento.');
-        return;
-      }
+      if (!isRewardedAdReady()) return;
       showRewardedAd(
         () => {
           dispatch({ type: 'ACTIVATE_AD_BOOST' });
-          Alert.alert('¡Boost activado!', 'Producción 2x por 4 horas.');
+          showToast('⚡ Boost 2x activado por 4 horas', 'success');
         },
         undefined,
       );
@@ -93,7 +85,7 @@ const RewardedAdButton: React.FC = () => {
     } else {
       doShowAd();
     }
-  }, [gameState.adBoost, cooldownMs, now, dispatch]);
+  }, [gameState.adBoost, cooldownMs, now, dispatch, showToast]);
 
   const getButtonStyle = () => {
     if (gameState.adBoost.isActive) return [styles.button, styles.buttonActive];

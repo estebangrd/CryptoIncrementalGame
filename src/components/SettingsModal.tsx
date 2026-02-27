@@ -6,7 +6,6 @@ import {
   StyleSheet,
   Modal,
   ScrollView,
-  Alert,
 } from 'react-native';
 import { useGame } from '../contexts/GameContext';
 import { languages } from '../data/translations';
@@ -23,7 +22,7 @@ interface SettingsModalProps {
 }
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose, onReset, onOpenShop }) => {
-  const { gameState, currentLanguage, setLanguage, t, dispatch } = useGame();
+  const { gameState, currentLanguage, setLanguage, t, dispatch, showToast } = useGame();
   const [showAchievements, setShowAchievements] = useState(false);
 
   const handleLanguageChange = async (languageCode: string) => {
@@ -31,11 +30,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose, onReset
   };
 
   const handleRestorePurchases = async () => {
-    Alert.alert('Restoring...', 'Please wait while we restore your purchases.');
     const purchases = await restorePurchases();
 
     if (purchases.length === 0) {
-      Alert.alert('Restore Purchases', 'No purchases to restore.');
+      showToast('No purchases to restore', 'info');
       return;
     }
 
@@ -51,9 +49,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose, onReset
       }
     }
 
-    Alert.alert('Restore Purchases', restoredCount > 0
-      ? `Successfully restored ${restoredCount} purchase(s).`
-      : 'No restorable purchases found (boosters and packs cannot be restored).');
+    showToast(
+      restoredCount > 0 ? `✓ Restored ${restoredCount} purchase(s)` : 'No restorable purchases found',
+      restoredCount > 0 ? 'success' : 'info',
+    );
   };
 
   const handleClearSavedData = () => {
