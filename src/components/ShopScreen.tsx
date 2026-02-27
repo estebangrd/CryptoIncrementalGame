@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, Alert, ActivityIndicator,
+  StyleSheet, ActivityIndicator,
 } from 'react-native';
 import { useGame } from '../contexts/GameContext';
 import { purchaseProduct } from '../services/IAPService';
@@ -56,18 +56,8 @@ const ShopScreen: React.FC = () => {
     }
   }, [iapState.isPurchasing, purchasing, dispatch]);
 
-  const confirmPurchase = useCallback((
-    productId: string,
-    title: string,
-    description: string,
-    price: number,
-    warning?: string,
-  ) => {
-    const msg = `${description}\n\nPrice: $${price.toFixed(2)}${warning ? `\n\n${warning}` : ''}`;
-    Alert.alert(title, msg, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Purchase', style: 'default', onPress: () => doPurchase(productId) },
-    ]);
+  const confirmPurchase = useCallback((productId: string) => {
+    doPurchase(productId);
   }, [doPurchase]);
 
   // ── Remove Ads tab ───────────────────────────────────────────────────────
@@ -87,13 +77,7 @@ const ShopScreen: React.FC = () => {
         <Text style={styles.priceText}>${IAP_PRICES.REMOVE_ADS.toFixed(2)}</Text>
         <TouchableOpacity
           style={[styles.buyButton, purchased && styles.buyButtonDisabled]}
-          onPress={() => !purchased && confirmPurchase(
-            IAP_PRODUCT_IDS.REMOVE_ADS,
-            'Remove Ads',
-            'Remove banner and interstitial ads forever. Rewarded ads will still be available.',
-            IAP_PRICES.REMOVE_ADS,
-            'This is a one-time permanent purchase.',
-          )}
+          onPress={() => !purchased && confirmPurchase(IAP_PRODUCT_IDS.REMOVE_ADS)}
           disabled={purchased || !!purchasing}
         >
           {purchasing === IAP_PRODUCT_IDS.REMOVE_ADS
@@ -131,13 +115,7 @@ const ShopScreen: React.FC = () => {
           <Text style={styles.priceText}>${IAP_PRICES.BOOSTER_2X.toFixed(2)}</Text>
           <TouchableOpacity
             style={[styles.buyButton, styles.buyButtonGold, !!purchasing && styles.buyButtonDisabled]}
-            onPress={() => confirmPurchase(
-              IAP_PRODUCT_IDS.BOOSTER_2X,
-              '2x Production Booster',
-              'Double your production for 4 hours. This boost can stack with rewarded ad boost.',
-              IAP_PRICES.BOOSTER_2X,
-              b2x.isActive ? 'Buying another will REPLACE the current boost, not stack.' : undefined,
-            )}
+            onPress={() => confirmPurchase(IAP_PRODUCT_IDS.BOOSTER_2X)}
             disabled={!!purchasing}
           >
             {purchasing === IAP_PRODUCT_IDS.BOOSTER_2X
@@ -160,13 +138,7 @@ const ShopScreen: React.FC = () => {
           <Text style={styles.priceText}>${IAP_PRICES.BOOSTER_5X.toFixed(2)}</Text>
           <TouchableOpacity
             style={[styles.buyButton, styles.buyButtonPurple, !!purchasing && styles.buyButtonDisabled]}
-            onPress={() => confirmPurchase(
-              IAP_PRODUCT_IDS.BOOSTER_5X,
-              '5x Production Booster',
-              '5x your production for 24 hours. Replaces any active 2x boost.',
-              IAP_PRICES.BOOSTER_5X,
-              b5x.isActive ? 'Buying another will REPLACE the current boost.' : undefined,
-            )}
+            onPress={() => confirmPurchase(IAP_PRODUCT_IDS.BOOSTER_5X)}
             disabled={!!purchasing}
           >
             {purchasing === IAP_PRODUCT_IDS.BOOSTER_5X
@@ -189,13 +161,7 @@ const ShopScreen: React.FC = () => {
           <Text style={styles.priceText}>${IAP_PRICES.PERMANENT_MULTIPLIER.toFixed(2)}</Text>
           <TouchableOpacity
             style={[styles.buyButton, perm && styles.buyButtonDisabled]}
-            onPress={() => !perm && confirmPurchase(
-              IAP_PRODUCT_IDS.PERMANENT_MULTIPLIER,
-              'Permanent 2x Multiplier',
-              'PERMANENTLY double your production. This multiplier stacks with prestige and temporary boosters.',
-              IAP_PRICES.PERMANENT_MULTIPLIER,
-              'This is a one-time purchase, permanent forever.',
-            )}
+            onPress={() => !perm && confirmPurchase(IAP_PRODUCT_IDS.PERMANENT_MULTIPLIER)}
             disabled={perm || !!purchasing}
           >
             {purchasing === IAP_PRODUCT_IDS.PERMANENT_MULTIPLIER
@@ -244,13 +210,7 @@ const ShopScreen: React.FC = () => {
             <Text style={styles.packPrice}>${pack.price.toFixed(2)}</Text>
             <TouchableOpacity
               style={[styles.packBuyButton, owned && styles.buyButtonDisabled]}
-              onPress={() => !owned && confirmPurchase(
-                pack.productId,
-                pack.title,
-                `You will receive:\n• ${rewards.cryptoCoins.toLocaleString()} CryptoCoins\n• $${rewards.realMoney.toLocaleString()} Real Money`,
-                pack.price,
-                'Can only be purchased once.',
-              )}
+              onPress={() => !owned && confirmPurchase(pack.productId)}
               disabled={owned || !!purchasing}
             >
               {purchasing === pack.productId
