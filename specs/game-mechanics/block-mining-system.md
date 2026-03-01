@@ -4,7 +4,7 @@
 - **Fase**: Phase 1 - Genesis (Implemented)
 - **Estado**: Implemented & Active
 - **Prioridad**: Critical (Core Game Mechanic)
-- **Última actualización**: 2026-02-21
+- **Última actualización**: 2026-03-01
 
 ## Descripción
 
@@ -18,6 +18,7 @@ Este sistema es el corazón del loop de gameplay: minar bloques → ganar Crypto
 - [x] Balancear la velocidad de minado para mantener engagement
 - [x] Proveer feedback visual claro del progreso de minado
 - [x] Implementar límite de suministro (21M bloques como Bitcoin)
+- [x] El minado manual es la fuente primaria early-game, pero insignificante en midgame
 
 ## Comportamiento Esperado
 
@@ -34,7 +35,33 @@ Este sistema es el corazón del loop de gameplay: minar bloques → ganar Crypto
 - `gameState.cryptoCoins` aumenta por la suma de recompensas
 - Se actualiza `currentReward` si se alcanzó un halving
 
-### Caso de Uso 2: Halving Event
+### Caso de Uso 2: Minado Manual (Click)
+**Dado que** el jugador presiona el botón de minar en la pantalla principal
+**Cuando** se ejecuta la acción `MINE_BLOCK`
+**Entonces**
+- Se verifica `canMineBlock()` — si retorna false, no ocurre nada
+- Se calcula `clickMultiplier` leyendo todos los upgrades de tipo `clickPower` comprados (multiplicativos)
+- Se calcula `reward = Math.max(1, Math.floor(currentReward × clickMultiplier))`
+  - Siempre es un número entero (no se minan fracciones de coin)
+  - Mínimo 1 coin, incluso si `currentReward` es cercano a 0
+- Se consume 1 bloque del supply de 21M (`blocksMined += 1`)
+- El jugador recibe `reward` CryptoCoins
+- Se actualiza `currentReward` y `nextHalving` en caso de halving
+
+**Diseño de balance:**
+- **Early game** (sin hardware): click = 50 coins = fuente primaria de ingresos
+- **Con upgrade clickPower**: click = 250 coins (5×) — impacto notable early-mid
+- **Midgame** (hardware produce 5,000+/sec): 250 coins/click = < 0.05 seg de producción → irrelevante
+- **Late game**: halvings reducen el reward base (50 → 25 → 12.5...) AND hardware escala exponencialmente → el click se vuelve testimonial
+
+**Upgrade clickPower:**
+- Existe UN solo upgrade de este tipo (`id: 'clickPower'`)
+- Multiplier: ×5
+- Costo: $1,000 dinero real
+- Se desbloquea siempre (visible desde el inicio del juego)
+- Intención de diseño: el jugador NO debería seguir haciendo click activo en midgame
+
+### Caso de Uso 4: Halving Event
 **Dado que** `blocksMined` alcanza un múltiplo de `HALVING_INTERVAL` (210,000)
 **Cuando** se mina el bloque que cruza el umbral
 **Entonces**
@@ -44,7 +71,7 @@ Este sistema es el corazón del loop de gameplay: minar bloques → ganar Crypto
 - El jugador ve reducida su tasa de ganancia de CryptoCoins por bloque
 - La producción total (`cryptoCoinsPerSecond`) se recalcula automáticamente
 
-### Caso de Uso 3: Alcanzar Máximo de Bloques
+### Caso de Uso 5: Alcanzar Máximo de Bloques
 **Dado que** `blocksMined` alcanza `TOTAL_BLOCKS` (21,000,000)
 **Cuando** se intenta minar un bloque adicional
 **Entonces**
@@ -54,7 +81,7 @@ Este sistema es el corazón del loop de gameplay: minar bloques → ganar Crypto
 - Se desbloquea la opción de Prestige (si aún no estaba disponible)
 - El jugador puede seguir vendiendo coins existentes o hacer prestige
 
-### Caso de Uso 4: Visualización de Progreso
+### Caso de Uso 6: Visualización de Progreso
 **Dado que** el jugador está en la pantalla principal del juego
 **Cuando** el componente `BlockStatus` se renderiza
 **Entonces**
@@ -66,6 +93,28 @@ Este sistema es el corazón del loop de gameplay: minar bloques → ganar Crypto
 - Todos los valores se actualizan en tiempo real
 
 ## Fórmulas y Cálculos
+
+### Cálculo de Reward por Click Manual
+```typescript
+function getClickMultiplier(gameState: GameState): number {
+  return gameState.upgrades
+    .filter(u => u.purchased && u.effect.type === 'clickPower')
+    .reduce((acc, u) => acc * u.effect.value, 1);
+}
+
+function calculateClickReward(gameState: GameState): number {
+  const baseReward = calculateCurrentReward(gameState.blocksMined);
+  const multiplier = getClickMultiplier(gameState);
+  return Math.max(1, Math.floor(baseReward * multiplier));
+}
+
+// Ejemplos de relevancia relativa:
+// Early (sin HW, sin upgrade):  click=50,  producción=0/s    → click es TODO
+// Early (sin HW, con upgrade):  click=250, producción=0/s    → click es TODO
+// Early-mid (con upgrade):      click=250, producción=10/s   → click ≈ 25s de producción
+// Midgame:                      click=250, producción=5000/s → click ≈ 0.05s → insignificante
+// Post-halving midgame:         click=125, producción=5000/s → click ≈ 0.025s → irrelevante
+```
 
 ### Cálculo de Mining Speed Total
 ```typescript
@@ -216,6 +265,9 @@ interface Hardware {
 
 1. **Un bloque solo se mina si `canMineBlock()` retorna true**: No se pueden minar más de 21M bloques
 2. **Los bloques se minan de forma discreta**: Solo bloques completos, no fracciones (aunque mining speed puede ser decimal)
+2b. **El click manual siempre otorga mínimo 1 coin**: `Math.max(1, Math.floor(reward))` — nunca 0 ni decimal
+2c. **El click manual consume 1 bloque del supply**: Contribuye a los halvings igual que el minado automático
+2d. **Solo existe UN upgrade de clickPower (×5)**: No hay más tiers — la intención es que el jugador NO siga haciendo click en midgame
 3. **La recompensa se calcula en el momento del minado**: No se puede "guardar" una recompensa mayor
 4. **El halving es automático e irreversible**: Una vez que se reduce la recompensa, no vuelve a subir
 5. **El mining speed puede ser 0**: Si el jugador no tiene hardware o tiene solo manual mining inactivo
@@ -316,6 +368,10 @@ interface Hardware {
 - [x] Las notificaciones de halving se muestran al usuario
 - [x] La producción considera el prestige multiplier
 - [x] La electricidad reduce la producción neta correctamente
+- [x] El click manual aplica el multiplicador de upgrades clickPower
+- [x] El click manual siempre retorna un entero ≥ 1
+- [x] El click manual consume 1 bloque del supply de 21M
+- [x] El click manual es irrelevante en midgame por diseño (no requiere fix)
 
 ## Notas de Implementación
 
