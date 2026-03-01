@@ -49,7 +49,7 @@ import {
   isStarterPack,
 } from '../services/IAPService';
 import { purchaseUpdatedListener, purchaseErrorListener } from 'react-native-iap';
-import { BOOSTER_CONFIG, STARTER_PACK_REWARDS } from '../config/balanceConfig';
+import { BOOSTER_CONFIG, STARTER_PACK_REWARDS, ENERGY_CONFIG } from '../config/balanceConfig';
 import { buildEndgameStats, calculateTotalEndgameProductionMultiplier, calculateRenewableDiscount } from '../utils/endgameLogic';
 import Toast, { ToastInfo } from '../components/Toast';
 import { IAP_PRODUCT_IDS } from '../config/iapConfig';
@@ -64,6 +64,7 @@ import {
   calculatePlanetDepletion,
   recalculateEnergyTotals,
   calculateTotalRequiredMW,
+  getEffectiveRenewableCap,
 } from '../utils/energyLogic';
 import {
   getInitialAIState,
@@ -125,6 +126,7 @@ type GameAction =
   | { type: 'APPLY_ACHIEVEMENT_REWARD'; payload: string }
   | { type: 'BUILD_ENERGY_SOURCE'; payload: string }
   | { type: 'DEMOLISH_ENERGY_SOURCE'; payload: string }
+  | { type: 'PURCHASE_RENEWABLE_UPGRADE'; payload: string }
   | { type: 'UPDATE_ENERGY_REQUIRED'; payload: number }
   | { type: 'PURCHASE_AI_LEVEL'; payload: { level: 1 | 2 | 3; confirmed?: boolean } }
   | { type: 'ADD_AI_LOG'; payload: { message: string; type: 'suggestion' | 'action' | 'warning' | 'autonomous' } }
@@ -272,6 +274,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         energy: action.payload.energy
           ? recalculateEnergyTotals(action.payload.energy)
           : getInitialEnergyState(),
+        renewableCapUpgrades: action.payload.renewableCapUpgrades ?? [],
         planetResources: action.payload.planetResources ?? 100,
         // IAP/Ad system migration: provide defaults for old saves
         iapState: action.payload.iapState ?? {
@@ -349,6 +352,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         realMoney: 0,
         totalRealMoneyEarned: 0,
         energy: getInitialEnergyState(),
+        renewableCapUpgrades: [],
         planetResources: 100,
         ai: getInitialAIState(),
         aiCryptosUnlocked: [],
@@ -514,6 +518,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           chronicle: false,
         },
         energy: getInitialEnergyState(),
+        renewableCapUpgrades: [],
         planetResources: 100,
         ai: getInitialAIState(),
         aiCryptosUnlocked: [],
@@ -865,7 +870,8 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     case 'BUILD_ENERGY_SOURCE': {
       const sourceId = action.payload;
       const energy = state.energy ?? getInitialEnergyState();
-      if (!canBuildEnergySource(energy, sourceId, state.realMoney)) return state;
+      const effectiveCap = getEffectiveRenewableCap(state.renewableCapUpgrades ?? []);
+      if (!canBuildEnergySource(energy, sourceId, state.realMoney, effectiveCap)) return state;
       const source = energy.sources[sourceId];
       if (!source) return state;
       const newEnergy = buildEnergySource(energy, sourceId);
@@ -874,6 +880,34 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         realMoney: state.realMoney - source.costPerUnit,
         energy: newEnergy,
       });
+    }
+
+    case 'PURCHASE_RENEWABLE_UPGRADE': {
+      const upgradeId = action.payload;
+      const upgradeCfg = ENERGY_CONFIG.RENEWABLE_UPGRADES.find(u => u.id === upgradeId);
+      if (!upgradeCfg) return state;
+
+      const purchased = state.renewableCapUpgrades ?? [];
+      if (purchased.includes(upgradeId)) return state;
+      if (state.realMoney < upgradeCfg.cost) return state;
+
+      // Check prerequisite
+      if (upgradeCfg.requiresUpgrade && !purchased.includes(upgradeCfg.requiresUpgrade)) return state;
+
+      // Check that current renewable MW >= cap before this upgrade (must fill current cap)
+      const capBeforeUpgrade = getEffectiveRenewableCap(purchased);
+      const currentRenewableMW = state.energy
+        ? Object.values(state.energy.sources)
+            .filter(s => s.isRenewable)
+            .reduce((sum, s) => sum + s.quantity * s.mwPerUnit, 0)
+        : 0;
+      if (currentRenewableMW < capBeforeUpgrade) return state;
+
+      return {
+        ...state,
+        realMoney: state.realMoney - upgradeCfg.cost,
+        renewableCapUpgrades: [...purchased, upgradeId],
+      };
     }
 
     case 'DEMOLISH_ENERGY_SOURCE': {
@@ -1042,6 +1076,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           chronicle: false,
         },
         energy: getInitialEnergyState(),
+        renewableCapUpgrades: [],
         planetResources: 100,
         ai: getInitialAIState(),
         aiCryptosUnlocked: [],

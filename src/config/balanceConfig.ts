@@ -366,6 +366,31 @@ export const ENERGY_CONFIG = {
     quantum_miner: 2_000,
     supercomputer: 10_000,
   },
+
+  // Upgrades que aumentan el cap de renovables secuencialmente
+  RENEWABLE_UPGRADES: [
+    {
+      id: 'grid_expansion',
+      capIncreaseMW: 4_000,    // 8,000 → 12,000 MW
+      cost: 300_000,
+      requiresUpgrade: null as string | null,
+      icon: '🔌',
+    },
+    {
+      id: 'wind_network',
+      capIncreaseMW: 6_000,    // 12,000 → 18,000 MW
+      cost: 1_000_000,
+      requiresUpgrade: 'grid_expansion' as string | null,
+      icon: '🌐',
+    },
+    {
+      id: 'smart_grid',
+      capIncreaseMW: 12_000,   // 18,000 → 30,000 MW
+      cost: 5_000_000,
+      requiresUpgrade: 'wind_network' as string | null,
+      icon: '⚡',
+    },
+  ],
 };
 
 // ============================================================================

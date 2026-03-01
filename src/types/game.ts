@@ -255,6 +255,7 @@ export interface GameState {
   achievements: Achievement[];
   // Energy system (Phase 4)
   energy: EnergyState;
+  renewableCapUpgrades: string[]; // IDs of purchased renewable cap upgrades
   planetResources: number; // 0-100, starts at 100
   // AI system (Phase 5)
   ai: AIState;

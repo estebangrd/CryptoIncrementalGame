@@ -759,6 +759,36 @@ export const translations: Translation = {
     es: 'RENOVABLES',
     pt: 'RENOVÁVEIS',
   },
+  'energy.renewableUpgrades': {
+    en: 'GRID UPGRADES',
+    es: 'MEJORAS DE RED',
+    pt: 'MELHORIAS DE REDE',
+  },
+  'energy.upgrade.grid_expansion': {
+    en: 'Grid Expansion',
+    es: 'Expansión de Red',
+    pt: 'Expansão de Rede',
+  },
+  'energy.upgrade.wind_network': {
+    en: 'Wind Network',
+    es: 'Red Eólica',
+    pt: 'Rede Eólica',
+  },
+  'energy.upgrade.smart_grid': {
+    en: 'Smart Grid',
+    es: 'Red Inteligente',
+    pt: 'Rede Inteligente',
+  },
+  'energy.upgrade.requiresPrevious': {
+    en: 'Requires previous upgrade',
+    es: 'Requiere mejora anterior',
+    pt: 'Requer melhoria anterior',
+  },
+  'energy.upgrade.fillCapFirst': {
+    en: 'Fill current cap first',
+    es: 'Llena el cap actual primero',
+    pt: 'Preencha o limite atual primeiro',
+  },
   'energy.nonRenewables': {
     en: 'NON-RENEWABLES',
     es: 'NO-RENOVABLES',

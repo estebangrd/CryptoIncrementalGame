@@ -8,7 +8,12 @@ import {
 } from 'react-native';
 import { useGame } from '../contexts/GameContext';
 import { EnergySource } from '../types/game';
-import { areNonRenewablesUnlocked, canBuildEnergySource } from '../utils/energyLogic';
+import {
+  areNonRenewablesUnlocked,
+  canBuildEnergySource,
+  getEffectiveRenewableCap,
+  calculateRenewableGeneratedMW,
+} from '../utils/energyLogic';
 import { ENERGY_CONFIG } from '../config/balanceConfig';
 
 const formatMW = (mw: number): string => {
@@ -30,7 +35,9 @@ const EnergyScreen: React.FC = () => {
 
   const { totalGeneratedMW, totalRequiredMW, aiControlled } = energy;
   const balance = totalGeneratedMW - totalRequiredMW;
-  const nonRenewablesUnlocked = areNonRenewablesUnlocked(energy);
+  const purchasedUpgrades = gameState.renewableCapUpgrades ?? [];
+  const effectiveCap = getEffectiveRenewableCap(purchasedUpgrades);
+  const nonRenewablesUnlocked = areNonRenewablesUnlocked(energy, effectiveCap);
 
   const getStatus = (): { label: string; color: string } => {
     if (totalRequiredMW === 0 || totalGeneratedMW >= totalRequiredMW) {
@@ -57,9 +64,9 @@ const EnergyScreen: React.FC = () => {
       .filter(s => s.isRenewable)
       .reduce((sum, s) => sum + s.quantity * s.mwPerUnit, 0);
 
-    const canBuild = canBuildEnergySource(energy, source.id, gameState.realMoney);
+    const canBuild = canBuildEnergySource(energy, source.id, gameState.realMoney, effectiveCap);
     const atRenewableCap = source.isRenewable &&
-      currentRenewableMW + source.mwPerUnit > ENERGY_CONFIG.RENEWABLE_CAP_MW;
+      currentRenewableMW + source.mwPerUnit > effectiveCap;
     const canDemolish = source.isRenewable && source.quantity > 0 && !aiControlled;
     const isAiLocked = !source.isRenewable && aiControlled;
 
@@ -100,11 +107,8 @@ const EnergyScreen: React.FC = () => {
   const renewableSources = Object.values(energy.sources).filter(s => s.isRenewable);
   const nonRenewableSources = Object.values(energy.sources).filter(s => !s.isRenewable);
 
-  const currentRenewableMW = renewableSources.reduce(
-    (sum, s) => sum + s.quantity * s.mwPerUnit,
-    0
-  );
-  const renewableCapPct = Math.round((currentRenewableMW / ENERGY_CONFIG.RENEWABLE_CAP_MW) * 100);
+  const currentRenewableMW = calculateRenewableGeneratedMW(energy.sources);
+  const renewableCapPct = Math.round((currentRenewableMW / effectiveCap) * 100);
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={true}>
@@ -147,6 +151,65 @@ const EnergyScreen: React.FC = () => {
       </View>
       <View style={styles.sourceList}>
         {renewableSources.map(renderSource)}
+      </View>
+
+      {/* Renewable Upgrades Section */}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>{t('energy.renewableUpgrades')}</Text>
+      </View>
+      <View style={styles.sourceList}>
+        {ENERGY_CONFIG.RENEWABLE_UPGRADES.map(upgrade => {
+          const isPurchased = purchasedUpgrades.includes(upgrade.id);
+          const prereqMet = !upgrade.requiresUpgrade || purchasedUpgrades.includes(upgrade.requiresUpgrade);
+          const capAtThisPoint = getEffectiveRenewableCap(
+            purchasedUpgrades.filter((_, i) =>
+              ENERGY_CONFIG.RENEWABLE_UPGRADES.findIndex(u => u.id === upgrade.id) >
+              ENERGY_CONFIG.RENEWABLE_UPGRADES.findIndex(u => u.id === purchasedUpgrades[i])
+            )
+          );
+          // Cap before this upgrade = current effective cap if not yet purchased
+          const capBefore = isPurchased
+            ? effectiveCap - upgrade.capIncreaseMW
+            : effectiveCap;
+          const capAfter = capBefore + upgrade.capIncreaseMW;
+          const renewableFull = currentRenewableMW >= capBefore;
+          const canAfford = gameState.realMoney >= upgrade.cost;
+          const canPurchase = !isPurchased && prereqMet && renewableFull && canAfford;
+
+          return (
+            <View key={upgrade.id} style={[styles.sourceRow, isPurchased && styles.sourceRowPurchased]}>
+              <Text style={styles.sourceIcon}>{upgrade.icon}</Text>
+              <View style={styles.sourceInfo}>
+                <Text style={styles.sourceName}>{t(`energy.upgrade.${upgrade.id}`)}</Text>
+                <Text style={styles.sourceStats}>
+                  {formatMW(capBefore)} → {formatMW(capAfter)}
+                </Text>
+                {!isPurchased && (
+                  <Text style={[styles.sourceCost, !prereqMet && styles.lockedText]}>
+                    {!prereqMet
+                      ? `🔒 ${t('energy.upgrade.requiresPrevious')}`
+                      : !renewableFull
+                      ? `${t('energy.upgrade.fillCapFirst')} (${renewableCapPct}%)`
+                      : formatMoney(upgrade.cost)}
+                  </Text>
+                )}
+              </View>
+              <View style={styles.sourceActions}>
+                {isPurchased ? (
+                  <Text style={styles.purchasedBadge}>✓</Text>
+                ) : (
+                  <TouchableOpacity
+                    style={[styles.actionBtn, !canPurchase && styles.actionBtnDisabled]}
+                    onPress={() => canPurchase && dispatch({ type: 'PURCHASE_RENEWABLE_UPGRADE', payload: upgrade.id })}
+                    disabled={!canPurchase}
+                  >
+                    <Text style={[styles.actionBtnText, canPurchase && { color: '#000' }]}>$</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+          );
+        })}
       </View>
 
       {/* Non-Renewables Section */}
@@ -278,6 +341,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#000',
+  },
+  sourceRowPurchased: {
+    opacity: 0.5,
+  },
+  purchasedBadge: {
+    fontSize: 18,
+    color: '#00ff88',
+    fontWeight: 'bold',
+    width: 34,
+    textAlign: 'center',
   },
   lockedSection: {
     backgroundColor: '#2a2a2a',

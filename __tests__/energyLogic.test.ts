@@ -185,52 +185,56 @@ describe('calculatePlanetDepletion', () => {
 });
 
 describe('areNonRenewablesUnlocked', () => {
+  const baseCap = ENERGY_CONFIG.RENEWABLE_CAP_MW; // 8000
+
   it('returns false when renewables are below 80% of cap', () => {
     // 79% of 8000 = 6320 MW
     const sources = { wind_farm: makeWindFarm(7) }; // 7 × 800 = 5600 MW (70%)
     const state = makeEnergyState(sources);
-    expect(areNonRenewablesUnlocked(state)).toBe(false);
+    expect(areNonRenewablesUnlocked(state, baseCap)).toBe(false);
   });
 
   it('returns true at exactly 80% of cap', () => {
     // 80% of 8000 = 6400 MW → 8 × wind_farm (800 MW each)
     const sources = { wind_farm: makeWindFarm(8) }; // 6400 MW
     const state = makeEnergyState(sources);
-    expect(areNonRenewablesUnlocked(state)).toBe(true);
+    expect(areNonRenewablesUnlocked(state, baseCap)).toBe(true);
   });
 
   it('returns true above 80% of cap', () => {
     // 10 × 800 = 8000 MW (100%)
     const sources = { wind_farm: makeWindFarm(10) };
     const state = makeEnergyState(sources);
-    expect(areNonRenewablesUnlocked(state)).toBe(true);
+    expect(areNonRenewablesUnlocked(state, baseCap)).toBe(true);
   });
 });
 
 describe('canBuildEnergySource', () => {
+  const baseCap = ENERGY_CONFIG.RENEWABLE_CAP_MW; // 8000
+
   it('returns false when player has insufficient money', () => {
     const state = makeEnergyState({ solar_farm: makeSolarFarm(0) });
     // solar_farm costs $5000
-    expect(canBuildEnergySource(state, 'solar_farm', 4999)).toBe(false);
+    expect(canBuildEnergySource(state, 'solar_farm', 4999, baseCap)).toBe(false);
   });
 
   it('returns true when player has enough money for renewable', () => {
     const state = makeEnergyState({ solar_farm: makeSolarFarm(0) });
-    expect(canBuildEnergySource(state, 'solar_farm', 5000)).toBe(true);
+    expect(canBuildEnergySource(state, 'solar_farm', 5000, baseCap)).toBe(true);
   });
 
   it('returns false when renewable cap is reached', () => {
     // Fill up to cap: 40 × solar_farm (200 MW) = 8000 MW
     const sources = { solar_farm: makeSolarFarm(40) };
     const state = makeEnergyState(sources);
-    expect(canBuildEnergySource(state, 'solar_farm', 100000)).toBe(false);
+    expect(canBuildEnergySource(state, 'solar_farm', 100000, baseCap)).toBe(false);
   });
 
   it('returns false for non-renewable when threshold not reached', () => {
     const sources = { coal_plant: makeCoalPlant(0) };
     const state = makeEnergyState(sources);
     // 0 MW renewable, threshold is 80% of 8000 = 6400 MW
-    expect(canBuildEnergySource(state, 'coal_plant', 100000)).toBe(false);
+    expect(canBuildEnergySource(state, 'coal_plant', 100000, baseCap)).toBe(false);
   });
 
   it('returns true for non-renewable when threshold is reached', () => {
@@ -241,7 +245,7 @@ describe('canBuildEnergySource', () => {
     };
     const state = makeEnergyState(sources);
     // coal_plant costs $2000
-    expect(canBuildEnergySource(state, 'coal_plant', 2000)).toBe(true);
+    expect(canBuildEnergySource(state, 'coal_plant', 2000, baseCap)).toBe(true);
   });
 
   it('returns false for non-renewable when AI controlled', () => {
@@ -250,7 +254,7 @@ describe('canBuildEnergySource', () => {
       coal_plant: makeCoalPlant(0),
     };
     const state = makeEnergyState(sources, { aiControlled: true });
-    expect(canBuildEnergySource(state, 'coal_plant', 100000)).toBe(false);
+    expect(canBuildEnergySource(state, 'coal_plant', 100000, baseCap)).toBe(false);
   });
 });
 

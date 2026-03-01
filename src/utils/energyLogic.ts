@@ -87,29 +87,37 @@ export const calculatePlanetDepletion = (sources: Record<string, EnergySource>):
     .reduce((sum, s) => sum + s.quantity * s.mwPerUnit * s.depletionPerMwPerSecond, 0);
 };
 
-export const areNonRenewablesUnlocked = (state: EnergyState): boolean => {
+export const getEffectiveRenewableCap = (purchasedUpgrades: string[]): number => {
+  let cap = ENERGY_CONFIG.RENEWABLE_CAP_MW;
+  for (const upgrade of ENERGY_CONFIG.RENEWABLE_UPGRADES) {
+    if (purchasedUpgrades.includes(upgrade.id)) {
+      cap += upgrade.capIncreaseMW;
+    }
+  }
+  return cap;
+};
+
+export const areNonRenewablesUnlocked = (state: EnergyState, effectiveCap: number): boolean => {
   const renewableMW = calculateRenewableGeneratedMW(state.sources);
-  return renewableMW >= ENERGY_CONFIG.RENEWABLE_CAP_MW * ENERGY_CONFIG.NON_RENEWABLE_UNLOCK_THRESHOLD;
+  return renewableMW >= effectiveCap * ENERGY_CONFIG.NON_RENEWABLE_UNLOCK_THRESHOLD;
 };
 
 export const canBuildEnergySource = (
   state: EnergyState,
   sourceId: string,
-  realMoney: number
+  realMoney: number,
+  effectiveCap: number,
 ): boolean => {
   const source = state.sources[sourceId];
   if (!source) return false;
 
-  // Must have enough money
   if (realMoney < source.costPerUnit) return false;
 
-  // Renewable cap check
   if (source.isRenewable) {
     const currentRenewable = calculateRenewableGeneratedMW(state.sources);
-    if (currentRenewable + source.mwPerUnit > ENERGY_CONFIG.RENEWABLE_CAP_MW) return false;
+    if (currentRenewable + source.mwPerUnit > effectiveCap) return false;
   } else {
-    // Non-renewable: must be unlocked threshold reached and not AI controlled
-    if (!areNonRenewablesUnlocked(state)) return false;
+    if (!areNonRenewablesUnlocked(state, effectiveCap)) return false;
     if (state.aiControlled) return false;
   }
 
