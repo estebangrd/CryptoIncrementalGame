@@ -1,14 +1,6 @@
 import { Cryptocurrency } from '../types/game';
 import { loadGameState, saveGameState } from '../utils/storage';
 
-// Interfaz para el historial de precios por moneda
-interface PriceHistoryData {
-  [cryptoId: string]: {
-    prices: number[];
-    lastUpdate: number;
-  };
-}
-
 // Constantes
 const MAX_HISTORY_POINTS = 24; // 24 puntos de historial
 const HISTORY_UPDATE_INTERVAL = 60000; // 1 minuto entre puntos

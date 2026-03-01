@@ -1,9 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Cryptocurrency } from '../types/game';
 
 interface PriceChartProps {
-  cryptocurrency: Cryptocurrency;
   priceHistory: number[];
 }
 
@@ -14,7 +12,7 @@ const formatPrice = (price: number): string => {
   return price.toFixed(6);
 };
 
-const PriceChart: React.FC<PriceChartProps> = ({ cryptocurrency, priceHistory }) => {
+const PriceChart: React.FC<PriceChartProps> = ({ priceHistory }) => {
   if (!priceHistory || priceHistory.length < 2) {
     return (
       <View style={styles.container}>

@@ -327,7 +327,6 @@ const MarketScreen: React.FC<MarketScreenProps> = ({ isActive = true }) => {
                   <View style={styles.expandedSection}>
                     {/* Price Chart - Always show */}
                     <PriceChart
-                      cryptocurrency={getSelectedCurrency()!}
                       priceHistory={priceHistories[getSelectedCurrency()!.id] || [1.0]}
                     />
                     
