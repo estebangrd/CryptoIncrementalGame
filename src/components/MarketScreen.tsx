@@ -394,7 +394,7 @@ const MarketScreen: React.FC<MarketScreenProps> = ({ isActive = true }) => {
                             </>
                           ) : (
                             <TouchableOpacity style={styles.sellButton} onPress={handleSellPress}>
-                              <Text style={styles.sellButtonText}>Sell for $</Text>
+                              <Text style={styles.sellButtonText}>Sell</Text>
                             </TouchableOpacity>
                           )}
                         </View>
@@ -485,7 +485,7 @@ const MarketScreen: React.FC<MarketScreenProps> = ({ isActive = true }) => {
                             </>
                           ) : (
                             <TouchableOpacity style={styles.sellButton} onPress={handleSellPress}>
-                              <Text style={styles.sellButtonText}>Sell for $</Text>
+                              <Text style={styles.sellButtonText}>Sell</Text>
                             </TouchableOpacity>
                           )}
                         </View>
