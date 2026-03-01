@@ -7,6 +7,13 @@ interface PriceChartProps {
   priceHistory: number[];
 }
 
+const formatPrice = (price: number): string => {
+  if (price >= 100) return price.toFixed(0);
+  if (price >= 1) return price.toFixed(2);
+  if (price >= 0.01) return price.toFixed(4);
+  return price.toFixed(6);
+};
+
 const PriceChart: React.FC<PriceChartProps> = ({ cryptocurrency, priceHistory }) => {
   if (!priceHistory || priceHistory.length < 2) {
     return (
@@ -92,9 +99,9 @@ const PriceChart: React.FC<PriceChartProps> = ({ cryptocurrency, priceHistory })
         </View>
         
         <View style={styles.priceInfo}>
-          <Text style={styles.priceLabel}>Current: {currentPrice.toFixed(2)}</Text>
-          <Text style={styles.priceLabel}>Min: {minPrice.toFixed(2)}</Text>
-          <Text style={styles.priceLabel}>Max: {maxPrice.toFixed(2)}</Text>
+          <Text style={styles.priceLabel}>Current: {formatPrice(currentPrice)}</Text>
+          <Text style={styles.priceLabel}>Min: {formatPrice(minPrice)}</Text>
+          <Text style={styles.priceLabel}>Max: {formatPrice(maxPrice)}</Text>
         </View>
       </View>
     </View>

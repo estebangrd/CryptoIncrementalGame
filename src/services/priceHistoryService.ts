@@ -10,8 +10,8 @@ interface PriceHistoryData {
 }
 
 // Constantes
-const MAX_HISTORY_POINTS = 24; // 24 puntos para representar 24 horas
-const HISTORY_UPDATE_INTERVAL = 3600000; // 1 hora en milisegundos
+const MAX_HISTORY_POINTS = 24; // 24 puntos de historial
+const HISTORY_UPDATE_INTERVAL = 60000; // 1 minuto entre puntos
 
 /**
  * Inicializa el historial de precios para todas las criptomonedas
@@ -37,7 +37,7 @@ export const initializePriceHistory = async (cryptocurrencies: Cryptocurrency[])
     cryptocurrencies.forEach(crypto => {
       if (!gameState.priceHistory![crypto.id]) {
         gameState.priceHistory![crypto.id] = {
-          prices: Array(MAX_HISTORY_POINTS).fill(crypto.currentValue),
+          prices: generateSimulatedHistory(crypto.currentValue, 0.05),
           lastUpdate: Date.now(),
         };
       }
