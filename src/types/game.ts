@@ -160,7 +160,8 @@ export interface EnergySource {
   nameKey: string;
   descriptionKey: string;
   mwPerUnit: number;
-  costPerUnit: number; // $ (real money)
+  costPerUnit: number; // $ base cost (first unit)
+  costMultiplier: number; // cost scales as costPerUnit * multiplier^quantity
   isRenewable: boolean;
   depletionPerMwPerSecond: number; // % planet per MW per second
   icon: string;

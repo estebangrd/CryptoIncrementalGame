@@ -13,6 +13,7 @@ import {
   canBuildEnergySource,
   getEffectiveRenewableCap,
   calculateRenewableGeneratedMW,
+  getEnergySourceCurrentCost,
 } from '../utils/energyLogic';
 import { ENERGY_CONFIG } from '../config/balanceConfig';
 
@@ -78,7 +79,7 @@ const EnergyScreen: React.FC = () => {
           <Text style={styles.sourceStats}>
             ×{source.quantity}  {formatMW(source.quantity * source.mwPerUnit)}
           </Text>
-          <Text style={styles.sourceCost}>{formatMoney(source.costPerUnit)}/unit</Text>
+          <Text style={styles.sourceCost}>{formatMoney(getEnergySourceCurrentCost(source))}/unit</Text>
         </View>
         <View style={styles.sourceActions}>
           <TouchableOpacity

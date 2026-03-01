@@ -13,6 +13,7 @@ export const getInitialEnergyState = (): EnergyState => {
       descriptionKey: `energy.${id}.desc`,
       mwPerUnit: cfg.mwPerUnit,
       costPerUnit: cfg.costPerUnit,
+      costMultiplier: cfg.costMultiplier,
       isRenewable: cfg.isRenewable,
       depletionPerMwPerSecond: cfg.depletionPerMwPerSecond,
       icon: cfg.icon,
@@ -87,6 +88,11 @@ export const calculatePlanetDepletion = (sources: Record<string, EnergySource>):
     .reduce((sum, s) => sum + s.quantity * s.mwPerUnit * s.depletionPerMwPerSecond, 0);
 };
 
+// Returns the cost of the next unit to build (scales with quantity owned)
+export const getEnergySourceCurrentCost = (source: EnergySource): number => {
+  return Math.round(source.costPerUnit * Math.pow(source.costMultiplier, source.quantity));
+};
+
 export const getEffectiveRenewableCap = (purchasedUpgrades: string[]): number => {
   let cap = ENERGY_CONFIG.RENEWABLE_CAP_MW;
   for (const upgrade of ENERGY_CONFIG.RENEWABLE_UPGRADES) {
@@ -111,7 +117,7 @@ export const canBuildEnergySource = (
   const source = state.sources[sourceId];
   if (!source) return false;
 
-  if (realMoney < source.costPerUnit) return false;
+  if (realMoney < getEnergySourceCurrentCost(source)) return false;
 
   if (source.isRenewable) {
     const currentRenewable = calculateRenewableGeneratedMW(state.sources);

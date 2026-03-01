@@ -65,6 +65,7 @@ import {
   recalculateEnergyTotals,
   calculateTotalRequiredMW,
   getEffectiveRenewableCap,
+  getEnergySourceCurrentCost,
 } from '../utils/energyLogic';
 import {
   getInitialAIState,
@@ -874,10 +875,11 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       if (!canBuildEnergySource(energy, sourceId, state.realMoney, effectiveCap)) return state;
       const source = energy.sources[sourceId];
       if (!source) return state;
+      const buildCost = getEnergySourceCurrentCost(source);
       const newEnergy = buildEnergySource(energy, sourceId);
       return recalculateGameStats({
         ...state,
-        realMoney: state.realMoney - source.costPerUnit,
+        realMoney: state.realMoney - buildCost,
         energy: newEnergy,
       });
     }
@@ -916,7 +918,9 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       const source = energy.sources[sourceId];
       if (!source || !source.isRenewable || source.quantity <= 0) return state;
       if (energy.aiControlled) return state;
-      const refund = source.costPerUnit * 0.5;
+      // Refund 50% of what the last unit cost (quantity - 1 owned after demolish)
+      const lastUnitCost = Math.round(source.costPerUnit * Math.pow(source.costMultiplier, source.quantity - 1));
+      const refund = lastUnitCost * 0.5;
       const newEnergy = demolishEnergySource(energy, sourceId);
       return recalculateGameStats({
         ...state,

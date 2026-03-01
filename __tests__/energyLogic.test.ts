@@ -11,6 +11,7 @@ import {
   getInitialEnergyState,
   calculateTotalGeneratedMW,
   calculateRenewableGeneratedMW,
+  getEnergySourceCurrentCost,
 } from '../src/utils/energyLogic';
 import { Hardware, EnergySource, EnergyState } from '../src/types/game';
 import { ENERGY_CONFIG } from '../src/config/balanceConfig';
@@ -54,6 +55,7 @@ const makeSolarFarm = (quantity: number): EnergySource => ({
   descriptionKey: 'energy.solar_farm.desc',
   mwPerUnit: 200,
   costPerUnit: 5000,
+  costMultiplier: 1.0,
   isRenewable: true,
   depletionPerMwPerSecond: 0,
   icon: '☀️',
@@ -67,6 +69,7 @@ const makeCoalPlant = (quantity: number): EnergySource => ({
   descriptionKey: 'energy.coal_plant.desc',
   mwPerUnit: 1000,
   costPerUnit: 2000,
+  costMultiplier: 1.0,
   isRenewable: false,
   depletionPerMwPerSecond: 0.0001,
   icon: '🏭',
@@ -80,6 +83,7 @@ const makeWindFarm = (quantity: number): EnergySource => ({
   descriptionKey: 'energy.wind_farm.desc',
   mwPerUnit: 800,
   costPerUnit: 20000,
+  costMultiplier: 1.0,
   isRenewable: true,
   depletionPerMwPerSecond: 0,
   icon: '💨',
@@ -255,6 +259,25 @@ describe('canBuildEnergySource', () => {
     };
     const state = makeEnergyState(sources, { aiControlled: true });
     expect(canBuildEnergySource(state, 'coal_plant', 100000, baseCap)).toBe(false);
+  });
+});
+
+describe('getEnergySourceCurrentCost', () => {
+  it('returns base cost when quantity is 0', () => {
+    const source = makeSolarFarm(0); // costPerUnit: 5000, multiplier: 1.0
+    expect(getEnergySourceCurrentCost(source)).toBe(5000);
+  });
+
+  it('scales cost with multiplier as quantity grows', () => {
+    const source = { ...makeSolarFarm(0), costPerUnit: 250_000, costMultiplier: 1.2 };
+    expect(getEnergySourceCurrentCost({ ...source, quantity: 0 })).toBe(250_000);
+    expect(getEnergySourceCurrentCost({ ...source, quantity: 1 })).toBe(300_000);
+    expect(getEnergySourceCurrentCost({ ...source, quantity: 2 })).toBe(360_000);
+  });
+
+  it('with multiplier 1.0 cost never changes', () => {
+    const source = makeSolarFarm(5); // costMultiplier: 1.0
+    expect(getEnergySourceCurrentCost(source)).toBe(5000);
   });
 });
 

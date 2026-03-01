@@ -311,52 +311,59 @@ export const ENERGY_CONFIG = {
 
   SOURCES: {
     solar_farm: {
-      mwPerUnit: 200,
-      costPerUnit: 5_000,
+      mwPerUnit: 100,
+      costPerUnit: 250_000,
+      costMultiplier: 1.2,
       isRenewable: true,
       depletionPerMwPerSecond: 0,
       icon: '☀️',
     },
     wind_farm: {
-      mwPerUnit: 800,
-      costPerUnit: 20_000,
+      mwPerUnit: 400,
+      costPerUnit: 1_000_000,
+      costMultiplier: 1.2,
       isRenewable: true,
       depletionPerMwPerSecond: 0,
       icon: '💨',
     },
     hydroelectric_dam: {
-      mwPerUnit: 3_000,
-      costPerUnit: 150_000,
+      mwPerUnit: 1_500,
+      costPerUnit: 5_000_000,
+      costMultiplier: 1.2,
       isRenewable: true,
       depletionPerMwPerSecond: 0,
       icon: '💧',
     },
     geothermal_plant: {
-      mwPerUnit: 5_000,
-      costPerUnit: 800_000,
+      mwPerUnit: 2_500,
+      costPerUnit: 25_000_000,
+      costMultiplier: 1.2,
       isRenewable: true,
       depletionPerMwPerSecond: 0,
       icon: '🌋',
     },
     coal_plant: {
-      mwPerUnit: 1_000,
-      costPerUnit: 2_000,
+      mwPerUnit: 500,
+      costPerUnit: 100_000,
+      costMultiplier: 1.2,
       isRenewable: false,
-      depletionPerMwPerSecond: 0.0000033, // 0.0001 / 30
+      depletionPerMwPerSecond: 0.0000033,
       icon: '🏭',
     },
     oil_refinery: {
-      mwPerUnit: 5_000,
-      costPerUnit: 8_000,
+      mwPerUnit: 2_500,
+      costPerUnit: 400_000,
+      costMultiplier: 1.2,
       isRenewable: false,
-      depletionPerMwPerSecond: 0.0000027, // 0.00008 / 30
+      depletionPerMwPerSecond: 0.0000027,
       icon: '🛢️',
     },
     nuclear_reactor: {
-      mwPerUnit: 20_000,
-      costPerUnit: 300_000,
+      mwPerUnit: 10_000,
+      costPerUnit: 10_000_000,
+      costMultiplier: 1.2,
       isRenewable: false,
-      depletionPerMwPerSecond: 0.0000017, // 0.00005 / 30
+      depletionPerMwPerSecond: 0.0000017,
       icon: '☢️',
     },
   },
@@ -372,21 +379,21 @@ export const ENERGY_CONFIG = {
     {
       id: 'grid_expansion',
       capIncreaseMW: 4_000,    // 8,000 → 12,000 MW
-      cost: 300_000,
+      cost: 5_000_000,
       requiresUpgrade: null as string | null,
       icon: '🔌',
     },
     {
       id: 'wind_network',
       capIncreaseMW: 6_000,    // 12,000 → 18,000 MW
-      cost: 1_000_000,
+      cost: 20_000_000,
       requiresUpgrade: 'grid_expansion' as string | null,
       icon: '🌐',
     },
     {
       id: 'smart_grid',
       capIncreaseMW: 12_000,   // 18,000 → 30,000 MW
-      cost: 5_000_000,
+      cost: 100_000_000,
       requiresUpgrade: 'wind_network' as string | null,
       icon: '⚡',
     },
