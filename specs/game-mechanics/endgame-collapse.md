@@ -316,6 +316,8 @@ export interface RunStats {
 - [ ] Al presionar el botón, se aplica el prestige correctamente
 - [ ] El estado resetea correctamente post-prestige (planetResources=100, ai.level=0, etc.)
 - [ ] Las estadísticas de la run se guardan en `lastRunStats`
+- [ ] La quote del Colapso menciona a la IA solo si `aiLevelReached === 3`; sin IA usa texto alternativo sobre agotamiento de recursos
+- [ ] El número de run en Legacy Bonus muestra `collapseCount + goodEndingCount + 1` (la run actual, no las anteriores)
 - [ ] `npm test` pasa sin errores
 - [ ] `npm run lint` pasa sin errores nuevos
 
@@ -336,6 +338,44 @@ describe('Endgame', () => {
       const state = createStateWith({ blocksMined: 21_000_000, planetResources: 34 });
       expect(state.collapseTriggered).toBe(false);
       expect(state.goodEndingTriggered).toBe(true);
+    });
+  });
+
+  describe('collapse quote variant', () => {
+    it('muestra quote de IA cuando aiLevelReached === 3', () => {
+      // EndingScreen selecciona 'endgame.collapse.quote' con mención a la IA
+      const quoteKey = getCollapseQuoteKey({ aiLevelReached: 3 });
+      expect(quoteKey).toBe('endgame.collapse.quote');
+    });
+
+    it('muestra quote sin IA cuando aiLevelReached < 3', () => {
+      // EndingScreen selecciona 'endgame.collapse.quoteNoAI' sin mención a la IA
+      const quoteKey = getCollapseQuoteKey({ aiLevelReached: 0 });
+      expect(quoteKey).toBe('endgame.collapse.quoteNoAI');
+    });
+
+    it('muestra quote sin IA para aiLevelReached 1 y 2', () => {
+      expect(getCollapseQuoteKey({ aiLevelReached: 1 })).toBe('endgame.collapse.quoteNoAI');
+      expect(getCollapseQuoteKey({ aiLevelReached: 2 })).toBe('endgame.collapse.quoteNoAI');
+    });
+  });
+
+  describe('prestige run number', () => {
+    it('primera run muestra run #1', () => {
+      // collapseCount=0, goodEndingCount=0 → run #1
+      const runNumber = getPrestigeRunNumber(0, 0);
+      expect(runNumber).toBe(1);
+    });
+
+    it('tercera run (2 collapsos previos) muestra run #3', () => {
+      const runNumber = getPrestigeRunNumber(2, 0);
+      expect(runNumber).toBe(3);
+    });
+
+    it('run mixta muestra suma correcta', () => {
+      // 1 colapso + 2 buenos endings previos → run #4
+      const runNumber = getPrestigeRunNumber(1, 2);
+      expect(runNumber).toBe(4);
     });
   });
 

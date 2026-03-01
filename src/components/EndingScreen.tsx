@@ -92,7 +92,7 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
   const bonus = calculateEndingBonus(endingType, collapseCount, goodEndingCount);
   const collapseProductionPct = Math.round((bonus.productionMultiplier - 1) * 100);
   const renewableDiscountPct = Math.round(calculateRenewableDiscount(goodEndingCount) * 100);
-  const prestigeRunNumber = collapseCount + goodEndingCount;
+  const prestigeRunNumber = collapseCount + goodEndingCount + 1;
 
   return (
     <Modal
@@ -120,7 +120,9 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
 
           {/* Quote */}
           <Text style={styles.quote}>
-            {t(isCollapse ? 'endgame.collapse.quote' : 'endgame.good.quote')}
+            {isCollapse
+              ? t(stats?.aiLevelReached === 3 ? 'endgame.collapse.quote' : 'endgame.collapse.quoteNoAI')
+              : t('endgame.good.quote')}
           </Text>
 
           {/* Stats section */}

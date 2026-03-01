@@ -1068,6 +1068,11 @@ export const translations: Translation = {
     es: 'La IA completó el blockchain.\nLa Tierra ya no tiene energía para sostener vida humana organizada.',
     pt: 'A IA completou o blockchain.\nA Terra não tem mais energia para sustentar a vida humana organizada.',
   },
+  'endgame.collapse.quoteNoAI': {
+    en: 'The planet\'s resources have been exhausted.\nEarth no longer has energy to sustain organized human life.',
+    es: 'Los recursos del planeta se han agotado.\nLa Tierra ya no tiene energía para sostener vida humana organizada.',
+    pt: 'Os recursos do planeta foram esgotados.\nA Terra não tem mais energia para sustentar a vida humana organizada.',
+  },
   'endgame.collapse.narrative': {
     en: 'A group of survivors, carrying the records of your technology and the lessons learned, board a ship to a new planet. They carry your legacy multipliers.\nThis time, perhaps, they will make better decisions.',
     es: 'Un grupo de supervivientes, con los registros de tu tecnología y las lecciones aprendidas, embarca en una nave hacia un nuevo planeta. Llevan tus multiplicadores de legado.\nEsta vez, quizás, tomen mejores decisiones.',
