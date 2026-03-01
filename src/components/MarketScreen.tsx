@@ -698,6 +698,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
     marginLeft: 8,
+    marginRight: 8,
   },
   sellButtonText: {
     fontSize: 16,
