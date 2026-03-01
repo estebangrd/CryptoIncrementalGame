@@ -27,6 +27,7 @@ const MarketScreen: React.FC<MarketScreenProps> = ({ isActive = true }) => {
   const [amountPercent, setAmountPercent] = useState(50); // 1-100
   const [priceHistories, setPriceHistories] = useState<{ [key: string]: number[] }>({});
   const [sellConfirming, setSellConfirming] = useState(false);
+  const [scrollEnabled, setScrollEnabled] = useState(true);
   const sellConfirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sliderRef = useRef<View>(null);
 
@@ -242,7 +243,9 @@ const MarketScreen: React.FC<MarketScreenProps> = ({ isActive = true }) => {
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
+      onPanResponderTerminateRequest: () => false,
       onPanResponderGrant: (evt) => {
+        setScrollEnabled(false);
         if (sliderRef.current) {
           sliderRef.current.measure((x, y, width, height, pageX, pageY) => {
             const touchX = evt.nativeEvent.pageX - pageX;
@@ -261,7 +264,10 @@ const MarketScreen: React.FC<MarketScreenProps> = ({ isActive = true }) => {
         }
       },
       onPanResponderRelease: () => {
-        // Optional: Add any logic when the user stops dragging
+        setScrollEnabled(true);
+      },
+      onPanResponderTerminate: () => {
+        setScrollEnabled(true);
       },
     })
   ).current;
@@ -278,7 +284,7 @@ const MarketScreen: React.FC<MarketScreenProps> = ({ isActive = true }) => {
       <View style={styles.headerContainer}>
         <Text style={styles.headerTitle}>📈 Crypto Market</Text>
       </View>
-      <ScrollView style={styles.currencyList} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.currencyList} showsVerticalScrollIndicator={false} scrollEnabled={scrollEnabled}>
         {(gameState.cryptocurrencies || []).filter(c => isCryptoUnlocked(c.id)).map((crypto) => {
           const isSelected = crypto.id === gameState.selectedCurrency;
           const priceChange = ((crypto.currentValue - crypto.baseValue) / crypto.baseValue) * 100;
