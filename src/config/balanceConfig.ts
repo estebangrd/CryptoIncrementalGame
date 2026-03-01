@@ -342,21 +342,21 @@ export const ENERGY_CONFIG = {
       mwPerUnit: 1_000,
       costPerUnit: 2_000,
       isRenewable: false,
-      depletionPerMwPerSecond: 0.0001,
+      depletionPerMwPerSecond: 0.0000033, // 0.0001 / 30
       icon: '🏭',
     },
     oil_refinery: {
       mwPerUnit: 5_000,
       costPerUnit: 8_000,
       isRenewable: false,
-      depletionPerMwPerSecond: 0.00008,
+      depletionPerMwPerSecond: 0.0000027, // 0.00008 / 30
       icon: '🛢️',
     },
     nuclear_reactor: {
       mwPerUnit: 20_000,
       costPerUnit: 300_000,
       isRenewable: false,
-      depletionPerMwPerSecond: 0.00005,
+      depletionPerMwPerSecond: 0.0000017, // 0.00005 / 30
       icon: '☢️',
     },
   },
