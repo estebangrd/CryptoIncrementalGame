@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Alert,
   PanResponder,
 } from 'react-native';
 
@@ -27,7 +26,30 @@ const MarketScreen: React.FC<MarketScreenProps> = ({ isActive = true }) => {
   const { gameState, dispatch, t } = useGame();
   const [amountPercent, setAmountPercent] = useState(50); // 1-100
   const [priceHistories, setPriceHistories] = useState<{ [key: string]: number[] }>({});
+  const [sellConfirming, setSellConfirming] = useState(false);
+  const sellConfirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sliderRef = useRef<View>(null);
+
+  const clearSellConfirm = () => {
+    setSellConfirming(false);
+    if (sellConfirmTimer.current) {
+      clearTimeout(sellConfirmTimer.current);
+      sellConfirmTimer.current = null;
+    }
+  };
+
+  // Reset confirmation when slider or currency changes
+  useEffect(() => {
+    clearSellConfirm();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [amountPercent, gameState.selectedCurrency]);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (sellConfirmTimer.current) clearTimeout(sellConfirmTimer.current);
+    };
+  }, []);
 
   const handleSelectCurrency = (currencyId: string) => {
     // Toggle selection: if already selected, deselect it
@@ -165,50 +187,27 @@ const MarketScreen: React.FC<MarketScreenProps> = ({ isActive = true }) => {
     );
   };
 
-  const handleSellForMoney = () => {
+  const handleSellPress = () => {
     const selectedCurrency = getSelectedCurrency();
     if (!selectedCurrency) return;
-
     const amount = Math.floor((gameState.cryptoCoins * amountPercent) / 100);
-    if (amount <= 0) return;
-
-    // Validar que el usuario tenga suficientes CryptoCoins
-    if (amount > gameState.cryptoCoins) {
-      Alert.alert('Error', 'Insufficient CryptoCoins to sell');
-      return;
-    }
-
-    // Use current market price for selling
+    if (amount <= 0 || amount > gameState.cryptoCoins) return;
     const price = selectedCurrency.currentValue;
-    
-    // Validación adicional para evitar valores anómalos
-    if (price <= 0 || !isFinite(price)) {
-      Alert.alert('Error', 'Invalid price data');
-      return;
-    }
+    if (price <= 0 || !isFinite(price)) return;
 
-    const moneyEarned = amount * price;
-    
+    setSellConfirming(true);
+    sellConfirmTimer.current = setTimeout(clearSellConfirm, 3000);
+  };
 
-    Alert.alert(
-      'Sell for Real Money',
-      `Sell ${formatCurrencyAmount(amount, 'CryptoCoin')} for $${moneyEarned.toFixed(2)}?\n\nCurrent price: $${price.toFixed(4)} per coin`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sell',
-          onPress: () => {
-            dispatch({
-              type: 'SELL_COINS_FOR_MONEY',
-              payload: {
-                amount: amount,
-                price: price,
-              },
-            });
-          },
-        },
-      ]
-    );
+  const handleSellConfirm = () => {
+    const selectedCurrency = getSelectedCurrency();
+    if (!selectedCurrency) { clearSellConfirm(); return; }
+    const amount = Math.floor((gameState.cryptoCoins * amountPercent) / 100);
+    const price = selectedCurrency.currentValue;
+    if (amount <= 0 || price <= 0 || !isFinite(price)) { clearSellConfirm(); return; }
+
+    dispatch({ type: 'SELL_COINS_FOR_MONEY', payload: { amount, price } });
+    clearSellConfirm();
   };
 
   const getLocalExchangePreview = () => {
@@ -231,6 +230,13 @@ const MarketScreen: React.FC<MarketScreenProps> = ({ isActive = true }) => {
     const crypto = gameState.cryptocurrencies.find(c => c.id === currencyId);
     return crypto ? crypto.symbol : 'CC';
   };
+
+  const sellPreviewMoney = (() => {
+    const cur = getSelectedCurrency();
+    if (!cur) return 0;
+    const amount = Math.floor((gameState.cryptoCoins * amountPercent) / 100);
+    return amount * cur.currentValue;
+  })();
 
   const panResponder = useRef(
     PanResponder.create({
@@ -371,12 +377,20 @@ const MarketScreen: React.FC<MarketScreenProps> = ({ isActive = true }) => {
                         
                         {/* Sell Button */}
                         <View style={styles.buttonContainer}>
-                          <TouchableOpacity
-                            style={styles.sellButton}
-                            onPress={handleSellForMoney}
-                          >
-                            <Text style={styles.sellButtonText}>Sell for $</Text>
-                          </TouchableOpacity>
+                          {sellConfirming ? (
+                            <>
+                              <TouchableOpacity style={styles.cancelButton} onPress={clearSellConfirm}>
+                                <Text style={styles.cancelButtonText}>✕ Cancel</Text>
+                              </TouchableOpacity>
+                              <TouchableOpacity style={styles.confirmSellButton} onPress={handleSellConfirm}>
+                                <Text style={styles.confirmSellButtonText}>✓ Sell ${sellPreviewMoney.toFixed(2)}</Text>
+                              </TouchableOpacity>
+                            </>
+                          ) : (
+                            <TouchableOpacity style={styles.sellButton} onPress={handleSellPress}>
+                              <Text style={styles.sellButtonText}>Sell for $</Text>
+                            </TouchableOpacity>
+                          )}
                         </View>
                       </>
                     )}
@@ -454,12 +468,20 @@ const MarketScreen: React.FC<MarketScreenProps> = ({ isActive = true }) => {
                             <Text style={styles.exchangeButtonText}>Exchange</Text>
                           </TouchableOpacity>
                           
-                          <TouchableOpacity
-                            style={styles.sellButton}
-                            onPress={handleSellForMoney}
-                          >
-                            <Text style={styles.sellButtonText}>Sell for $</Text>
-                          </TouchableOpacity>
+                          {sellConfirming ? (
+                            <>
+                              <TouchableOpacity style={styles.cancelButton} onPress={clearSellConfirm}>
+                                <Text style={styles.cancelButtonText}>✕</Text>
+                              </TouchableOpacity>
+                              <TouchableOpacity style={styles.confirmSellButton} onPress={handleSellConfirm}>
+                                <Text style={styles.confirmSellButtonText}>✓ ${sellPreviewMoney.toFixed(2)}</Text>
+                              </TouchableOpacity>
+                            </>
+                          ) : (
+                            <TouchableOpacity style={styles.sellButton} onPress={handleSellPress}>
+                              <Text style={styles.sellButtonText}>Sell for $</Text>
+                            </TouchableOpacity>
+                          )}
                         </View>
                       </>
                     )}
@@ -704,6 +726,36 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#fff',
+  },
+  cancelButton: {
+    backgroundColor: 'transparent',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#555',
+    padding: 16,
+    alignItems: 'center',
+    flex: 1,
+    marginLeft: 8,
+    marginRight: 4,
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#888',
+  },
+  confirmSellButton: {
+    backgroundColor: '#00ff88',
+    borderRadius: 8,
+    padding: 16,
+    alignItems: 'center',
+    flex: 2,
+    marginLeft: 4,
+    marginRight: 8,
+  },
+  confirmSellButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#000',
   },
 });
 
