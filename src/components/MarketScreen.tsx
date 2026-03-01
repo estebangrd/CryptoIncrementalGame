@@ -344,7 +344,10 @@ const MarketScreen: React.FC<MarketScreenProps> = ({ isActive = true }) => {
                                   { left: `${amountPercent}%` }
                                 ]}
                               >
-                                <Text style={styles.thumbLabel}>{amountPercent}%</Text>
+                                <Text style={[
+                                  styles.thumbLabel,
+                                  { transform: [{ translateX: -(amountPercent / 100) * 20 }] },
+                                ]}>{amountPercent}%</Text>
                               </View>
                             </View>
                             <View style={styles.sliderLabels}>
@@ -403,7 +406,10 @@ const MarketScreen: React.FC<MarketScreenProps> = ({ isActive = true }) => {
                                   { left: `${amountPercent}%` }
                                 ]}
                               >
-                                <Text style={styles.thumbLabel}>{amountPercent}%</Text>
+                                <Text style={[
+                                  styles.thumbLabel,
+                                  { transform: [{ translateX: -(amountPercent / 100) * 20 }] },
+                                ]}>{amountPercent}%</Text>
                               </View>
                             </View>
                             <View style={styles.sliderLabels}>
