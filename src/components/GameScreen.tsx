@@ -134,15 +134,22 @@ const GameScreen: React.FC = () => {
               <Text style={styles.shopButtonText}>💎</Text>
             </TouchableOpacity>
           )}
-          {gameState.unlockedTabs?.energy && gameState.energy && (
-            <Text style={
-              gameState.energy.totalGeneratedMW >= gameState.energy.totalRequiredMW
-                ? styles.energyOk
-                : styles.energyWarn
-            }>
-              ⚡ {gameState.energy.totalGeneratedMW}/{gameState.energy.totalRequiredMW}MW
-            </Text>
-          )}
+          {gameState.unlockedTabs?.energy && gameState.energy && (() => {
+            const { totalGeneratedMW: gen, totalRequiredMW: req } = gameState.energy;
+            const balance = gen - req;
+            const sign = balance >= 0 ? '+' : '';
+            const color =
+              balance < 0
+                ? '#ff4444'
+                : req > 0 && balance < req * 0.2
+                ? '#ffaa00'
+                : '#00ff88';
+            return (
+              <Text style={[styles.energyBalance, { color }]}>
+                ⚡ {sign}{formatNumber(balance)} MW
+              </Text>
+            );
+          })()}
           {gameState.iapState.removeAdsPurchased && (
             <Animated.View style={[styles.adFreeBadge, { opacity: adFreeBadgeOpacity }]}>
               <Text style={styles.adFreeBadgeText}>✓ Ad Free</Text>
@@ -453,15 +460,9 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: '#888',
   },
-  energyOk: {
+  energyBalance: {
     fontSize: 11,
     fontWeight: 'bold',
-    color: '#00ff88',
-  },
-  energyWarn: {
-    fontSize: 11,
-    fontWeight: 'bold',
-    color: '#ff4444',
   },
 });
 
