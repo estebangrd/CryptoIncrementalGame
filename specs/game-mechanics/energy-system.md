@@ -4,7 +4,7 @@
 - **Fase**: Phase 4 — La Crisis Energética (narrativa)
 - **Estado**: Implemented
 - **Prioridad**: High
-- **Última actualización**: 2026-02-22
+- **Última actualización**: 2026-03-01
 - **Depende de**: Hardware tiers 9-11 implementados (Opción B)
 
 ---
@@ -313,7 +313,13 @@ export interface EnergyState {
 - Cuando IA controla: todos los botones [+] y [-] de no-renovables muestran candado 🤖
 
 ### Indicador compacto en header
-- Muestra solo el balance: `⚡ 3,200 / 2,500 MW` en verde o rojo según estado
+- Muestra solo el balance neto: `⚡ +3,200 MW` o `⚡ -500 MW`
+- Tres estados de color:
+  - 🟢 Verde `#00ff88`: superávit cómodo — `balance >= required × 0.1`
+  - 🟡 Amarillo `#ffaa00`: margen ajustado — `0 <= balance < required × 0.1` (próxima compra puede causar déficit)
+  - 🔴 Rojo `#ff4444`: déficit — `balance < 0`, hardware inactivo
+- Formato: `⚡ {signo}{balance} MW` donde signo es `+` si positivo, vacío si negativo (el `-` es parte del número)
+- Solo visible cuando la pestaña Energía está desbloqueada (`unlockedTabs.energy === true`)
 
 ---
 

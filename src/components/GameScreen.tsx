@@ -141,7 +141,7 @@ const GameScreen: React.FC = () => {
             const color =
               balance < 0
                 ? '#ff4444'
-                : req > 0 && balance < req * 0.2
+                : req > 0 && balance < req * 0.1
                 ? '#ffaa00'
                 : '#00ff88';
             return (
