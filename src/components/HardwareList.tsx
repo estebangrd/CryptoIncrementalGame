@@ -38,6 +38,12 @@ const HardwareList: React.FC = () => {
         const electricityCost = calculateHardwareElectricityCost(hardware);
         const miningSpeed = calculateHardwareMiningSpeed(hardware, gameState.upgrades);
         const coinsPerSecond = miningSpeed * hardware.blockReward;
+
+        const unitHardware = { ...hardware, owned: 1 };
+        const deltaHashRate = calculateHardwareProduction(unitHardware, gameState.upgrades);
+        const deltaMiningSpeed = calculateHardwareMiningSpeed(unitHardware, gameState.upgrades);
+        const deltaCoinsPerSec = deltaMiningSpeed * hardware.blockReward;
+        const deltaElectricity = hardware.electricityCost;
         
         return (
           <View key={hardware.id} style={styles.hardwareItem}>
@@ -84,6 +90,19 @@ const HardwareList: React.FC = () => {
               </View>
             </View>
             
+            <View style={styles.deltaRow}>
+              <Text style={styles.deltaLabel}>+1 adds: </Text>
+              <Text style={styles.deltaCoins}>+{formatNumber(deltaCoinsPerSec)} coins/s</Text>
+              <Text style={styles.deltaSeparator}> · </Text>
+              <Text style={styles.deltaHash}>+{formatNumber(deltaHashRate)} H/s</Text>
+              {deltaElectricity > 0 && (
+                <>
+                  <Text style={styles.deltaSeparator}> · </Text>
+                  <Text style={styles.deltaElec}>-{formatNumber(deltaElectricity)} elec</Text>
+                </>
+              )}
+            </View>
+
             <TouchableOpacity
               style={[styles.buyButton, !canAfford && styles.buyButtonDisabled]}
               onPress={() => handleBuyHardware(hardware.id)}
@@ -152,6 +171,37 @@ const styles = StyleSheet.create({
   },
   cannotAfford: {
     color: '#ff4444',
+  },
+  deltaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1a1a1a',
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginBottom: 10,
+    flexWrap: 'wrap',
+  },
+  deltaLabel: {
+    fontSize: 12,
+    color: '#666',
+  },
+  deltaCoins: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#00ff88',
+  },
+  deltaHash: {
+    fontSize: 12,
+    color: '#aaa',
+  },
+  deltaSeparator: {
+    fontSize: 12,
+    color: '#444',
+  },
+  deltaElec: {
+    fontSize: 12,
+    color: '#ff6666',
   },
   buyButton: {
     backgroundColor: '#00ff88',
