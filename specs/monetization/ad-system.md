@@ -50,9 +50,15 @@ Este es el primer juego del desarrollador, por lo que AdMob es la plataforma ele
   - Si comprado: NO mostrar banner, skip
   - Si NO comprado: continuar
 - Banner ad se carga en bottom position
-- Banner se muestra con size `SMART_BANNER` (responsive)
-- Altura del banner se reserva en el layout (50-90px según device)
-- El contenido del juego se ajusta para no quedar cubierto por el banner
+- Banner se muestra con size `ANCHORED_ADAPTIVE_BANNER` (responsive)
+- Altura del banner se reserva en el layout (50-90px según device):
+  - `AdBanner` reporta su altura real al parent via prop `onHeightChange(height: number)`
+  - `GameScreen` guarda esa altura en estado (`adBannerHeight`)
+  - `BottomSheetTabs` recibe prop `bottomOffset` y ajusta su `container.bottom` a ese valor
+  - El banner queda en `position: 'absolute'` bottom 0 (ancla visual)
+  - El bottom sheet se acorta por arriba para no quedar cubierto por el banner
+- Cuando Remove Ads se compra: `AdBanner` retorna null y emite `onHeightChange(0)` via useEffect, recuperando el espacio completo para la UI de juego
+- El layout resultante se comporta como si el banner no existiera: las proporciones de todos los elementos se mantienen exactamente igual, simplemente el bottom sheet ocupa hasta el borde inferior de la pantalla
 - Si el banner falla al cargar:
   - Log error a Analytics: `ad_load_failed`
   - NO mostrar espacio vacío

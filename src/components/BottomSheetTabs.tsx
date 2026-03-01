@@ -23,9 +23,10 @@ type ActiveTab = 'mining' | 'market' | 'hardware' | 'upgrades' | 'prestige' | 'e
 interface BottomSheetTabsProps {
   onMineBlock: () => void;
   t: (key: string) => string;
+  bottomOffset?: number;
 }
 
-const BottomSheetTabs: React.FC<BottomSheetTabsProps> = ({ onMineBlock, t }) => {
+const BottomSheetTabs: React.FC<BottomSheetTabsProps> = ({ onMineBlock, t, bottomOffset = 0 }) => {
   const { gameState } = useGame();
   const [activeTab, setActiveTab] = useState<ActiveTab>('mining');
   
@@ -123,7 +124,7 @@ const BottomSheetTabs: React.FC<BottomSheetTabsProps> = ({ onMineBlock, t }) => 
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { bottom: bottomOffset }]}>
       <View style={styles.bottomSheet}>
         {/* Header */}
         <View style={styles.header}>

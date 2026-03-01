@@ -1,11 +1,21 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
 import { useGame } from '../contexts/GameContext';
 import { getAdUnitId } from '../config/adConfig';
 
-const AdBanner: React.FC = () => {
+interface AdBannerProps {
+  onHeightChange?: (height: number) => void;
+}
+
+const AdBanner: React.FC<AdBannerProps> = ({ onHeightChange }) => {
   const { gameState } = useGame();
+
+  useEffect(() => {
+    if (gameState.iapState.removeAdsPurchased) {
+      onHeightChange?.(0);
+    }
+  }, [gameState.iapState.removeAdsPurchased, onHeightChange]);
 
   if (gameState.iapState.removeAdsPurchased) {
     return null;
@@ -14,7 +24,10 @@ const AdBanner: React.FC = () => {
   const adUnitId = getAdUnitId('banner');
 
   return (
-    <View style={styles.container}>
+    <View
+      style={styles.container}
+      onLayout={(e) => onHeightChange?.(e.nativeEvent.layout.height)}
+    >
       <BannerAd
         unitId={adUnitId}
         size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}

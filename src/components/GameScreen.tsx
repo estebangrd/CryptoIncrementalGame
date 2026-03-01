@@ -36,6 +36,7 @@ const GameScreen: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [showShop, setShowShop] = useState(false);
   const [toastAchievement, setToastAchievement] = useState<Achievement | null>(null);
+  const [adBannerHeight, setAdBannerHeight] = useState(0);
   const prevAchievementsRef = useRef(gameState.achievements);
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
@@ -227,7 +228,7 @@ const GameScreen: React.FC = () => {
       </View>
 
       {/* Bottom Sheet Tabs - Bottom Half */}
-      <BottomSheetTabs onMineBlock={handleMineBlock} t={t} />
+      <BottomSheetTabs onMineBlock={handleMineBlock} t={t} bottomOffset={adBannerHeight} />
 
       {/* Settings Modal */}
       <SettingsModal
@@ -238,7 +239,7 @@ const GameScreen: React.FC = () => {
       />
 
       {/* Ad Banner - bottom of screen */}
-      <AdBanner />
+      <AdBanner onHeightChange={setAdBannerHeight} />
 
       {/* Achievement Toast */}
       <AchievementToast
