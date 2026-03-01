@@ -101,17 +101,17 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
       visible={visible}
       onRequestClose={() => {}} // intentionally no-op — not dismissible
     >
-      <Animated.View
+      <View
         style={[
           styles.container,
           isCollapse ? styles.containerCollapse : styles.containerGood,
-          { opacity: fadeAnim },
         ]}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
+          <Animated.View style={{ opacity: fadeAnim, width: '100%', alignItems: 'center' }}>
           {/* Title */}
           <Text style={styles.icon}>{isCollapse ? '🌍💀' : '🌍✅'}</Text>
           <Text style={[styles.title, isCollapse ? styles.titleCollapse : styles.titleGood]}>
@@ -223,8 +223,9 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
           </Animated.View>
 
           <View style={styles.bottomSpacer} />
+          </Animated.View>
         </ScrollView>
-      </Animated.View>
+      </View>
     </Modal>
   );
 };
