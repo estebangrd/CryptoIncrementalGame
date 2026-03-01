@@ -85,22 +85,17 @@ const MarketScreen: React.FC<MarketScreenProps> = ({ isActive = true }) => {
     }
   }, [gameState.selectedCurrency]);
 
-  // Cargar historial inicial para todas las monedas
+  // Cargar historial inicial para todas las monedas (siempre fetcha datos frescos de la API)
   React.useEffect(() => {
     const loadAllHistories = async () => {
       try {
-        // Verificar que las criptomonedas estén disponibles
         if (!gameState.cryptocurrencies || gameState.cryptocurrencies.length === 0) {
           return;
         }
-        
-        const { needsHistoryInitialization, initializePriceHistory } = await import('../services/priceHistoryService');
-        
-        if (await needsHistoryInitialization()) {
-          await initializePriceHistory(gameState.cryptocurrencies);
-        }
-        
-        // Cargar historial para cada moneda
+
+        const { initializePriceHistory } = await import('../services/priceHistoryService');
+        await initializePriceHistory(gameState.cryptocurrencies);
+
         for (const crypto of gameState.cryptocurrencies) {
           await loadPriceHistory(crypto.id);
         }
@@ -108,9 +103,9 @@ const MarketScreen: React.FC<MarketScreenProps> = ({ isActive = true }) => {
         console.error('Error initializing price histories:', error);
       }
     };
-    
+
     loadAllHistories();
-  }, [gameState.cryptocurrencies]);
+  }, []);
 
   // Auto-refresh prices every second - ONLY when tab is active
   React.useEffect(() => {

@@ -19,6 +19,46 @@ const COINGECKO_IDS: { [key: string]: string } = {
   litecoin: 'litecoin',
 };
 
+// Mapeo para historial — cryptocoin usa litecoin como base
+const COINGECKO_HISTORY_IDS: { [key: string]: string } = {
+  bitcoin: 'bitcoin',
+  ethereum: 'ethereum',
+  dogecoin: 'dogecoin',
+  cardano: 'cardano',
+  cryptocoin: 'litecoin',
+};
+
+const CRYPTOCOIN_LTC_FACTOR = 1 / 70;
+
+/**
+ * Obtiene el historial de precios de las últimas 24h desde CoinGecko.
+ * Para cryptocoin, usa el historial de Litecoin escalado por 1/70.
+ * Retorna null si la API falla (el caller debe usar fallback simulado).
+ */
+export const fetchRealPriceHistory = async (cryptoId: string): Promise<number[] | null> => {
+  try {
+    const coinId = COINGECKO_HISTORY_IDS[cryptoId];
+    if (!coinId) return null;
+
+    const url = `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=usd&days=1&interval=hourly`;
+    const response = await fetch(url);
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    const prices: number[] = (data.prices as [number, number][]).map(([, price]) => price);
+
+    if (prices.length === 0) return null;
+
+    const trimmed = prices.slice(-24); // máximo 24 puntos
+    if (cryptoId === 'cryptocoin') {
+      return trimmed.map(p => p * CRYPTOCOIN_LTC_FACTOR);
+    }
+    return trimmed;
+  } catch {
+    return null;
+  }
+};
+
 // Precios de respaldo si la API falla
 const FALLBACK_PRICES: { [key: string]: number } = {
   cryptocoin: 1.0,
