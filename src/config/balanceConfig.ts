@@ -175,7 +175,7 @@ export const UPGRADE_CONFIG = {
   // Click Power - Aumenta CryptoCoins por click
   clickPower: {
     cost: 1000,                // Costo en $ (dinero real)
-    multiplier: 1.5,           // Multiplicador (1.5 = +50%)
+    multiplier: 5,             // Multiplicador (5 = 5x coins por click)
   },
 
   // CPU Efficiency - Duplica velocidad de CPUs

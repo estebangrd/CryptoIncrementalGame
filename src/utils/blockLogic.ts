@@ -64,19 +64,22 @@ export const canMineBlock = (gameState: GameState): boolean => {
   return gameState.blocksMined < GENESIS_CONSTANTS.TOTAL_BLOCKS;
 };
 
+// Calculate click multiplier from purchased upgrades
+const getClickMultiplier = (gameState: GameState): number => {
+  return gameState.upgrades
+    .filter(u => u.purchased && u.effect.type === 'clickPower')
+    .reduce((acc, u) => acc * u.effect.value, 1);
+};
+
 // Mine a block and return updated game state
 export const mineBlock = (gameState: GameState): GameState => {
   if (!canMineBlock(gameState)) return gameState;
-  
+
   const newGameState = { ...gameState };
-  const reward = calculateCurrentReward(gameState.blocksMined);
-  
-  // Debug logs for mining
-  console.log('DEBUG: mineBlock - Before mining');
-  console.log('DEBUG: blocksMined:', gameState.blocksMined);
-  console.log('DEBUG: cryptoCoins:', gameState.cryptoCoins);
-  console.log('DEBUG: reward for this block:', reward);
-  
+  const baseReward = calculateCurrentReward(gameState.blocksMined);
+  const clickMultiplier = getClickMultiplier(gameState);
+  const reward = Math.max(1, Math.floor(baseReward * clickMultiplier));
+
   // Mine the block
   newGameState.blocksMined += 1;
   newGameState.cryptoCoins += reward;

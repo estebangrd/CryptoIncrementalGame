@@ -87,7 +87,7 @@ export const initialUpgrades: Upgrade[] = [
     id: 'clickPower',
     name: 'Click Power',
     nameKey: 'upgrade.clickPower',
-    description: 'Increase CryptoCoins per click by 50%',
+    description: 'Mine 5x CryptoCoins per click',
     descriptionKey: 'upgrade.clickPower.description',
     cost: UPGRADE_CONFIG.clickPower.cost,
     purchased: false,

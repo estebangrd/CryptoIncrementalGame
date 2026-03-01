@@ -195,9 +195,9 @@ export const translations: Translation = {
     pt: 'Poder de Clique',
   },
   'upgrade.clickPower.description': {
-    en: 'Increase CryptoCoins per click by 50%',
-    es: 'Aumenta CryptoCoins por clic en 50%',
-    pt: 'Aumenta CryptoCoins por clique em 50%',
+    en: 'Mine 5x CryptoCoins per click',
+    es: 'Mina 5x CryptoCoins por clic',
+    pt: 'Minera 5x CryptoCoins por clique',
   },
   'upgrade.cpuEfficiency': {
     en: 'CPU Efficiency',
