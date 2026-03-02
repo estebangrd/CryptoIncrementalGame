@@ -4,19 +4,19 @@
 - **Fase**: Phase 2 - Expansion (Implemented)
 - **Estado**: Implemented & Active
 - **Prioridad**: High (Monetization Bridge)
-- **Última actualización**: 2026-02-21
+- **Última actualización**: 2026-03-01
 
 ## Descripción
 
-El Market System permite a los jugadores convertir CryptoCoins en Real Money ($) mediante la venta en un mercado simulado. Los precios de las criptomonedas fluctúan basándose en datos reales obtenidos de CoinGecko API. El dinero real ($) se usa para comprar hardware avanzado y upgrades, creando un loop económico: CryptoCoins → Real Money → Hardware → Más CryptoCoins.
+El Market System permite a los jugadores convertir CryptoCoins en Real Money ($) mediante la venta en un mercado simulado. Los precios de las criptomonedas fluctúan basándose en datos históricos reales de Litecoin almacenados localmente en el dispositivo (sin dependencia de APIs externas en runtime). El dinero real ($) se usa para comprar hardware avanzado y upgrades, creando un loop económico: CryptoCoins → Real Money → Hardware → Más CryptoCoins.
 
-El sistema incluye múltiples criptomonedas (Bitcoin, Ethereum, Dogecoin, Cardano) además del CryptoCoin nativo, cada una con su propia volatilidad y valor de mercado.
+El CryptoCoin nativo deriva su precio del historial de Litecoin escalado por un factor variable (seed de partida). Las otras criptomonedas (BTC, ETH, DOGE, ADA) son puramente cosméticas/de referencia y solo se usan para dar contexto de mercado.
 
 ## Objetivos
 - [x] Crear un puente económico entre progresión gratuita y monetización
-- [x] Simular un mercado de criptomonedas realista
-- [x] Usar precios reales de API cuando hay conectividad
-- [x] Implementar fallback a precios simulados sin conectividad (futuro)
+- [x] Simular un mercado de criptomonedas con datos históricos reales
+- [x] Funcionar 100% offline sin dependencias de API en runtime
+- [x] Proporcionar variabilidad entre partidas mediante seed aleatoria
 - [x] Proporcionar información visual de tendencias de precios
 - [x] Desbloquear progresivamente para no overwhelm al jugador
 
@@ -34,16 +34,15 @@ El sistema incluye múltiples criptomonedas (Bitcoin, Ethereum, Dogecoin, Cardan
 - Se muestra una confirmación: "Sold X CC for $Y"
 - Se verifica si se desbloqueó el Hardware tab ($200 threshold)
 
-### Caso de Uso 2: Actualización de Precios desde API
-**Dado que** el usuario tiene conectividad a internet
-**Cuando** abre el Market o pasa 1 minuto desde la última actualización
+### Caso de Uso 2: Actualización de Precios (Historial Local)
+**Dado que** el jugador tiene el Market abierto
+**Cuando** pasa 1 minuto desde la última actualización
 **Entonces**
-- Se llama a CoinGecko API para obtener precios actuales
-- Se actualizan los valores de `currentValue` para cada criptomoneda
-- Se guarda el timestamp de la actualización
-- Se actualiza el historial de precios para los charts
-- Si la API falla, se mantienen los precios anteriores
-- Se muestra "Last updated: X seconds ago"
+- Se avanza 1 posición en el historial local de Litecoin (`priceHistoryIndex++`)
+- El nuevo precio de CryptoCoin = `ltcPrice[index] / priceSeed`
+- Se agrega el nuevo precio al chart (ventana deslizante de 30 puntos)
+- Se descarta el punto más antiguo del chart
+- Si `index` llega al final del dataset, hace loop: `index = 0`
 
 ### Caso de Uso 3: Ver Detalles de Criptomoneda
 **Dado que** el jugador abre la lista de criptomonedas en el Market
@@ -77,10 +76,17 @@ El sistema incluye múltiples criptomonedas (Bitcoin, Ethereum, Dogecoin, Cardan
   volatility: 0.1,         // 10% de fluctuación
   color: '#00ff88',        // Verde crypto
   icon: 'currency-btc',
-  isNative: true           // No usa API, precio simulado
+  isNative: true           // Precio derivado del historial local de LTC
 }
 ```
 **Propósito**: Moneda principal del juego, siempre disponible
+
+**Fórmula de precio**:
+```
+cryptoCoinPrice = ltcHistoricalPrice[priceHistoryIndex] / priceSeed
+```
+- `ltcHistoricalPrice`: array de precios históricos de LTC (3 meses, 1 punto/minuto)
+- `priceSeed`: factor divisor aleatorio generado al crear la partida, rango **68–72** (base: 70)
 
 ### Bitcoin (BTC)
 ```typescript
@@ -225,6 +231,52 @@ function simulatePrice(baseValue: number, volatility: number): number {
 // Precio puede variar entre $8.50 y $11.50
 ```
 
+## Sistema de Historial Local de Precios
+
+### Diseño General
+En lugar de consumir APIs externas en runtime (con restricciones de ToS comerciales y dependencia de conectividad), el juego usa un dataset histórico real de Litecoin almacenado localmente. Esto provee:
+- Inmersión con movimientos de precio reales
+- Funcionamiento 100% offline
+- Sin restricciones legales de uso comercial
+- Variabilidad entre partidas mediante seed
+
+### Dataset
+- **Fuente**: Litecoin (LTC) — ya usado como base para CryptoCoin
+- **Ventana**: 3 meses de historia (≈ 129,600 puntos a 1 punto/minuto)
+- **Formato**: Array de floats (precio USD), descargado una vez por el dev y commiteado al repo
+- **Ubicación**: `src/data/ltcPriceHistory.ts` (exporta array numérico)
+- **Tamaño estimado**: ~1–1.5 MB
+
+### Seed de Partida
+```typescript
+// Generada aleatoriamente al crear una partida nueva, persiste toda la partida
+const priceSeed = Math.floor(Math.random() * 5) + 68; // rango: 68–72 (base: 70)
+
+// Punto de entrada aleatorio en el dataset
+const priceHistoryStartIndex = Math.floor(Math.random() * totalPoints);
+```
+
+- `priceSeed` determina cuánto vale el CryptoCoin relativo al LTC
+- Un seed de 68 → precio más alto → más dinero por venta → partida más fácil
+- Un seed de 72 → precio más bajo → partida más ajustada
+- El rango ±2 mantiene la variabilidad sin romper el balance
+
+### Reproducción Minuto a Minuto
+```typescript
+// Cada minuto
+priceHistoryIndex = (priceHistoryIndex + 1) % ltcPriceHistory.length;
+const newCryptoCoinPrice = ltcPriceHistory[priceHistoryIndex] / priceSeed;
+```
+
+- Al llegar al final del dataset hace **loop** seamless al inicio
+- El jugador no nota el loop ya que la gráfica solo muestra 30 minutos
+- `priceHistoryIndex` y `priceSeed` se persisten en el GameState (AsyncStorage)
+
+### Chart (últimos 30 minutos)
+- Ventana deslizante de 30 puntos: cada minuto entra 1 punto nuevo, sale el más viejo
+- Seed inicial del chart: los 30 puntos anteriores al `priceHistoryStartIndex` en el dataset
+- Título en UI: "Price Evolution (30min)"
+
 ## Estructura de Datos
 
 ### Cryptocurrency Interface
@@ -255,20 +307,22 @@ interface GameState {
   currencyBalances: {                   // Balance por cripto (futuro)
     [currencyId: string]: number;
   };
-  priceHistory?: {                      // Historial para charts
+  priceHistory?: {                      // Ventana deslizante de 30 puntos para charts
     [cryptoId: string]: {
       prices: number[];
       lastUpdate: number;
     };
   };
+  priceSeed: number;                    // Factor divisor LTC→CC (68–72), fijo por partida
+  priceHistoryIndex: number;            // Posición actual en ltcPriceHistory (0..N-1)
 }
 ```
 
 ## Reglas de Negocio
 
-1. **Solo se puede vender CryptoCoin nativo**: Actualmente no se pueden vender BTC, ETH, etc. (son solo referencia de precio)
-2. **Los precios se actualizan cada 1 minuto**: Sincronizado con el historial de precios (30 puntos = 30 minutos)
-3. **La API puede fallar**: Se mantienen precios anteriores si falla
+1. **Solo se puede vender CryptoCoin nativo**: BTC, ETH, etc. son solo referencia cosmética de precio
+2. **Los precios se actualizan cada 1 minuto**: Avanzando 1 punto en el historial local de LTC
+3. **Sin dependencia de red en runtime**: Todo el historial de precios es local
 4. **No hay fees de transacción**: Por ahora, futura feature
 5. **No se puede vender más de lo que se tiene**: Validación estricta
 6. **El dinero real no se puede convertir de vuelta a CryptoCoins**: Solo va en una dirección
@@ -368,7 +422,7 @@ function shouldUnlockHardware(gameState: GameState): boolean {
 - `GameContext` - State management
 - `balanceConfig.ts` - Valores base de criptos
 - `Block Mining System` - Para generar CryptoCoins
-- `CoinGecko API` - Para precios reales
+- `src/data/ltcPriceHistory.ts` - Dataset histórico local de LTC (3 meses, 1 punto/min)
 
 ### Bloquea
 - `Hardware Tab` - Se desbloquea después de ganar $200
@@ -382,14 +436,15 @@ function shouldUnlockHardware(gameState: GameState): boolean {
 ## Criterios de Aceptación
 
 - [x] El jugador puede vender CryptoCoins por Real Money
-- [x] Los precios se actualizan desde CoinGecko API
+- [ ] Los precios se derivan del historial local de LTC (sin API en runtime)
 - [x] El Market se desbloquea con 15 bloques + 1000 CC
 - [x] El Hardware tab se desbloquea con $200 earned
 - [x] Los precios persisten entre sesiones
-- [x] La API tiene fallback si no hay conectividad (mantiene precios anteriores)
-- [x] Se muestran charts de tendencias de precio
+- [x] El juego funciona 100% offline
+- [x] Se muestran charts de tendencias de precio (últimos 30 minutos)
 - [x] Las transacciones tienen validaciones de seguridad
-- [x] La UI muestra "Last updated" timestamp
+- [ ] La seed se genera aleatoriamente al crear partida nueva y persiste
+- [ ] El historial hace loop seamless al llegar al final del dataset
 - [x] Las notificaciones de unlock se muestran correctamente
 
 ## Notas de Implementación
@@ -606,10 +661,10 @@ describe('Market E2E', () => {
 
 ## Performance Considerations
 
-- **API calls**: Máximo 1 cada 5 minutos
+- **Dataset en memoria**: `ltcPriceHistory` se importa una vez al arrancar, no se lee de disco cada minuto
 - **Chart rendering**: Usar react-native-chart-kit o Victory (optimizado)
 - **Price updates**: No re-render innecesarios, usar React.memo
-- **Storage**: Guardar solo últimos 100 price points (no todo el historial)
+- **Storage**: Persistir solo `priceSeed`, `priceHistoryIndex`, y la ventana de 30 puntos del chart
 
 ## Analytics
 
