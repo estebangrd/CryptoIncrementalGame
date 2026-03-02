@@ -1,4 +1,5 @@
 import { GameState, Hardware, Upgrade } from '../types/game';
+import { LTC_PRICE_HISTORY } from '../data/ltcPriceHistory';
 import {
   calculateCurrentReward,
   calculateNextHalving,
@@ -263,6 +264,24 @@ export const formatNumber = (num: number): string => {
 
 import { UNLOCK_CONFIG, HARDWARE_CONFIG, BOOSTER_CONFIG } from '../config/balanceConfig';
 
+// Rango del seed: 68–72 (±2 del base 70)
+const PRICE_SEED_MIN = 68;
+const PRICE_SEED_RANGE = 5; // 68, 69, 70, 71, 72
+// Punto de inicio acotado al primer mes para garantizar ≥2 meses antes del loop
+const FIRST_MONTH_POINTS = 30 * 24 * 60; // 43,200
+
+export const generatePriceSeed = (): number =>
+  Math.floor(Math.random() * PRICE_SEED_RANGE) + PRICE_SEED_MIN;
+
+export const generatePriceStartIndex = (): number =>
+  Math.floor(Math.random() * FIRST_MONTH_POINTS);
+
+export const getInitialChartWindow = (startIndex: number, seed: number): number[] =>
+  Array.from({ length: 30 }, (_, i) => {
+    const idx = (startIndex - 29 + i + LTC_PRICE_HISTORY.length) % LTC_PRICE_HISTORY.length;
+    return LTC_PRICE_HISTORY[idx] / seed;
+  });
+
 // Progressive unlock system
 export const UNLOCK_REQUIREMENTS = {
   MARKET_BLOCKS: UNLOCK_CONFIG.market.requiredBlocks,
@@ -349,11 +368,17 @@ export const isHardwareUnlocked = (gameState: GameState, hardware: Hardware): bo
 };
 
 export const getInitialGameState = (): GameState => {
+  const priceSeed = generatePriceSeed();
+  const priceHistoryIndex = generatePriceStartIndex();
+  const initialCCPrice = LTC_PRICE_HISTORY[priceHistoryIndex] / priceSeed;
+
   return {
     cryptoCoins: 0,
     cryptoCoinsPerSecond: 0,
     totalElectricityCost: 0,
-    cryptocurrencies: cryptocurrencies,
+    cryptocurrencies: cryptocurrencies.map(c =>
+      c.id === 'cryptocoin' ? { ...c, currentValue: initialCCPrice } : c
+    ),
     selectedCurrency: null,
     hardware: hardwareProgression,
     upgrades: initialUpgrades,
@@ -401,6 +426,15 @@ export const getInitialGameState = (): GameState => {
     // Real money system
     realMoney: 0,
     totalRealMoneyEarned: 0,
+    // Price history system
+    priceSeed,
+    priceHistoryIndex,
+    priceHistory: {
+      cryptocoin: {
+        prices: getInitialChartWindow(priceHistoryIndex, priceSeed),
+        lastUpdate: Date.now(),
+      },
+    },
     // Achievements
     achievements: ALL_ACHIEVEMENTS,
     // Energy system

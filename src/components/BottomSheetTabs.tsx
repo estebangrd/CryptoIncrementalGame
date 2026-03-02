@@ -65,7 +65,7 @@ const BottomSheetTabs: React.FC<BottomSheetTabsProps> = ({ onMineBlock, t, botto
       case 'market':
         return (
           <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={true}>
-            <MarketScreen isActive={activeTab === 'market'} />
+            <MarketScreen />
           </ScrollView>
         );
       case 'prestige':
@@ -90,8 +90,8 @@ const BottomSheetTabs: React.FC<BottomSheetTabsProps> = ({ onMineBlock, t, botto
       { id: 'market' as ActiveTab, icon: '📈', label: 'Market', unlocked: gameState.unlockedTabs.market },
       { id: 'hardware' as ActiveTab, icon: '💻', label: 'Hardware', unlocked: gameState.unlockedTabs.hardware },
       { id: 'upgrades' as ActiveTab, icon: '🔧', label: 'Upgrades', unlocked: gameState.unlockedTabs.upgrades },
-      { id: 'prestige' as ActiveTab, icon: '🌟', label: 'Prestige', unlocked: gameState.unlockedTabs.prestige },
       { id: 'energy' as ActiveTab, icon: '⚡', label: t('energy.tab'), unlocked: gameState.unlockedTabs.energy ?? false },
+      { id: 'prestige' as ActiveTab, icon: '🌟', label: 'Prestige', unlocked: gameState.unlockedTabs.prestige },
       { id: 'chronicle' as ActiveTab, icon: '📖', label: t('narrative.tab'), unlocked: gameState.unlockedTabs.chronicle ?? false },
     ];
 

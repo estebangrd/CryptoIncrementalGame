@@ -249,6 +249,9 @@ export interface GameState {
   totalRealMoneyEarned: number;
   // Price history system
   priceHistory?: { [cryptoId: string]: { prices: number[]; lastUpdate: number } };
+  // LTC local dataset system
+  priceSeed: number;         // divisor LTC→CC, rango 68–72, fijo por partida
+  priceHistoryIndex: number; // posición actual en LTC_PRICE_HISTORY
   // IAP, Ads and Achievements systems
   iapState: IAPState;
   adState: AdState;

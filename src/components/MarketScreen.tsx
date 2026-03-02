@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -18,14 +18,9 @@ import {
 } from '../utils/exchangeLogic';
 import PriceChart from './PriceChart';
 
-interface MarketScreenProps {
-  isActive?: boolean;
-}
-
-const MarketScreen: React.FC<MarketScreenProps> = ({ isActive = true }) => {
+const MarketScreen: React.FC = () => {
   const { gameState, dispatch, t } = useGame();
   const [amountPercent, setAmountPercent] = useState(50); // 1-100
-  const [priceHistories, setPriceHistories] = useState<{ [key: string]: number[] }>({});
   const [sellConfirming, setSellConfirming] = useState(false);
   const [scrollEnabled, setScrollEnabled] = useState(true);
   const sellConfirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -68,81 +63,8 @@ const MarketScreen: React.FC<MarketScreenProps> = ({ isActive = true }) => {
     return gameState.cryptocurrencies.find(c => c.id === gameState.selectedCurrency);
   };
 
-  const loadPriceHistory = async (cryptoId: string) => {
-    try {
-      const { getPriceHistory } = await import('../services/priceHistoryService');
-      const history = await getPriceHistory(cryptoId);
-      setPriceHistories(prev => ({ ...prev, [cryptoId]: history }));
-    } catch (error) {
-      console.error('Error loading price history:', error);
-    }
-  };
-
-  // Cargar historial de precios cuando se selecciona una moneda
-  React.useEffect(() => {
-    if (gameState.selectedCurrency) {
-      loadPriceHistory(gameState.selectedCurrency);
-    }
-  }, [gameState.selectedCurrency]);
-
-  // Cargar historial inicial para todas las monedas (siempre fetcha datos frescos de la API)
-  React.useEffect(() => {
-    const loadAllHistories = async () => {
-      try {
-        if (!gameState.cryptocurrencies || gameState.cryptocurrencies.length === 0) {
-          return;
-        }
-
-        const { initializePriceHistory } = await import('../services/priceHistoryService');
-        await initializePriceHistory(gameState.cryptocurrencies);
-
-        for (const crypto of gameState.cryptocurrencies) {
-          await loadPriceHistory(crypto.id);
-        }
-      } catch (error) {
-        console.error('Error initializing price histories:', error);
-      }
-    };
-
-    loadAllHistories();
-  }, []);
-
-  // Auto-refresh prices every minute - ONLY when tab is active
-  React.useEffect(() => {
-    if (!isActive) return;
-
-    const refreshPrices = async () => {
-      if (!gameState.cryptocurrencies || gameState.cryptocurrencies.length === 0) {
-        return;
-      }
-
-      try {
-        const { fetchCryptoPrices } = await import('../services/cryptoAPI');
-        const { updateAllPriceHistory } = await import('../services/priceHistoryService');
-
-        const updatedCryptos = await fetchCryptoPrices(gameState.cryptocurrencies);
-
-        await updateAllPriceHistory(updatedCryptos);
-
-        if (gameState.selectedCurrency) {
-          await loadPriceHistory(gameState.selectedCurrency);
-        }
-
-        dispatch({
-          type: 'UPDATE_CRYPTOCURRENCY_PRICES',
-          payload: updatedCryptos,
-        });
-      } catch (error) {
-        console.warn('Failed to refresh prices:', error);
-      }
-    };
-
-    refreshPrices();
-
-    const interval = setInterval(refreshPrices, 60000);
-
-    return () => clearInterval(interval);
-  }, [gameState.selectedCurrency, isActive]);
+  const getPriceHistoryForChart = (cryptoId: string): number[] =>
+    gameState.priceHistory?.[cryptoId]?.prices ?? [1.0];
 
   const handleExchange = () => {
     const selectedCurrency = getSelectedCurrency();
@@ -315,7 +237,7 @@ const MarketScreen: React.FC<MarketScreenProps> = ({ isActive = true }) => {
                   <View style={styles.expandedSection}>
                     {/* Price Chart - Always show */}
                     <PriceChart
-                      priceHistory={priceHistories[getSelectedCurrency()!.id] || [1.0]}
+                      priceHistory={getPriceHistoryForChart(getSelectedCurrency()!.id)}
                     />
                     
                     {/* CryptoCoin Sell Section */}

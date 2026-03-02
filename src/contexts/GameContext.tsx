@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useReducer, useEffect, useState, useCallback, ReactNode } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
-import { GameState, Cryptocurrency, IAPState, AdState, AdBoostState, Achievement, PrestigeRun, RunStats, AILevel, EndingType } from '../types/game';
+import { GameState, Cryptocurrency, IAPState, AdState, AdBoostState, PrestigeRun, RunStats, AILevel, EndingType } from '../types/game';
 import { hardwareProgression } from '../data/hardwareData';
 import { initialUpgrades } from '../data/gameData';
 import { cryptocurrencies } from '../data/cryptocurrencies';
-import { getInitialGameState, updateOfflineProgress, checkAndUpdateUnlocks } from '../utils/gameLogic';
+import { getInitialGameState, updateOfflineProgress, checkAndUpdateUnlocks, generatePriceSeed, generatePriceStartIndex, getInitialChartWindow } from '../utils/gameLogic';
 import {
   canPrestige,
   calculateProductionMultiplier,
@@ -26,31 +26,24 @@ import {
 } from '../utils/gameLogic';
 import {
   updateMarketState,
-  getActiveNPCs,
-  calculateNPCPurchaseAmount,
   processNPCPurchase,
   updateMarketAfterTransaction,
-  getMarketStats,
   getInitialMarketState
 } from '../utils/marketLogic';
 import { saveGameState, loadGameState, saveLanguage, loadLanguage } from '../utils/storage';
 import { translations } from '../data/translations';
-import { fetchCryptoPrices, shouldUpdatePrices } from '../services/cryptoAPI';
-import { initializePriceHistory, updateAllPriceHistory } from '../services/priceHistoryService';
+import { LTC_PRICE_HISTORY } from '../data/ltcPriceHistory';
 import { initializeAdMob, loadInterstitial, showInterstitialIfEligible } from '../services/AdMobService';
 import {
   initializeIAP,
   getProducts,
-  purchaseProduct as iapPurchaseProduct,
   completePurchase,
-  restorePurchases as restoreIAPPurchases,
   terminateIAP,
-  isNonConsumableProduct,
   isStarterPack,
 } from '../services/IAPService';
 import { purchaseUpdatedListener, purchaseErrorListener } from 'react-native-iap';
 import { BOOSTER_CONFIG, STARTER_PACK_REWARDS, ENERGY_CONFIG } from '../config/balanceConfig';
-import { buildEndgameStats, calculateTotalEndgameProductionMultiplier, calculateRenewableDiscount } from '../utils/endgameLogic';
+import { buildEndgameStats, calculateTotalEndgameProductionMultiplier } from '../utils/endgameLogic';
 import Toast, { ToastInfo } from '../components/Toast';
 import { IAP_PRODUCT_IDS } from '../config/iapConfig';
 import { PurchaseRecord } from '../types/game';
@@ -66,6 +59,7 @@ import {
   calculateTotalRequiredMW,
   getEffectiveRenewableCap,
   getEnergySourceCurrentCost,
+  getActiveHardwareWithEnergyConstraint,
 } from '../utils/energyLogic';
 import {
   getInitialAIState,
@@ -99,6 +93,7 @@ type GameAction =
   | { type: 'EXCHANGE_CURRENCY'; payload: { fromCurrency: string; toCurrency: string; amount: number } }
   | { type: 'MINE_BLOCK' }
   | { type: 'UPDATE_MARKET_STATE' }
+  | { type: 'ADVANCE_PRICE_INDEX' }
   | { type: 'SELL_TO_NPC'; payload: { npcId: string; amount: number } }
   | { type: 'SELL_COINS_FOR_MONEY'; payload: { amount: number; price: number } }
   | { type: 'BUY_HARDWARE_WITH_MONEY'; payload: string }
@@ -176,7 +171,7 @@ const recalculateGameStats = (state: GameState): GameState => {
 
 const gameReducer = (state: GameState, action: GameAction): GameState => {
   switch (action.type) {
-    case 'BUY_HARDWARE':
+    case 'BUY_HARDWARE': {
       const hardwareIndex = state.hardware.findIndex(h => h.id === action.payload);
       if (hardwareIndex === -1) return state;
 
@@ -195,6 +190,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       };
 
       return recalculateGameStats(newState);
+    }
     case 'BUY_UPGRADE':
       const upgradeIndex = state.upgrades.findIndex(u => u.id === action.payload);
       if (upgradeIndex === -1) return state;
@@ -320,6 +316,9 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         collapseCount: action.payload.collapseCount ?? 0,
         goodEndingCount: action.payload.goodEndingCount ?? 0,
         lastEndgameStats: action.payload.lastEndgameStats ?? null,
+        // Price history system migration
+        priceSeed: action.payload.priceSeed ?? generatePriceSeed(),
+        priceHistoryIndex: action.payload.priceHistoryIndex ?? generatePriceStartIndex(),
         unlockedTabs: {
           market: action.payload.unlockedTabs?.market ?? false,
           hardware: action.payload.unlockedTabs?.hardware ?? false,
@@ -329,6 +328,16 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           chronicle: action.payload.unlockedTabs?.chronicle ?? false,
         },
       };
+      // Initialize chart window if missing (new field or first load)
+      if (!loadedState.priceHistory?.['cryptocoin']) {
+        loadedState.priceHistory = {
+          ...loadedState.priceHistory,
+          cryptocoin: {
+            prices: getInitialChartWindow(loadedState.priceHistoryIndex, loadedState.priceSeed),
+            lastUpdate: Date.now(),
+          },
+        };
+      }
       return recalculateGameStats(loadedState);
     }
     case 'RESET_GAME':
@@ -372,27 +381,35 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       // If collapse or good ending already triggered, stop all production
       if (state.collapseTriggered || state.goodEndingTriggered) return state;
 
-      // Calculate how many blocks should be mined based on hardware mining speed
-      const totalMiningSpeed = calculateTotalMiningSpeed(state.hardware, state.upgrades);
+      // Calculate how many blocks should be mined based on energy-constrained mining speed
+      const energyGeneratedMW = state.energy?.totalGeneratedMW ?? 0;
+      const activeEnergyHardware = getActiveHardwareWithEnergyConstraint(state.hardware, energyGeneratedMW);
+      const activeUnitsForSpeed: Record<string, number> = {};
+      for (const hw of activeEnergyHardware) {
+        activeUnitsForSpeed[hw.id] = hw.activeUnits;
+      }
+      const constrainedHardware = state.hardware.map(hw =>
+        hw.energyRequired > 0
+          ? { ...hw, owned: activeUnitsForSpeed[hw.id] ?? 0 }
+          : hw
+      );
+      const totalMiningSpeed = calculateTotalMiningSpeed(constrainedHardware, state.upgrades);
       const blocksToMine = Math.floor(totalMiningSpeed); // Mine complete blocks only
 
       if (blocksToMine > 0 && canMineBlock(state)) {
-        // Mine blocks and get rewards
+        // Mine blocks for progression counter; coins come from cryptoCoinsPerSecond
         let newState = { ...state };
-        let totalReward = 0;
 
         for (let i = 0; i < blocksToMine && canMineBlock(newState); i++) {
-          const reward = calculateCurrentReward(newState.blocksMined);
           newState.blocksMined += 1;
-          totalReward += reward;
-
-          // Update current reward and next halving after each block
           newState.currentReward = calculateCurrentReward(newState.blocksMined);
           newState.nextHalving = calculateNextHalving(newState.blocksMined);
         }
 
-        newState.cryptoCoins += totalReward;
-        newState.totalCryptoCoins += totalReward;
+        // Coins are based on steady-state production rate, independent of halving rewards
+        const coinsThisTick = state.cryptoCoinsPerSecond;
+        newState.cryptoCoins += coinsThisTick;
+        newState.totalCryptoCoins += coinsThisTick;
 
         // Planet resource depletion from non-renewable energy sources
         if (newState.energy?.nonRenewableActiveMW > 0) {
@@ -527,22 +544,43 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         planetResourcesVisible: false,
         collapseTriggered: false,
         goodEndingTriggered: false,
+        priceSeed: generatePriceSeed(),
+        priceHistoryIndex: generatePriceStartIndex(),
+        priceHistory: undefined,
       };
       return recalculateGameStats(prestigedState);
     }
     case 'EXCHANGE_CURRENCY':
       return performExchange(state, action.payload.fromCurrency, action.payload.toCurrency, action.payload.amount);
-    case 'MINE_BLOCK':
+    case 'MINE_BLOCK': {
       if (canMineBlock(state)) {
-        const newState = mineBlock(state);
-        return recalculateGameStats(newState);
+        const minedState = mineBlock(state);
+        return recalculateGameStats(minedState);
       }
       return state;
+    }
     case 'UPDATE_MARKET_STATE':
       return {
         ...state,
         marketState: updateMarketState(state.marketState),
       };
+    case 'ADVANCE_PRICE_INDEX': {
+      const nextIndex = (state.priceHistoryIndex + 1) % LTC_PRICE_HISTORY.length;
+      const newPrice = LTC_PRICE_HISTORY[nextIndex] / state.priceSeed;
+      const prevWindow = state.priceHistory?.['cryptocoin']?.prices ?? [];
+      const newWindow = [...prevWindow, newPrice].slice(-30);
+      return {
+        ...state,
+        priceHistoryIndex: nextIndex,
+        cryptocurrencies: state.cryptocurrencies.map(c =>
+          c.id === 'cryptocoin' ? { ...c, currentValue: newPrice } : c
+        ),
+        priceHistory: {
+          ...state.priceHistory,
+          cryptocoin: { prices: newWindow, lastUpdate: Date.now() },
+        },
+      };
+    }
     case 'SELL_TO_NPC':
       const npc = state.marketState.npcs.find(n => n.id === action.payload.npcId);
       if (!npc || npc.type !== 'buyer') return state;
@@ -569,13 +607,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       }
 
       const moneyEarned = coinsToSell * action.payload.price;
-
-      // Validar que el monto no sea excesivamente grande (posible bug de cálculo)
-      // Este límite previene errores numéricos o bugs que podrían generar valores anómalos
-      if (moneyEarned > 100000000) { // $100M como límite de seguridad extremo
-        console.warn('Suspiciously large transaction amount:', moneyEarned);
-        return state;
-      }
+      if (!isFinite(moneyEarned) || moneyEarned <= 0) return state;
 
       return recalculateGameStats({
         ...state,
@@ -1146,12 +1178,13 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     gameStateRef.current = gameState;
   }, [gameState]);
 
-  // Debug log for initial state
+  // Debug log for initial state — intentionally runs once on mount
   React.useEffect(() => {
     console.log('DEBUG: Initial game state loaded');
     console.log('DEBUG: Initial cryptoCoinsPerSecond:', gameState.cryptoCoinsPerSecond);
     console.log('DEBUG: Initial hardware:', gameState.hardware.map(h => ({ id: h.id, owned: h.owned, miningSpeed: h.miningSpeed, blockReward: h.blockReward })));
     console.log('DEBUG: Initial upgrades:', gameState.upgrades.filter(u => u.purchased).map(u => ({ id: u.id, purchased: u.purchased })));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const [currentLanguage, setCurrentLanguage] = React.useState('en');
@@ -1231,9 +1264,6 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     const interval = setInterval(() => {
       if (gameState.cryptoCoinsPerSecond > 0) {
-        console.log('DEBUG: Adding production, cryptoCoinsPerSecond:', gameState.cryptoCoinsPerSecond);
-        console.log('DEBUG: Hardware owned:', gameState.hardware.map(h => ({ id: h.id, owned: h.owned, baseProduction: h.baseProduction, miningSpeed: h.miningSpeed, blockReward: h.blockReward })));
-        console.log('DEBUG: Upgrades purchased:', gameState.upgrades.filter(u => u.purchased).map(u => ({ id: u.id, purchased: u.purchased, effect: u.effect })));
         dispatch({ type: 'ADD_PRODUCTION' });
       }
     }, 1000);
@@ -1259,30 +1289,13 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return () => clearInterval(interval);
   }, []);
 
-  // Initialize price history when game loads and cryptocurrencies are available
+  // Advance LTC price index every minute
   useEffect(() => {
-    const initializeHistory = async () => {
-      try {
-        console.log('[DEBUG] GameContext: Attempting to initialize price history');
-        console.log('[DEBUG] GameContext: cryptocurrencies available:', gameState.cryptocurrencies?.length || 0);
-
-        // Solo inicializar si hay criptomonedas disponibles
-        if (gameState.cryptocurrencies && gameState.cryptocurrencies.length > 0) {
-          // Primero guardar el estado actual antes de inicializar el historial
-          console.log('[DEBUG] GameContext: Saving game state before initializing price history');
-          await saveGameState(gameState);
-
-          console.log('[DEBUG] GameContext: Now calling initializePriceHistory');
-          await initializePriceHistory(gameState.cryptocurrencies);
-          console.log('[DEBUG] GameContext: Price history initialized successfully');
-        }
-      } catch (error) {
-        console.warn('[WARN] Failed to initialize price history:', error);
-      }
-    };
-
-    initializeHistory();
-  }, [gameState.cryptocurrencies]);
+    const interval = setInterval(() => {
+      dispatch({ type: 'ADVANCE_PRICE_INDEX' });
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Initialize AdMob on mount
   useEffect(() => {
@@ -1408,43 +1421,6 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     gameState.hardware,
   ]);
 
-  // Update crypto prices when user enters market view
-  useEffect(() => {
-    const updateCryptoPrices = async () => {
-      const now = Date.now();
-      const lastUpdate = gameState.marketUpdateTime || 0;
-
-      // Solo actualizar si hay criptomonedas disponibles
-      if (!gameState.cryptocurrencies || gameState.cryptocurrencies.length === 0) {
-        return;
-      }
-
-      // Solo actualizar si ha pasado suficiente tiempo o si es la primera vez
-      if (shouldUpdatePrices(lastUpdate) || lastUpdate === 0) {
-        try {
-          const updatedCryptos = await fetchCryptoPrices(gameState.cryptocurrencies);
-
-          // Actualizar historial de precios
-          await updateAllPriceHistory(updatedCryptos);
-
-          // Actualizar el estado con los nuevos precios
-          dispatch({
-            type: 'LOAD_GAME',
-            payload: {
-              ...gameState,
-              cryptocurrencies: updatedCryptos,
-              marketUpdateTime: now,
-            }
-          });
-        } catch (error) {
-          console.warn('Failed to update crypto prices:', error);
-        }
-      }
-    };
-
-    // Llamar a la función cuando el componente se monte o cuando el usuario entre a la vista market
-    updateCryptoPrices();
-  }, [gameState.cryptocurrencies]);
 
   return (
     <GameContext.Provider value={{ gameState, currentLanguage, t, dispatch, setLanguage, showToast }}>
