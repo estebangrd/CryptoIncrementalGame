@@ -61,6 +61,27 @@ Este sistema es el corazón del loop de gameplay: minar bloques → ganar Crypto
 - Se desbloquea siempre (visible desde el inicio del juego)
 - Intención de diseño: el jugador NO debería seguir haciendo click activo en midgame
 
+### Caso de Uso 3: Producción Automática Estable Post-Halvings
+**Dado que** el jugador tiene hardware activo y ha pasado por múltiples halvings (e.g., blocksMined = 5,000,000)
+**Cuando** el game loop tick se ejecuta
+**Entonces**
+- Se añaden exactamente `cryptoCoinsPerSecond` coins al balance del jugador
+- El valor de `cryptoCoinsPerSecond` NO decreció por los halvings
+- `blocksMined` sigue incrementando normalmente
+- `currentReward` (display) sí refleja el valor halved, pero no afecta el income
+
+**Anti-patrón evitado**: No se usa `calculateCurrentReward(blocksMined)` para calcular coins en la producción automática. Con alto mining speed (ej: 5 Mining Farms = 750 bloques/tick), el block reward efectivo caería a near-zero después de minutos, congelando la producción.
+
+### Caso de Uso 3b: Mining Speed Respeta Restricciones de Energía en ADD_PRODUCTION
+**Dado que** el jugador tiene 5 Mining Farms (500 MW c/u) y 0 MW de energía generada
+**Cuando** el game loop tick de ADD_PRODUCTION se ejecuta
+**Entonces**
+- Los Mining Farms NO contribuyen a `blocksToMine` (están "apagados" por falta de energía)
+- Solo el hardware tier 1-8 (sin requisito de energía) mina bloques
+- Comprar luego generadores de energía activa los Mining Farms correctamente
+
+**Rationale**: Sin esta restricción, el hardware tier 9+ incrementaría `blocksMined` sin energía, causando halvings prematuros y agotando el supply de 21M bloques sin que el jugador hubiera activado el hardware legítimamente.
+
 ### Caso de Uso 4: Halving Event
 **Dado que** `blocksMined` alcanza un múltiplo de `HALVING_INTERVAL` (210,000)
 **Cuando** se mina el bloque que cruza el umbral
@@ -169,23 +190,35 @@ function getBlocksUntilHalving(blocksMined: number): number {
 ```
 
 ### Producción de CryptoCoins por Segundo
+
+La producción de monedas está **desacoplada del sistema de halvings** por diseño. Los halvings afectan el contador de bloques (progresión hacia 21M) pero no reducen el income per se.
+
 ```typescript
 function calculateTotalProduction(gameState: GameState): number {
   let totalProduction = 0;
 
   for (const hardware of gameState.hardware) {
-    // Mining speed (blocks/second) × Block reward (coins/block)
-    const miningSpeed = calculateHardwareMiningSpeed(hardware, gameState.upgrades);
-    const coinsPerSecond = miningSpeed * hardware.blockReward;
+    // Para hardware tier 9+ (energyRequired > 0), solo cuentan las unidades activas
+    const effectiveOwned = hardware.energyRequired > 0
+      ? getActiveUnitsFromEnergyConstraint(hardware, gameState.energy)
+      : hardware.owned;
+
+    if (effectiveOwned === 0) continue;
+
+    // Mining speed (blocks/second) × blockReward estático (coins/block)
+    // NOTA: Se usa hardware.blockReward (estático), NO calculateCurrentReward(blocksMined)
+    // Esto garantiza que las monedas por segundo nunca decaen por halvings
+    const speed = calculateHardwareMiningSpeed({ ...hardware, owned: effectiveOwned }, gameState.upgrades);
+    const coinsPerSecond = speed * hardware.blockReward;
     totalProduction += coinsPerSecond;
   }
 
-  // Apply prestige multiplier
-  const finalProduction = totalProduction * gameState.prestigeMultiplier;
-
-  return finalProduction;
+  // Apply all multipliers (prestige, IAP boosters, ad boost, AI)
+  return totalProduction * allMultipliers;
 }
 ```
+
+**Rationale**: `hardware.blockReward` es el valor de diseño de balance (e.g., 15 CC/bloque para Mining Farm). `calculateCurrentReward(blocksMined)` es el reward de la blockchain que decrece con halvings. Mezclarlos haría que la producción automática colapsara a cero, rompiendo el loop del juego.
 
 ### Verificación de Minado Permitido
 ```typescript
@@ -372,6 +405,10 @@ interface Hardware {
 - [x] El click manual siempre retorna un entero ≥ 1
 - [x] El click manual consume 1 bloque del supply de 21M
 - [x] El click manual es irrelevante en midgame por diseño (no requiere fix)
+- [x] La producción automática de coins NO decrece con los halvings (usa `cryptoCoinsPerSecond`, no `calculateCurrentReward`)
+- [x] Hardware tier 9+ (energyRequired > 0) NO contribuye a `blocksToMine` en ADD_PRODUCTION si no tiene energía suficiente
+- [x] Con balance de energía positivo (+X MW), todos los mining farms/quantum miners activos generan coins correctamente
+- [x] Los halvings afectan solo el display de "reward por bloque" y la progresión del contador, no el income real del jugador
 
 ## Notas de Implementación
 
@@ -399,32 +436,41 @@ useEffect(() => {
 ### Reducer Action: ADD_PRODUCTION
 ```typescript
 case 'ADD_PRODUCTION':
-  const totalMiningSpeed = calculateTotalMiningSpeed(state.hardware, state.upgrades);
-  const blocksToMine = Math.floor(totalMiningSpeed); // Solo bloques completos
+  if (state.collapseTriggered || state.goodEndingTriggered) return state;
+
+  // Mining speed respeta restricciones de energía: hardware tier 9+
+  // solo cuenta si tiene energía suficiente
+  const constrainedHardware = state.hardware.map(hw =>
+    hw.energyRequired > 0
+      ? { ...hw, owned: getActiveUnitsFromEnergy(hw, state.energy) }
+      : hw
+  );
+  const totalMiningSpeed = calculateTotalMiningSpeed(constrainedHardware, state.upgrades);
+  const blocksToMine = Math.floor(totalMiningSpeed);
 
   if (blocksToMine > 0 && canMineBlock(state)) {
     let newState = { ...state };
-    let totalReward = 0;
 
-    // Minar múltiples bloques si mining speed es alto
+    // Minar bloques: solo incrementa el contador de progresión (21M goal)
+    // Las monedas NO provienen de calculateCurrentReward (que decrece con halvings)
     for (let i = 0; i < blocksToMine && canMineBlock(newState); i++) {
-      const reward = calculateCurrentReward(newState.blocksMined);
       newState.blocksMined += 1;
-      totalReward += reward;
-
-      // Actualizar reward si se alcanzó halving
       newState.currentReward = calculateCurrentReward(newState.blocksMined);
       newState.nextHalving = calculateNextHalving(newState.blocksMined);
     }
 
-    newState.cryptoCoins += totalReward;
-    newState.totalCryptoCoins += totalReward;
+    // Coins por tick = cryptoCoinsPerSecond (rate estático basado en hardware.blockReward)
+    // Independiente de halvings → garantiza producción estable
+    newState.cryptoCoins += state.cryptoCoinsPerSecond;
+    newState.totalCryptoCoins += state.cryptoCoinsPerSecond;
 
     return recalculateGameStats(newState);
   }
 
   return state;
 ```
+
+**Invariante clave**: los halvings reducen `calculateCurrentReward(blocksMined)` (visible en la UI como "recompensa actual por bloque"), pero NO reducen `cryptoCoinsPerSecond`. El income del jugador se mantiene estable mientras tenga hardware activo y energía suficiente.
 
 ### Configuración de Balance
 Para ajustar la velocidad del juego:
@@ -621,6 +667,21 @@ describe('Block Mining E2E', () => {
 **Edge Case 6: Prestige multiplier extremo**
 - Input: prestigeMultiplier = 1000 (después de muchos prestiges)
 - Expected: Producción se multiplica correctamente, no causa overflow
+
+**Edge Case 7: Producción no colapsa después de muchos halvings**
+- Input: blocksMined = 8,000,000 (38+ halvings), 5 ASIC Gen 3 owned
+- Expected: `cryptoCoinsPerSecond` sigue siendo `5 × 60 × 20 × prestigeMultiplier` (usa `hardware.blockReward` estático = 20)
+- NOT expected: `cryptoCoinsPerSecond` ≈ 0 por usar `calculateCurrentReward(8_000_000)` ≈ 0.0000002
+
+**Edge Case 8: Mining Farms sin energía no incrementan blocksMined**
+- Input: 5 Mining Farms owned, `totalGeneratedMW = 0`, `totalRequiredMW = 2500`
+- Expected: ADD_PRODUCTION calcula `blocksToMine` ignorando las Mining Farms → solo hardware tier 1-8 contribuye
+- NOT expected: Mining Farms contribuyen 750 bloques/tick consumiendo supply sin operar realmente
+
+**Edge Case 9: Mining Farms con energía parcial**
+- Input: 5 Mining Farms owned, 1500 MW generados (solo 3 de 5 farms activas)
+- Expected: Solo 3 Mining Farms contribuyen a `blocksToMine` (3 × 150 = 450 bloques/tick)
+- Expected: `cryptoCoinsPerSecond` refleja solo 3 farms activas
 
 ## Performance Considerations
 

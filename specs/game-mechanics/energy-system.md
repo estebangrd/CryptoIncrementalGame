@@ -312,6 +312,8 @@ export interface EnergyState {
 - Estado APAGÓN TOTAL: borde rojo, animación de parpadeo
 - Cuando IA controla: todos los botones [+] y [-] de no-renovables muestran candado 🤖
 
+**Posición en la navegación**: La pestaña Energía ocupa la **posición 5** (entre Upgrades y Prestige). Ver tabla de tab order en `specs/ui-ux/game-flow.md`.
+
 ### Indicador compacto en header
 - Muestra solo el balance neto: `⚡ +3,200 MW` o `⚡ -500 MW`
 - Tres estados de color:
@@ -368,6 +370,9 @@ export interface EnergyState {
 - [ ] La depleción de Recursos del Planeta se activa con cualquier MW no-renovable
 - [ ] Con IA Nivel 3, los botones de no-renovables muestran estado "controlado por IA"
 - [ ] Al recuperar energía suficiente, el hardware apagado vuelve a operar automáticamente
+- [ ] Hardware tier 9+ con `energyRequired > 0` **no contribuye al mining speed** en el game loop tick si `totalGeneratedMW` es insuficiente para operarlo — evita halvings prematuros por hardware "fantasma"
+- [ ] Con balance de energía positivo (ej: +3,500 MW), los Mining Farms y Quantum Miners activos **generan coins continuamente** cada segundo, visible en el incremento del balance de CryptoCoins
+- [ ] Comprar más generadores de energía (BUILD_ENERGY_SOURCE) activa inmediatamente el hardware tier 9+ que estaba apagado, comenzando producción sin reiniciar la app
 - [ ] `npm test` pasa sin errores
 - [ ] `npm run lint` pasa sin errores nuevos
 
