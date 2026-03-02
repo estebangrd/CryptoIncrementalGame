@@ -107,32 +107,27 @@ const MarketScreen: React.FC<MarketScreenProps> = ({ isActive = true }) => {
     loadAllHistories();
   }, []);
 
-  // Auto-refresh prices every second - ONLY when tab is active
+  // Auto-refresh prices every minute - ONLY when tab is active
   React.useEffect(() => {
-    // Solo ejecutar si la pestaña está activa
     if (!isActive) return;
-    
+
     const refreshPrices = async () => {
-      // Verificar que las criptomonedas estén disponibles
       if (!gameState.cryptocurrencies || gameState.cryptocurrencies.length === 0) {
         return;
       }
-      
+
       try {
         const { fetchCryptoPrices } = await import('../services/cryptoAPI');
         const { updateAllPriceHistory } = await import('../services/priceHistoryService');
-        
+
         const updatedCryptos = await fetchCryptoPrices(gameState.cryptocurrencies);
-        
-        // Actualizar historial de precios
+
         await updateAllPriceHistory(updatedCryptos);
-        
-        // Recargar historiales para las monedas seleccionadas
+
         if (gameState.selectedCurrency) {
           await loadPriceHistory(gameState.selectedCurrency);
         }
-        
-        // Usar la nueva acción que solo actualiza las criptomonedas
+
         dispatch({
           type: 'UPDATE_CRYPTOCURRENCY_PRICES',
           payload: updatedCryptos,
@@ -142,14 +137,12 @@ const MarketScreen: React.FC<MarketScreenProps> = ({ isActive = true }) => {
       }
     };
 
-    // Refresh immediately on mount
     refreshPrices();
 
-    // Then refresh every second
-    const interval = setInterval(refreshPrices, 1000);
+    const interval = setInterval(refreshPrices, 60000);
 
     return () => clearInterval(interval);
-  }, [gameState.selectedCurrency, isActive]); // Agregar isActive como dependencia
+  }, [gameState.selectedCurrency, isActive]);
 
   const handleExchange = () => {
     const selectedCurrency = getSelectedCurrency();

@@ -36,7 +36,7 @@ El sistema incluye múltiples criptomonedas (Bitcoin, Ethereum, Dogecoin, Cardan
 
 ### Caso de Uso 2: Actualización de Precios desde API
 **Dado que** el usuario tiene conectividad a internet
-**Cuando** abre el Market o pasan 5 minutos desde la última actualización
+**Cuando** abre el Market o pasa 1 minuto desde la última actualización
 **Entonces**
 - Se llama a CoinGecko API para obtener precios actuales
 - Se actualizan los valores de `currentValue` para cada criptomoneda
@@ -207,7 +207,7 @@ async function fetchCryptoPrices(
 ```typescript
 function shouldUpdatePrices(lastUpdateTime: number): boolean {
   const now = Date.now();
-  const UPDATE_INTERVAL = 5 * 60 * 1000; // 5 minutos
+  const UPDATE_INTERVAL = 60 * 1000; // 1 minuto
 
   return (now - lastUpdateTime) >= UPDATE_INTERVAL;
 }
@@ -267,7 +267,7 @@ interface GameState {
 ## Reglas de Negocio
 
 1. **Solo se puede vender CryptoCoin nativo**: Actualmente no se pueden vender BTC, ETH, etc. (son solo referencia de precio)
-2. **Los precios se actualizan cada 5 minutos**: No más frecuente para respetar límites de API
+2. **Los precios se actualizan cada 1 minuto**: Sincronizado con el historial de precios (30 puntos = 30 minutos)
 3. **La API puede fallar**: Se mantienen precios anteriores si falla
 4. **No hay fees de transacción**: Por ahora, futura feature
 5. **No se puede vender más de lo que se tiene**: Validación estricta
@@ -327,7 +327,7 @@ function shouldUnlockHardware(gameState: GameState): boolean {
 
 ### Price Chart (PriceChart Component)
 - [ ] Gráfico de línea con historial de precios
-- [ ] Eje X: Tiempo (últimas 24h o 7 días)
+- [ ] Eje X: Tiempo (últimos 30 minutos, 1 punto por minuto)
 - [ ] Eje Y: Precio en USD
 - [ ] Color de línea: Color de la cripto
 - [ ] Tooltips al tocar puntos del chart

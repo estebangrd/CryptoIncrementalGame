@@ -1,15 +1,14 @@
 import { Cryptocurrency } from '../types/game';
 import { loadGameState, saveGameState } from '../utils/storage';
-import { fetchRealPriceHistory } from './cryptoAPI';
 
 // Constantes
-const MAX_HISTORY_POINTS = 24; // 24 puntos de historial
+const MAX_HISTORY_POINTS = 30; // 30 puntos = últimos 30 minutos
 const HISTORY_UPDATE_INTERVAL = 60000; // 1 minuto entre puntos
 
 /**
  * Inicializa el historial de precios para todas las criptomonedas.
- * Siempre fetcha datos reales de CoinGecko para tener datos frescos.
- * Usa historial simulado como fallback si la API falla.
+ * Genera 30 puntos simulados alrededor del precio actual como seed inicial.
+ * Solo inicializa si no existe historial previo.
  */
 export const initializePriceHistory = async (cryptocurrencies: Cryptocurrency[]): Promise<void> => {
   try {
@@ -21,11 +20,12 @@ export const initializePriceHistory = async (cryptocurrencies: Cryptocurrency[])
     }
 
     for (const crypto of cryptocurrencies) {
-      const realHistory = await fetchRealPriceHistory(crypto.id);
-      gameState.priceHistory[crypto.id] = {
-        prices: realHistory ?? generateSimulatedHistory(crypto.currentValue, 0.05),
-        lastUpdate: Date.now(),
-      };
+      if (!gameState.priceHistory[crypto.id]) {
+        gameState.priceHistory[crypto.id] = {
+          prices: generateSimulatedHistory(crypto.currentValue, crypto.volatility ?? 0.05),
+          lastUpdate: Date.now(),
+        };
+      }
     }
 
     await saveGameState(gameState);

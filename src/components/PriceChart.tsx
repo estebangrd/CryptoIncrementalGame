@@ -45,7 +45,7 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceHistory }) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Price Evolution (24h)</Text>
+        <Text style={styles.title}>Price Evolution (30min)</Text>
         <Text style={[styles.priceChange, { color: isPositive ? '#00ff88' : '#ff4444' }]}>
           {isPositive ? '+' : ''}{priceChange.toFixed(2)}%
         </Text>
