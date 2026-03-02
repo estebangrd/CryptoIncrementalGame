@@ -438,15 +438,15 @@ function shouldUnlockHardware(gameState: GameState): boolean {
 ## Criterios de Aceptación
 
 - [x] El jugador puede vender CryptoCoins por Real Money
-- [ ] Los precios se derivan del historial local de LTC (sin API en runtime)
+- [x] Los precios se derivan del historial local de LTC (sin API en runtime)
 - [x] El Market se desbloquea con 15 bloques + 1000 CC
 - [x] El Hardware tab se desbloquea con $200 earned
 - [x] Los precios persisten entre sesiones
 - [x] El juego funciona 100% offline
 - [x] Se muestran charts de tendencias de precio (últimos 30 minutos)
 - [x] Las transacciones tienen validaciones de seguridad
-- [ ] La seed se genera aleatoriamente al crear partida nueva y persiste
-- [ ] El historial hace loop seamless al llegar al final del dataset
+- [x] La seed se genera aleatoriamente al crear partida nueva y persiste
+- [x] El historial hace loop seamless al llegar al final del dataset
 - [x] Las notificaciones de unlock se muestran correctamente
 
 ## Notas de Implementación
