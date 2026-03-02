@@ -808,6 +808,24 @@ analytics().logEvent('user_returned_after_long_absence', {
 
 ---
 
+### Bottom Navigation Tab Order
+
+El orden visual de las pestañas en la barra inferior es fijo:
+
+| Posición | Tab | Ícono | Condición de unlock |
+|----------|-----|-------|---------------------|
+| 1 | Mining | ⛏️ | Siempre visible |
+| 2 | Market | 📈 | 15 bloques + 1,000 CC |
+| 3 | Hardware | 💻 | $200 total ganados |
+| 4 | Upgrades | 🔧 | 1+ hardware comprado |
+| 5 | Energy | ⚡ | Primer hardware tier 9+ |
+| 6 | Chronicle | 📖 | Evento narrativo activado |
+| 7 | Prestige | 🌟 | 21M bloques minados |
+
+**Nota**: Prestige (posición 7, última) refuerza que es un evento de end-game. Chronicle (posición 6) aparece antes ya que puede activarse durante mid-game.
+
+---
+
 ### Navigation Flow
 
 ```
