@@ -95,7 +95,10 @@ const GameScreen: React.FC = () => {
     !gameState.iapState.starterPacksPurchased.large ||
     !gameState.iapState.starterPacksPurchased.mega;
 
-  const pendingNarrativeEvent = getPendingNarrativeEvent(gameState.narrativeEvents ?? []);
+  const isGameOver = gameState.collapseTriggered || gameState.goodEndingTriggered;
+  const pendingNarrativeEvent = isGameOver
+    ? null
+    : getPendingNarrativeEvent(gameState.narrativeEvents ?? []);
 
   const handleDismissNarrativeEvent = () => {
     if (pendingNarrativeEvent) {
