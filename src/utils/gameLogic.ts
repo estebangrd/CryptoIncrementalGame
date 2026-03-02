@@ -1,11 +1,6 @@
 import { GameState, Hardware, Upgrade } from '../types/game';
 import { LTC_PRICE_HISTORY } from '../data/ltcPriceHistory';
-import {
-  calculateCurrentReward,
-  calculateNextHalving,
-  calculateTotalHashRate,
-  GENESIS_CONSTANTS
-} from './blockLogic';
+import { GENESIS_CONSTANTS } from './blockLogic';
 import { getInitialMarketState } from './marketLogic';
 import { getInitialEnergyState, getActiveHardwareWithEnergyConstraint } from './energyLogic';
 import { getAIProductionMultiplier, getInitialAIState } from './aiLogic';

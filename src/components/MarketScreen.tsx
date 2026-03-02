@@ -12,8 +12,6 @@ import { useGame } from '../contexts/GameContext';
 import { getPriceChangeColor } from '../utils/marketLogic';
 import {
   getExchangePreview,
-  determineExchangeDirection,
-  getCurrencyBalance,
   formatCurrencyAmount
 } from '../utils/exchangeLogic';
 import PriceChart from './PriceChart';
@@ -128,20 +126,6 @@ const MarketScreen: React.FC = () => {
     return getExchangePreview(gameState, selectedCurrency.id, amountPercent);
   };
 
-  const getBalance = (currencyId: string) => {
-    return getCurrencyBalance(gameState, currencyId);
-  };
-
-  const getCurrencyIcon = (currencyId: string) => {
-    const crypto = gameState.cryptocurrencies.find(c => c.id === currencyId);
-    return crypto ? crypto.icon : '🪙';
-  };
-
-  const getCurrencySymbol = (currencyId: string) => {
-    const crypto = gameState.cryptocurrencies.find(c => c.id === currencyId);
-    return crypto ? crypto.symbol : 'CC';
-  };
-
   const sellPreviewMoney = (() => {
     const cur = getSelectedCurrency();
     if (!cur) return 0;
@@ -157,7 +141,7 @@ const MarketScreen: React.FC = () => {
       onPanResponderGrant: (evt) => {
         setScrollEnabled(false);
         if (sliderRef.current) {
-          sliderRef.current.measure((x, y, width, height, pageX, pageY) => {
+          sliderRef.current.measure((x, y, width, height, pageX, _pageY) => {
             const touchX = evt.nativeEvent.pageX - pageX;
             const percentage = Math.max(1, Math.min(100, (touchX / width) * 100));
             setAmountPercent(Math.round(percentage));
@@ -166,7 +150,7 @@ const MarketScreen: React.FC = () => {
       },
       onPanResponderMove: (evt) => {
         if (sliderRef.current) {
-          sliderRef.current.measure((x, y, width, height, pageX, pageY) => {
+          sliderRef.current.measure((x, y, width, height, pageX, _pageY) => {
             const touchX = evt.nativeEvent.pageX - pageX;
             const percentage = Math.max(1, Math.min(100, (touchX / width) * 100));
             setAmountPercent(Math.round(percentage));
