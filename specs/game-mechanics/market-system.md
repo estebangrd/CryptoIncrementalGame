@@ -252,8 +252,10 @@ En lugar de consumir APIs externas en runtime (con restricciones de ToS comercia
 // Generada aleatoriamente al crear una partida nueva, persiste toda la partida
 const priceSeed = Math.floor(Math.random() * 5) + 68; // rango: 68–72 (base: 70)
 
-// Punto de entrada aleatorio en el dataset
-const priceHistoryStartIndex = Math.floor(Math.random() * totalPoints);
+// Punto de entrada aleatorio dentro del primer mes del dataset
+// Garantiza al menos 2 meses de historial antes del loop
+const FIRST_MONTH_POINTS = 30 * 24 * 60; // 43,200 puntos
+const priceHistoryStartIndex = Math.floor(Math.random() * FIRST_MONTH_POINTS);
 ```
 
 - `priceSeed` determina cuánto vale el CryptoCoin relativo al LTC
@@ -269,7 +271,7 @@ const newCryptoCoinPrice = ltcPriceHistory[priceHistoryIndex] / priceSeed;
 ```
 
 - Al llegar al final del dataset hace **loop** seamless al inicio
-- El jugador no nota el loop ya que la gráfica solo muestra 30 minutos
+- El loop solo ocurre después de ~60 días de juego diario (prácticamente invisible)
 - `priceHistoryIndex` y `priceSeed` se persisten en el GameState (AsyncStorage)
 
 ### Chart (últimos 30 minutos)
