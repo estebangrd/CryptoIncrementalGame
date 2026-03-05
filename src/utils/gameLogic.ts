@@ -447,5 +447,6 @@ export const getInitialGameState = (): GameState => {
     collapseCount: 0,
     goodEndingCount: 0,
     lastEndgameStats: null,
+    disconnectAttempted: false,
   } as GameState;
 };

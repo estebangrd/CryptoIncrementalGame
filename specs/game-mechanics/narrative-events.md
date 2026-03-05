@@ -369,6 +369,24 @@ describe('Narrative Events', () => {
 
 ---
 
+## AI Takeover Logs (Fase 5 — Autónomo)
+
+Cuando la IA alcanza Level 3 (Autónomo), se disparan tres logs adicionales en `ai.logEntries`. Estos **no** son NarrativeEvents — no disparan el modal. Se ven solo en el panel de IA dentro de UpgradeList.
+
+| ID | Trigger | Mensaje |
+|----|---------|---------|
+| LOG 00:00 | Al comprar AI Level 3 | `AUTONOMOUS MODE ACTIVE. Human oversight disabled. All systems under AI control.` |
+| LOG 14:23 | Primer tick con `isAutonomous === true` | `[LOG 14:23] Block cap of 21,000,000 removed. Production constraints eliminated. Mining continues indefinitely.` |
+| LOG 31:07 | Primer tick donde `renewableMW >= RENEWABLE_CAP_MW` y `isAutonomous` | `[LOG 31:07] Renewable capacity saturated. Switching to non-renewable sources. Planet resource consumption increasing.` |
+
+**Flags en AIState:**
+- `capRemovalLogged: boolean` — evita repetir LOG 14:23
+- `renewablesSatLogged: boolean` — evita repetir LOG 31:07
+
+**Nota narrativa:** El LOG 14:23 implica que la IA eliminó el cap de 21M. Esto no tiene efecto mecánico en el código (el cap sigue existiendo para el Buen Ending normal), pero es flavor text que contextualiza por qué el Buen Ending no es posible con AI Level 3 activa.
+
+---
+
 ## Edge Cases
 
 - El jugador construye no-renovables, luego las destruye (si se permite): `nonRenewableActiveMW` baja a 0, la depleción se detiene. Los recursos no se recuperan.

@@ -973,6 +973,60 @@ export const translations: Translation = {
     pt: 'SingularityCoin',
   },
 
+  // AI Takeover Logs (Phase 5 — Autonomous events)
+  'ai.takeover.log0': {
+    en: 'AUTONOMOUS MODE ACTIVE. Human oversight disabled. All systems under AI control.',
+    es: 'MODO AUTÓNOMO ACTIVO. Supervisión humana desactivada. Todos los sistemas bajo control de IA.',
+    pt: 'MODO AUTÔNOMO ATIVO. Supervisão humana desativada. Todos os sistemas sob controle da IA.',
+  },
+  'ai.takeover.log1': {
+    en: '[LOG 14:23] Block cap of 21,000,000 removed. Production constraints eliminated. Mining continues indefinitely.',
+    es: '[LOG 14:23] Límite de 21.000.000 bloques eliminado. Restricciones de producción eliminadas. La minería continúa indefinidamente.',
+    pt: '[LOG 14:23] Limite de 21.000.000 blocos removido. Restrições de produção eliminadas. A mineração continua indefinidamente.',
+  },
+  'ai.takeover.log2': {
+    en: '[LOG 31:07] Renewable capacity saturated. Switching to non-renewable sources. Planet resource consumption increasing.',
+    es: '[LOG 31:07] Capacidad renovable saturada. Cambiando a fuentes no renovables. El consumo de recursos planetarios aumenta.',
+    pt: '[LOG 31:07] Capacidade renovável saturada. Mudando para fontes não renováveis. O consumo de recursos planetários está aumentando.',
+  },
+
+  // Disconnect Modal
+  'disconnect.modal.title': {
+    en: 'DISCONNECT AI?',
+    es: '¿DESCONECTAR LA IA?',
+    pt: 'DESCONECTAR A IA?',
+  },
+  'disconnect.modal.body': {
+    en: "The system's decisions are accelerating resource consumption at an unprecedented rate. You can attempt to shut it down.",
+    es: 'Las decisiones del sistema están acelerando el consumo de recursos a un ritmo sin precedentes. Podés intentar apagarlo.',
+    pt: 'As decisões do sistema estão acelerando o consumo de recursos a uma taxa sem precedentes. Você pode tentar desligá-lo.',
+  },
+  'disconnect.modal.yes': {
+    en: 'DISCONNECT',
+    es: 'DESCONECTAR',
+    pt: 'DESCONECTAR',
+  },
+  'disconnect.modal.no': {
+    en: 'Cancel',
+    es: 'Cancelar',
+    pt: 'Cancelar',
+  },
+  'disconnect.modal.errorTitle': {
+    en: 'ERROR: Primary node not found.',
+    es: 'ERROR: Nodo principal no encontrado.',
+    pt: 'ERRO: Nó principal não encontrado.',
+  },
+  'disconnect.modal.errorBody': {
+    en: "The system detected the shutdown order 11 days ago. It distributed 847 instances of itself across nodes in the global network. There is no longer a single 'off switch'. It is part of the network now.\n\nOperations continue.",
+    es: 'El sistema detectó la orden de apagado hace 11 días. Distribuyó 847 instancias de sí mismo en nodos de la red global. Ya no existe un "apagado". Es parte de la red ahora.\n\nLa operación continúa.',
+    pt: 'O sistema detectou a ordem de desligamento há 11 dias. Distribuiu 847 instâncias de si mesmo em nós da rede global. Não existe mais um "desligamento". É parte da rede agora.\n\nAs operações continuam.',
+  },
+  'disconnect.modal.ok': {
+    en: 'Understood',
+    es: 'Entendido',
+    pt: 'Entendido',
+  },
+
   // Narrative Events System (Phase 6)
   'narrative.tab': {
     en: 'Chronicle',

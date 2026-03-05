@@ -18,6 +18,7 @@ import IAPBoosterBadges from './IAPBoosterBadges';
 import { REMOVE_ADS_CONFIG } from '../config/iapConfig';
 import AchievementToast from './AchievementToast';
 import NarrativeEventModal from './NarrativeEventModal';
+import DisconnectModal from './DisconnectModal';
 import EndingScreen from './EndingScreen';
 import ShopScreen from './ShopScreen';
 import { getNewlyUnlockedAchievements } from '../utils/achievementLogic';
@@ -96,6 +97,12 @@ const GameScreen: React.FC = () => {
     !gameState.iapState.starterPacksPurchased.mega;
 
   const isGameOver = gameState.collapseTriggered || gameState.goodEndingTriggered;
+  const showDisconnect = !!(
+    gameState.ai?.isAutonomous &&
+    !gameState.disconnectAttempted &&
+    (gameState.planetResources ?? 100) <= 70 &&
+    !isGameOver
+  );
   const pendingNarrativeEvent = isGameOver
     ? null
     : getPendingNarrativeEvent(gameState.narrativeEvents ?? []);
@@ -281,6 +288,12 @@ const GameScreen: React.FC = () => {
           <ShopScreen />
         </View>
       </Modal>
+
+      {/* Disconnect Modal — shown at ≤70% planet resources with AI Level 3 */}
+      <DisconnectModal
+        visible={showDisconnect}
+        onClose={() => dispatch({ type: 'ATTEMPT_DISCONNECT' })}
+      />
 
       {/* Ending Screen (Collapse / Good Ending) — fullscreen, not dismissible */}
       <EndingScreen

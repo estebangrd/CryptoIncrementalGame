@@ -26,6 +26,8 @@ export interface AIState {
   isAutonomous: boolean;       // true when level === 3
   logEntries: AILogEntry[];    // last 50 entries, most recent first
   lastSuggestionAt: number;    // timestamp
+  capRemovalLogged: boolean;   // LOG 14:23 — cap 21M removed
+  renewablesSatLogged: boolean; // LOG 31:07 — renewables saturated
 }
 
 export interface PrestigeRequirement {
@@ -273,6 +275,7 @@ export interface GameState {
   collapseCount: number;           // total collapse endings
   goodEndingCount: number;         // total good endings
   lastEndgameStats: EndgameStats | null;
+  disconnectAttempted: boolean;    // player already saw the disconnect popup
 }
 
 export interface Hardware {

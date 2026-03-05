@@ -11,6 +11,8 @@ export const getInitialAIState = (): AIState => ({
   isAutonomous: false,
   logEntries: [],
   lastSuggestionAt: 0,
+  capRemovalLogged: false,
+  renewablesSatLogged: false,
 });
 
 export const getAIProductionMultiplier = (level: AILevel): number => {

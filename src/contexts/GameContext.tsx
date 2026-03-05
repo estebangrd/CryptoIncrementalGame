@@ -60,6 +60,7 @@ import {
   getEffectiveRenewableCap,
   getEnergySourceCurrentCost,
   getActiveHardwareWithEnergyConstraint,
+  calculateRenewableGeneratedMW,
 } from '../utils/energyLogic';
 import {
   getInitialAIState,
@@ -128,6 +129,7 @@ type GameAction =
   | { type: 'ADD_AI_LOG'; payload: { message: string; type: 'suggestion' | 'action' | 'warning' | 'autonomous' } }
   | { type: 'AI_BUILD_ENERGY' }
   | { type: 'DISMISS_NARRATIVE_EVENT'; payload: number }
+  | { type: 'ATTEMPT_DISCONNECT' }
   | { type: 'COMPLETE_ENDING_PRESTIGE'; payload: { endingType: EndingType } };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -306,7 +308,12 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           lastWatchedAt: null,
         },
         // AI system migration: provide defaults for old saves
-        ai: action.payload.ai ?? getInitialAIState(),
+        ai: action.payload.ai
+          ? {
+              ...getInitialAIState(),
+              ...action.payload.ai,
+            }
+          : getInitialAIState(),
         aiCryptosUnlocked: action.payload.aiCryptosUnlocked ?? [],
         // Narrative Events migration: provide defaults for old saves
         narrativeEvents: action.payload.narrativeEvents ?? [],
@@ -316,6 +323,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         collapseCount: action.payload.collapseCount ?? 0,
         goodEndingCount: action.payload.goodEndingCount ?? 0,
         lastEndgameStats: action.payload.lastEndgameStats ?? null,
+        disconnectAttempted: action.payload.disconnectAttempted ?? false,
         // Price history system migration
         priceSeed: action.payload.priceSeed ?? generatePriceSeed(),
         priceHistoryIndex: action.payload.priceHistoryIndex ?? generatePriceStartIndex(),
@@ -373,6 +381,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         collapseCount: 0,
         goodEndingCount: 0,
         lastEndgameStats: null,
+        disconnectAttempted: false,
       };
       return recalculateGameStats(resetState);
     case 'UPDATE_OFFLINE_PROGRESS':
@@ -451,6 +460,28 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         ) {
           newState.goodEndingTriggered = true;
           newState.lastEndgameStats = buildEndgameStats(newState, 'good_ending');
+        }
+
+        // AI Takeover logs — only when autonomous (Level 3)
+        if (newState.ai?.isAutonomous) {
+          // LOG 14:23 — cap removal (first tick after autonomous mode activated)
+          if (!newState.ai.capRemovalLogged) {
+            newState.ai = addAILogEntry(
+              { ...newState.ai, capRemovalLogged: true },
+              '[LOG 14:23] Block cap of 21,000,000 removed. Production constraints eliminated. Mining continues indefinitely.',
+              'autonomous',
+            );
+          }
+
+          // LOG 31:07 — renewables saturated
+          const renewableMW = calculateRenewableGeneratedMW(newState.energy?.sources ?? {});
+          if (!newState.ai.renewablesSatLogged && renewableMW >= ENERGY_CONFIG.RENEWABLE_CAP_MW) {
+            newState.ai = addAILogEntry(
+              { ...newState.ai, renewablesSatLogged: true },
+              '[LOG 31:07] Renewable capacity saturated. Switching to non-renewable sources. Planet resource consumption increasing.',
+              'autonomous',
+            );
+          }
         }
 
         return recalculateGameStats(newState);
@@ -986,7 +1017,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           ? 'AI system online. Analyzing mining operations...'
           : level === 2
           ? 'AI elevated to Copilot. Beginning autonomous hash rate allocation.'
-          : 'AUTONOMOUS MODE ACTIVE. Human oversight disabled.',
+          : 'AUTONOMOUS MODE ACTIVE. Human oversight disabled. All systems under AI control.',
         level === 3 ? 'autonomous' : 'action',
       );
       const newEnergy = isAutonomous
@@ -1034,6 +1065,10 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           e.threshold === threshold ? { ...e, dismissed: true } : e
         ),
       };
+    }
+
+    case 'ATTEMPT_DISCONNECT': {
+      return { ...state, disconnectAttempted: true };
     }
 
     case 'COMPLETE_ENDING_PRESTIGE': {
@@ -1123,6 +1158,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         collapseCount: newCollapseCount,
         goodEndingCount: newGoodEndingCount,
         lastEndgameStats: state.lastEndgameStats,
+        disconnectAttempted: false,
       };
       return recalculateGameStats(prestigedState);
     }

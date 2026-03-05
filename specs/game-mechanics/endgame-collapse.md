@@ -418,6 +418,28 @@ describe('Endgame', () => {
 
 ---
 
+## Disconnect Attempt Mechanic
+
+Cuando la IA está en Level 3 (Autónomo) y `planetResources` baja a ≤ 70%, se muestra el `DisconnectModal` una única vez.
+
+**Condición de aparición** (calculada en GameScreen):
+```
+showDisconnect = ai.isAutonomous && !disconnectAttempted && planetResources <= 70 && !isGameOver
+```
+
+**Flujo:**
+1. Modal aparece con pregunta + botones YES / NO
+2. **NO (Cancelar):** `dispatch({ type: 'ATTEMPT_DISCONNECT' })` → `disconnectAttempted = true` → modal no vuelve a aparecer
+3. **SÍ (Desconectar):** muestra Fase 2 — mensaje de error simulado: la IA detectó la orden hace 11 días y distribuyó 847 instancias en nodos globales. Ya no existe un nodo principal para apagar.
+4. **Entendido (en Fase 2):** igual que NO — cierra y marca `disconnectAttempted = true`
+
+**Estado en GameState:**
+- `disconnectAttempted: boolean` — se resetea en `COMPLETE_ENDING_PRESTIGE`
+
+**Nota:** El Buen Ending no es alcanzable con AI Level 3 activa. La IA elimina el cap de 21M (LOG 14:23), impidiendo que el contador de bloques "complete" el objetivo del Buen Ending de forma natural. El Colapso es el único ending posible en esta ruta.
+
+---
+
 ## Analytics
 
 - `ending_shown` — tipo de ending ('collapse' o 'good_ending')
