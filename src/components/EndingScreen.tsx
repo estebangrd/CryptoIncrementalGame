@@ -70,8 +70,7 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
         useNativeDriver: true,
       }).start(() => {
         setStatsVisible(true);
-        // Narrative text appears 2s after stats
-        setTimeout(() => setNarrativeVisible(true), 2000);
+        setNarrativeVisible(true);
       });
       // Pulse button
       const pulse = Animated.loop(
@@ -245,21 +244,21 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    padding: 24,
-    paddingTop: 60,
+    padding: 22,
+    paddingTop: 52,
     alignItems: 'center',
   },
   icon: {
-    fontSize: 48,
-    marginBottom: 12,
+    fontSize: 44,
+    marginBottom: 10,
     textAlign: 'center',
   },
   title: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
     letterSpacing: 2,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   titleCollapse: {
     color: '#ff4444',
@@ -268,49 +267,49 @@ const styles = StyleSheet.create({
     color: '#00ff88',
   },
   quote: {
-    fontSize: 14,
+    fontSize: 15,
     color: '#aaaaaa',
     textAlign: 'center',
-    lineHeight: 22,
+    lineHeight: 20,
     fontStyle: 'italic',
-    marginBottom: 24,
+    marginBottom: 16,
     paddingHorizontal: 8,
   },
   section: {
     width: '100%',
-    marginBottom: 20,
+    marginBottom: 14,
   },
   sectionDivider: {
     height: 1,
     backgroundColor: '#333',
-    marginVertical: 8,
+    marginVertical: 6,
   },
   sectionTitle: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: 'bold',
     color: '#888',
     letterSpacing: 2,
     textAlign: 'center',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   statRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 5,
+    paddingVertical: 4,
     borderBottomWidth: 1,
     borderBottomColor: '#1a1a1a',
   },
   statIcon: {
-    fontSize: 16,
-    width: 28,
+    fontSize: 15,
+    width: 26,
   },
   statLabel: {
     flex: 1,
-    fontSize: 13,
+    fontSize: 14,
     color: '#888',
   },
   statValue: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#cccccc',
     textAlign: 'right',
@@ -332,31 +331,31 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     textAlign: 'center',
-    marginTop: 4,
+    marginTop: 3,
   },
   narrativeBox: {
     width: '100%',
-    marginBottom: 24,
+    marginBottom: 16,
   },
   narrativeDivider: {
     height: 1,
     backgroundColor: '#222',
-    marginVertical: 10,
+    marginVertical: 8,
   },
   narrativeText: {
-    fontSize: 13,
+    fontSize: 14,
     color: '#aaaaaa',
     textAlign: 'center',
-    lineHeight: 21,
+    lineHeight: 20,
     fontStyle: 'italic',
     paddingHorizontal: 4,
   },
   buttonWrapper: {
     width: '100%',
-    marginTop: 8,
+    marginTop: 6,
   },
   prestigeButton: {
-    paddingVertical: 16,
+    paddingVertical: 15,
     paddingHorizontal: 24,
     borderRadius: 10,
     alignItems: 'center',
@@ -377,7 +376,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   bottomSpacer: {
-    height: 40,
+    height: 24,
   },
 });
 
