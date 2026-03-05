@@ -317,10 +317,10 @@ export const checkAndUpdateUnlocks = (gameState: GameState): GameState => {
     newUnlockedTabs.upgrades = true;
   }
 
-  // Unlock Prestige: when blocksMined reaches 21M (total supply)
+  // Unlock Prestige: when blocksMined reaches 21M OR player has already prestiged
   // Once unlocked it stays unlocked
   if (!newUnlockedTabs.prestige &&
-      gameState.blocksMined >= GENESIS_CONSTANTS.TOTAL_BLOCKS) {
+      (gameState.blocksMined >= GENESIS_CONSTANTS.TOTAL_BLOCKS || gameState.prestigeLevel >= 1)) {
     newUnlockedTabs.prestige = true;
   }
   // Also keep it unlocked if already unlocked

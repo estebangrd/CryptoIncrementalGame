@@ -939,6 +939,34 @@ describe('Prestige Integration', () => {
 ### E2E Tests
 ```typescript
 describe('Prestige E2E', () => {
+  it('should keep prestige tab active after reset when prestigeLevel >= 1', async () => {
+    // Player already has prestige level 2
+    await mockGameState({ prestigeLevel: 2, unlockedTabs: { prestige: false } });
+
+    // Prestige tab must be visible and selectable even with prestige: false in saved state
+    await expect(element(by.id('prestige-tab'))).toBeVisible();
+    await element(by.id('prestige-tab')).tap();
+    await expect(element(by.id('current-prestige-level'))).toHaveText('2');
+  });
+
+  it('should preserve prestige tab after performing a prestige reset', async () => {
+    await mockGameState({ blocksMined: 21000000 });
+
+    await element(by.id('prestige-tab')).tap();
+    await element(by.id('prestige-now-button')).tap();
+    await element(by.id('prestige-confirm-input')).typeText('PRESTIGE');
+    await element(by.id('confirm-prestige-button')).tap();
+
+    await waitFor(element(by.id('prestige-celebration')))
+      .toBeVisible()
+      .withTimeout(2000);
+
+    // After reset, prestige tab must still be accessible
+    await expect(element(by.id('prestige-tab'))).toBeVisible();
+    await element(by.id('prestige-tab')).tap();
+    await expect(element(by.id('current-prestige-level'))).toHaveText('1');
+  });
+
   it('should complete prestige from unlock to new run', async () => {
     await launch();
 
