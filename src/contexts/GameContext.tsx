@@ -13,7 +13,6 @@ import {
 } from '../utils/prestigeLogic';
 import { performExchange } from '../utils/exchangeLogic';
 import {
-  calculateTotalHashRate,
   calculateCurrentReward,
   calculateNextHalving,
   mineBlock,
@@ -22,7 +21,8 @@ import {
 import {
   calculateTotalElectricityCost,
   calculateTotalMiningSpeed,
-  calculateTotalProduction
+  calculateTotalProduction,
+  calculateTotalHashRate
 } from '../utils/gameLogic';
 import {
   updateMarketState,

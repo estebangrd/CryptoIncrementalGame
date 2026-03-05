@@ -102,19 +102,6 @@ export const mineBlock = (gameState: GameState): GameState => {
   return newGameState;
 };
 
-// Calculate total hash rate from all hardware
-export const calculateTotalHashRate = (gameState: GameState): number => {
-  let totalHashRate = 0;
-  
-  gameState.hardware.forEach(hardware => {
-    // Each hardware has a base hash rate
-    const baseHashRate = hardware.baseProduction * 10; // Convert production to hash rate
-    totalHashRate += baseHashRate * hardware.owned;
-  });
-  
-  return totalHashRate;
-};
-
 // Check if Phase 1 is complete
 export const isPhase1Complete = (gameState: GameState): boolean => {
   return gameState.blocksMined >= GENESIS_CONSTANTS.TOTAL_BLOCKS;

@@ -4,7 +4,7 @@
 - **Fase**: Phase 1 - Genesis (Implemented)
 - **Estado**: Implemented & Active
 - **Prioridad**: Critical (Core Game Mechanic)
-- **Última actualización**: 2026-03-01
+- **Última actualización**: 2026-03-05
 
 ## Descripción
 
@@ -228,17 +228,45 @@ function canMineBlock(gameState: GameState): boolean {
 ```
 
 ### Hash Rate Total (Métrica Visual)
+
+El hash rate refleja el poder de minado efectivo, incluyendo los mismos multiplicadores que afectan la producción real de monedas. Ubicación: `src/utils/gameLogic.ts`.
+
 ```typescript
 function calculateTotalHashRate(gameState: GameState): number {
   let totalHashRate = 0;
 
   for (const hardware of gameState.hardware) {
-    totalHashRate += hardware.baseProduction * hardware.owned;
+    if (hardware.owned === 0) continue;
+
+    const baseHashRate = hardware.baseProduction * 10; // H/s base por unidad
+
+    // Multiplicadores de upgrades por hardware (mismo criterio que calculateHardwareMiningSpeed)
+    let upgradeMultiplier = 1;
+    for (const upgrade of gameState.upgrades) {
+      if (upgrade.purchased && upgrade.effect.type === 'production') {
+        if (upgrade.effect.target === hardware.id ||
+            isHardwareInCategory(hardware.id, upgrade.effect.target)) {
+          upgradeMultiplier *= upgrade.effect.value;
+        }
+      }
+    }
+
+    totalHashRate += baseHashRate * hardware.owned * upgradeMultiplier;
   }
 
-  return totalHashRate;
+  // Multiplicadores globales (mismos que calculateTotalProduction)
+  const prestigeMultiplier = gameState.prestigeProductionMultiplier ?? gameState.prestigeMultiplier ?? 1;
+  const adBoostMultiplier = isAdBoostActive(gameState) ? BOOSTER_CONFIG.REWARDED_AD_BOOST.multiplier : 1.0;
+  const permanentMultiplier = gameState.iapState?.permanentMultiplierPurchased
+    ? BOOSTER_CONFIG.PERMANENT_MULTIPLIER.multiplier : 1.0;
+  const iapBoosterMultiplier = getActiveIAPBooster(gameState); // 5x > 2x > 1x
+  const aiMultiplier = getAIProductionMultiplier(gameState.ai?.level ?? 0);
+
+  return totalHashRate * prestigeMultiplier * adBoostMultiplier * permanentMultiplier * iapBoosterMultiplier * aiMultiplier;
 }
 ```
+
+**Invariante**: `totalHashRate` siempre es coherente con `cryptoCoinsPerSecond`. Si la producción se multiplica por 2x (prestige, booster, etc.), el hash rate mostrado también se multiplica por 2x.
 
 ## Constantes de Configuración
 
@@ -287,7 +315,7 @@ interface Hardware {
   id: string;
   miningSpeed: number;           // Bloques por segundo que mina 1 unidad
   blockReward: number;           // CryptoCoins que otorga por bloque minado
-  baseProduction: number;        // Hash rate (solo para display)
+  baseProduction: number;        // Hash rate base por unidad (× 10 = H/s base)
   owned: number;                 // Cantidad poseída
   electricityCost: number;       // Costo por segundo (reduce producción neta)
   level: number;                 // Nivel tecnológico (1-8)
@@ -406,6 +434,7 @@ interface Hardware {
 - [x] El click manual consume 1 bloque del supply de 21M
 - [x] El click manual es irrelevante en midgame por diseño (no requiere fix)
 - [x] La producción automática de coins NO decrece con los halvings (usa `cryptoCoinsPerSecond`, no `calculateCurrentReward`)
+- [x] El Hash Rate mostrado incluye multiplicadores de upgrades de producción, prestige, boosters (ad, IAP) e IA — coherente con `cryptoCoinsPerSecond`
 - [x] Hardware tier 9+ (energyRequired > 0) NO contribuye a `blocksToMine` en ADD_PRODUCTION si no tiene energía suficiente
 - [x] Con balance de energía positivo (+X MW), todos los mining farms/quantum miners activos generan coins correctamente
 - [x] Los halvings afectan solo el display de "reward por bloque" y la progresión del contador, no el income real del jugador
@@ -414,7 +443,7 @@ interface Hardware {
 
 ### Archivos Principales
 - `src/utils/blockLogic.ts` - Lógica de cálculo de bloques y recompensas
-- `src/utils/gameLogic.ts` - Función `calculateTotalProduction()`
+- `src/utils/gameLogic.ts` - Funciones `calculateTotalProduction()` y `calculateTotalHashRate()`
 - `src/contexts/GameContext.tsx` - Game loop que ejecuta minado cada segundo
 - `src/components/BlockStatus.tsx` - Componente de visualización
 - `src/config/balanceConfig.ts` - Constantes de configuración

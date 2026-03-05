@@ -160,6 +160,55 @@ export const calculateTotalProduction = (gameState: GameState): number => {
 };
 
 
+export const calculateTotalHashRate = (gameState: GameState): number => {
+  let totalHashRate = 0;
+
+  gameState.hardware.forEach(hardware => {
+    if (hardware.owned === 0) return;
+    const baseHashRate = hardware.baseProduction * 10;
+    // Apply same per-hardware upgrade multipliers as calculateHardwareMiningSpeed
+    let upgradeMultiplier = 1;
+    gameState.upgrades.forEach(upgrade => {
+      if (upgrade.purchased && upgrade.effect.type === 'production') {
+        if (upgrade.effect.target === hardware.id) {
+          upgradeMultiplier *= upgrade.effect.value;
+        } else if (upgrade.effect.target === 'cpu' && (hardware.id === 'basic_cpu' || hardware.id === 'advanced_cpu')) {
+          upgradeMultiplier *= upgrade.effect.value;
+        } else if (upgrade.effect.target === 'gpu' && (hardware.id === 'basic_gpu' || hardware.id === 'advanced_gpu')) {
+          upgradeMultiplier *= upgrade.effect.value;
+        } else if (upgrade.effect.target === 'asic' && (hardware.id === 'asic_gen1' || hardware.id === 'asic_gen2' || hardware.id === 'asic_gen3')) {
+          upgradeMultiplier *= upgrade.effect.value;
+        }
+      }
+    });
+    totalHashRate += baseHashRate * hardware.owned * upgradeMultiplier;
+  });
+
+  // Apply global multipliers (same as calculateTotalProduction)
+  const prestigeMultiplier = gameState.prestigeProductionMultiplier ?? gameState.prestigeMultiplier ?? 1;
+
+  let adBoostMultiplier = 1.0;
+  if (gameState.adBoost?.isActive && gameState.adBoost.expiresAt !== null && Date.now() < gameState.adBoost.expiresAt) {
+    adBoostMultiplier = BOOSTER_CONFIG.REWARDED_AD_BOOST.multiplier;
+  }
+
+  const permanentMultiplier = gameState.iapState?.permanentMultiplierPurchased
+    ? BOOSTER_CONFIG.PERMANENT_MULTIPLIER.multiplier
+    : 1.0;
+
+  let iapBoosterMultiplier = 1.0;
+  const now = Date.now();
+  if (gameState.iapState?.booster5x?.isActive && gameState.iapState.booster5x.expiresAt !== null && now < gameState.iapState.booster5x.expiresAt) {
+    iapBoosterMultiplier = BOOSTER_CONFIG.BOOSTER_5X.multiplier;
+  } else if (gameState.iapState?.booster2x?.isActive && gameState.iapState.booster2x.expiresAt !== null && now < gameState.iapState.booster2x.expiresAt) {
+    iapBoosterMultiplier = BOOSTER_CONFIG.BOOSTER_2X.multiplier;
+  }
+
+  const aiMultiplier = getAIProductionMultiplier(gameState.ai?.level ?? 0);
+
+  return totalHashRate * prestigeMultiplier * adBoostMultiplier * permanentMultiplier * iapBoosterMultiplier * aiMultiplier;
+};
+
 export const canAffordHardware = (gameState: GameState, hardwareId: string): boolean => {
   const hardware = gameState.hardware.find(h => h.id === hardwareId);
   if (!hardware) return false;
