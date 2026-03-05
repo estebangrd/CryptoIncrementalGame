@@ -137,22 +137,6 @@ const GameScreen: React.FC = () => {
               <Text style={styles.shopButtonText}>💎</Text>
             </TouchableOpacity>
           )}
-          {gameState.unlockedTabs?.energy && gameState.energy && (() => {
-            const { totalGeneratedMW: gen, totalRequiredMW: req } = gameState.energy;
-            const balance = gen - req;
-            const sign = balance >= 0 ? '+' : '';
-            const color =
-              balance < 0
-                ? '#ff4444'
-                : req > 0 && balance < req * 0.1
-                ? '#ffaa00'
-                : '#00ff88';
-            return (
-              <Text style={[styles.energyBalance, { color }]}>
-                ⚡ {sign}{formatNumber(balance)} MW
-              </Text>
-            );
-          })()}
           {gameState.iapState.removeAdsPurchased && (
             <Animated.View style={[styles.adFreeBadge, { opacity: adFreeBadgeOpacity }]}>
               <Text style={styles.adFreeBadgeText}>✓ Ad Free</Text>
@@ -180,6 +164,22 @@ const GameScreen: React.FC = () => {
                 -{formatNumber(gameState.totalElectricityCost)}/sec electricity
               </Text>
             )}
+            {gameState.unlockedTabs?.energy && gameState.energy && (() => {
+              const { totalGeneratedMW: gen, totalRequiredMW: req } = gameState.energy;
+              const balance = gen - req;
+              const sign = balance >= 0 ? '+' : '';
+              const color =
+                balance < 0
+                  ? '#ff4444'
+                  : req > 0 && balance < req * 0.1
+                  ? '#ffaa00'
+                  : '#00ff88';
+              return (
+                <Text style={[styles.energyBalance, { color }]}>
+                  ⚡ {sign}{formatNumber(balance)} MW
+                </Text>
+              );
+            })()}
           </View>
         </View>
 
@@ -464,8 +464,9 @@ const styles = StyleSheet.create({
     color: '#888',
   },
   energyBalance: {
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
 
