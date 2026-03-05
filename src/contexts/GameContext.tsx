@@ -32,7 +32,7 @@ import {
 } from '../utils/marketLogic';
 import { saveGameState, loadGameState, saveLanguage, loadLanguage } from '../utils/storage';
 import { translations } from '../data/translations';
-import { LTC_PRICE_HISTORY } from '../data/ltcPriceHistory';
+import { BTC_PRICE_HISTORY } from '../data/btcPriceHistory';
 import { initializeAdMob, loadInterstitial, showInterstitialIfEligible } from '../services/AdMobService';
 import {
   initializeIAP,
@@ -596,8 +596,8 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         marketState: updateMarketState(state.marketState),
       };
     case 'ADVANCE_PRICE_INDEX': {
-      const nextIndex = (state.priceHistoryIndex + 1) % LTC_PRICE_HISTORY.length;
-      const newPrice = LTC_PRICE_HISTORY[nextIndex] / state.priceSeed;
+      const nextIndex = (state.priceHistoryIndex + 1) % BTC_PRICE_HISTORY.length;
+      const newPrice = BTC_PRICE_HISTORY[nextIndex] / state.priceSeed;
       const prevWindow = state.priceHistory?.['cryptocoin']?.prices ?? [];
       const newWindow = [...prevWindow, newPrice].slice(-30);
       return {

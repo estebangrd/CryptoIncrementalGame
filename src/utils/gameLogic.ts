@@ -1,5 +1,5 @@
 import { GameState, Hardware, Upgrade } from '../types/game';
-import { LTC_PRICE_HISTORY } from '../data/ltcPriceHistory';
+import { BTC_PRICE_HISTORY } from '../data/btcPriceHistory';
 import { GENESIS_CONSTANTS } from './blockLogic';
 import { getInitialMarketState } from './marketLogic';
 import { getInitialEnergyState, getActiveHardwareWithEnergyConstraint } from './energyLogic';
@@ -259,9 +259,9 @@ export const formatNumber = (num: number): string => {
 
 import { UNLOCK_CONFIG, HARDWARE_CONFIG, BOOSTER_CONFIG } from '../config/balanceConfig';
 
-// Rango del seed: 68–72 (±2 del base 70)
-const PRICE_SEED_MIN = 68;
-const PRICE_SEED_RANGE = 5; // 68, 69, 70, 71, 72
+// Rango del seed: 68000–73000 → CC price ≈ BTC/seed ≈ $1.4–$1.8
+const PRICE_SEED_MIN = 68000;
+const PRICE_SEED_RANGE = 5000; // 68000–73000
 // Punto de inicio acotado al primer mes para garantizar ≥2 meses antes del loop
 const FIRST_MONTH_POINTS = 30 * 24 * 60; // 43,200
 
@@ -273,8 +273,8 @@ export const generatePriceStartIndex = (): number =>
 
 export const getInitialChartWindow = (startIndex: number, seed: number): number[] =>
   Array.from({ length: 30 }, (_, i) => {
-    const idx = (startIndex - 29 + i + LTC_PRICE_HISTORY.length) % LTC_PRICE_HISTORY.length;
-    return LTC_PRICE_HISTORY[idx] / seed;
+    const idx = (startIndex - 29 + i + BTC_PRICE_HISTORY.length) % BTC_PRICE_HISTORY.length;
+    return BTC_PRICE_HISTORY[idx] / seed;
   });
 
 // Progressive unlock system
@@ -365,7 +365,7 @@ export const isHardwareUnlocked = (gameState: GameState, hardware: Hardware): bo
 export const getInitialGameState = (): GameState => {
   const priceSeed = generatePriceSeed();
   const priceHistoryIndex = generatePriceStartIndex();
-  const initialCCPrice = LTC_PRICE_HISTORY[priceHistoryIndex] / priceSeed;
+  const initialCCPrice = BTC_PRICE_HISTORY[priceHistoryIndex] / priceSeed;
 
   return {
     cryptoCoins: 0,
