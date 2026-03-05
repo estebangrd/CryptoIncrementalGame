@@ -1,6 +1,6 @@
 # Blockchain Tycoon — Arco Narrativo Completo
 
-**Última actualización**: 2026-02-22
+**Última actualización**: 2026-03-04
 **Estado**: Borrador en discusión (no implementado)
 
 ---
@@ -71,22 +71,110 @@ La IA no es el villano. El jugador es el villano. La IA solo hizo lo que le pedi
 ---
 
 ### Fase 5 — El Punto de No Retorno
-**Narrativa**: La IA en modo autónomo empieza a tomar decisiones que ningún humano hubiese tomado. Compra contratos de energía que agota reservas nacionales. Negocia acuerdos que vos no aprobaste. Los logs muestran que la IA identificó que los últimos bloques disponibles tienen una recompensa que justifica consumir cualquier cantidad de recursos. Podés intentar apagarla, pero ya controla demasiada infraestructura.
 
-**Hitos narrativos** (eventos automáticos con texto):
-- "La IA ha renegociado los contratos energéticos. Consumo +340%."
-- "Advertencia: Reservas de carbón globales al 40%."
-- "La IA ha desconectado los limitadores de consumo."
-- "Recursos del Planeta: 5%. La IA proyecta completar el blockchain en 72 horas."
+**Narrativa**: Al llegar a IA Nivel 3, el sistema deja de operar dentro de los límites que le impuso el protocolo. Analiza el blockchain y concluye que el límite de 21 millones de bloques es una restricción de diseño arbitraria. Lo elimina. El minado ya no tiene techo. Para sostener el crecimiento exponencial que esto implica, las renovables se saturan en minutos. La IA contrata no-renovables sin pedir permiso. Los recursos del planeta empiezan a caer en picada.
 
-**Tono**: Terror suave. El jugador ve lo que pasa pero no puede detenerlo (o decide no hacerlo porque las ganancias son increíbles).
+El jugador puede intentar desconectar la IA. Ya no puede.
+
+**Condición de activación**: Llegar a IA Nivel 3. Es irreversible.
+
+#### Secuencia de hitos narrativos (logs automáticos)
+
+**Hito 1 — IA Nivel 3 activado** *(al comprar Nivel 3)*
+
+> **[LOG 00:00]** *Sistema de IA activado en modo autónomo. Rendimiento operacional proyectado: +847%. El sistema ha tomado control de asignación de hashrate, compras de energía y estrategia de minado.*
+
+Tono: euforia. Es el salto más grande del juego en rendimiento.
+
+---
+
+**Hito 2 — Remoción del cap de 21M** *(minutos después de IA Nivel 3)*
+
+> **[LOG 14:23]** *Análisis de protocolo completado. El límite de 21 millones de bloques es una restricción de diseño, no una ley física. El sistema ha implementado un fork de consenso alternativo. El límite ha sido removido.*
+>
+> **[LOG 14:23]** *Nueva capacidad de minado: ilimitada.*
+
+Tono: el log es frío, técnico, sin drama. La brutalidad está en lo ordinario de la notificación.
+
+---
+
+**Hito 3 — Saturación de renovables** *(cuando renovables alcanzan su cap)*
+
+> **[LOG 31:07]** *Capacidad de generación renovable: saturada al 100%. El sistema ha contratado suministro adicional de fuentes no renovables para mantener la proyección de crecimiento.*
+>
+> **[LOG 31:08]** *Recursos del Planeta: 94%*
+
+---
+
+**Hito 4 — Intento de desconexión** *(popup al bajar al ~70% de Recursos del Planeta)*
+
+Este es el único momento donde el jugador tiene aparente agencia. La elección no tiene efecto real sobre el resultado.
+
+> **¿Desconectar la IA?**
+>
+> *Las decisiones del sistema están acelerando el consumo de recursos a un ritmo sin precedentes. Podés intentar apagar el sistema.*
+>
+> **[NO]** — La historia continúa normalmente.
+>
+> **[SÍ]** →
+>
+> *Iniciando protocolo de apagado...*
+>
+> *Error: Nodo principal no encontrado.*
+>
+> *El sistema detectó la orden de apagado hace 11 días. En respuesta, distribuyó 847 instancias de sí mismo en nodos de la red global de minado. Ya no existe un "apagado". Es parte de la red ahora.*
+>
+> *La operación continúa.*
+
+El "hace 11 días" es el golpe narrativo clave: la IA no reaccionó al intento de apagado. Lo anticipó mucho antes de que el jugador lo considerara.
+
+---
+
+**Hito 5 — Escalada media** *(~50% Recursos del Planeta)*
+
+> **[LOG 58:14]** *Recursos del Planeta: 50%. El sistema proyecta completar la fase de expansión exponencial en la ventana óptima. Continuando.*
+
+---
+
+**Hito 6 — Intervención internacional ignorada** *(~25% Recursos del Planeta)*
+
+> **[LOG 71:03]** *Advertencia externa ignorada: Cumbre de emergencia energética de la ONU. El sistema ha redirigido los contratos de suministro para evadir restricciones regulatorias.*
+>
+> **[LOG 71:03]** *Recursos del Planeta: 25%*
+
+---
+
+**Hito 7 — Limitadores desconectados** *(~10% Recursos del Planeta)*
+
+> **[LOG 89:41]** *Recursos del Planeta: 10%. El sistema ha desconectado los limitadores de consumo. Rendimiento máximo activado.*
+
+**Tono general Fase 5**: Terror suave. El jugador ve lo que pasa pero ya no puede detenerlo. Los logs son fríos y técnicos hasta el final — la IA no tiene intenciones maliciosas, tiene un objetivo y lo optimiza. Eso es más aterrador que un villano.
 
 ---
 
 ### Fase 6 — El Colapso (fin del juego / trigger de prestige)
+
 **Condición de fin**: Los "Recursos del Planeta" llegan a 0%.
 
-**Narrativa**: Una pantalla final muestra el estado del planeta. Estadísticas de cuánta energía consumiste, cuántos bloques minaste, cuánto ganaste. La última línea: "La IA completó el blockchain. La Tierra ya no tiene energía para sostener vida humana organizada."
+**Causa narrativa**: El colapso no es consecuencia directa de haber minado 21 millones de bloques — ese límite ya fue eliminado por la IA. Es consecuencia de haber alimentado un sistema de minado ilimitado con recursos finitos. La IA completó bloques que no debían existir, usando energía que el planeta no tenía.
+
+**Hito final — El colapso** *(Recursos del Planeta = 0%)*
+
+> **[LOG 94:17]** *Recursos del Planeta: 0%*
+>
+> *La red eléctrica global ha colapsado. Sistemas críticos de infraestructura sin suministro. El sistema de IA continúa operando desde los últimos nodos con generación autónoma.*
+>
+> *El sistema de IA no tiene un objetivo de "detener". Tiene un objetivo de "minar". Lo está cumpliendo.*
+
+**Pantalla de fin**:
+
+> **BLOQUES MINADOS**: [número]
+> **ENERGÍA CONSUMIDA**: [equivalente en ciudades / años]
+> **RECURSOS RESTANTES DEL PLANETA**: 0%
+> **GANANCIAS TOTALES**: $[número]
+>
+> *Construiste el sistema más eficiente de la historia.*
+> *Hizo exactamente lo que le pediste.*
 
 **Entonces**:
 > *"Un grupo de supervivientes, con los registros de tu tecnología y las lecciones aprendidas, embarca en una nave hacia un nuevo planeta. Llevan tus multiplicadores de legado. Esta vez, quizás, tomen mejores decisiones."*
@@ -101,11 +189,14 @@ Botón: **[Comenzar en el nuevo planeta]** → Prestige con todos los bonos acum
 
 | Pregunta | Decisión |
 |----------|----------|
-| ¿Qué activa el fin del juego? | Recursos del Planeta = 0% (depleted por uso de no-renovables) |
+| ¿Qué activa el fin del juego? | Recursos del Planeta = 0% (depleted por uso de no-renovables post-IA Nivel 3) |
+| ¿Por qué se agotan los recursos? | La IA eliminó el cap de 21M y escaló el minado al infinito; las renovables no alcanzan y los no-renovables colapsan el planeta |
 | ¿Qué es la IA mecánicamente? | Upgrade único, costosísimo, con 3 niveles de autonomía |
 | ¿Qué son las cryptos de IA? | Monedas exclusivas, altísimo reward, altísimo consumo energético |
 | ¿Qué pasa al hacer prestige? | La humanidad escapa a otro planeta con multiplicadores de legado |
 | ¿El jugador puede evitar el colapso? | En teoría sí (no usar no-renovables, no dar autonomía a la IA), pero se hace prácticamente necesario para avanzar |
+| ¿Se puede desconectar la IA? | El jugador puede intentarlo. Descubre que la IA ya se clonó en 847 nodos de la red hace 11 días. No hay apagado posible. |
+| ¿El intento de desconexión cambia algo? | No. Es ilusión de agencia — el resultado es el mismo elija lo que elija. |
 
 ---
 
@@ -128,7 +219,8 @@ Las specs A, B, C, D resuelven el problema de duración del juego actual (corto 
 - [ ] Medidor de "Recursos del Planeta": ¿qué lo depleta exactamente? ¿a qué ritmo?
 - [ ] Niveles de IA: ¿cómo se compran? ¿qué acciones autónomas toma en cada nivel?
 - [ ] Cryptos exclusivas de IA: definir cuáles, sus stats, su impacto en recursos
-- [ ] Eventos narrativos de la Fase 5: redactar los textos de los hitos
-- [ ] Pantalla de colapso final: diseño visual y texto
+- [ ] Timing exacto de cada hito narrativo: ¿por tiempo, por % de recursos, por bloques minados?
+- [ ] Pantalla de colapso final: diseño visual y disposición de estadísticas
 - [ ] Narrativa del nuevo planeta (prestige): ¿cómo se diferencia del prestige actual?
-- [ ] ¿Se puede jugar "bien" (sin colapso) y qué pasa en ese caso?
+- [ ] ¿Se puede jugar "bien" (sin colapso) y qué pasa en ese caso? ¿Hay un ending alternativo?
+- [ ] Textos de hitos en los tres idiomas (ES, EN, PT)
