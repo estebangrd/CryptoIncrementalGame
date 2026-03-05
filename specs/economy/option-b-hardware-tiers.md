@@ -2,9 +2,9 @@
 
 ## Estado
 - **Fase**: Game Length Extension (Pre-Phase 4)
-- **Estado**: Planned
+- **Estado**: Implemented & Active
 - **Prioridad**: High
-- **Última actualización**: 2026-02-22
+- **Última actualización**: 2026-03-04
 - **Objetivo conjunto**: Alcanzar 10-15h por primera run (combinado con Opciones A, C y D)
 - **Contribución de esta opción**: Agregar 3 capas de contenido endgame que requieren horas para alcanzar
 
