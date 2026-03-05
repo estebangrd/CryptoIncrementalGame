@@ -308,9 +308,9 @@ export const formatNumber = (num: number): string => {
 
 import { UNLOCK_CONFIG, HARDWARE_CONFIG, BOOSTER_CONFIG } from '../config/balanceConfig';
 
-// Rango del seed: 68000–73000 → CC price ≈ BTC/seed ≈ $1.4–$1.8
-const PRICE_SEED_MIN = 68000;
-const PRICE_SEED_RANGE = 5000; // 68000–73000
+// Rango del seed: 90000–96000 → CC price ≈ BTC/seed ≈ $1.03–$1.38
+const PRICE_SEED_MIN = 90000;
+const PRICE_SEED_RANGE = 6000; // 90000–96000
 // Punto de inicio acotado al primer mes para garantizar ≥2 meses antes del loop
 const FIRST_MONTH_POINTS = 30 * 24 * 60; // 43,200
 

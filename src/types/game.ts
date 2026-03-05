@@ -252,7 +252,7 @@ export interface GameState {
   // Price history system
   priceHistory?: { [cryptoId: string]: { prices: number[]; lastUpdate: number } };
   // BTC local dataset system
-  priceSeed: number;         // divisor BTC→CC, rango 68000–73000, fijo por partida
+  priceSeed: number;         // divisor BTC→CC, rango 90000–96000, fijo por partida
   priceHistoryIndex: number; // posición actual en BTC_PRICE_HISTORY
   // IAP, Ads and Achievements systems
   iapState: IAPState;
