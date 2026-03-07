@@ -16,6 +16,9 @@ import {
 } from '../utils/exchangeLogic';
 import PriceChart from './PriceChart';
 
+const formatUSD = (amount: number) =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', notation: 'compact', compactDisplay: 'short', maximumFractionDigits: 2 }).format(amount);
+
 const MarketScreen: React.FC = () => {
   const { gameState, dispatch, t } = useGame();
   const [amountPercent, setAmountPercent] = useState(50); // 1-100
@@ -266,10 +269,10 @@ const MarketScreen: React.FC = () => {
                         {gameState.cryptoCoins > 0 && (
                           <View style={styles.exchangePreview}>
                             <Text style={styles.previewText}>
-                              You'll earn: ${((gameState.cryptoCoins * amountPercent) / 100 * getSelectedCurrency()!.currentValue).toFixed(2)}
+                              You'll earn: {formatUSD((gameState.cryptoCoins * amountPercent) / 100 * getSelectedCurrency()!.currentValue)}
                             </Text>
                             <Text style={styles.feeText}>
-                              Current price: ${getSelectedCurrency()!.currentValue.toFixed(4)} per coin
+                              Current price: {formatUSD(getSelectedCurrency()!.currentValue)} per coin
                             </Text>
                           </View>
                         )}
@@ -282,7 +285,7 @@ const MarketScreen: React.FC = () => {
                                 <Text style={styles.cancelButtonText}>✕ Cancel</Text>
                               </TouchableOpacity>
                               <TouchableOpacity style={styles.confirmSellButton} onPress={handleSellConfirm}>
-                                <Text style={styles.confirmSellButtonText}>✓ Sell ${sellPreviewMoney.toFixed(2)}</Text>
+                                <Text style={styles.confirmSellButtonText}>✓ Sell {formatUSD(sellPreviewMoney)}</Text>
                               </TouchableOpacity>
                             </>
                           ) : (
@@ -373,7 +376,7 @@ const MarketScreen: React.FC = () => {
                                 <Text style={styles.cancelButtonText}>✕</Text>
                               </TouchableOpacity>
                               <TouchableOpacity style={styles.confirmSellButton} onPress={handleSellConfirm}>
-                                <Text style={styles.confirmSellButtonText}>✓ ${sellPreviewMoney.toFixed(2)}</Text>
+                                <Text style={styles.confirmSellButtonText}>✓ {formatUSD(sellPreviewMoney)}</Text>
                               </TouchableOpacity>
                             </>
                           ) : (

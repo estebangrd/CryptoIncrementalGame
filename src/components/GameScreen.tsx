@@ -7,6 +7,7 @@ import {
   Animated,
   Modal,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGame } from '../contexts/GameContext';
 import { formatNumber } from '../utils/gameLogic';
 import { clearGameData } from '../utils/storage';
@@ -34,6 +35,7 @@ const getPlanetResourceColor = (pct: number): string => {
 
 const GameScreen: React.FC = () => {
   const { gameState, dispatch, t } = useGame();
+  const insets = useSafeAreaInsets();
   const [showSettings, setShowSettings] = useState(false);
   const [showShop, setShowShop] = useState(false);
   const [toastAchievement, setToastAchievement] = useState<Achievement | null>(null);
@@ -136,7 +138,7 @@ const GameScreen: React.FC = () => {
       {/* Main Content Area - Top Half */}
       <View style={styles.mainContent}>
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
           <Text style={styles.title}>{t('game.title')}</Text>
           <IAPBoosterBadges />
           {hasPermanentOffers && (
