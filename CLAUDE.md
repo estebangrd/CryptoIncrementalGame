@@ -214,6 +214,10 @@ When the user explicitly instructs a change to CLAUDE.md, edit it directly witho
 
 For destructive operations (`git reset --hard`, `git push --force`, `rm -rf`, etc.) always ask first.
 
+## Worktree por defecto
+
+Al iniciar cada sesión, crear un worktree con `EnterWorktree` antes de modificar cualquier archivo. Usar un nombre descriptivo relacionado con la tarea (ej. `fix-market-ui`, `feat-new-hardware`).
+
 ## Feature Implementation Workflow (OBLIGATORIO)
 
 Toda feature nueva DEBE seguir este orden. No saltear pasos.
