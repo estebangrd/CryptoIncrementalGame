@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Dimensions,
   ScrollView,
+  Animated,
 } from 'react-native';
 import { useGame } from '../contexts/GameContext';
 import HardwareList from './HardwareList';
@@ -24,9 +25,11 @@ interface BottomSheetTabsProps {
   onMineBlock: () => void;
   t: (key: string) => string;
   bottomOffset?: number;
+  onTabChange?: (tab: string) => void;
+  topAnim?: Animated.Value;
 }
 
-const BottomSheetTabs: React.FC<BottomSheetTabsProps> = ({ onMineBlock, t, bottomOffset = 0 }) => {
+const BottomSheetTabs: React.FC<BottomSheetTabsProps> = ({ onMineBlock, t, bottomOffset = 0, onTabChange, topAnim }) => {
   const { gameState } = useGame();
   const [activeTab, setActiveTab] = useState<ActiveTab>('mining');
   
@@ -38,6 +41,7 @@ const BottomSheetTabs: React.FC<BottomSheetTabsProps> = ({ onMineBlock, t, botto
 
   const handleTabPress = (tab: ActiveTab) => {
     setActiveTab(tab);
+    onTabChange?.(tab);
   };
 
   const renderContent = () => {
@@ -123,8 +127,10 @@ const BottomSheetTabs: React.FC<BottomSheetTabsProps> = ({ onMineBlock, t, botto
     );
   };
 
+  const containerTop = topAnim ?? SCREEN_HEIGHT * 0.5;
+
   return (
-    <View style={[styles.container, { bottom: bottomOffset }]}>
+    <Animated.View style={[styles.container, { top: containerTop, bottom: bottomOffset }]}>
       <View style={styles.bottomSheet}>
         {/* Header */}
         <View style={styles.header}>
@@ -147,7 +153,7 @@ const BottomSheetTabs: React.FC<BottomSheetTabsProps> = ({ onMineBlock, t, botto
           {renderContent()}
         </View>
       </View>
-    </View>
+    </Animated.View>
   );
 };
 
@@ -157,7 +163,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    top: SCREEN_HEIGHT * 0.5, // Start from middle of screen
     backgroundColor: 'transparent',
   },
   bottomSheet: {

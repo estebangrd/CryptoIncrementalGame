@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Animated,
   Modal,
+  Dimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGame } from '../contexts/GameContext';
@@ -26,6 +27,10 @@ import { getNewlyUnlockedAchievements } from '../utils/achievementLogic';
 import { getPendingNarrativeEvent } from '../utils/narrativeLogic';
 import { Achievement } from '../types/game';
 
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const SHEET_DEFAULT_TOP = SCREEN_HEIGHT * 0.5;
+const SHEET_EXPANDED_TOP = SCREEN_HEIGHT * 0.18;
+
 const getPlanetResourceColor = (pct: number): string => {
   if (pct > 59) return '#22c55e';
   if (pct > 39) return '#eab308';
@@ -42,6 +47,15 @@ const GameScreen: React.FC = () => {
   const [adBannerHeight, setAdBannerHeight] = useState(0);
   const prevAchievementsRef = useRef(gameState.achievements);
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const splitAnim = useRef(new Animated.Value(SHEET_DEFAULT_TOP)).current;
+
+  const handleTabChange = useCallback((tab: string) => {
+    Animated.timing(splitAnim, {
+      toValue: tab === 'mining' ? SHEET_DEFAULT_TOP : SHEET_EXPANDED_TOP,
+      duration: 280,
+      useNativeDriver: false,
+    }).start();
+  }, [splitAnim]);
 
   // Pulsing animation for critical resource level (<5%)
   useEffect(() => {
@@ -247,7 +261,7 @@ const GameScreen: React.FC = () => {
       </View>
 
       {/* Bottom Sheet Tabs - Bottom Half */}
-      <BottomSheetTabs onMineBlock={handleMineBlock} t={t} bottomOffset={adBannerHeight} />
+      <BottomSheetTabs onMineBlock={handleMineBlock} t={t} bottomOffset={adBannerHeight} onTabChange={handleTabChange} topAnim={splitAnim} />
 
       {/* Settings Modal */}
       <SettingsModal
