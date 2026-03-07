@@ -1,10 +1,10 @@
 # Ad System - AdMob Integration
 
 ## Estado
-- **Fase**: Phase 1 - Genesis (Designed, Not Implemented)
-- **Estado**: Specification Complete
+- **Fase**: Phase 1 - Genesis (Partially Implemented)
+- **Estado**: In Progress
 - **Prioridad**: High (Primary Monetization)
-- **Última actualización**: 2026-02-21
+- **Última actualización**: 2026-03-07
 
 ## Descripción
 
@@ -527,6 +527,8 @@ interface AdEvent {
 4. **Rewarded Ad boost NO stackea**: Ver otro ad reemplaza el boost, no lo suma
 5. **Cooldown de rewarded ad es 5 minutos**: Después de ver un ad, debe esperar 5 min
 6. **Boost de rewarded ad dura 4 horas**: 2x production por 4 horas exactas
+6b. **Offer window de 20 segundos**: El bubble aparece 20s y desaparece si no se toca
+6c. **Intervalo entre ofertas: 3 minutos**: El bubble reaparece cada 3 min (solo si disponible)
 7. **Interstitial cooldown es 6 horas**: Max 1 cada 6 horas, solo en app open
 8. **No interstitial en primera sesión**: Mala UX mostrar ad inmediatamente
 9. **Graceful degradation**: Si ad falla, continuar gameplay sin bloquear
@@ -544,27 +546,41 @@ interface AdEvent {
 - [ ] En pantallas con scroll: banner sticky (no scrollea)
 - [ ] Si Remove Ads comprado: banner invisible (no reserve espacio)
 
-### Rewarded Ad Button
-- [ ] Ubicación: Top bar o tab dedicado "Free Boost"
-- [ ] Icono: Video/play icon + "2x Boost"
-- [ ] Estados:
-  - **Available**: Verde, pulsante, "Watch Ad for 2x Boost"
-  - **Cooldown**: Gris, deshabilitado, "Next ad in 4:32"
-  - **Boost Active**: Dorado, muestra timer "2x Active: 3:45:12"
-  - **Loading**: Spinner, "Loading ad..."
-- [ ] Al tocar:
-  - Si available: mostrar rewarded ad inmediatamente
-  - Si cooldown: mostrar toast "Available in X minutes"
-  - Si boost active: mostrar dialog de confirmación
+### Rewarded Ad Button — Floating Bubble
+- **Estilo**: Bubble compacto redondeado (72×72px, borderRadius 36), superpuesto sobre la pantalla (`position: absolute`)
+- **Posición**: Borde derecho (right: 12px), ~35% desde el top de la pantalla
+- **Animación de entrada**: Spring slide desde la derecha + fade in
+- **Animación de salida**: Slide hacia la derecha + fade out
+
+#### Offer Window (lógica de aparición)
+- El bubble NO está siempre visible; aparece de forma periódica:
+  - `OFFER_INTERVAL_MS = 3 * 60 * 1000` (3 minutos entre ofertas)
+  - `OFFER_WINDOW_MS = 20_000` (visible 20 segundos)
+- Primera oferta: 3 minutos después de montar el componente
+- El bubble se auto-descarta tras 20 segundos si el usuario no interactúa
+- Si hay boost activo o cooldown activo: el bubble NO aparece
+
+#### Contenido del bubble
+- Ícono 📺 (28px)
+- Label "2x GRATIS" (9px, verde)
+- Badge de countdown en esquina top-left: segundos restantes de la ventana
+- Botón ✕ pequeño debajo del bubble para descartar manualmente
+
+#### Estados
+- **Offer visible**: Bubble verde con glow (`borderColor: #00ff88`, `shadowColor: #00ff88`)
+- **Boost activo**: Badge pill dorado en esquina superior derecha (`⚡ 2x · H:MM:SS`), sin bubble
+- **Cooldown / fuera de ventana**: Componente retorna null (no renderiza nada)
+
+#### Al tocar el bubble
+- Si available: mostrar rewarded ad inmediatamente
+- Si boost ya activo: mostrar dialog de confirmación antes de reemplazar
+- Tras ver el ad exitosamente: cerrar bubble e iniciar cooldown
 
 ### Boost Active Indicator
-- [ ] Badge en top bar: "2x" con timer
-- [ ] Color: Dorado/amarillo brillante
-- [ ] Animación: Glow/pulsante sutil
-- [ ] Timer: Formato "H:MM:SS"
-- [ ] Al tocar: mostrar modal con detalles:
-  - "2x Production Boost Active"
-  - "Time remaining: 3:45:12"
+- [ ] Badge pill en esquina superior derecha: "⚡ 2x · H:MM:SS"
+- [ ] Color: Dorado/amarillo (`#FFD700`)
+- [ ] Posición: `position: absolute`, `top: insets.top + 50`, `right: 16`
+- [ ] Sin animación (estático, siempre visible mientras boost corra)
   - "Your production is doubled!"
   - Botón: "Watch another ad (will reset timer)"
 

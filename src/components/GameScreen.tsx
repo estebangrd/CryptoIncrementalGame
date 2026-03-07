@@ -43,7 +43,7 @@ const GameScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const [showSettings, setShowSettings] = useState(false);
   const [showShop, setShowShop] = useState(false);
-  const [toastAchievement, setToastAchievement] = useState<Achievement | null>(null);
+  const [toastQueue, setToastQueue] = useState<Achievement[]>([]);
   const [adBannerHeight, setAdBannerHeight] = useState(0);
   const prevAchievementsRef = useRef(gameState.achievements);
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -85,18 +85,24 @@ const GameScreen: React.FC = () => {
     prevRemoveAds.current = gameState.iapState.removeAdsPurchased;
   }, [gameState.iapState.removeAdsPurchased, adFreeBadgeOpacity]);
 
-  // Achievement toast detection
+  // Achievement toast queue
   useEffect(() => {
     const newlyUnlocked = getNewlyUnlockedAchievements(
       prevAchievementsRef.current || [],
       gameState.achievements || []
     );
     if (newlyUnlocked.length > 0) {
-      setToastAchievement(newlyUnlocked[0]);
-      dispatch({ type: 'APPLY_ACHIEVEMENT_REWARD', payload: newlyUnlocked[0].id });
+      newlyUnlocked.forEach(a =>
+        dispatch({ type: 'APPLY_ACHIEVEMENT_REWARD', payload: a.id })
+      );
+      setToastQueue(prev => [...prev, ...newlyUnlocked]);
     }
     prevAchievementsRef.current = gameState.achievements;
   }, [gameState.achievements, dispatch]);
+
+  const handleDismissToast = useCallback(() => {
+    setToastQueue(prev => prev.slice(1));
+  }, []);
 
 
   const handleMineBlock = () => {
@@ -234,13 +240,6 @@ const GameScreen: React.FC = () => {
           </Animated.View>
         )}
 
-        {/* 2x Boost button — above the stats box */}
-        {!gameState.iapState.removeAdsPurchased && (
-          <View style={styles.boostRow}>
-            <RewardedAdButton />
-          </View>
-        )}
-
         {/* Stats */}
         <View style={styles.statsContainer}>
           <Text style={styles.statsText}>
@@ -276,11 +275,14 @@ const GameScreen: React.FC = () => {
       {/* Ad Banner - bottom of screen */}
       <AdBanner onHeightChange={setAdBannerHeight} />
 
+      {/* Floating Rewarded Ad Offer - absolute overlay */}
+      {!gameState.iapState.removeAdsPurchased && <RewardedAdButton />}
+
       {/* Achievement Toast */}
       <AchievementToast
-        achievement={toastAchievement}
-        displayName={toastAchievement?.name || toastAchievement?.nameKey || ''}
-        onDismiss={() => setToastAchievement(null)}
+        achievement={toastQueue[0] ?? null}
+        displayName={toastQueue[0]?.name || toastQueue[0]?.nameKey || ''}
+        onDismiss={handleDismissToast}
       />
 
       {/* Narrative Event Modal */}
@@ -394,11 +396,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#ff6666',
     textAlign: 'center',
-  },
-  boostRow: {
-    paddingHorizontal: 20,
-    paddingVertical: 4,
-    alignItems: 'flex-end',
   },
   statsContainer: {
     paddingHorizontal: 20,
