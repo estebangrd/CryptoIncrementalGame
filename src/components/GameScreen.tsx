@@ -152,22 +152,24 @@ const GameScreen: React.FC = () => {
       {/* Main Content Area - Top Half */}
       <View style={styles.mainContent}>
         {/* Header */}
-        <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
+        <View style={[styles.header, { paddingTop: insets.top }]}>
           <Text style={styles.title}>{t('game.title')}</Text>
           <IAPBoosterBadges />
-          {hasPermanentOffers && (
-            <TouchableOpacity style={styles.shopButton} onPress={() => setShowShop(true)}>
-              <Text style={styles.shopButtonText}>💎</Text>
+          <View style={styles.rightGroup}>
+            {gameState.iapState.removeAdsPurchased && (
+              <Animated.View style={[styles.adFreeBadge, { opacity: adFreeBadgeOpacity }]}>
+                <Text style={styles.adFreeBadgeText}>✓ Ad Free</Text>
+              </Animated.View>
+            )}
+            {hasPermanentOffers && (
+              <TouchableOpacity style={styles.shopButton} onPress={() => setShowShop(true)}>
+                <Text style={styles.shopButtonText}>💎</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity style={styles.settingsButton} onPress={() => setShowSettings(true)}>
+              <Text style={styles.settingsButtonText}>⚙️</Text>
             </TouchableOpacity>
-          )}
-          {gameState.iapState.removeAdsPurchased && (
-            <Animated.View style={[styles.adFreeBadge, { opacity: adFreeBadgeOpacity }]}>
-              <Text style={styles.adFreeBadgeText}>✓ Ad Free</Text>
-            </Animated.View>
-          )}
-          <TouchableOpacity style={styles.settingsButton} onPress={() => setShowSettings(true)}>
-            <Text style={styles.settingsButtonText}>⚙️</Text>
-          </TouchableOpacity>
+          </View>
         </View>
 
         {/* Main Stats Area */}
@@ -339,7 +341,7 @@ const styles = StyleSheet.create({
   mainContent: {
     height: '45%',
     backgroundColor: '#1a1a1a',
-    paddingTop: 30,
+    paddingTop: 0,
   },
   header: {
     flexDirection: 'row',
@@ -455,6 +457,11 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: 'bold',
     color: '#00ff88',
+  },
+  rightGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   shopButton: {
     padding: 6,

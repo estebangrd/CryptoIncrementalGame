@@ -185,16 +185,16 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
 
               {collapseProductionPct > 0 && (
                 <Text style={styles.bonusText}>
-                  +{collapseProductionPct}% {isCollapse ? 'producción permanente' : 'producción permanente'}
+                  {t('endgame.bonus.production').replace('{{pct}}', String(collapseProductionPct))}
                 </Text>
               )}
               {!isCollapse && renewableDiscountPct > 0 && (
                 <Text style={styles.bonusText}>
-                  -{renewableDiscountPct}% costo de energía renovable
+                  {t('endgame.bonus.renewable').replace('{{pct}}', String(renewableDiscountPct))}
                 </Text>
               )}
               <Text style={styles.bonusSubtext}>
-                (run #{prestigeRunNumber} — acumulado)
+                {t('endgame.bonus.runLabel').replace('{{n}}', String(prestigeRunNumber))}
               </Text>
             </View>
           )}
@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     padding: 22,
-    paddingTop: 52,
+    paddingTop: 0,
     alignItems: 'center',
   },
   icon: {
