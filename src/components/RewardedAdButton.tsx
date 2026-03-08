@@ -43,13 +43,20 @@ const RewardedAdButton: React.FC<Props> = ({ sheetTopAnim }) => {
   const { gameState, dispatch, showToast } = useGame();
   const insets = useSafeAreaInsets();
 
-  // Badge top tracks the sheet: below the tab row when expanded, below stats when collapsed
+  // Badge top tracks the sheet: below stats when collapsed
   const badgeTop = sheetTopAnim.interpolate({
     inputRange: [SHEET_EXPANDED_TOP, SHEET_DEFAULT_TOP],
     outputRange: [
       SHEET_EXPANDED_TOP + SHEET_TABS_OFFSET,
       insets.top + SCREEN_HEIGHT * 0.22,
     ],
+    extrapolate: 'clamp',
+  });
+
+  // Badge hides when the sheet is expanded (non-mining tab active)
+  const badgeOpacity = sheetTopAnim.interpolate({
+    inputRange: [SHEET_EXPANDED_TOP, SHEET_DEFAULT_TOP],
+    outputRange: [0, 1],
     extrapolate: 'clamp',
   });
   const cooldownMs = BOOSTER_CONFIG.REWARDED_AD_BOOST.cooldownMs;
@@ -170,7 +177,7 @@ const RewardedAdButton: React.FC<Props> = ({ sheetTopAnim }) => {
   const isBoostActive = gameState.adBoost.isActive && boostRemaining() > 0;
   if (isBoostActive) {
     return (
-      <Animated.View style={[styles.activeBadge, { top: badgeTop }]}>
+      <Animated.View style={[styles.activeBadge, { top: badgeTop, opacity: badgeOpacity }]}>
         <Text style={styles.activeBadgeText}>⚡ 2x · {formatTime(boostRemaining())}</Text>
       </Animated.View>
     );
