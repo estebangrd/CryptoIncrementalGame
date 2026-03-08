@@ -1347,6 +1347,39 @@ describe('Ad System E2E', () => {
 });
 ```
 
+### Acceptance Tests — Rewarded Ad Bubble (implemented 2026-03-07)
+
+#### Offer Window
+- [ ] El bubble NO aparece al montar el componente inmediatamente
+- [ ] El bubble aparece después de exactamente 3 minutos sin haber visto un ad
+- [ ] El bubble es visible durante 20 segundos y luego desaparece solo
+- [ ] El badge de countdown en el bubble muestra los segundos restantes y decrementa cada segundo
+- [ ] Si el usuario toca ✕, el bubble desaparece y el timer de 3 minutos reinicia desde ese momento
+- [ ] Si el usuario toca el bubble y ve el ad, el bubble desaparece y se inicia el cooldown
+- [ ] Durante cooldown activo (< 5 min desde último ad): el bubble NO aparece aunque hayan pasado 3 min
+- [ ] Con boost activo: el bubble NO aparece
+
+#### Visual / Posición
+- [ ] El bubble tiene forma circular (72×72px, borderRadius 36)
+- [ ] Está pegado al borde derecho de la pantalla (right: 12px)
+- [ ] Está posicionado a ~35% del alto de la pantalla desde el top
+- [ ] Entra desde el borde derecho con animación spring
+- [ ] Sale hacia el borde derecho con animación fade
+- [ ] El glow verde (`shadowColor: #00ff88`) es visible sobre el fondo oscuro
+- [ ] NO tapa el texto principal de CryptoCoins ni los stats
+
+#### Boost Activo Badge
+- [ ] Mientras el boost está activo, se muestra el badge pill dorado "⚡ 2x · H:MM:SS"
+- [ ] El badge está posicionado en la esquina derecha, debajo del área de stats
+- [ ] El timer del badge decrementa en tiempo real cada segundo
+- [ ] Al expirar el boost, el badge desaparece
+
+#### Market — Formato de Moneda
+- [ ] "You'll earn:" muestra valores compactos: $2.8M en lugar de $2,494,803.81
+- [ ] "Current price:" muestra el precio con formato compacto cuando corresponde
+- [ ] El botón de confirmación "✓ Sell $X.XM" también usa formato compacto
+- [ ] El formato funciona correctamente en Android (Hermes engine)
+
 ## Performance Considerations
 
 ### Non-Functional Requirements
