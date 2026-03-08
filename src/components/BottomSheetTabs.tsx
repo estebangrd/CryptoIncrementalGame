@@ -8,6 +8,7 @@ import {
   ScrollView,
   Animated,
 } from 'react-native';
+import { THEME } from '../styles/theme';
 import { useGame } from '../contexts/GameContext';
 import HardwareList from './HardwareList';
 import UpgradeList from './UpgradeList';
@@ -167,16 +168,17 @@ const styles = StyleSheet.create({
   },
   bottomSheet: {
     flex: 1,
-    backgroundColor: '#2a2a2a',
+    backgroundColor: 'rgba(2,8,16,0.97)',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: -2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    borderTopWidth: 1,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: 'rgba(0,255,136,0.15)',
+    shadowColor: THEME.neonGreen,
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
     elevation: 5,
   },
   header: {
@@ -184,21 +186,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
+    borderBottomColor: 'rgba(0,255,136,0.08)',
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
-    color: '#00ff88',
+    color: THEME.neonGreen,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
   },
   tabsContainer: {
     flexDirection: 'row',
     paddingHorizontal: 6,
     paddingVertical: 6,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
+    borderBottomColor: THEME.borderNeutral,
     alignItems: 'center',
   },
   tab: {
@@ -209,14 +213,21 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginHorizontal: 2,
     minHeight: 44,
+    borderWidth: 1,
+    borderColor: THEME.borderNeutral,
   },
   activeTab: {
-    backgroundColor: '#0d1f0d',
+    backgroundColor: 'rgba(0,255,136,0.1)',
     borderWidth: 1,
-    borderColor: '#00ff88',
+    borderColor: THEME.neonGreen,
+    shadowColor: THEME.neonGreen,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
   },
   lockedTab: {
-    opacity: 0.25,
+    opacity: 0.2,
+    borderColor: 'transparent',
   },
   tabIcon: {
     fontSize: 20,
@@ -225,11 +236,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   activeTabLabel: {
-    color: '#00ff88',
+    color: THEME.neonGreen,
     fontWeight: 'bold',
     fontSize: 9,
     marginTop: 3,
     textAlign: 'center',
+    letterSpacing: 0.5,
   },
   content: {
     flex: 1,

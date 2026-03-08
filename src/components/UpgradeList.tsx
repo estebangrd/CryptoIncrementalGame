@@ -7,6 +7,7 @@ import {
   Modal,
   ScrollView,
 } from 'react-native';
+import { THEME } from '../styles/theme';
 import { useGame } from '../contexts/GameContext';
 import { formatNumber, canAffordUpgrade, isUpgradeUnlocked } from '../utils/gameLogic';
 import { isAIUnlocked, canPurchaseAILevel } from '../utils/aiLogic';
@@ -245,17 +246,18 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   aiTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: 'bold',
     color: '#a855f7',
     letterSpacing: 1,
     marginBottom: 12,
+    textTransform: 'uppercase',
   },
   logContainer: {
-    backgroundColor: '#1a1a2e',
+    backgroundColor: 'rgba(168,85,247,0.06)',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#a855f740',
+    borderColor: 'rgba(168,85,247,0.25)',
     padding: 10,
     marginBottom: 12,
   },
@@ -267,17 +269,17 @@ const styles = StyleSheet.create({
   },
   logLevelBadge: {
     fontSize: 11,
-    color: '#888',
+    color: THEME.textDim,
     fontWeight: 'normal',
   },
   logEmpty: {
     fontSize: 12,
-    color: '#555',
+    color: THEME.textDim,
     fontStyle: 'italic',
   },
   logEntry: {
     fontSize: 11,
-    color: '#ccc',
+    color: THEME.textBody,
     marginBottom: 3,
     lineHeight: 16,
   },
@@ -285,25 +287,25 @@ const styles = StyleSheet.create({
     color: '#88ccff',
   },
   logEntry_action: {
-    color: '#88ffcc',
+    color: THEME.neonGreen,
   },
   logEntry_warning: {
-    color: '#ffcc44',
+    color: THEME.neonYellow,
   },
   logEntry_autonomous: {
-    color: '#ff6688',
+    color: THEME.neonRed,
   },
   aiCard: {
-    backgroundColor: '#1e1e2e',
+    backgroundColor: 'rgba(168,85,247,0.04)',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#a855f730',
+    borderColor: 'rgba(168,85,247,0.2)',
   },
   aiCardPurchased: {
     borderColor: '#a855f7',
-    backgroundColor: '#1e1030',
+    backgroundColor: 'rgba(168,85,247,0.1)',
   },
   aiCardLocked: {
     opacity: 0.5,
@@ -322,7 +324,7 @@ const styles = StyleSheet.create({
   },
   irreversibleBadge: {
     fontSize: 11,
-    color: '#ff4444',
+    color: THEME.neonRed,
     fontWeight: 'bold',
   },
   ownedBadge: {
@@ -332,7 +334,7 @@ const styles = StyleSheet.create({
   },
   aiCardDesc: {
     fontSize: 13,
-    color: '#aaa',
+    color: THEME.textDim,
     lineHeight: 18,
     marginBottom: 10,
   },
@@ -348,73 +350,79 @@ const styles = StyleSheet.create({
   },
   aiCardCost: {
     fontSize: 13,
-    color: '#00ff88',
+    color: THEME.neonGreen,
     fontWeight: '600',
   },
   lockHint: {
     fontSize: 12,
-    color: '#666',
+    color: THEME.textDim,
     fontStyle: 'italic',
   },
   // ── Modal ──
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.8)',
+    backgroundColor: 'rgba(0,0,0,0.85)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
   },
   modalContainer: {
-    backgroundColor: '#1a0010',
+    backgroundColor: 'rgba(2,8,16,0.98)',
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: '#ff4444',
+    borderColor: THEME.neonRed,
     padding: 24,
     width: '100%',
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#ff4444',
+    color: THEME.neonRed,
     marginBottom: 16,
     textAlign: 'center',
   },
   modalMessage: {
     fontSize: 14,
-    color: '#ffaaaa',
+    color: THEME.textBody,
     lineHeight: 22,
     marginBottom: 24,
     textAlign: 'center',
   },
   confirmButton: {
-    backgroundColor: '#cc0000',
+    backgroundColor: 'rgba(255,61,90,0.2)',
     borderRadius: 8,
     paddingVertical: 14,
     alignItems: 'center',
     marginBottom: 12,
+    borderWidth: 1,
+    borderColor: THEME.neonRed,
   },
   confirmButtonText: {
-    color: '#fff',
+    color: THEME.neonRed,
     fontSize: 15,
     fontWeight: 'bold',
     letterSpacing: 1,
   },
   cancelButton: {
-    backgroundColor: '#333',
+    backgroundColor: 'transparent',
     borderRadius: 8,
     paddingVertical: 12,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: THEME.borderNeutral,
   },
   cancelButtonText: {
-    color: '#aaa',
+    color: THEME.textDim,
     fontSize: 14,
   },
   // ── Standard Upgrades ──
   upgradeItem: {
-    backgroundColor: '#2a2a2a',
+    backgroundColor: THEME.bgCard,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: THEME.borderYellow,
   },
   upgradeHeader: {
     flexDirection: 'row',
@@ -431,13 +439,13 @@ const styles = StyleSheet.create({
   upgradeName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#fff',
+    color: THEME.textWhite,
     marginBottom: 4,
   },
   upgradeDescription: {
-    fontSize: 14,
-    color: '#888',
-    lineHeight: 20,
+    fontSize: 13,
+    color: THEME.textDim,
+    lineHeight: 18,
   },
   upgradeStats: {
     marginBottom: 16,
@@ -448,52 +456,58 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   statLabel: {
-    fontSize: 14,
-    color: '#888',
+    fontSize: 13,
+    color: THEME.textDim,
   },
   statValue: {
     fontSize: 14,
-    color: '#00ff88',
-    fontWeight: '500',
+    color: THEME.neonYellow,
+    fontWeight: '600',
   },
   cannotAfford: {
-    color: '#ff4444',
+    color: THEME.neonRed,
   },
   purchasedBadge: {
-    backgroundColor: '#00ff88',
+    backgroundColor: 'rgba(0,255,136,0.08)',
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 4,
     alignSelf: 'flex-start',
     marginTop: 4,
+    borderWidth: 1,
+    borderColor: THEME.neonGreen,
   },
   purchasedText: {
-    color: '#000',
+    color: THEME.neonGreen,
     fontSize: 12,
     fontWeight: 'bold',
   },
   buyButton: {
-    backgroundColor: '#00ff88',
+    backgroundColor: 'rgba(255,214,0,0.1)',
     borderRadius: 8,
     paddingVertical: 12,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: THEME.neonYellow,
   },
   buyButtonDisabled: {
-    backgroundColor: '#444',
+    backgroundColor: 'transparent',
+    borderColor: THEME.borderNeutral,
   },
   buyButtonDanger: {
-    backgroundColor: '#cc2200',
+    backgroundColor: 'rgba(255,61,90,0.15)',
+    borderColor: THEME.neonRed,
   },
   buyButtonText: {
-    color: '#000',
+    color: THEME.neonYellow,
     fontSize: 16,
     fontWeight: 'bold',
   },
   buyButtonTextDisabled: {
-    color: '#888',
+    color: THEME.textDim,
   },
   textMuted: {
-    color: '#555',
+    color: THEME.textDim,
   },
 });
 

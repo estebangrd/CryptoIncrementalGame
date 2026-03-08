@@ -7,6 +7,7 @@ import {
   ScrollView,
   PanResponder,
 } from 'react-native';
+import { THEME } from '../styles/theme';
 
 import { useGame } from '../contexts/GameContext';
 import { getPriceChangeColor } from '../utils/marketLogic';
@@ -401,7 +402,7 @@ const MarketScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: 'transparent',
     padding: 20,
   },
   headerContainer: {
@@ -411,11 +412,13 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#fff',
+    color: THEME.neonGreen,
     textAlign: 'center',
     flex: 1,
+    textTransform: 'uppercase',
+    letterSpacing: 2,
   },
   currencyList: {
     flex: 1,
@@ -424,18 +427,20 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   currencyItem: {
-    backgroundColor: '#2a2a2a',
+    backgroundColor: 'rgba(0,0,0,0.3)',
     borderRadius: 12,
     padding: 16,
     marginBottom: 0,
+    borderWidth: 1,
+    borderColor: THEME.borderNeutral,
   },
   selectedCurrencyItem: {
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0,
   },
   selectedCurrencyContainer: {
-    borderWidth: 2,
-    borderColor: '#00ff88',
+    borderWidth: 1,
+    borderColor: THEME.neonGreen,
     borderRadius: 12,
     marginBottom: 12,
     overflow: 'hidden',
@@ -454,12 +459,12 @@ const styles = StyleSheet.create({
   currencyName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#fff',
+    color: THEME.textWhite,
     marginBottom: 4,
   },
   currencySymbol: {
     fontSize: 14,
-    color: '#888',
+    color: THEME.textDim,
   },
   priceInfo: {
     alignItems: 'flex-end',
@@ -467,7 +472,7 @@ const styles = StyleSheet.create({
   currentPrice: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#fff',
+    color: THEME.textWhite,
     marginBottom: 4,
   },
   priceChange: {
@@ -477,8 +482,7 @@ const styles = StyleSheet.create({
   expandedSection: {
     marginTop: 0,
     paddingTop: 16,
-    backgroundColor: '#2a2a2a',
-    borderRadius: 0,
+    backgroundColor: 'rgba(0,0,0,0.3)',
     padding: 16,
     marginHorizontal: -16,
     borderTopLeftRadius: 0,
@@ -487,12 +491,14 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 12,
   },
   exchangeTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
-    color: '#00ff88',
-    marginBottom: 20,
+    color: THEME.neonGreen,
+    marginBottom: 16,
     marginTop: 8,
     marginLeft: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   exchangeRow: {
     flexDirection: 'row',
@@ -502,16 +508,18 @@ const styles = StyleSheet.create({
   exchangeLabel: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#fff',
+    color: THEME.textWhite,
     width: 60,
   },
   currencyDisplay: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#333',
+    backgroundColor: THEME.bgCard,
     borderRadius: 8,
     padding: 12,
+    borderWidth: 1,
+    borderColor: THEME.borderNeutral,
   },
   currencyIconSmall: {
     fontSize: 20,
@@ -520,12 +528,12 @@ const styles = StyleSheet.create({
   currencyText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#fff',
+    color: THEME.textWhite,
     flex: 1,
   },
   balanceText: {
     fontSize: 12,
-    color: '#888',
+    color: THEME.textDim,
   },
   amountSection: {
     marginBottom: 16,
@@ -536,14 +544,14 @@ const styles = StyleSheet.create({
   },
   sliderTrack: {
     height: 8,
-    backgroundColor: '#333',
+    backgroundColor: 'rgba(255,255,255,0.05)',
     borderRadius: 4,
     position: 'relative',
     marginBottom: 8,
   },
   sliderFill: {
     height: '100%',
-    backgroundColor: '#00ff88',
+    backgroundColor: THEME.neonGreen,
     borderRadius: 4,
     position: 'absolute',
     left: 0,
@@ -552,20 +560,20 @@ const styles = StyleSheet.create({
   sliderThumb: {
     width: 20,
     height: 20,
-    backgroundColor: '#fff',
+    backgroundColor: THEME.textWhite,
     borderRadius: 10,
     position: 'absolute',
     top: -6,
     marginLeft: -10,
     borderWidth: 2,
-    borderColor: '#00ff88',
+    borderColor: THEME.neonGreen,
     justifyContent: 'center',
     alignItems: 'center',
   },
   thumbLabel: {
     fontSize: 10,
     fontWeight: 'bold',
-    color: '#00ff88',
+    color: THEME.neonGreen,
     position: 'absolute',
     top: -25,
     left: -10,
@@ -578,11 +586,13 @@ const styles = StyleSheet.create({
   },
   sliderLabel: {
     fontSize: 12,
-    color: '#888',
+    color: THEME.textDim,
   },
   exchangePreview: {
-    backgroundColor: '#333',
+    backgroundColor: 'rgba(255,214,0,0.06)',
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,214,0,0.2)',
     padding: 12,
     marginBottom: 16,
     alignItems: 'center',
@@ -590,11 +600,11 @@ const styles = StyleSheet.create({
   previewText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#00ff88',
+    color: THEME.neonYellow,
   },
   feeText: {
     fontSize: 12,
-    color: '#888',
+    color: THEME.textDim,
     marginTop: 4,
   },
   buttonContainer: {
@@ -603,17 +613,19 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   exchangeButton: {
-    backgroundColor: '#00ff88',
+    backgroundColor: 'rgba(0,255,136,0.1)',
     borderRadius: 8,
     padding: 16,
     alignItems: 'center',
     flex: 1,
     marginRight: 8,
+    borderWidth: 1,
+    borderColor: THEME.neonGreen,
   },
   exchangeButtonText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#000',
+    color: THEME.neonGreen,
   },
   sellButton: {
     backgroundColor: '#ff6b35',
@@ -627,13 +639,13 @@ const styles = StyleSheet.create({
   sellButtonText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#fff',
+    color: THEME.textWhite,
   },
   cancelButton: {
     backgroundColor: 'transparent',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#555',
+    borderColor: THEME.borderNeutral,
     padding: 16,
     alignItems: 'center',
     flex: 1,
@@ -643,11 +655,13 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#888',
+    color: THEME.textDim,
   },
   confirmSellButton: {
-    backgroundColor: '#00ff88',
+    backgroundColor: 'rgba(0,255,136,0.15)',
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: THEME.neonGreen,
     padding: 16,
     alignItems: 'center',
     flex: 2,
@@ -657,7 +671,7 @@ const styles = StyleSheet.create({
   confirmSellButtonText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#000',
+    color: THEME.neonGreen,
   },
 });
 

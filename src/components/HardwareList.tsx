@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
+import { THEME } from '../styles/theme';
 import { useGame } from '../contexts/GameContext';
 import { formatNumber, calculateHardwareCost, canAffordHardware, calculateHardwareProduction, calculateHardwareElectricityCost, calculateHardwareMiningSpeed, isHardwareUnlocked } from '../utils/gameLogic';
 
@@ -124,10 +125,12 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   hardwareItem: {
-    backgroundColor: '#2a2a2a',
+    backgroundColor: THEME.bgCard,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: THEME.borderCyan,
   },
   hardwareHeader: {
     flexDirection: 'row',
@@ -144,39 +147,47 @@ const styles = StyleSheet.create({
   hardwareName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#fff',
+    color: THEME.textWhite,
     marginBottom: 4,
   },
   hardwareDescription: {
-    fontSize: 14,
-    color: '#888',
-    lineHeight: 20,
+    fontSize: 13,
+    color: THEME.textDim,
+    lineHeight: 18,
   },
   hardwareStats: {
-    marginBottom: 16,
+    marginBottom: 12,
   },
   statRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    borderRadius: 7,
   },
   statLabel: {
-    fontSize: 14,
-    color: '#888',
+    fontSize: 11,
+    color: THEME.textDim,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   statValue: {
-    fontSize: 14,
-    color: '#00ff88',
-    fontWeight: '500',
+    fontSize: 13,
+    color: THEME.neonCyan,
+    fontWeight: 'bold',
   },
   cannotAfford: {
-    color: '#ff4444',
+    color: THEME.neonRed,
   },
   deltaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1a1a1a',
+    backgroundColor: 'rgba(0,229,255,0.04)',
     borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(0,229,255,0.15)',
     paddingHorizontal: 10,
     paddingVertical: 6,
     marginBottom: 10,
@@ -184,41 +195,44 @@ const styles = StyleSheet.create({
   },
   deltaLabel: {
     fontSize: 12,
-    color: '#666',
+    color: THEME.textDim,
   },
   deltaCoins: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#00ff88',
+    color: THEME.neonGreen,
   },
   deltaHash: {
     fontSize: 12,
-    color: '#aaa',
+    color: THEME.textBody,
   },
   deltaSeparator: {
     fontSize: 12,
-    color: '#444',
+    color: THEME.borderNeutral,
   },
   deltaElec: {
     fontSize: 12,
-    color: '#ff6666',
+    color: THEME.neonRed,
   },
   buyButton: {
-    backgroundColor: '#00ff88',
+    backgroundColor: 'rgba(0,255,136,0.1)',
     borderRadius: 8,
     paddingVertical: 12,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: THEME.neonGreen,
   },
   buyButtonDisabled: {
-    backgroundColor: '#444',
+    backgroundColor: 'transparent',
+    borderColor: THEME.borderNeutral,
   },
   buyButtonText: {
-    color: '#000',
+    color: THEME.neonGreen,
     fontSize: 16,
     fontWeight: 'bold',
   },
   buyButtonTextDisabled: {
-    color: '#888',
+    color: THEME.textDim,
   },
 });
 

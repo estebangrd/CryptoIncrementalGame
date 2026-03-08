@@ -8,6 +8,7 @@ import {
   Modal,
   Dimensions,
 } from 'react-native';
+import { THEME } from '../styles/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGame } from '../contexts/GameContext';
 import { formatNumber } from '../utils/gameLogic';
@@ -385,11 +386,11 @@ const GameScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: THEME.bg,
   },
   mainContent: {
     height: '45%',
-    backgroundColor: '#1a1a1a',
+    backgroundColor: THEME.bg,
     paddingTop: 0,
   },
   header: {
@@ -399,11 +400,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 0,
     paddingBottom: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: THEME.borderGreenFaint,
   },
   title: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#00ff88',
+    color: THEME.neonGreen,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
   },
   settingsButton: {
     padding: 8,
@@ -414,15 +419,25 @@ const styles = StyleSheet.create({
   statsArea: {
     flex: 1,
     paddingHorizontal: 16,
-    paddingTop: 4,
-    paddingBottom: 4,
+    paddingTop: 6,
+    paddingBottom: 6,
+    marginHorizontal: 12,
+    marginTop: 8,
+    backgroundColor: THEME.bgCardGreen,
+    borderWidth: 1,
+    borderColor: THEME.borderGreenFaint,
+    borderRadius: 12,
   },
   cryptoCoinsText: {
-    fontSize: 30,
+    fontSize: 32,
     fontWeight: 'bold',
-    color: '#00ff88',
+    color: THEME.neonGreen,
     textAlign: 'center',
     marginBottom: 8,
+    shadowColor: THEME.neonGreen,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
   },
   statsRow: {
     flexDirection: 'row',
@@ -433,38 +448,40 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statLabel: {
-    fontSize: 11,
-    color: '#555',
+    fontSize: 10,
+    color: THEME.textDim,
     marginBottom: 2,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   statValue: {
     fontSize: 14,
-    color: '#ccc',
+    color: THEME.textBody,
     fontWeight: '600',
   },
   statPositive: {
-    color: '#00ff88',
+    color: THEME.neonGreen,
   },
   statNegative: {
-    color: '#ff6666',
+    color: THEME.neonRed,
   },
   moneyValue: {
-    color: '#00ff88',
+    color: THEME.neonYellow,
     fontWeight: 'bold',
   },
   statDividerV: {
     width: 1,
-    backgroundColor: '#2a2a2a',
+    backgroundColor: THEME.borderNeutral,
     marginVertical: 2,
   },
   statsRowDivider: {
     height: 1,
-    backgroundColor: '#2a2a2a',
+    backgroundColor: THEME.borderNeutral,
   },
   planetMeterContainer: {
     paddingHorizontal: 20,
     paddingVertical: 6,
-    backgroundColor: '#111a11',
+    backgroundColor: 'rgba(0,255,136,0.03)',
   },
   planetMeterRow: {
     flexDirection: 'row',
@@ -473,7 +490,7 @@ const styles = StyleSheet.create({
   },
   planetMeterLabel: {
     fontSize: 12,
-    color: '#888',
+    color: THEME.textDim,
   },
   planetMeterPct: {
     fontSize: 12,
@@ -481,7 +498,7 @@ const styles = StyleSheet.create({
   },
   planetMeterBarBg: {
     height: 6,
-    backgroundColor: '#333',
+    backgroundColor: 'rgba(255,255,255,0.05)',
     borderRadius: 3,
     overflow: 'hidden',
   },
@@ -490,9 +507,9 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   adFreeBadge: {
-    backgroundColor: '#1a6b3a',
+    backgroundColor: 'rgba(0,255,136,0.1)',
     borderWidth: 1,
-    borderColor: '#00ff88',
+    borderColor: THEME.neonGreen,
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -500,7 +517,7 @@ const styles = StyleSheet.create({
   adFreeBadgeText: {
     fontSize: 11,
     fontWeight: 'bold',
-    color: '#00ff88',
+    color: THEME.neonGreen,
   },
   rightGroup: {
     flexDirection: 'row',
@@ -510,7 +527,7 @@ const styles = StyleSheet.create({
   shopButton: {
     padding: 6,
     borderRadius: 16,
-    backgroundColor: '#1a1a2e',
+    backgroundColor: 'rgba(168,85,247,0.1)',
     borderWidth: 1,
     borderColor: '#a855f7',
   },
@@ -519,7 +536,7 @@ const styles = StyleSheet.create({
   },
   shopModal: {
     flex: 1,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: THEME.bg,
     paddingTop: 50,
   },
   shopModalHeader: {
@@ -529,19 +546,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
+    borderBottomColor: THEME.borderNeutral,
   },
   shopModalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#fff',
+    color: THEME.textWhite,
   },
   shopModalClose: {
     padding: 4,
   },
   shopModalCloseText: {
     fontSize: 20,
-    color: '#888',
+    color: THEME.textDim,
   },
   energyBalance: {
     fontSize: 14,

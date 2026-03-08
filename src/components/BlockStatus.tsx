@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { GameState } from '../types/game';
 import { formatBlockInfo, calculateBlockTime } from '../utils/blockLogic';
 import { formatNumber } from '../utils/gameLogic';
+import { THEME } from '../styles/theme';
 
 const CLICK_WINDOW_MS = 1000;
 
@@ -120,11 +121,13 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#2a2a2a',
+    backgroundColor: THEME.bgCardGreen,
     borderRadius: 12,
     padding: 16,
     margin: 16,
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: THEME.borderGreen,
   },
   header: {
     flexDirection: 'row',
@@ -133,25 +136,27 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   phaseTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
-    color: '#00ff88',
+    color: THEME.neonGreen,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   progressText: {
-    fontSize: 14,
-    color: '#cccccc',
+    fontSize: 13,
+    color: THEME.textDim,
   },
   progressBar: {
-    height: 8,
-    backgroundColor: '#1a1a1a',
-    borderRadius: 4,
+    height: 6,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 3,
     overflow: 'hidden',
     marginBottom: 12,
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#00ff88',
-    borderRadius: 4,
+    backgroundColor: THEME.neonGreen,
+    borderRadius: 3,
   },
   infoRow: {
     flexDirection: 'row',
@@ -163,38 +168,43 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   infoLabel: {
-    fontSize: 12,
-    color: '#888888',
+    fontSize: 9,
+    color: THEME.textDim,
     marginBottom: 2,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   infoValue: {
     fontSize: 14,
-    color: '#ffffff',
+    color: THEME.neonCyan,
     fontWeight: 'bold',
   },
   infoValueBoosted: {
-    color: '#00ff88',
+    color: THEME.neonGreen,
   },
   clickBoostLabel: {
     fontSize: 10,
-    color: '#00cc66',
+    color: THEME.neonGreen,
     marginTop: 1,
   },
   mineButton: {
-    backgroundColor: '#00ff88',
+    backgroundColor: 'rgba(0,255,136,0.13)',
     borderRadius: 8,
     padding: 10,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: THEME.neonGreen,
   },
   mineButtonDisabled: {
-    backgroundColor: '#444444',
+    backgroundColor: 'transparent',
+    borderColor: THEME.borderNeutral,
   },
   mineButtonText: {
-    color: '#000000',
+    color: THEME.neonGreen,
     fontSize: 14,
     fontWeight: 'bold',
   },
   mineButtonTextDisabled: {
-    color: '#888888',
+    color: THEME.textDim,
   },
 });
