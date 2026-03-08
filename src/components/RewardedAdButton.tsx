@@ -146,11 +146,11 @@ const RewardedAdButton: React.FC = () => {
     }
   }, [gameState.adBoost, dispatch, showToast]);
 
-  // Small pill badge while boost is active
+  // Small pill badge while boost is active — positioned below the stats text
   const isBoostActive = gameState.adBoost.isActive && boostRemaining() > 0;
   if (isBoostActive) {
     return (
-      <View style={[styles.activeBadge, { top: insets.top + 50 }]}>
+      <View style={[styles.activeBadge, { top: insets.top + SCREEN_HEIGHT * 0.22 }]}>
         <Text style={styles.activeBadgeText}>⚡ 2x · {formatTime(boostRemaining())}</Text>
       </View>
     );

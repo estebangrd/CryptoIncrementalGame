@@ -14,10 +14,10 @@ import {
   getExchangePreview,
   formatCurrencyAmount
 } from '../utils/exchangeLogic';
+import { formatNumber } from '../utils/gameLogic';
 import PriceChart from './PriceChart';
 
-const formatUSD = (amount: number) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', notation: 'compact', compactDisplay: 'short', maximumFractionDigits: 2 }).format(amount);
+const formatUSD = (amount: number): string => `$${formatNumber(amount)}`;
 
 const MarketScreen: React.FC = () => {
   const { gameState, dispatch, t } = useGame();
