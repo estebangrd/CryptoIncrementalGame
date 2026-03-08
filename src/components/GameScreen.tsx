@@ -276,7 +276,7 @@ const GameScreen: React.FC = () => {
       <AdBanner onHeightChange={setAdBannerHeight} />
 
       {/* Floating Rewarded Ad Offer - absolute overlay */}
-      {!gameState.iapState.removeAdsPurchased && <RewardedAdButton />}
+      {!gameState.iapState.removeAdsPurchased && <RewardedAdButton sheetTopAnim={splitAnim} />}
 
       {/* Achievement Toast */}
       <AchievementToast

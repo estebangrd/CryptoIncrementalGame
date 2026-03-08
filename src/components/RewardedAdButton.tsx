@@ -18,6 +18,12 @@ const OFFER_WINDOW_MS = 20_000;           // 20 seconds visible
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
+// Must match GameScreen constants
+const SHEET_DEFAULT_TOP = SCREEN_HEIGHT * 0.5;
+const SHEET_EXPANDED_TOP = SCREEN_HEIGHT * 0.18;
+// Approx height of bottom sheet header + tabs row
+const SHEET_TABS_OFFSET = 135;
+
 const formatTime = (ms: number): string => {
   const totalSeconds = Math.max(0, Math.floor(ms / 1000));
   const h = Math.floor(totalSeconds / 3600);
@@ -29,9 +35,23 @@ const formatTime = (ms: number): string => {
   return `${m}:${s.toString().padStart(2, '0')}`;
 };
 
-const RewardedAdButton: React.FC = () => {
+interface Props {
+  sheetTopAnim: Animated.Value;
+}
+
+const RewardedAdButton: React.FC<Props> = ({ sheetTopAnim }) => {
   const { gameState, dispatch, showToast } = useGame();
   const insets = useSafeAreaInsets();
+
+  // Badge top tracks the sheet: below the tab row when expanded, below stats when collapsed
+  const badgeTop = sheetTopAnim.interpolate({
+    inputRange: [SHEET_EXPANDED_TOP, SHEET_DEFAULT_TOP],
+    outputRange: [
+      SHEET_EXPANDED_TOP + SHEET_TABS_OFFSET,
+      insets.top + SCREEN_HEIGHT * 0.22,
+    ],
+    extrapolate: 'clamp',
+  });
   const cooldownMs = BOOSTER_CONFIG.REWARDED_AD_BOOST.cooldownMs;
 
   const [now, setNow] = useState(Date.now());
@@ -146,13 +166,13 @@ const RewardedAdButton: React.FC = () => {
     }
   }, [gameState.adBoost, dispatch, showToast]);
 
-  // Small pill badge while boost is active — positioned below the stats text
+  // Small pill badge while boost is active — follows sheet position
   const isBoostActive = gameState.adBoost.isActive && boostRemaining() > 0;
   if (isBoostActive) {
     return (
-      <View style={[styles.activeBadge, { top: insets.top + SCREEN_HEIGHT * 0.22 }]}>
+      <Animated.View style={[styles.activeBadge, { top: badgeTop }]}>
         <Text style={styles.activeBadgeText}>⚡ 2x · {formatTime(boostRemaining())}</Text>
-      </View>
+      </Animated.View>
     );
   }
 
