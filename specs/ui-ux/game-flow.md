@@ -380,105 +380,24 @@ analytics().logEvent('prestige_completed', {
 
 ### Returning User Experience (RUX)
 
-#### Scenario 1: Regresa después de 5 minutos (Short Session)
-**Context**: Usuario cerró app, vuelve poco después
+#### Returning User (cualquier ausencia)
+**Context**: Usuario cerró la app y la reabre
 
 **Flow**:
 1. App launch
 2. Cargar saved state de AsyncStorage
-3. Calcular offline progress:
-   - Time offline: 5 minutos = 300 segundos
-   - Production: 100 CC/s (ejemplo)
-   - Offline multiplier: 0.5 (50%)
-   - Earnings: 300 × 100 × 0.5 = 15,000 CC
-4. NO mostrar offline modal (muy poco tiempo)
-5. Simplemente acreditar las coins silenciosamente
-6. Usuario continúa donde dejó
+3. Sincronizar `lastSaveTime` sin acreditar coins (no hay offline earnings)
+4. Continúa exactamente donde lo dejó
 
 **UI**:
-- Coins balance actualizado
-- No interrupciones
+- Coins balance igual al momento de cierre
+- No interrupciones ni modals
 - Game loop continúa normalmente
 
 **Analytics**:
 ```typescript
 analytics().logEvent('session_started', {
-  time_since_last_session: 300,
-  offline_earnings: 15000,
-});
-```
-
----
-
-#### Scenario 2: Regresa después de 8 horas (Overnight)
-**Context**: Usuario dejó correr el juego overnight
-
-**Flow**:
-1. App launch
-2. Cargar saved state
-3. Calcular offline progress:
-   - Time offline: 8 horas = 28,800 segundos
-   - Production: 1,000 CC/s
-   - Offline multiplier: 0.5
-   - Earnings: 28,800 × 1,000 × 0.5 = 14,400,000 CC
-   - Blocks mined offline: (1,000 CC/s ÷ 50 CC/block) × 28,800s × 0.5 = 288,000 bloques
-4. Mostrar Offline Progress modal:
-   - "Welcome Back!"
-   - "You were offline for: 8 hours"
-   - "Coins earned: 14,400,000 CC" (conteo animado)
-   - "Blocks mined: 288,000" (conteo animado)
-   - "Offline efficiency: 50%"
-   - Tip: "💡 Buy more hardware to earn even while offline!"
-   - Button: "Collect" (verde)
-5. Usuario toca "Collect":
-   - Acreditar earnings
-   - Modal cierra
-   - Animación de coins volando al balance
-6. Usuario continúa jugando
-
-**UI**:
-- Modal full-screen con stats de offline progress
-- Animaciones de conteo (números subiendo)
-- Celebración visual
-
-**Analytics**:
-```typescript
-analytics().logEvent('offline_progress_collected', {
-  time_offline: 28800,
-  coins_earned: 14400000,
-  blocks_mined: 288000,
-});
-```
-
----
-
-#### Scenario 3: Regresa después de 1 semana (Long Absence)
-**Context**: Usuario no jugó por 7 días
-
-**Flow**:
-1. App launch
-2. Calcular offline progress:
-   - Time offline: 7 días = 604,800 segundos
-   - **PERO capped a MAX_OFFLINE_TIME**: 24 horas = 86,400 segundos
-   - Production: 5,000 CC/s
-   - Earnings: 86,400 × 5,000 × 0.5 = 216,000,000 CC
-3. Offline modal:
-   - "Welcome Back!"
-   - "You were offline for: 7 days"
-   - "⚠️ Offline earnings are capped at 24 hours"
-   - "Coins earned: 216,000,000 CC (24h worth)"
-   - "Blocks mined: X"
-   - Tip: "💡 Open the game daily to maximize earnings!"
-   - Button: "Collect"
-4. Usuario colecta
-5. Opcionalmente: Mostrar "daily bonus" o incentive para regresar mañana (Phase 2+)
-
-**Analytics**:
-```typescript
-analytics().logEvent('user_returned_after_long_absence', {
-  days_offline: 7,
-  capped_earnings: true,
-  earnings_collected: 216000000,
+  time_since_last_session: secondsAway,
 });
 ```
 
@@ -651,29 +570,17 @@ analytics().logEvent('user_returned_after_long_absence', {
 **Flow**:
 1. App launch (splash screen)
 2. Load saved state from AsyncStorage
-3. Calculate offline time:
+3. Sincronizar timestamp:
    ```typescript
-   const now = Date.now();
-   const lastSave = savedState.lastSaveTime;
-   const offlineSeconds = (now - lastSave) / 1000;
+   // No se acreditan coins — solo se actualiza lastSaveTime
+   dispatch({ type: 'UPDATE_OFFLINE_PROGRESS' });
    ```
-4. Calculate offline earnings:
-   ```typescript
-   const maxOfflineSeconds = BALANCE_CONFIG.MAX_OFFLINE_TIME * 3600;
-   const effectiveSeconds = Math.min(offlineSeconds, maxOfflineSeconds);
-   const earnings = effectiveSeconds * productionPerSecond * OFFLINE_MULTIPLIER;
-   ```
-5. Apply offline progress:
-   - Increment cryptoCoins
-   - Increment blocksMined
-   - Update stats
-6. Show offline modal (si offline > 5 minutos)
-7. Restore game to active state
+4. Restore game to active state — continúa desde el estado guardado
 
 **Edge Cases**:
 - **No internet**: Game works 100% offline, no API calls needed
 - **Save corrupted**: Fallback to default state, log error
-- **Clock manipulation**: Detect negative time delta, ignore offline progress
+- **Clock manipulation**: No aplica (no hay offline earnings que calcular)
 
 ---
 

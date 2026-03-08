@@ -192,31 +192,23 @@ Todos los boosters stackean multiplicativamente con prestige y rewarded ad boost
 **Cuando** cierra la app por 6 horas y la reabre
 **Entonces**
 - Al reabrir app:
-  - Calcular tiempo offline: 6 horas
   - Verificar si booster sigue activo:
     - `Date.now() - booster5x.activatedAt = 18 horas`
     - `24 horas - 18 horas = 6 horas restantes` ✓ Sigue activo
-  - Aplicar boost a producción offline:
-    - Offline earnings calculados con 5x boost
-    - Mostrar: "Earned X CC while away (with 5x boost!)"
+  - **No se acreditan coins** por el tiempo en background
   - Badge actualizado con tiempo correcto:
     - "5x Boost: 6:00:00"
-  - Continuar countdown normalmente
+  - Continuar countdown normalmente (el boost aplica desde ahora)
 
 ### Caso de Uso 8: Booster Expira Durante Offline
 **Dado que** el usuario tiene 2x booster activo (2 horas restantes)
 **Cuando** cierra la app por 4 horas y la reabre
 **Entonces**
 - Al reabrir app:
-  - Calcular que booster expiró hace 2 horas:
-    - Primera 2h: producción con 2x boost
-    - Últimas 2h: producción sin boost
-  - Calcular offline earnings:
-    - `earnings = (2h × baseProduction × 2.0) + (2h × baseProduction × 1.0)`
-  - Mostrar notificación:
-    - "Earned X CC while away"
-    - "Your 2x boost expired while you were away"
+  - Verificar que booster expiró durante el cierre
+  - **No se acreditan coins** por el tiempo en background
   - Booster marcado como inactivo
+  - No se muestra modal de offline earnings
   - Badge no se muestra
 
 ### Caso de Uso 9: Comprar Permanent 2x Multiplier

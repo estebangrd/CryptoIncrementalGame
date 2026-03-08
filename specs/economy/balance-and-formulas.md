@@ -317,24 +317,7 @@ function estimateRunDuration(
 
 ### 6. Offline Progress
 
-#### 6.1 Cálculo de Earnings Offline
-```typescript
-function calculateOfflineEarnings(
-  secondsOffline: number,
-  productionPerSecond: number
-): number {
-  const maxOfflineSeconds = BALANCE_CONFIG.MAX_OFFLINE_TIME * 3600; // 24h en segundos
-  const effectiveSeconds = Math.min(secondsOffline, maxOfflineSeconds);
-
-  const offlineMultiplier = BALANCE_CONFIG.OFFLINE_EARNINGS_MULTIPLIER; // 0.5 (50%)
-
-  return effectiveSeconds * productionPerSecond * offlineMultiplier;
-}
-
-// Ejemplo con 10 horas offline @ 100 CC/s:
-// Segundos offline: 10 × 3600 = 36,000s
-// Earnings: 36,000 × 100 × 0.5 = 1,800,000 CC
-```
+El juego **no acredita ganancias mientras está en background**. La producción solo ocurre cuando el usuario está jugando activamente. Al volver al primer plano, `updateOfflineProgress` únicamente sincroniza `lastSaveTime` sin acreditar monedas.
 
 ## ROI (Return on Investment) por Hardware
 
@@ -433,9 +416,8 @@ function calculateHardwareROI(hardware: Hardware): {
 | **First Prestige** | ~15 hours | 21M | $200M | COMPLETE! |
 
 **Notas**:
-- Tiempos asumen juego activo (no offline progress)
+- Tiempos asumen juego activo (no hay offline progress)
 - Pueden variar ±30% basado en estrategia del jugador
-- Offline progress puede reducir tiempos significativamente
 - Upgrades compradas pueden acelerar progresión
 
 ### Subsequent Runs (Con Prestige)
@@ -623,8 +605,7 @@ interface BalanceMetrics {
 2. NO comprar hardware caro hasta tener upgrades que lo multipliquen
 3. Comprar todos los upgrades de producción apenas sea posible
 4. Vender CryptoCoins constantemente para maximizar cash flow
-5. Usar offline progress estratégicamente (dejar correr overnight)
-6. Priorizar ASIC Gen 3 + ASIC Optimization en late game
+5. Priorizar ASIC Gen 3 + ASIC Optimization en late game
 
 **Tiempo estimado**: 8-12 horas (first run)
 
@@ -639,16 +620,15 @@ interface BalanceMetrics {
 
 **Tiempo estimado**: 15-20 horas (first run)
 
-### Strategy 3: Idle Master (Máximo Offline Progress)
-**Objetivo**: Maximizar ganancias offline
+### Strategy 3: Efficiency Builder (Máximo ROI)
+**Objetivo**: Optimizar ratio producción/electricidad
 
-1. Comprar hardware con BAJO electricityCost (para net positivo offline)
-2. Evitar ASIC Gen 3 (electricidad muy alta)
-3. Jugar solo 2-3 veces al día (dejar corriendo entre sesiones)
-4. Comprar upgrades de producción (NO click)
-5. Usar prestige para acelerar runs futuros
+1. Comprar hardware con BAJO electricityCost relativo a su producción
+2. Comprar upgrades de producción antes que de click
+3. Usar prestige para acelerar runs futuros
+4. Vender coins en picos de precio
 
-**Tiempo estimado**: 20-30 horas (first run), pero con solo 2-3 horas de juego activo
+**Tiempo estimado**: 12-18 horas (first run)
 
 ### Strategy 4: Prestige Hunter (Máximo Prestige Levels)
 **Objetivo**: Alcanzar el mayor prestige level posible
@@ -657,8 +637,6 @@ interface BalanceMetrics {
 2. Usar estrategia Speedrunner para cada run
 3. Priorizar badges que dan bonos permanentes
 4. Optimizar cada run para mejorar tiempo del anterior
-5. Usar offline progress estratégicamente
-
 **Tiempo estimado**: 100+ horas para alcanzar prestige level 50
 
 ## Edge Cases de Balance
@@ -683,10 +661,8 @@ interface BalanceMetrics {
 
 ### Edge Case 4: Offline por 1 semana
 - **Escenario**: Jugador no abre el juego por 7 días
-- **Problema**: Recibiría earnings masivos, desbalanceando progresión
-- **Solución**:
-  - Offline earnings capped a 24 horas (MAX_OFFLINE_TIME)
-  - Multiplicador de 50% para balancear (OFFLINE_EARNINGS_MULTIPLIER)
+- **Resultado**: No hay earnings offline — al volver, el estado está exactamente donde lo dejó
+- **Diseño intencional**: El juego requiere sesiones activas para progresar
 
 ### Edge Case 5: Precio de CryptoCoin sube mucho
 - **Escenario**: Precio de CC pasa de $0.001 a $1 (si hubiera fluctuación real)
@@ -759,8 +735,7 @@ analytics().logEvent('balance_metric', {
 - Establecidos valores iniciales de balance
 - COST_MULTIPLIER: 1.15
 - Prestige bonuses: 10% production, 5% click
-- Offline multiplier: 50%
-- Max offline time: 24 horas
+- Sin offline earnings (producción solo durante sesión activa)
 
 ### Future Versions
 - TBD basado en playtesting y analytics

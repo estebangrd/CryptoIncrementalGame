@@ -283,19 +283,7 @@ export const buyUpgrade = (gameState: GameState, upgradeId: string): GameState =
 
 
 export const updateOfflineProgress = (gameState: GameState): GameState => {
-  const now = Date.now();
-  const timeDiff = (now - gameState.lastSaveTime) / 1000; // Convert to seconds
-
-  if (timeDiff <= 0) return gameState;
-
-  const newGameState = { ...gameState };
-  const offlineEarnings = gameState.cryptoCoinsPerSecond * timeDiff;
-
-  newGameState.cryptoCoins += offlineEarnings;
-  newGameState.totalCryptoCoins += offlineEarnings;
-  newGameState.lastSaveTime = now;
-
-  return newGameState;
+  return { ...gameState, lastSaveTime: Date.now() };
 };
 
 export const formatNumber = (num: number): string => {

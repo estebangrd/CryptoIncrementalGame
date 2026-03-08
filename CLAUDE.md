@@ -186,8 +186,7 @@ src/
 ## Known Technical Details
 
 - **Auto-save**: Every 10 seconds + on app background/inactive
-- **Offline earnings**: 50% of normal rate (configurable in `BALANCE_CONFIG.OFFLINE_EARNINGS_MULTIPLIER`)
-- **Max offline time**: 24 hours
+- **Offline earnings**: Disabled — production only occurs during active play sessions
 - **Market update interval**: 60 seconds (price refresh + history update)
 - **Production tick**: 1 second
 - **Price API**: CoinGecko (free tier, limited to specific cryptocurrencies)

@@ -226,17 +226,12 @@ Este es el primer juego del desarrollador, por lo que AdMob es la plataforma ele
 **Cuando** cierra la app y la reabre después
 **Entonces**
 - Al reabrir app:
-  - Calcular tiempo offline: `Date.now() - lastSaveTime`
+  - **No se acreditan coins** por el tiempo en background
   - Verificar si boost sigue activo:
-    - Si `Date.now() - boostActivatedAt < 4 hours`: boost sigue activo
-    - Si expiró durante offline: boost inactivo
-  - Si boost expiró mientras estaba offline:
-    - Producción offline se calcula con boost hasta el momento de expiración
-    - Después de expiración: producción sin boost
-    - Mostrar notificación: "Your 2x boost expired while you were away"
-  - Si boost sigue activo:
-    - Continuar aplicando boost
-    - Mostrar tiempo restante actualizado
+    - Si `Date.now() - boostActivatedAt < 4 hours`: boost sigue activo, aplicar desde ahora
+    - Si expiró durante el cierre: boost inactivo
+  - Si boost expiró: mostrar notificación "Your 2x boost expired"
+  - Si boost sigue activo: continuar countdown con tiempo restante actualizado
 
 ## Fórmulas y Cálculos
 
@@ -347,52 +342,12 @@ function calculateTotalProductionWithBoost(gameState: GameState): number {
 // Final: 1000 × 1.5 × 2.0 = 3000 CC/s
 ```
 
-### Offline Production con Boost Activo
-```typescript
-function calculateOfflineEarningsWithBoost(
-  secondsOffline: number,
-  baseProductionPerSecond: number,
-  boostState: AdBoostState
-): number {
-  if (!boostState.isActive) {
-    // Sin boost, cálculo normal
-    return secondsOffline * baseProductionPerSecond * 0.5; // 50% offline
-  }
+### Boost en Background
 
-  const boostDuration = 4 * 60 * 60; // 4 horas en segundos
-  const boostActivatedAt = boostState.activatedAt / 1000; // convertir a segundos
-  const now = Date.now() / 1000;
-  const offlineStartTime = now - secondsOffline;
-
-  // Calcular cuánto tiempo del offline tuvo boost
-  const boostExpiresAt = boostActivatedAt + boostDuration;
-
-  let timeWithBoost = 0;
-  let timeWithoutBoost = 0;
-
-  if (offlineStartTime >= boostExpiresAt) {
-    // Todo el offline fue sin boost (expiró antes)
-    timeWithoutBoost = secondsOffline;
-  } else if (offlineStartTime < boostActivatedAt) {
-    // Offline empezó antes del boost
-    const timeBeforeBoost = Math.min(boostActivatedAt - offlineStartTime, secondsOffline);
-    const timeAfterBoostStart = secondsOffline - timeBeforeBoost;
-
-    timeWithBoost = Math.min(timeAfterBoostStart, boostDuration);
-    timeWithoutBoost = secondsOffline - timeWithBoost;
-  } else {
-    // Offline empezó durante el boost
-    timeWithBoost = Math.min(boostExpiresAt - offlineStartTime, secondsOffline);
-    timeWithoutBoost = secondsOffline - timeWithBoost;
-  }
-
-  // Calcular earnings
-  const earningsWithBoost = timeWithBoost * baseProductionPerSecond * 2.0 * 0.5;
-  const earningsWithoutBoost = timeWithoutBoost * baseProductionPerSecond * 0.5;
-
-  return earningsWithBoost + earningsWithoutBoost;
-}
-```
+El juego **no produce coins en background**. Si el usuario cierra la app con boost activo:
+- El timer del boost sigue corriendo en tiempo real (no se pausa)
+- Al volver, si el boost expiró, se marca como inactivo
+- No se calculan earnings retroactivos por el tiempo que el boost estuvo activo en background
 
 ## Constantes de Configuración
 
