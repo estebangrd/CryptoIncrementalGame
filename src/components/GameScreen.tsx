@@ -178,40 +178,106 @@ const GameScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Main Stats Area */}
+        {/* Unified Stats Panel */}
         <View style={styles.statsArea}>
-          <View style={styles.statsContent}>
-            <Text style={styles.cryptoCoinsText}>
-              {formatNumber(gameState.cryptoCoins)} {t('game.cryptoCoins')}
-            </Text>
-            <Text style={styles.productionText}>
-              {formatNumber(gameState.cryptoCoinsPerSecond)} {t('game.perSecond')}
-            </Text>
-            <Text style={styles.hashRateText}>
-              {formatNumber(gameState.totalHashRate)} H/s
-            </Text>
-            {gameState.totalElectricityCost > 0 && (
-              <Text style={styles.electricityText}>
-                -{formatNumber(gameState.totalElectricityCost)}/sec electricity
+          {/* Hero: CryptoCoins */}
+          <Text style={styles.cryptoCoinsText}>
+            {formatNumber(gameState.cryptoCoins)} {t('game.cryptoCoins')}
+          </Text>
+
+          {/* Row 1: Prod/s + Hash Rate */}
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <Text style={styles.statLabel}>⚡ {t('game.stats.production')}</Text>
+              <Text style={styles.statValue}>
+                +{formatNumber(gameState.cryptoCoinsPerSecond)}{t('game.perSecond')}
               </Text>
-            )}
-            {gameState.unlockedTabs?.energy && gameState.energy && (() => {
-              const { totalGeneratedMW: gen, totalRequiredMW: req } = gameState.energy;
-              const balance = gen - req;
-              const sign = balance >= 0 ? '+' : '';
-              const color =
-                balance < 0
-                  ? '#ff4444'
-                  : req > 0 && balance < req * 0.1
-                  ? '#ffaa00'
-                  : '#00ff88';
-              return (
+            </View>
+            <View style={styles.statDividerV} />
+            <View style={styles.statItem}>
+              <Text style={styles.statLabel}>🖥 {t('game.stats.hashRate')}</Text>
+              <Text style={styles.statValue}>{formatNumber(gameState.totalHashRate)} H/s</Text>
+            </View>
+          </View>
+
+          {/* Row 2: Power + Net (only when electricity > 0) */}
+          {gameState.totalElectricityCost > 0 && (() => {
+            const net = gameState.cryptoCoinsPerSecond - gameState.totalElectricityCost;
+            return (
+              <>
+                <View style={styles.statsRowDivider} />
+                <View style={styles.statsRow}>
+                  <View style={styles.statItem}>
+                    <Text style={styles.statLabel}>🔌 {t('game.stats.power')}</Text>
+                    <Text style={[styles.statValue, styles.statNegative]}>
+                      -{formatNumber(gameState.totalElectricityCost)}{t('game.perSecond')}
+                    </Text>
+                  </View>
+                  <View style={styles.statDividerV} />
+                  <View style={styles.statItem}>
+                    <Text style={styles.statLabel}>✦ {t('game.stats.net')}</Text>
+                    <Text style={[styles.statValue, net >= 0 ? styles.statPositive : styles.statNegative]}>
+                      {net >= 0 ? '+' : ''}{formatNumber(net)}{t('game.perSecond')}
+                    </Text>
+                  </View>
+                </View>
+              </>
+            );
+          })()}
+
+          {/* Energy balance (only when energy tab unlocked) */}
+          {gameState.unlockedTabs?.energy && gameState.energy && (() => {
+            const { totalGeneratedMW: gen, totalRequiredMW: req } = gameState.energy;
+            const balance = gen - req;
+            const sign = balance >= 0 ? '+' : '';
+            const color = balance < 0 ? '#ff4444' : req > 0 && balance < req * 0.1 ? '#ffaa00' : '#00ff88';
+            return (
+              <>
+                <View style={styles.statsRowDivider} />
                 <Text style={[styles.energyBalance, { color }]}>
                   ⚡ {sign}{formatNumber(balance)} MW
                 </Text>
-              );
-            })()}
+              </>
+            );
+          })()}
+
+          {/* Divider before totals */}
+          <View style={styles.statsRowDivider} />
+
+          {/* Totals Row 1: Total CC + Blocks */}
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <Text style={styles.statLabel}>📊 {t('game.stats.total')}</Text>
+              <Text style={styles.statValue}>{formatNumber(gameState.totalCryptoCoins)}</Text>
+            </View>
+            <View style={styles.statDividerV} />
+            <View style={styles.statItem}>
+              <Text style={styles.statLabel}>⛏ {t('game.stats.blocks')}</Text>
+              <Text style={styles.statValue}>{formatNumber(gameState.blocksMined)}</Text>
+            </View>
           </View>
+
+          {/* Totals Row 2: Money (only when > 0) */}
+          {gameState.realMoney > 0 && (
+            <>
+              <View style={styles.statsRowDivider} />
+              <View style={styles.statsRow}>
+                <View style={styles.statItem}>
+                  <Text style={styles.statLabel}>💰 {t('game.stats.money')}</Text>
+                  <Text style={[styles.statValue, styles.moneyValue]}>${formatNumber(gameState.realMoney)}</Text>
+                </View>
+                {gameState.totalRealMoneyEarned > 0 && (
+                  <>
+                    <View style={styles.statDividerV} />
+                    <View style={styles.statItem}>
+                      <Text style={styles.statLabel}>💵 {t('game.stats.totalEarned')}</Text>
+                      <Text style={[styles.statValue, styles.moneyValue]}>${formatNumber(gameState.totalRealMoneyEarned)}</Text>
+                    </View>
+                  </>
+                )}
+              </View>
+            </>
+          )}
         </View>
 
         {/* Planet Resources Meter — only visible after first non-renewable activated */}
@@ -240,25 +306,6 @@ const GameScreen: React.FC = () => {
           </Animated.View>
         )}
 
-        {/* Stats */}
-        <View style={styles.statsContainer}>
-          <Text style={styles.statsText}>
-            {t('game.totalCryptoCoins')}: {formatNumber(gameState.totalCryptoCoins)}
-          </Text>
-          <Text style={styles.statsText}>
-            Blocks Mined: {formatNumber(gameState.blocksMined)}
-          </Text>
-          {gameState.realMoney > 0 && (
-            <Text style={styles.moneyText}>
-              💰 Real Money: ${formatNumber(gameState.realMoney)}
-            </Text>
-          )}
-          {gameState.totalRealMoneyEarned > 0 && (
-            <Text style={styles.moneyText}>
-              💵 Total Earned: ${formatNumber(gameState.totalRealMoneyEarned)}
-            </Text>
-          )}
-        </View>
       </View>
 
       {/* Bottom Sheet Tabs - Bottom Half */}
@@ -366,53 +413,53 @@ const styles = StyleSheet.create({
   },
   statsArea: {
     flex: 1,
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 5,
-  },
-  statsContent: {
-    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 4,
+    paddingBottom: 4,
   },
   cryptoCoinsText: {
-    fontSize: 32,
+    fontSize: 30,
     fontWeight: 'bold',
     color: '#00ff88',
     textAlign: 'center',
-    marginBottom: 5,
+    marginBottom: 8,
   },
-  productionText: {
-    fontSize: 18,
-    color: '#888',
-    textAlign: 'center',
-    marginBottom: 5,
-  },
-  hashRateText: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-  },
-  electricityText: {
-    fontSize: 14,
-    color: '#ff6666',
-    textAlign: 'center',
-  },
-  statsContainer: {
-    paddingHorizontal: 20,
+  statsRow: {
+    flexDirection: 'row',
     paddingVertical: 6,
-    backgroundColor: '#2a2a2a',
-    marginBottom: 0,
   },
-  statsText: {
-    fontSize: 14,
-    color: '#888',
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  statLabel: {
+    fontSize: 11,
+    color: '#555',
     marginBottom: 2,
   },
-  moneyText: {
+  statValue: {
     fontSize: 14,
+    color: '#ccc',
+    fontWeight: '600',
+  },
+  statPositive: {
     color: '#00ff88',
-    marginBottom: 2,
+  },
+  statNegative: {
+    color: '#ff6666',
+  },
+  moneyValue: {
+    color: '#00ff88',
     fontWeight: 'bold',
+  },
+  statDividerV: {
+    width: 1,
+    backgroundColor: '#2a2a2a',
+    marginVertical: 2,
+  },
+  statsRowDivider: {
+    height: 1,
+    backgroundColor: '#2a2a2a',
   },
   planetMeterContainer: {
     paddingHorizontal: 20,

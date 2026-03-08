@@ -48,6 +48,46 @@ export const translations: Translation = {
     es: 'CryptoCoins Totales',
     pt: 'CryptoCoins Totais',
   },
+  'game.stats.production': {
+    en: 'Prod/s',
+    es: 'Prod/s',
+    pt: 'Prod/s',
+  },
+  'game.stats.hashRate': {
+    en: 'Hash Rate',
+    es: 'Hash Rate',
+    pt: 'Hash Rate',
+  },
+  'game.stats.power': {
+    en: 'Power',
+    es: 'Poder',
+    pt: 'Energia',
+  },
+  'game.stats.net': {
+    en: 'Net/s',
+    es: 'Neto/s',
+    pt: 'Líquido/s',
+  },
+  'game.stats.total': {
+    en: 'Total CC',
+    es: 'Total CC',
+    pt: 'Total CC',
+  },
+  'game.stats.blocks': {
+    en: 'Blocks',
+    es: 'Bloques',
+    pt: 'Blocos',
+  },
+  'game.stats.money': {
+    en: 'Cash',
+    es: 'Efectivo',
+    pt: 'Dinheiro',
+  },
+  'game.stats.totalEarned': {
+    en: 'Earned',
+    es: 'Ganado',
+    pt: 'Ganho',
+  },
 
   // Cryptocurrencies
   'cryptocoin': {
