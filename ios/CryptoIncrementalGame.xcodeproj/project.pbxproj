@@ -12,6 +12,12 @@
 		18D0E4750F974C378379FF93 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		ED08421945954AD9B5EC33D9 /* Rajdhani-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = AC0C7545F1FD4331A74888BB /* Rajdhani-SemiBold.ttf */; };
+		E087C11724D6422BA060EBDF /* Rajdhani-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1F357377A29242B79B2D8980 /* Rajdhani-Light.ttf */; };
+		87EF28A03642465D87665089 /* Orbitron-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F1F09704B89B4A509C7BC7ED /* Orbitron-Regular.ttf */; };
+		A97934F9A70848BDB6DF8879 /* Rajdhani-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4EDCD0CB20C84F6185A4BFF7 /* Rajdhani-Bold.ttf */; };
+		BCE1C4C7B2344549A1402ACE /* ShareTechMono-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 73B3946E511A4790A1F4B1FA /* ShareTechMono-Regular.ttf */; };
+		784FF327593B47FA9FE24EE7 /* Rajdhani-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = AAF58405A2B541C2BA7B6EC5 /* Rajdhani-Regular.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -25,6 +31,12 @@
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = CryptoIncrementalGame/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = CryptoIncrementalGame/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		AC0C7545F1FD4331A74888BB /* Rajdhani-SemiBold.ttf */ = {isa = PBXFileReference; name = "Rajdhani-SemiBold.ttf"; path = "../src/assets/fonts/Rajdhani-SemiBold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		1F357377A29242B79B2D8980 /* Rajdhani-Light.ttf */ = {isa = PBXFileReference; name = "Rajdhani-Light.ttf"; path = "../src/assets/fonts/Rajdhani-Light.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		F1F09704B89B4A509C7BC7ED /* Orbitron-Regular.ttf */ = {isa = PBXFileReference; name = "Orbitron-Regular.ttf"; path = "../src/assets/fonts/Orbitron-Regular.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		4EDCD0CB20C84F6185A4BFF7 /* Rajdhani-Bold.ttf */ = {isa = PBXFileReference; name = "Rajdhani-Bold.ttf"; path = "../src/assets/fonts/Rajdhani-Bold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		73B3946E511A4790A1F4B1FA /* ShareTechMono-Regular.ttf */ = {isa = PBXFileReference; name = "ShareTechMono-Regular.ttf"; path = "../src/assets/fonts/ShareTechMono-Regular.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		AAF58405A2B541C2BA7B6EC5 /* Rajdhani-Regular.ttf */ = {isa = PBXFileReference; name = "Rajdhani-Regular.ttf"; path = "../src/assets/fonts/Rajdhani-Regular.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -75,6 +87,7 @@
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				BBD78D7AC51CEA395F1C20DB /* Pods */,
+				DE28B279777146A8930E0F26 /* Resources */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -97,6 +110,20 @@
 			);
 			path = Pods;
 			sourceTree = "<group>";
+		};
+		DE28B279777146A8930E0F26 /* Resources */ = {
+			isa = "PBXGroup";
+			children = (
+				AC0C7545F1FD4331A74888BB /* Rajdhani-SemiBold.ttf */,
+				1F357377A29242B79B2D8980 /* Rajdhani-Light.ttf */,
+				F1F09704B89B4A509C7BC7ED /* Orbitron-Regular.ttf */,
+				4EDCD0CB20C84F6185A4BFF7 /* Rajdhani-Bold.ttf */,
+				73B3946E511A4790A1F4B1FA /* ShareTechMono-Regular.ttf */,
+				AAF58405A2B541C2BA7B6EC5 /* Rajdhani-Regular.ttf */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+			path = "";
 		};
 /* End PBXGroup section */
 
@@ -162,6 +189,12 @@
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				18D0E4750F974C378379FF93 /* PrivacyInfo.xcprivacy in Resources */,
+				ED08421945954AD9B5EC33D9 /* Rajdhani-SemiBold.ttf in Resources */,
+				E087C11724D6422BA060EBDF /* Rajdhani-Light.ttf in Resources */,
+				87EF28A03642465D87665089 /* Orbitron-Regular.ttf in Resources */,
+				A97934F9A70848BDB6DF8879 /* Rajdhani-Bold.ttf in Resources */,
+				BCE1C4C7B2344549A1402ACE /* ShareTechMono-Regular.ttf in Resources */,
+				784FF327593B47FA9FE24EE7 /* Rajdhani-Regular.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

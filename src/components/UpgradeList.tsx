@@ -11,6 +11,7 @@ import { useGame } from '../contexts/GameContext';
 import { formatNumber, canAffordUpgrade, isUpgradeUnlocked } from '../utils/gameLogic';
 import { isAIUnlocked, canPurchaseAILevel } from '../utils/aiLogic';
 import { AI_CONFIG } from '../config/balanceConfig';
+import { colors, fonts } from '../config/theme';
 
 const AI_LEVEL_NAMES: Record<number, string> = {
   1: 'Asistente',
@@ -46,11 +47,10 @@ const AISection: React.FC = () => {
 
   return (
     <View style={styles.aiSection}>
-      <Text style={styles.aiTitle}>{t('ai.section.title')}</Text>
+      <Text style={styles.aiSectionTitle}>{t('ai.section.title')}</Text>
 
-      {/* AI Log (visible from level 1) */}
       {ai.level >= 1 && (
-        <View style={styles.logContainer}>
+        <View style={styles.logCard}>
           <Text style={styles.logTitle}>
             {t('ai.log.title')}
             {'  '}
@@ -73,14 +73,11 @@ const AISection: React.FC = () => {
         </View>
       )}
 
-      {/* AI Level Cards */}
       {levels.map(level => {
         const config = AI_CONFIG.LEVELS[level];
         const isPurchased = ai.level >= level;
         const canAfford = canPurchaseAILevel(gameState, level);
-        const isLocked = !isPurchased && (
-          level === 1 ? !aiUnlocked : ai.level < level - 1
-        );
+        const isLocked = !isPurchased && (level === 1 ? !aiUnlocked : ai.level < level - 1);
         const pctBonus = Math.round((config.productionMultiplier - 1) * 100);
 
         return (
@@ -107,9 +104,7 @@ const AISection: React.FC = () => {
             </Text>
 
             <View style={styles.aiCardStats}>
-              <Text style={styles.aiCardBonus}>
-                +{pctBonus}% {t('ai.production.bonus').replace('+{{pct}}% ', '')}
-              </Text>
+              <Text style={styles.aiCardBonus}>+{pctBonus}% {t('ai.production.bonus').replace('+{{pct}}% ', '')}</Text>
               <Text style={[styles.aiCardCost, !canAfford && !isPurchased && styles.cannotAfford]}>
                 ${formatNumber(config.cost)}
               </Text>
@@ -132,8 +127,9 @@ const AISection: React.FC = () => {
                 ]}
                 onPress={() => handleBuyLevel(level)}
                 disabled={!canAfford}
+                activeOpacity={0.7}
               >
-                <Text style={[styles.buyButtonText, !canAfford && styles.buyButtonTextDisabled]}>
+                <Text style={[styles.buyButtonText, !canAfford && styles.buyButtonTextDim]}>
                   {t('ui.buy')}
                 </Text>
               </TouchableOpacity>
@@ -142,15 +138,9 @@ const AISection: React.FC = () => {
         );
       })}
 
-      {/* Confirmation modal for Level 3 */}
-      <Modal
-        visible={confirmLevel3}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setConfirmLevel3(false)}
-      >
+      <Modal visible={confirmLevel3} transparent animationType="fade" onRequestClose={() => setConfirmLevel3(false)}>
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
+          <View style={styles.modalBox}>
             <Text style={styles.modalTitle}>{t('ai.confirm.title')}</Text>
             <Text style={styles.modalMessage}>{t('ai.confirm.message')}</Text>
             <TouchableOpacity style={styles.confirmButton} onPress={handleConfirmLevel3}>
@@ -185,7 +175,7 @@ const UpgradeList: React.FC = () => {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
       <AISection />
 
       {gameState.upgrades
@@ -195,27 +185,16 @@ const UpgradeList: React.FC = () => {
           const isPurchased = upgrade.purchased;
 
           return (
-            <View key={upgrade.id} style={styles.upgradeItem}>
+            <View key={upgrade.id} style={[styles.upgradeCard, isPurchased && styles.upgradeCardOwned]}>
               <View style={styles.upgradeHeader}>
                 <Text style={styles.upgradeIcon}>{getUpgradeIcon(upgrade.icon)}</Text>
                 <View style={styles.upgradeInfo}>
                   <Text style={styles.upgradeName}>{t(upgrade.nameKey)}</Text>
-                  <Text style={styles.upgradeDescription}>{t(upgrade.descriptionKey)}</Text>
+                  <Text style={styles.upgradeDesc}>{t(upgrade.descriptionKey)}</Text>
                 </View>
-              </View>
-
-              <View style={styles.upgradeStats}>
-                <View style={styles.statRow}>
-                  <Text style={styles.statLabel}>{t('ui.cost')}:</Text>
-                  <Text style={[styles.statValue, !canAfford && !isPurchased && styles.cannotAfford]}>
-                    ${formatNumber(upgrade.cost)}
-                  </Text>
-                </View>
-                {isPurchased && (
-                  <View style={styles.purchasedBadge}>
-                    <Text style={styles.purchasedText}>✓ {t('ui.owned')}</Text>
-                  </View>
-                )}
+                <Text style={[styles.upgradeCost, !canAfford && !isPurchased && styles.cannotAfford, isPurchased && styles.ownedCost]}>
+                  {isPurchased ? '✓ OWNED' : `$${formatNumber(upgrade.cost)}`}
+                </Text>
               </View>
 
               {!isPurchased && (
@@ -223,8 +202,9 @@ const UpgradeList: React.FC = () => {
                   style={[styles.buyButton, !canAfford && styles.buyButtonDisabled]}
                   onPress={() => handleBuyUpgrade(upgrade.id)}
                   disabled={!canAfford}
+                  activeOpacity={0.7}
                 >
-                  <Text style={[styles.buyButtonText, !canAfford && styles.buyButtonTextDisabled]}>
+                  <Text style={[styles.buyButtonText, !canAfford && styles.buyButtonTextDim]}>
                     {t('ui.buy')}
                   </Text>
                 </TouchableOpacity>
@@ -238,75 +218,75 @@ const UpgradeList: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    flex: 1,
+    backgroundColor: colors.bg,
   },
-  // ── AI Section ──
+  contentContainer: {
+    padding: 12,
+    gap: 10,
+  },
+  // AI Section
   aiSection: {
-    marginBottom: 24,
+    marginBottom: 8,
   },
-  aiTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
+  aiSectionTitle: {
+    fontFamily: fonts.orbitron,
+    fontSize: 11,
     color: '#a855f7',
-    letterSpacing: 1,
-    marginBottom: 12,
+    letterSpacing: 1.5,
+    marginBottom: 10,
   },
-  logContainer: {
-    backgroundColor: '#1a1a2e',
+  logCard: {
+    backgroundColor: 'rgba(168,85,247,0.06)',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#a855f740',
+    borderColor: 'rgba(168,85,247,0.25)',
     padding: 10,
-    marginBottom: 12,
+    marginBottom: 10,
   },
   logTitle: {
+    fontFamily: fonts.rajdhaniBold,
     fontSize: 12,
-    fontWeight: 'bold',
     color: '#a855f7',
     marginBottom: 6,
   },
   logLevelBadge: {
+    fontFamily: fonts.rajdhani,
     fontSize: 11,
-    color: '#888',
+    color: colors.dim,
     fontWeight: 'normal',
   },
   logEmpty: {
+    fontFamily: fonts.rajdhani,
     fontSize: 12,
-    color: '#555',
+    color: colors.dim,
     fontStyle: 'italic',
   },
   logEntry: {
-    fontSize: 11,
+    fontFamily: fonts.mono,
+    fontSize: 10,
     color: '#ccc',
-    marginBottom: 3,
-    lineHeight: 16,
+    marginBottom: 2,
+    lineHeight: 15,
   },
-  logEntry_suggestion: {
-    color: '#88ccff',
-  },
-  logEntry_action: {
-    color: '#88ffcc',
-  },
-  logEntry_warning: {
-    color: '#ffcc44',
-  },
-  logEntry_autonomous: {
-    color: '#ff6688',
-  },
+  logEntry_suggestion: { color: '#88ccff' },
+  logEntry_action: { color: colors.ng },
+  logEntry_warning: { color: colors.ny },
+  logEntry_autonomous: { color: colors.nr },
   aiCard: {
-    backgroundColor: '#1e1e2e',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    backgroundColor: 'rgba(168,85,247,0.05)',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#a855f730',
+    borderColor: 'rgba(168,85,247,0.2)',
   },
   aiCardPurchased: {
     borderColor: '#a855f7',
-    backgroundColor: '#1e1030',
+    backgroundColor: 'rgba(168,85,247,0.1)',
   },
   aiCardLocked: {
-    opacity: 0.5,
+    opacity: 0.4,
   },
   aiCardHeader: {
     flexDirection: 'row',
@@ -315,182 +295,179 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   aiCardTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: fonts.orbitron,
+    fontSize: 12,
     color: '#e0c3fc',
     flex: 1,
   },
   irreversibleBadge: {
-    fontSize: 11,
-    color: '#ff4444',
+    fontFamily: fonts.mono,
+    fontSize: 10,
+    color: colors.nr,
     fontWeight: 'bold',
   },
   ownedBadge: {
-    fontSize: 11,
+    fontFamily: fonts.mono,
+    fontSize: 10,
     color: '#a855f7',
     fontWeight: 'bold',
   },
   aiCardDesc: {
+    fontFamily: fonts.rajdhani,
     fontSize: 13,
     color: '#aaa',
     lineHeight: 18,
-    marginBottom: 10,
+    marginBottom: 8,
   },
   aiCardStats: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   aiCardBonus: {
-    fontSize: 13,
+    fontFamily: fonts.mono,
+    fontSize: 12,
     color: '#a855f7',
-    fontWeight: '600',
   },
   aiCardCost: {
-    fontSize: 13,
-    color: '#00ff88',
-    fontWeight: '600',
+    fontFamily: fonts.mono,
+    fontSize: 12,
+    color: colors.ng,
   },
   lockHint: {
+    fontFamily: fonts.rajdhani,
     fontSize: 12,
-    color: '#666',
+    color: colors.dim,
     fontStyle: 'italic',
   },
-  // ── Modal ──
+  // Modal
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.8)',
+    backgroundColor: 'rgba(0,0,0,0.85)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
   },
-  modalContainer: {
-    backgroundColor: '#1a0010',
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: '#ff4444',
+  modalBox: {
+    backgroundColor: '#120008',
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: colors.nr,
     padding: 24,
     width: '100%',
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#ff4444',
-    marginBottom: 16,
+    fontFamily: fonts.orbitron,
+    fontSize: 16,
+    color: colors.nr,
+    marginBottom: 14,
     textAlign: 'center',
   },
   modalMessage: {
+    fontFamily: fonts.rajdhani,
     fontSize: 14,
     color: '#ffaaaa',
-    lineHeight: 22,
-    marginBottom: 24,
+    lineHeight: 20,
+    marginBottom: 20,
     textAlign: 'center',
   },
   confirmButton: {
     backgroundColor: '#cc0000',
-    borderRadius: 8,
-    paddingVertical: 14,
+    borderRadius: 6,
+    paddingVertical: 12,
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   confirmButtonText: {
+    fontFamily: fonts.orbitron,
     color: '#fff',
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: 'bold',
     letterSpacing: 1,
   },
   cancelButton: {
-    backgroundColor: '#333',
-    borderRadius: 8,
-    paddingVertical: 12,
+    backgroundColor: colors.bg2,
+    borderRadius: 6,
+    paddingVertical: 10,
     alignItems: 'center',
   },
   cancelButtonText: {
-    color: '#aaa',
+    fontFamily: fonts.rajdhani,
+    color: colors.dim,
     fontSize: 14,
   },
-  // ── Standard Upgrades ──
-  upgradeItem: {
-    backgroundColor: '#2a2a2a',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
+  // Standard Upgrades
+  upgradeCard: {
+    backgroundColor: colors.card2,
+    borderWidth: 1,
+    borderColor: 'rgba(0,229,255,0.15)',
+    borderRadius: 8,
+    padding: 12,
+  },
+  upgradeCardOwned: {
+    backgroundColor: 'rgba(0,229,255,0.04)',
+    borderColor: 'rgba(0,229,255,0.1)',
+    opacity: 0.7,
   },
   upgradeHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    gap: 10,
+    marginBottom: 10,
   },
   upgradeIcon: {
-    fontSize: 32,
-    marginRight: 12,
+    fontSize: 24,
   },
   upgradeInfo: {
     flex: 1,
   },
   upgradeName: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: fonts.orbitron,
+    fontSize: 11,
     color: '#fff',
-    marginBottom: 4,
+    fontWeight: 'bold',
+    marginBottom: 2,
   },
-  upgradeDescription: {
-    fontSize: 14,
-    color: '#888',
-    lineHeight: 20,
+  upgradeDesc: {
+    fontFamily: fonts.rajdhani,
+    fontSize: 11,
+    color: colors.dim,
+    lineHeight: 15,
   },
-  upgradeStats: {
-    marginBottom: 16,
+  upgradeCost: {
+    fontFamily: fonts.mono,
+    fontSize: 13,
+    color: colors.ny,
   },
-  statRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 14,
-    color: '#888',
-  },
-  statValue: {
-    fontSize: 14,
-    color: '#00ff88',
-    fontWeight: '500',
+  ownedCost: {
+    color: colors.ng,
+    fontSize: 11,
   },
   cannotAfford: {
-    color: '#ff4444',
-  },
-  purchasedBadge: {
-    backgroundColor: '#00ff88',
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    alignSelf: 'flex-start',
-    marginTop: 4,
-  },
-  purchasedText: {
-    color: '#000',
-    fontSize: 12,
-    fontWeight: 'bold',
+    color: colors.nr,
   },
   buyButton: {
-    backgroundColor: '#00ff88',
-    borderRadius: 8,
-    paddingVertical: 12,
+    borderWidth: 1.5,
+    borderColor: colors.nc,
+    borderRadius: 6,
+    paddingVertical: 9,
     alignItems: 'center',
   },
   buyButtonDisabled: {
-    backgroundColor: '#444',
+    borderColor: colors.borderDim,
   },
   buyButtonDanger: {
-    backgroundColor: '#cc2200',
+    borderColor: colors.nr,
   },
   buyButtonText: {
-    color: '#000',
-    fontSize: 16,
+    fontFamily: fonts.orbitron,
+    fontSize: 11,
+    color: colors.nc,
     fontWeight: 'bold',
+    letterSpacing: 1,
   },
-  buyButtonTextDisabled: {
-    color: '#888',
+  buyButtonTextDim: {
+    color: colors.dim,
   },
   textMuted: {
     color: '#555',

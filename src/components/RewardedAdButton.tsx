@@ -36,29 +36,36 @@ const formatTime = (ms: number): string => {
 };
 
 interface Props {
-  sheetTopAnim: Animated.Value;
+  sheetTopAnim: Animated.Value | null;
 }
 
 const RewardedAdButton: React.FC<Props> = ({ sheetTopAnim }) => {
   const { gameState, dispatch, showToast } = useGame();
   const insets = useSafeAreaInsets();
 
+  const fixedTop = useRef(new Animated.Value(insets.top + SCREEN_HEIGHT * 0.22)).current;
+  const fixedOpacity = useRef(new Animated.Value(1)).current;
+
   // Badge top tracks the sheet: below stats when collapsed
-  const badgeTop = sheetTopAnim.interpolate({
-    inputRange: [SHEET_EXPANDED_TOP, SHEET_DEFAULT_TOP],
-    outputRange: [
-      SHEET_EXPANDED_TOP + SHEET_TABS_OFFSET,
-      insets.top + SCREEN_HEIGHT * 0.22,
-    ],
-    extrapolate: 'clamp',
-  });
+  const badgeTop = sheetTopAnim
+    ? sheetTopAnim.interpolate({
+        inputRange: [SHEET_EXPANDED_TOP, SHEET_DEFAULT_TOP],
+        outputRange: [
+          SHEET_EXPANDED_TOP + SHEET_TABS_OFFSET,
+          insets.top + SCREEN_HEIGHT * 0.22,
+        ],
+        extrapolate: 'clamp',
+      })
+    : fixedTop;
 
   // Badge hides when the sheet is expanded (non-mining tab active)
-  const badgeOpacity = sheetTopAnim.interpolate({
-    inputRange: [SHEET_EXPANDED_TOP, SHEET_DEFAULT_TOP],
-    outputRange: [0, 1],
-    extrapolate: 'clamp',
-  });
+  const badgeOpacity = sheetTopAnim
+    ? sheetTopAnim.interpolate({
+        inputRange: [SHEET_EXPANDED_TOP, SHEET_DEFAULT_TOP],
+        outputRange: [0, 1],
+        extrapolate: 'clamp',
+      })
+    : fixedOpacity;
   const cooldownMs = BOOSTER_CONFIG.REWARDED_AD_BOOST.cooldownMs;
 
   const [now, setNow] = useState(Date.now());

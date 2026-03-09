@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { GameState } from '../types/game';
 import { formatBlockInfo, calculateBlockTime } from '../utils/blockLogic';
 import { formatNumber } from '../utils/gameLogic';
+import { colors, fonts } from '../config/theme';
 
 const CLICK_WINDOW_MS = 1000;
 
@@ -12,7 +13,7 @@ interface BlockStatusProps {
   t: (key: string) => string;
 }
 
-export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock, t }) => {
+export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock, t: _t }) => {
   const blockInfo = formatBlockInfo(gameState);
   const blockTime = calculateBlockTime(gameState.difficulty, gameState.totalHashRate);
   const [clickBoost, setClickBoost] = useState(0);
@@ -56,145 +57,190 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
 
   const displayHashRate = blockInfo.totalHashRate + clickBoost;
   const hasClickBoost = clickBoost > 0;
+  const isComplete = blockInfo.blocksMined >= blockInfo.totalBlocks;
+  const progressPct = blockInfo.phaseProgress;
 
   return (
-    <View style={styles.container}>
-      {/* Phase and Progress */}
-      <View style={styles.header}>
-        <Text style={styles.phaseTitle}>Phase 1: Genesis</Text>
-        <Text style={styles.progressText}>
-          {formatNumber(blockInfo.blocksMined)} / {formatNumber(blockInfo.totalBlocks)} blocks
-        </Text>
-      </View>
-
-      {/* Progress Bar */}
-      <View style={styles.progressBar}>
-        <View
-          style={[
-            styles.progressFill,
-            { width: `${blockInfo.phaseProgress}%` }
-          ]}
-        />
-      </View>
-
-      {/* Block Info Row */}
-      <View style={styles.infoRow}>
-        <View style={styles.infoItem}>
-          <Text style={styles.infoLabel}>Reward</Text>
-          <Text style={styles.infoValue}>{formatNumber(blockInfo.currentReward)}</Text>
-        </View>
-        <View style={styles.infoItem}>
-          <Text style={styles.infoLabel}>Hash Rate</Text>
-          <Text style={[styles.infoValue, hasClickBoost && styles.infoValueBoosted]}>
-            {formatNumber(displayHashRate)} H/s
+    <ScrollView style={styles.scroll} contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      {/* Phase Card */}
+      <View style={styles.phaseCard}>
+        <View style={styles.phaseRow}>
+          <Text style={styles.phaseTitle}>Phase 1: Genesis</Text>
+          <Text style={styles.phaseBlocks}>
+            {formatNumber(blockInfo.blocksMined)} / {formatNumber(blockInfo.totalBlocks)}
           </Text>
-          {hasClickBoost && (
-            <Text style={styles.clickBoostLabel}>+{formatNumber(clickBoost)} click</Text>
-          )}
         </View>
-        <View style={styles.infoItem}>
-          <Text style={styles.infoLabel}>Next Halving</Text>
-          <Text style={styles.infoValue}>{formatNumber(blockInfo.blocksUntilHalving)}</Text>
+        <View style={styles.progressBarBg}>
+          <View style={[styles.progressBarFill, { width: `${progressPct}%` as any }]} />
+        </View>
+        <Text style={styles.progressLabel}>{progressPct.toFixed(1)}% complete</Text>
+      </View>
+
+      {/* Stat Cards Grid */}
+      <View style={styles.grid}>
+        <View style={styles.statCard}>
+          <Text style={styles.statCardLabel}>REWARD</Text>
+          <Text style={styles.statCardValue}>{formatNumber(blockInfo.currentReward)}</Text>
+          <Text style={styles.statCardSub}>CC / block</Text>
+        </View>
+        <View style={[styles.statCard, styles.statCardCyan]}>
+          <Text style={[styles.statCardLabel, styles.labelCyan]}>HASH RATE</Text>
+          <Text style={[styles.statCardValue, hasClickBoost && styles.valueBoosted]}>
+            {formatNumber(displayHashRate)}
+          </Text>
+          <Text style={styles.statCardSub}>
+            {hasClickBoost ? `+${formatNumber(clickBoost)} click` : 'H/s'}
+          </Text>
+        </View>
+        <View style={styles.statCard}>
+          <Text style={styles.statCardLabel}>NEXT HALVING</Text>
+          <Text style={styles.statCardValue}>{formatNumber(blockInfo.blocksUntilHalving)}</Text>
+          <Text style={styles.statCardSub}>blocks</Text>
+        </View>
+        <View style={[styles.statCard, styles.statCardCyan]}>
+          <Text style={[styles.statCardLabel, styles.labelCyan]}>BLOCK TIME</Text>
+          <Text style={styles.statCardValue}>{blockTime.toFixed(1)}s</Text>
+          <Text style={styles.statCardSub}>avg</Text>
         </View>
       </View>
 
-      {/* Mine Block Button */}
+      {/* Mine Button */}
       <TouchableOpacity
-        style={[
-          styles.mineButton,
-          blockInfo.blocksMined >= blockInfo.totalBlocks && styles.mineButtonDisabled
-        ]}
+        style={[styles.mineButton, isComplete && styles.mineButtonDone]}
         onPress={handleMineClick}
-        disabled={blockInfo.blocksMined >= blockInfo.totalBlocks}
+        disabled={isComplete}
+        activeOpacity={0.75}
       >
-        <Text style={[
-          styles.mineButtonText,
-          blockInfo.blocksMined >= blockInfo.totalBlocks && styles.mineButtonTextDisabled
-        ]}>
-          {blockInfo.blocksMined >= blockInfo.totalBlocks ? 'Phase Complete!' : 'Mine Block'}
+        <Text style={[styles.mineButtonText, isComplete && styles.mineButtonTextDone]}>
+          {isComplete ? '✓ Phase Complete' : '⛏ Mine Block'}
         </Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#2a2a2a',
-    borderRadius: 12,
-    padding: 16,
-    margin: 16,
-    marginBottom: 8,
+  scroll: {
+    flex: 1,
+    backgroundColor: colors.bg,
   },
-  header: {
+  container: {
+    padding: 12,
+    gap: 10,
+  },
+  phaseCard: {
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    padding: 12,
+  },
+  phaseRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
   },
   phaseTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#00ff88',
-  },
-  progressText: {
-    fontSize: 14,
-    color: '#cccccc',
-  },
-  progressBar: {
-    height: 8,
-    backgroundColor: '#1a1a1a',
-    borderRadius: 4,
-    overflow: 'hidden',
-    marginBottom: 12,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#00ff88',
-    borderRadius: 4,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  infoItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  infoLabel: {
+    fontFamily: fonts.orbitron,
     fontSize: 12,
-    color: '#888888',
-    marginBottom: 2,
-  },
-  infoValue: {
-    fontSize: 14,
-    color: '#ffffff',
+    color: colors.ng,
     fontWeight: 'bold',
   },
-  infoValueBoosted: {
-    color: '#00ff88',
+  phaseBlocks: {
+    fontFamily: fonts.mono,
+    fontSize: 11,
+    color: colors.dim,
   },
-  clickBoostLabel: {
+  progressBarBg: {
+    height: 6,
+    backgroundColor: 'rgba(0,255,136,0.1)',
+    borderRadius: 3,
+    overflow: 'hidden',
+    marginBottom: 4,
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: colors.ng,
+    borderRadius: 3,
+    shadowColor: colors.ng,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
+  },
+  progressLabel: {
+    fontFamily: fonts.mono,
     fontSize: 10,
-    color: '#00cc66',
-    marginTop: 1,
+    color: colors.dim,
+    textAlign: 'right',
   },
-  mineButton: {
-    backgroundColor: '#00ff88',
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  statCard: {
+    flex: 1,
+    minWidth: '45%',
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
     borderRadius: 8,
     padding: 10,
     alignItems: 'center',
   },
-  mineButtonDisabled: {
-    backgroundColor: '#444444',
+  statCardCyan: {
+    backgroundColor: colors.card2,
+    borderColor: 'rgba(0,229,255,0.2)',
+  },
+  statCardLabel: {
+    fontFamily: fonts.rajdhani,
+    fontSize: 10,
+    color: colors.ng,
+    letterSpacing: 1,
+    marginBottom: 4,
+  },
+  labelCyan: {
+    color: colors.nc,
+  },
+  statCardValue: {
+    fontFamily: fonts.mono,
+    fontSize: 20,
+    color: '#fff',
+    marginBottom: 2,
+  },
+  valueBoosted: {
+    color: colors.ng,
+  },
+  statCardSub: {
+    fontFamily: fonts.rajdhani,
+    fontSize: 10,
+    color: colors.dim,
+  },
+  mineButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 1.5,
+    borderColor: colors.ng,
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: 'center',
+    shadowColor: colors.ng,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  mineButtonDone: {
+    borderColor: colors.dim,
+    shadowOpacity: 0,
   },
   mineButtonText: {
-    color: '#000000',
+    fontFamily: fonts.orbitron,
     fontSize: 14,
     fontWeight: 'bold',
+    color: colors.ng,
+    letterSpacing: 1,
   },
-  mineButtonTextDisabled: {
-    color: '#888888',
+  mineButtonTextDone: {
+    color: colors.dim,
   },
 });
