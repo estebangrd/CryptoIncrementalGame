@@ -6,219 +6,382 @@ import {
   StyleSheet,
 } from 'react-native';
 import { useGame } from '../contexts/GameContext';
-import { formatNumber, calculateHardwareCost, canAffordHardware, calculateHardwareProduction, calculateHardwareElectricityCost, calculateHardwareMiningSpeed, isHardwareUnlocked } from '../utils/gameLogic';
+import { formatNumber, calculateHardwareProduction, calculateHardwareElectricityCost, calculateHardwareMiningSpeed, isHardwareUnlocked } from '../utils/gameLogic';
+import { colors, fonts } from '../config/theme';
 
+// ── Section Header ─────────────────────────────────────────────────
+const SectionHeader: React.FC<{ label: string }> = ({ label }) => (
+  <View style={hdrStyles.row}>
+    <Text style={hdrStyles.text}>{label}</Text>
+    <View style={hdrStyles.line} />
+  </View>
+);
+
+const hdrStyles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 2,
+    paddingBottom: 10,
+  },
+  text: {
+    fontFamily: fonts.mono,
+    fontSize: 9,
+    letterSpacing: 4,
+    color: 'rgba(255,255,255,0.4)',
+    textTransform: 'uppercase',
+  },
+  line: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(0,229,255,0.2)',
+  },
+});
+
+// ── HardwareList ───────────────────────────────────────────────────
 const HardwareList: React.FC = () => {
   const { gameState, dispatch, t } = useGame();
 
   const handleBuyHardware = (hardwareId: string) => {
     const hardware = gameState.hardware.find(h => h.id === hardwareId);
     if (!hardware) return;
-    
     const cost = Math.floor(hardware.baseCost * Math.pow(hardware.costMultiplier, hardware.owned));
-    
     if (gameState.realMoney >= cost) {
       dispatch({ type: 'BUY_HARDWARE_WITH_MONEY', payload: hardwareId });
     }
   };
 
-  const getHardwareIcon = (iconName: string) => {
-    // Return the icon directly since it's already an emoji in the new system
-    return iconName;
-  };
-
   return (
     <View style={styles.container}>
+      <SectionHeader label="Mining Rigs" />
+
       {gameState.hardware
-        .filter((hardware) => isHardwareUnlocked(gameState, hardware)) // Solo mostrar hardware desbloqueado
+        .filter((hardware) => isHardwareUnlocked(gameState, hardware))
         .map((hardware) => {
-        const cost = Math.floor(hardware.baseCost * Math.pow(hardware.costMultiplier, hardware.owned));
-        const canAfford = gameState.realMoney >= cost;
-        const hashRate = calculateHardwareProduction(hardware, gameState.upgrades);
-        const electricityCost = calculateHardwareElectricityCost(hardware);
-        const miningSpeed = calculateHardwareMiningSpeed(hardware, gameState.upgrades);
-        const coinsPerSecond = miningSpeed * hardware.blockReward;
+          const cost = Math.floor(hardware.baseCost * Math.pow(hardware.costMultiplier, hardware.owned));
+          const canAfford = gameState.realMoney >= cost;
+          const hasUnits = hardware.owned > 0;
+          const hashRate = calculateHardwareProduction(hardware, gameState.upgrades);
+          const electricityCost = calculateHardwareElectricityCost(hardware);
+          const miningSpeed = calculateHardwareMiningSpeed(hardware, gameState.upgrades);
+          const coinsPerSecond = miningSpeed * hardware.blockReward;
 
-        const unitHardware = { ...hardware, owned: 1 };
-        const deltaHashRate = calculateHardwareProduction(unitHardware, gameState.upgrades);
-        const deltaMiningSpeed = calculateHardwareMiningSpeed(unitHardware, gameState.upgrades);
-        const deltaCoinsPerSec = deltaMiningSpeed * hardware.blockReward;
-        const deltaElectricity = hardware.electricityCost;
-        
-        return (
-          <View key={hardware.id} style={styles.hardwareItem}>
-            <View style={styles.hardwareHeader}>
-              <Text style={styles.hardwareIcon}>{getHardwareIcon(hardware.icon)}</Text>
-              <View style={styles.hardwareInfo}>
-                <Text style={styles.hardwareName}>{t(hardware.nameKey)}</Text>
-                <Text style={styles.hardwareDescription}>{t(hardware.descriptionKey)}</Text>
-              </View>
-            </View>
-            
-            <View style={styles.hardwareStats}>
-              <View style={styles.statRow}>
-                <Text style={styles.statLabel}>Level {hardware.level}:</Text>
-                <Text style={styles.statValue}>{hardware.owned} owned</Text>
-              </View>
-              <View style={styles.statRow}>
-                <Text style={styles.statLabel}>Hash Rate:</Text>
-                <Text style={styles.statValue}>{formatNumber(hashRate)} H/s</Text>
-              </View>
-              <View style={styles.statRow}>
-                <Text style={styles.statLabel}>Mining Speed:</Text>
-                <Text style={styles.statValue}>{formatNumber(miningSpeed)} blocks/sec</Text>
-              </View>
-              <View style={styles.statRow}>
-                <Text style={styles.statLabel}>Block Reward:</Text>
-                <Text style={styles.statValue}>{formatNumber(hardware.blockReward)} coins</Text>
-              </View>
-              <View style={styles.statRow}>
-                <Text style={styles.statLabel}>Coins/sec:</Text>
-                <Text style={styles.statValue}>{formatNumber(coinsPerSecond)}</Text>
-              </View>
-              {electricityCost > 0 && (
-                <View style={styles.statRow}>
-                  <Text style={styles.statLabel}>Electricity:</Text>
-                  <Text style={styles.statValue}>-{formatNumber(electricityCost)}/sec</Text>
+          const unitHardware = { ...hardware, owned: 1 };
+          const deltaHashRate = calculateHardwareProduction(unitHardware, gameState.upgrades);
+          const deltaMiningSpeed = calculateHardwareMiningSpeed(unitHardware, gameState.upgrades);
+          const deltaCoinsPerSec = deltaMiningSpeed * hardware.blockReward;
+          const deltaElectricity = hardware.electricityCost;
+
+          return (
+            <View key={hardware.id} style={[styles.card, hasUnits && styles.cardOwned]}>
+              {/* Top accent line */}
+              <View style={[styles.cardAccent, hasUnits && styles.cardAccentOwned]} />
+
+              {/* Header */}
+              <View style={styles.cardHeader}>
+                <View style={[styles.cardIconWrap, hasUnits && styles.cardIconWrapOwned]}>
+                  <Text style={styles.cardIcon}>{hardware.icon}</Text>
                 </View>
-              )}
-              <View style={styles.statRow}>
-                <Text style={styles.statLabel}>Cost:</Text>
-                <Text style={[styles.statValue, !canAfford && styles.cannotAfford]}>
-                  ${formatNumber(cost)}
-                </Text>
+                <View style={styles.cardTitleGroup}>
+                  <Text style={styles.cardName}>{t(hardware.nameKey)}</Text>
+                  <Text style={styles.cardDesc}>{t(hardware.descriptionKey)}</Text>
+                </View>
+                <View style={[styles.ownedBadge, hasUnits && styles.ownedBadgeActive]}>
+                  <Text style={[styles.ownedNum, hasUnits && styles.ownedNumActive]}>{hardware.owned}</Text>
+                  <Text style={styles.ownedLabel}>OWNED</Text>
+                </View>
               </View>
-            </View>
-            
-            <View style={styles.deltaRow}>
-              <Text style={styles.deltaLabel}>+1 adds: </Text>
-              <Text style={styles.deltaCoins}>+{formatNumber(deltaCoinsPerSec)} coins/s</Text>
-              <Text style={styles.deltaSeparator}> · </Text>
-              <Text style={styles.deltaHash}>+{formatNumber(deltaHashRate)} H/s</Text>
-              {deltaElectricity > 0 && (
-                <>
-                  <Text style={styles.deltaSeparator}> · </Text>
-                  <Text style={styles.deltaElec}>-{formatNumber(deltaElectricity)} elec</Text>
-                </>
-              )}
-            </View>
 
-            <TouchableOpacity
-              style={[styles.buyButton, !canAfford && styles.buyButtonDisabled]}
-              onPress={() => handleBuyHardware(hardware.id)}
-              disabled={!canAfford}
-            >
-              <Text style={[styles.buyButtonText, !canAfford && styles.buyButtonTextDisabled]}>
-                {t('ui.buy')}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        );
-      })}
+              {/* Stats grid */}
+              <View style={styles.statsGrid}>
+                <View style={styles.statsRow}>
+                  <View style={styles.statsCell}>
+                    <Text style={styles.statLabel}>HASH RATE</Text>
+                    <Text style={[styles.statVal, styles.valCyan]}>{formatNumber(hashRate)}</Text>
+                    <Text style={styles.statUnit}>H/s</Text>
+                  </View>
+                  <View style={styles.statsCell}>
+                    <Text style={styles.statLabel}>MINE SPEED</Text>
+                    <Text style={[styles.statVal, styles.valGreen]}>{formatNumber(miningSpeed)}</Text>
+                    <Text style={styles.statUnit}>blk/s</Text>
+                  </View>
+                  <View style={styles.statsCell}>
+                    <Text style={styles.statLabel}>REWARD</Text>
+                    <Text style={[styles.statVal, styles.valGreen]}>{formatNumber(hardware.blockReward)}</Text>
+                    <Text style={styles.statUnit}>CC/blk</Text>
+                  </View>
+                  <View style={styles.statsCell}>
+                    <Text style={styles.statLabel}>COINS/SEC</Text>
+                    <Text style={[styles.statVal, styles.valGreen]}>{formatNumber(coinsPerSecond)}</Text>
+                    <Text style={styles.statUnit}>CC/s</Text>
+                  </View>
+                  {electricityCost > 0 && (
+                    <View style={styles.statsCell}>
+                      <Text style={styles.statLabel}>ELECTRICITY</Text>
+                      <Text style={[styles.statVal, styles.valRed]}>-{formatNumber(electricityCost)}</Text>
+                      <Text style={styles.statUnit}>/s</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+
+              {/* Preview row */}
+              <View style={styles.previewRow}>
+                <Text style={styles.previewPrefix}>+1 ADDS: </Text>
+                <Text style={styles.previewGreen}>+{formatNumber(deltaCoinsPerSec)} CC/s</Text>
+                <Text style={styles.previewDim}> · </Text>
+                <Text style={styles.previewCyan}>+{formatNumber(deltaHashRate)} H/s</Text>
+                {deltaElectricity > 0 && (
+                  <>
+                    <Text style={styles.previewDim}> · </Text>
+                    <Text style={styles.previewRed}>-{formatNumber(deltaElectricity)} elec</Text>
+                  </>
+                )}
+              </View>
+
+              {/* Cost + Buy */}
+              <View style={styles.costRow}>
+                <Text style={styles.costLabel}>PURCHASE COST</Text>
+                <Text style={[styles.costVal, !canAfford && styles.costValRed]}>${formatNumber(cost)}</Text>
+              </View>
+              <TouchableOpacity
+                style={[styles.buyButton, !canAfford && styles.buyButtonDisabled]}
+                onPress={() => handleBuyHardware(hardware.id)}
+                disabled={!canAfford}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.buyButtonText, !canAfford && styles.buyButtonTextDim]}>
+                  ⬡ {canAfford ? 'BUY UNIT' : 'INSUFFICIENT FUNDS'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          );
+        })}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    padding: 12,
+    gap: 10,
   },
-  hardwareItem: {
-    backgroundColor: '#2a2a2a',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
+  card: {
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 13,
+    padding: 14,
+    overflow: 'hidden',
   },
-  hardwareHeader: {
+  cardOwned: {
+    borderColor: 'rgba(0,255,136,0.18)',
+  },
+  cardAccent: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 2,
+    backgroundColor: 'rgba(0,229,255,0.5)',
+  },
+  cardAccentOwned: {
+    backgroundColor: 'rgba(0,255,136,0.5)',
+  },
+  cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
+    marginTop: 4,
+    gap: 10,
   },
-  hardwareIcon: {
-    fontSize: 32,
-    marginRight: 12,
+  cardIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    backgroundColor: 'rgba(0,229,255,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(0,229,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
   },
-  hardwareInfo: {
+  cardIconWrapOwned: {
+    backgroundColor: 'rgba(0,255,136,0.08)',
+    borderColor: 'rgba(0,255,136,0.2)',
+  },
+  cardIcon: {
+    fontSize: 22,
+  },
+  cardTitleGroup: {
     flex: 1,
   },
-  hardwareName: {
-    fontSize: 18,
-    fontWeight: 'bold',
+  cardName: {
+    fontFamily: fonts.orbitron,
+    fontSize: 13,
     color: '#fff',
-    marginBottom: 4,
+    fontWeight: '700',
+    marginBottom: 2,
   },
-  hardwareDescription: {
-    fontSize: 14,
-    color: '#888',
-    lineHeight: 20,
+  cardDesc: {
+    fontFamily: fonts.rajdhani,
+    fontSize: 11,
+    color: colors.dim,
+    lineHeight: 15,
   },
-  hardwareStats: {
-    marginBottom: 16,
+  ownedBadge: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,229,255,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(0,229,255,0.22)',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    flexShrink: 0,
   },
-  statRow: {
+  ownedBadgeActive: {
+    backgroundColor: 'rgba(0,255,136,0.1)',
+    borderColor: 'rgba(0,255,136,0.25)',
+  },
+  ownedNum: {
+    fontFamily: fonts.mono,
+    fontSize: 18,
+    color: colors.nc,
+    lineHeight: 22,
+  },
+  ownedNumActive: {
+    color: colors.ng,
+  },
+  ownedLabel: {
+    fontFamily: fonts.mono,
+    fontSize: 8,
+    color: colors.dim,
+    letterSpacing: 1,
+  },
+  statsGrid: {
+    marginBottom: 10,
+  },
+  statsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4,
+    flexWrap: 'wrap',
+    gap: 5,
+  },
+  statsCell: {
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    borderRadius: 7,
+    padding: 6,
+    alignItems: 'flex-start',
+    minWidth: 70,
+    flex: 1,
   },
   statLabel: {
-    fontSize: 14,
-    color: '#888',
+    fontFamily: fonts.mono,
+    fontSize: 8,
+    color: colors.dim,
+    letterSpacing: 1,
+    marginBottom: 2,
   },
-  statValue: {
-    fontSize: 14,
-    color: '#00ff88',
-    fontWeight: '500',
+  statVal: {
+    fontFamily: fonts.orbitron,
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#fff',
   },
-  cannotAfford: {
-    color: '#ff4444',
+  valGreen: { color: colors.ng },
+  valCyan: { color: colors.nc },
+  valRed: { color: colors.nr },
+  statUnit: {
+    fontFamily: fonts.rajdhani,
+    fontSize: 9,
+    color: colors.dim,
   },
-  deltaRow: {
+  previewRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1a1a1a',
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    marginBottom: 10,
     flexWrap: 'wrap',
+    backgroundColor: 'rgba(0,229,255,0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(0,229,255,0.15)',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    marginBottom: 10,
   },
-  deltaLabel: {
-    fontSize: 12,
-    color: '#666',
+  previewPrefix: {
+    fontFamily: fonts.mono,
+    fontSize: 9,
+    color: colors.dim,
+    letterSpacing: 1,
   },
-  deltaCoins: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#00ff88',
+  previewGreen: {
+    fontFamily: fonts.mono,
+    fontSize: 10,
+    color: colors.ng,
   },
-  deltaHash: {
-    fontSize: 12,
-    color: '#aaa',
+  previewCyan: {
+    fontFamily: fonts.mono,
+    fontSize: 10,
+    color: colors.nc,
   },
-  deltaSeparator: {
-    fontSize: 12,
-    color: '#444',
+  previewDim: {
+    fontFamily: fonts.mono,
+    fontSize: 10,
+    color: colors.dim,
   },
-  deltaElec: {
-    fontSize: 12,
-    color: '#ff6666',
+  previewRed: {
+    fontFamily: fonts.mono,
+    fontSize: 10,
+    color: colors.nr,
+  },
+  costRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  costLabel: {
+    fontFamily: fonts.mono,
+    fontSize: 9,
+    color: colors.dim,
+    letterSpacing: 2,
+  },
+  costVal: {
+    fontFamily: fonts.orbitron,
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.ny,
+  },
+  costValRed: {
+    color: colors.nr,
   },
   buyButton: {
-    backgroundColor: '#00ff88',
-    borderRadius: 8,
-    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: colors.ng,
+    borderRadius: 11,
+    paddingVertical: 13,
     alignItems: 'center',
+    backgroundColor: 'rgba(0,255,136,0.06)',
+    shadowColor: colors.ng,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
   },
   buyButtonDisabled: {
-    backgroundColor: '#444',
+    borderColor: colors.borderDim,
+    backgroundColor: 'transparent',
+    shadowOpacity: 0,
   },
   buyButtonText: {
-    color: '#000',
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: fonts.orbitron,
+    fontSize: 12,
+    color: colors.ng,
+    fontWeight: '700',
+    letterSpacing: 3,
   },
-  buyButtonTextDisabled: {
-    color: '#888',
+  buyButtonTextDim: {
+    color: colors.dim,
+    letterSpacing: 1,
   },
 });
 

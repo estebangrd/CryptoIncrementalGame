@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { GameState } from '../types/game';
 import { formatBlockInfo, calculateBlockTime } from '../utils/blockLogic';
 import { formatNumber } from '../utils/gameLogic';
+import { colors, fonts } from '../config/theme';
 
 const CLICK_WINDOW_MS = 1000;
 
@@ -12,7 +13,139 @@ interface BlockStatusProps {
   t: (key: string) => string;
 }
 
-export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock, t }) => {
+// ── Section Header ─────────────────────────────────────────────────
+const SectionHeader: React.FC<{ label: string }> = ({ label }) => (
+  <View style={hdrStyles.row}>
+    <Text style={hdrStyles.text}>{label}</Text>
+    <View style={hdrStyles.line} />
+  </View>
+);
+
+const hdrStyles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 2,
+    paddingBottom: 10,
+  },
+  text: {
+    fontFamily: fonts.mono,
+    fontSize: 9,
+    letterSpacing: 4,
+    color: 'rgba(255,255,255,0.4)',
+    textTransform: 'uppercase',
+  },
+  line: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(0,255,136,0.2)',
+  },
+});
+
+// ── NodeStat Card ──────────────────────────────────────────────────
+interface NodeStatProps {
+  icon: string;
+  label: string;
+  value: string;
+  sub?: string;
+  variant?: 'green' | 'cyan' | 'red' | 'yellow';
+}
+
+const NodeStat: React.FC<NodeStatProps> = ({ icon, label, value, sub, variant = 'green' }) => {
+  const cardStyle = variant === 'cyan' ? statStyles.cardCyan
+    : variant === 'red' ? statStyles.cardRed
+    : variant === 'yellow' ? statStyles.cardYellow
+    : statStyles.card;
+  const valStyle = variant === 'cyan' ? statStyles.valCyan
+    : variant === 'red' ? statStyles.valRed
+    : variant === 'yellow' ? statStyles.valYellow
+    : statStyles.valGreen;
+  return (
+    <View style={[statStyles.card, cardStyle]}>
+      <Text style={statStyles.icon}>{icon}</Text>
+      <Text style={statStyles.label}>{label}</Text>
+      <Text style={[statStyles.value, valStyle]}>{value}</Text>
+      {sub && <Text style={statStyles.sub}>{sub}</Text>}
+    </View>
+  );
+};
+
+const statStyles = StyleSheet.create({
+  card: {
+    flex: 1,
+    backgroundColor: 'rgba(0,255,136,0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(0,255,136,0.22)',
+    borderRadius: 12,
+    padding: 13,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  cardCyan: {
+    backgroundColor: 'rgba(0,229,255,0.04)',
+    borderColor: 'rgba(0,229,255,0.18)',
+  },
+  cardRed: {
+    backgroundColor: 'rgba(255,61,90,0.04)',
+    borderColor: 'rgba(255,61,90,0.22)',
+  },
+  cardYellow: {
+    backgroundColor: 'rgba(255,214,0,0.04)',
+    borderColor: 'rgba(255,214,0,0.22)',
+  },
+  icon: {
+    fontSize: 13,
+    marginBottom: 5,
+  },
+  label: {
+    fontFamily: fonts.mono,
+    fontSize: 8,
+    letterSpacing: 2,
+    color: 'rgba(255,255,255,0.4)',
+    textTransform: 'uppercase',
+    marginBottom: 3,
+  },
+  value: {
+    fontFamily: fonts.orbitron,
+    fontSize: 17,
+    fontWeight: '700',
+    lineHeight: 22,
+  },
+  valGreen: {
+    color: colors.ng,
+    textShadowColor: 'rgba(0,255,136,0.35)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 6,
+  },
+  valCyan: {
+    color: colors.nc,
+    textShadowColor: 'rgba(0,229,255,0.35)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 6,
+  },
+  valRed: {
+    color: colors.nr,
+    textShadowColor: 'rgba(255,61,90,0.35)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 6,
+  },
+  valYellow: {
+    color: colors.ny,
+    textShadowColor: 'rgba(255,214,0,0.35)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 6,
+  },
+  sub: {
+    fontFamily: fonts.rajdhani,
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.4)',
+    marginTop: 2,
+  },
+});
+
+// ── BlockStatus ────────────────────────────────────────────────────
+export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock, t: _t }) => {
   const blockInfo = formatBlockInfo(gameState);
   const blockTime = calculateBlockTime(gameState.difficulty, gameState.totalHashRate);
   const [clickBoost, setClickBoost] = useState(0);
@@ -56,145 +189,284 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
 
   const displayHashRate = blockInfo.totalHashRate + clickBoost;
   const hasClickBoost = clickBoost > 0;
+  const isComplete = blockInfo.blocksMined >= blockInfo.totalBlocks;
+  const progressPct = blockInfo.phaseProgress;
+
+  const hasElectricity = gameState.totalElectricityCost > 0;
+  const netProduction = gameState.cryptoCoinsPerSecond - gameState.totalElectricityCost;
+  const hasMoney = gameState.realMoney > 0;
+  const hasTotalEarned = gameState.totalRealMoneyEarned > 0;
 
   return (
-    <View style={styles.container}>
-      {/* Phase and Progress */}
-      <View style={styles.header}>
-        <Text style={styles.phaseTitle}>Phase 1: Genesis</Text>
-        <Text style={styles.progressText}>
-          {formatNumber(blockInfo.blocksMined)} / {formatNumber(blockInfo.totalBlocks)} blocks
-        </Text>
-      </View>
+    <ScrollView style={styles.scroll} contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
 
-      {/* Progress Bar */}
-      <View style={styles.progressBar}>
-        <View
-          style={[
-            styles.progressFill,
-            { width: `${blockInfo.phaseProgress}%` }
-          ]}
+      {/* ── NODE STATUS ── */}
+      <SectionHeader label="Node Status" />
+
+      {/* Primary stat row */}
+      <View style={styles.statRow}>
+        <NodeStat
+          icon="🖥"
+          label="Hash Rate"
+          value={formatNumber(displayHashRate)}
+          sub={hasClickBoost ? `+${formatNumber(clickBoost)} click` : 'H/s — Active'}
+          variant={hasClickBoost ? 'green' : 'cyan'}
+        />
+        <NodeStat
+          icon="◈"
+          label="Net Income"
+          value={`+${formatNumber(hasElectricity ? netProduction : gameState.cryptoCoinsPerSecond)}`}
+          sub="CC/sec"
+          variant="green"
         />
       </View>
 
-      {/* Block Info Row */}
-      <View style={styles.infoRow}>
-        <View style={styles.infoItem}>
-          <Text style={styles.infoLabel}>Reward</Text>
-          <Text style={styles.infoValue}>{formatNumber(blockInfo.currentReward)}</Text>
-        </View>
-        <View style={styles.infoItem}>
-          <Text style={styles.infoLabel}>Hash Rate</Text>
-          <Text style={[styles.infoValue, hasClickBoost && styles.infoValueBoosted]}>
-            {formatNumber(displayHashRate)} H/s
-          </Text>
-          {hasClickBoost && (
-            <Text style={styles.clickBoostLabel}>+{formatNumber(clickBoost)} click</Text>
+      {/* Secondary stat row */}
+      <View style={styles.statRow}>
+        {hasElectricity && (
+          <NodeStat
+            icon="🔌"
+            label="Power Drain"
+            value={`-${formatNumber(gameState.totalElectricityCost)}`}
+            sub="units/sec"
+            variant="red"
+          />
+        )}
+        <NodeStat
+          icon="🏦"
+          label="Blocks Mined"
+          value={formatNumber(gameState.blocksMined)}
+          sub="all time"
+          variant="cyan"
+        />
+      </View>
+
+      {/* Cash row */}
+      {hasMoney && (
+        <View style={styles.statRow}>
+          <NodeStat
+            icon="💰"
+            label="Cash Balance"
+            value={`$${formatNumber(gameState.realMoney)}`}
+            sub="Available"
+            variant="yellow"
+          />
+          {hasTotalEarned && (
+            <NodeStat
+              icon="💵"
+              label="Total Earned"
+              value={`$${formatNumber(gameState.totalRealMoneyEarned)}`}
+              sub="All time"
+              variant="cyan"
+            />
           )}
         </View>
-        <View style={styles.infoItem}>
-          <Text style={styles.infoLabel}>Next Halving</Text>
-          <Text style={styles.infoValue}>{formatNumber(blockInfo.blocksUntilHalving)}</Text>
+      )}
+
+      {/* ── CURRENT PHASE ── */}
+      <SectionHeader label="Current Phase" />
+
+      {/* Phase Card */}
+      <View style={styles.phaseCard}>
+        <View style={styles.phaseRow}>
+          <View>
+            <Text style={styles.phaseSublabel}>ACTIVE CHAIN</Text>
+            <Text style={styles.phaseTitle}>⬡ GENESIS</Text>
+          </View>
+          <View style={styles.phaseCountGroup}>
+            <Text style={styles.phaseCountValue}>{formatNumber(blockInfo.blocksMined)}</Text>
+            <Text style={styles.phaseCountSub}>/ {formatNumber(blockInfo.totalBlocks)} blocks</Text>
+          </View>
+        </View>
+        <View style={styles.progressBarBg}>
+          <View style={[styles.progressBarFill, { width: `${progressPct}%` as any }]} />
+        </View>
+        <View style={styles.phaseStats}>
+          <View style={styles.phaseStat}>
+            <Text style={styles.phaseStatLabel}>Reward</Text>
+            <Text style={[styles.phaseStatValue, { color: colors.ny }]}>{formatNumber(blockInfo.currentReward)}</Text>
+          </View>
+          <View style={styles.phaseStat}>
+            <Text style={styles.phaseStatLabel}>Hash Rate</Text>
+            <Text style={[styles.phaseStatValue, { color: colors.nc }]}>{formatNumber(displayHashRate)}</Text>
+          </View>
+          <View style={styles.phaseStat}>
+            <Text style={styles.phaseStatLabel}>Halving At</Text>
+            <Text style={[styles.phaseStatValue, { color: colors.nr }]}>{formatNumber(blockInfo.blocksUntilHalving)}</Text>
+          </View>
         </View>
       </View>
 
-      {/* Mine Block Button */}
+      {/* Block time row */}
+      <View style={styles.blockTimeRow}>
+        <Text style={styles.blockTimeLabel}>AVG BLOCK TIME</Text>
+        <Text style={styles.blockTimeValue}>{blockTime.toFixed(1)}s</Text>
+      </View>
+
+      {/* Mine Button */}
       <TouchableOpacity
-        style={[
-          styles.mineButton,
-          blockInfo.blocksMined >= blockInfo.totalBlocks && styles.mineButtonDisabled
-        ]}
+        style={[styles.mineButton, isComplete && styles.mineButtonDone]}
         onPress={handleMineClick}
-        disabled={blockInfo.blocksMined >= blockInfo.totalBlocks}
+        disabled={isComplete}
+        activeOpacity={0.75}
       >
-        <Text style={[
-          styles.mineButtonText,
-          blockInfo.blocksMined >= blockInfo.totalBlocks && styles.mineButtonTextDisabled
-        ]}>
-          {blockInfo.blocksMined >= blockInfo.totalBlocks ? 'Phase Complete!' : 'Mine Block'}
+        <Text style={styles.mineHammer}>⛏</Text>
+        <Text style={[styles.mineButtonText, isComplete && styles.mineButtonTextDone]}>
+          {isComplete ? 'Phase Complete' : 'Mine Block'}
         </Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#2a2a2a',
-    borderRadius: 12,
-    padding: 16,
-    margin: 16,
-    marginBottom: 8,
+  scroll: {
+    flex: 1,
+    backgroundColor: colors.bg,
   },
-  header: {
+  container: {
+    padding: 12,
+    gap: 10,
+  },
+  statRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 2,
+  },
+  // ── Phase Card ──
+  phaseCard: {
+    backgroundColor: 'rgba(0,255,136,0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(0,255,136,0.22)',
+    borderRadius: 12,
+    padding: 14,
+  },
+  phaseRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
+    alignItems: 'flex-start',
+    marginBottom: 10,
+  },
+  phaseSublabel: {
+    fontFamily: fonts.mono,
+    fontSize: 8,
+    letterSpacing: 3,
+    color: 'rgba(255,255,255,0.4)',
+    marginBottom: 3,
   },
   phaseTitle: {
-    fontSize: 16,
+    fontFamily: fonts.orbitron,
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.ng,
+    letterSpacing: 2,
+  },
+  phaseCountGroup: {
+    alignItems: 'flex-end',
+  },
+  phaseCountValue: {
+    fontFamily: fonts.mono,
+    fontSize: 12,
+    color: colors.nc,
     fontWeight: 'bold',
-    color: '#00ff88',
   },
-  progressText: {
-    fontSize: 14,
-    color: '#cccccc',
+  phaseCountSub: {
+    fontFamily: fonts.mono,
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.4)',
   },
-  progressBar: {
-    height: 8,
-    backgroundColor: '#1a1a1a',
-    borderRadius: 4,
+  progressBarBg: {
+    height: 5,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 3,
     overflow: 'hidden',
     marginBottom: 12,
   },
-  progressFill: {
+  progressBarFill: {
     height: '100%',
-    backgroundColor: '#00ff88',
-    borderRadius: 4,
+    backgroundColor: colors.ng,
+    borderRadius: 3,
+    shadowColor: colors.ng,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
   },
-  infoRow: {
+  phaseStats: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 12,
   },
-  infoItem: {
+  phaseStat: {
     flex: 1,
     alignItems: 'center',
   },
-  infoLabel: {
-    fontSize: 12,
-    color: '#888888',
+  phaseStatLabel: {
+    fontFamily: fonts.mono,
+    fontSize: 8,
+    letterSpacing: 1,
+    color: 'rgba(255,255,255,0.4)',
+    textTransform: 'uppercase',
     marginBottom: 2,
   },
-  infoValue: {
-    fontSize: 14,
-    color: '#ffffff',
-    fontWeight: 'bold',
+  phaseStatValue: {
+    fontFamily: fonts.orbitron,
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#fff',
   },
-  infoValueBoosted: {
-    color: '#00ff88',
-  },
-  clickBoostLabel: {
-    fontSize: 10,
-    color: '#00cc66',
-    marginTop: 1,
-  },
-  mineButton: {
-    backgroundColor: '#00ff88',
-    borderRadius: 8,
-    padding: 10,
+  blockTimeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
   },
-  mineButtonDisabled: {
-    backgroundColor: '#444444',
+  blockTimeLabel: {
+    fontFamily: fonts.mono,
+    fontSize: 8,
+    letterSpacing: 2,
+    color: 'rgba(255,255,255,0.4)',
+  },
+  blockTimeValue: {
+    fontFamily: fonts.orbitron,
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  // ── Mine Button ──
+  mineButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(0,255,136,0.06)',
+    borderWidth: 1,
+    borderColor: colors.ng,
+    borderRadius: 13,
+    paddingVertical: 16,
+    shadowColor: colors.ng,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.13,
+    shadowRadius: 10,
+  },
+  mineButtonDone: {
+    borderColor: colors.dim,
+    shadowOpacity: 0,
+    backgroundColor: 'transparent',
+  },
+  mineHammer: {
+    fontSize: 18,
   },
   mineButtonText: {
-    color: '#000000',
-    fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: fonts.orbitron,
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.ng,
+    letterSpacing: 4,
+    textTransform: 'uppercase',
   },
-  mineButtonTextDisabled: {
-    color: '#888888',
+  mineButtonTextDone: {
+    color: colors.dim,
   },
 });

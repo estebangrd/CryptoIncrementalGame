@@ -1,0 +1,29 @@
+{
+  "migIndex": 1,
+  "data": [
+    {
+      "path": "src/assets/fonts/Rajdhani-SemiBold.ttf",
+      "sha1": "631daaffec8f19b9b0c23a80b3465a278993e22a"
+    },
+    {
+      "path": "src/assets/fonts/Rajdhani-Light.ttf",
+      "sha1": "446edd8562d2ad5ce7e4a345cf87759cfa47bd39"
+    },
+    {
+      "path": "src/assets/fonts/Orbitron-Regular.ttf",
+      "sha1": "fb5d5694113c6c7d0d1966e73b348cadd79a1bff"
+    },
+    {
+      "path": "src/assets/fonts/Rajdhani-Bold.ttf",
+      "sha1": "fb82c1992ff13cb2bc6fa12c29ffcb89974adb7b"
+    },
+    {
+      "path": "src/assets/fonts/ShareTechMono-Regular.ttf",
+      "sha1": "a6378d9adcac43f7e9963967d8c1d10ae321f558"
+    },
+    {
+      "path": "src/assets/fonts/Rajdhani-Regular.ttf",
+      "sha1": "b15421316b5c5bb92af38cb6b8db1a8df554cec4"
+    }
+  ]
+}

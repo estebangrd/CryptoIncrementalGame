@@ -105,6 +105,14 @@ android {
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
+    packaging {
+        jniLibs {
+            pickFirsts += ['lib/arm64-v8a/libNitroModules.so',
+                           'lib/armeabi-v7a/libNitroModules.so',
+                           'lib/x86/libNitroModules.so',
+                           'lib/x86_64/libNitroModules.so']
+        }
+    }
 }
 
 dependencies {
