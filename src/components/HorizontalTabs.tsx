@@ -101,9 +101,7 @@ const HorizontalTabs: React.FC<HorizontalTabsProps> = ({ onMineBlock, t, bottomO
               disabled={isLocked}
               activeOpacity={0.7}
             >
-              <Text style={[styles.tabIcon, isActive && styles.tabIconActive]}>
-                {tab.icon}
-              </Text>
+              <Text style={styles.tabIcon}>{tab.icon}</Text>
               <Text style={[styles.tabLabel, isActive && styles.tabLabelActive, isLocked && styles.tabLabelLocked]}>
                 {tab.label}
               </Text>
@@ -138,34 +136,36 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   tab: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 6,
+    gap: 4,
+    paddingVertical: 7,
+    paddingHorizontal: 13,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.borderDim,
-    minWidth: 60,
+    borderColor: 'rgba(255,255,255,0.07)',
   },
   tabActive: {
     backgroundColor: 'rgba(0,255,136,0.10)',
     borderColor: colors.ng,
+    shadowColor: colors.ng,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
   },
   tabLocked: {
     opacity: 0.3,
   },
   tabIcon: {
-    fontSize: 16,
-    marginBottom: 2,
-  },
-  tabIconActive: {
-    fontSize: 16,
+    fontSize: 13,
   },
   tabLabel: {
-    fontSize: 9,
+    fontSize: 12,
     color: colors.dim,
     fontFamily: fonts.rajdhani,
-    textAlign: 'center',
+    fontWeight: '600',
+    letterSpacing: 0.5,
   },
   tabLabelActive: {
     color: colors.ng,

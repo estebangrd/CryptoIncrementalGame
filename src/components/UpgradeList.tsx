@@ -156,6 +156,37 @@ const AISection: React.FC = () => {
   );
 };
 
+// ── Section Header ─────────────────────────────────────────────────
+const SectionHeader: React.FC<{ label: string }> = ({ label }) => (
+  <View style={secStyles.row}>
+    <Text style={secStyles.text}>{label}</Text>
+    <View style={secStyles.line} />
+  </View>
+);
+
+const secStyles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 2,
+    paddingBottom: 10,
+  },
+  text: {
+    fontFamily: fonts.mono,
+    fontSize: 9,
+    letterSpacing: 4,
+    color: 'rgba(255,255,255,0.4)',
+    textTransform: 'uppercase',
+  },
+  line: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(255,214,0,0.2)',
+  },
+});
+
+// ── UpgradeList ─────────────────────────────────────────────────────
 const UpgradeList: React.FC = () => {
   const { gameState, dispatch, t } = useGame();
 
@@ -178,6 +209,8 @@ const UpgradeList: React.FC = () => {
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
       <AISection />
 
+      <SectionHeader label="Research Lab" />
+
       {gameState.upgrades
         .filter((upgrade) => isUpgradeUnlocked(gameState, upgrade) || upgrade.purchased)
         .map((upgrade) => {
@@ -186,29 +219,48 @@ const UpgradeList: React.FC = () => {
 
           return (
             <View key={upgrade.id} style={[styles.upgradeCard, isPurchased && styles.upgradeCardOwned]}>
+              {/* Top accent */}
+              <View style={[styles.cardAccent, isPurchased && styles.cardAccentOwned]} />
+
               <View style={styles.upgradeHeader}>
-                <Text style={styles.upgradeIcon}>{getUpgradeIcon(upgrade.icon)}</Text>
+                <View style={[styles.upgradeIconWrap, isPurchased && styles.upgradeIconWrapOwned]}>
+                  <Text style={styles.upgradeIcon}>{getUpgradeIcon(upgrade.icon)}</Text>
+                </View>
                 <View style={styles.upgradeInfo}>
                   <Text style={styles.upgradeName}>{t(upgrade.nameKey)}</Text>
                   <Text style={styles.upgradeDesc}>{t(upgrade.descriptionKey)}</Text>
                 </View>
-                <Text style={[styles.upgradeCost, !canAfford && !isPurchased && styles.cannotAfford, isPurchased && styles.ownedCost]}>
-                  {isPurchased ? '✓ OWNED' : `$${formatNumber(upgrade.cost)}`}
-                </Text>
               </View>
 
-              {!isPurchased && (
-                <TouchableOpacity
-                  style={[styles.buyButton, !canAfford && styles.buyButtonDisabled]}
-                  onPress={() => handleBuyUpgrade(upgrade.id)}
-                  disabled={!canAfford}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.buyButtonText, !canAfford && styles.buyButtonTextDim]}>
-                    {t('ui.buy')}
+              <View style={styles.upgradeFooter}>
+                <View>
+                  <Text style={styles.upgradeCostLabel}>RESEARCH COST</Text>
+                  <Text style={[
+                    styles.upgradeCost,
+                    !canAfford && !isPurchased && styles.cannotAfford,
+                    isPurchased && styles.ownedCost,
+                  ]}>
+                    {isPurchased ? '—' : `$${formatNumber(upgrade.cost)}`}
                   </Text>
-                </TouchableOpacity>
-              )}
+                </View>
+
+                {isPurchased ? (
+                  <View style={styles.deployedBadge}>
+                    <Text style={styles.deployedBadgeText}>✓ DEPLOYED</Text>
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    style={[styles.buyButton, !canAfford && styles.buyButtonDisabled]}
+                    onPress={() => handleBuyUpgrade(upgrade.id)}
+                    disabled={!canAfford}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.buyButtonText, !canAfford && styles.buyButtonTextDim]}>
+                      ACQUIRE
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
           );
         })}
@@ -398,63 +450,126 @@ const styles = StyleSheet.create({
   },
   // Standard Upgrades
   upgradeCard: {
-    backgroundColor: colors.card2,
+    backgroundColor: 'rgba(255,255,255,0.03)',
     borderWidth: 1,
-    borderColor: 'rgba(0,229,255,0.15)',
-    borderRadius: 8,
-    padding: 12,
+    borderColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 13,
+    padding: 14,
+    overflow: 'hidden',
   },
   upgradeCardOwned: {
-    backgroundColor: 'rgba(0,229,255,0.04)',
-    borderColor: 'rgba(0,229,255,0.1)',
-    opacity: 0.7,
+    borderColor: 'rgba(0,255,136,0.18)',
+    backgroundColor: 'rgba(0,255,136,0.025)',
+    opacity: 0.75,
+  },
+  cardAccent: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 2,
+    backgroundColor: 'rgba(255,214,0,0.5)',
+  },
+  cardAccentOwned: {
+    backgroundColor: 'rgba(0,255,136,0.5)',
   },
   upgradeHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 10,
     marginBottom: 10,
+    marginTop: 4,
+  },
+  upgradeIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,214,0,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,214,0,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  upgradeIconWrapOwned: {
+    backgroundColor: 'rgba(0,255,136,0.08)',
+    borderColor: 'rgba(0,255,136,0.2)',
   },
   upgradeIcon: {
-    fontSize: 24,
+    fontSize: 22,
   },
   upgradeInfo: {
     flex: 1,
   },
   upgradeName: {
     fontFamily: fonts.orbitron,
-    fontSize: 11,
+    fontSize: 12,
     color: '#fff',
-    fontWeight: 'bold',
-    marginBottom: 2,
+    fontWeight: '700',
+    marginBottom: 3,
   },
   upgradeDesc: {
     fontFamily: fonts.rajdhani,
-    fontSize: 11,
+    fontSize: 12,
     color: colors.dim,
-    lineHeight: 15,
+    lineHeight: 16,
+  },
+  upgradeFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+    marginTop: 10,
+  },
+  upgradeCostLabel: {
+    fontFamily: fonts.mono,
+    fontSize: 8,
+    color: colors.dim,
+    letterSpacing: 2,
+    marginBottom: 2,
   },
   upgradeCost: {
-    fontFamily: fonts.mono,
-    fontSize: 13,
+    fontFamily: fonts.orbitron,
+    fontSize: 16,
+    fontWeight: '700',
     color: colors.ny,
   },
   ownedCost: {
-    color: colors.ng,
-    fontSize: 11,
+    color: colors.dim,
+    fontSize: 13,
   },
   cannotAfford: {
     color: colors.nr,
   },
-  buyButton: {
-    borderWidth: 1.5,
-    borderColor: colors.nc,
-    borderRadius: 6,
-    paddingVertical: 9,
+  deployedBadge: {
+    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'rgba(0,255,136,0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(0,255,136,0.25)',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
+  deployedBadgeText: {
+    fontFamily: fonts.mono,
+    fontSize: 9,
+    color: colors.ng,
+    letterSpacing: 1,
+  },
+  buyButton: {
+    flex: 1,
+    maxWidth: 140,
+    borderWidth: 1,
+    borderColor: 'rgba(255,214,0,0.38)',
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,214,0,0.06)',
   },
   buyButtonDisabled: {
     borderColor: colors.borderDim,
+    backgroundColor: 'transparent',
   },
   buyButtonDanger: {
     borderColor: colors.nr,
@@ -462,9 +577,9 @@ const styles = StyleSheet.create({
   buyButtonText: {
     fontFamily: fonts.orbitron,
     fontSize: 11,
-    color: colors.nc,
-    fontWeight: 'bold',
-    letterSpacing: 1,
+    color: colors.ny,
+    fontWeight: '700',
+    letterSpacing: 2,
   },
   buyButtonTextDim: {
     color: colors.dim,

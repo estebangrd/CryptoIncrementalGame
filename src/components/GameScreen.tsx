@@ -7,7 +7,10 @@ import {
   Animated,
   Modal,
   Alert,
+  Dimensions,
+  Easing,
 } from 'react-native';
+import Svg, { Defs, Pattern, Rect, Line } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGame } from '../contexts/GameContext';
 import { formatNumber } from '../utils/gameLogic';
@@ -28,6 +31,168 @@ import { getPendingNarrativeEvent } from '../utils/narrativeLogic';
 import { Achievement } from '../types/game';
 import { colors, fonts } from '../config/theme';
 
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+// ── Hex helpers ────────────────────────────────────────────────────
+const HEX = '0123456789abcdef';
+const randomHex = () => {
+  let s = '0x';
+  for (let i = 0; i < 8; i++) s += HEX[Math.floor(Math.random() * 16)];
+  return s + '…';
+};
+
+const buildHashLine = (blocksMined: number) =>
+  [randomHex(), randomHex(), `BLOCK #${blocksMined.toLocaleString()} MINED ✓`, randomHex(), randomHex(), randomHex()].join(' · ');
+
+// ── AnimatedGrid ───────────────────────────────────────────────────
+const AnimatedGrid: React.FC = () => {
+  const shiftAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(shiftAnim, {
+        toValue: 40,
+        duration: 20000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    ).start();
+  }, [shiftAnim]);
+
+  return (
+    <Animated.View
+      style={[StyleSheet.absoluteFill, { transform: [{ translateY: shiftAnim }] }]}
+      pointerEvents="none"
+    >
+      <Svg width={SCREEN_WIDTH} height={SCREEN_HEIGHT + 40}>
+        <Defs>
+          <Pattern id="cyberpunkGrid" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+            <Line x1="40" y1="0" x2="40" y2="40" stroke="rgba(0,255,136,0.025)" strokeWidth="1" />
+            <Line x1="0" y1="40" x2="40" y2="40" stroke="rgba(0,255,136,0.025)" strokeWidth="1" />
+          </Pattern>
+        </Defs>
+        <Rect width={SCREEN_WIDTH} height={SCREEN_HEIGHT + 40} fill="url(#cyberpunkGrid)" />
+      </Svg>
+    </Animated.View>
+  );
+};
+
+// ── Scanline ───────────────────────────────────────────────────────
+const Scanline: React.FC = () => {
+  const scanAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(scanAnim, {
+        toValue: SCREEN_HEIGHT,
+        duration: 7000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    ).start();
+  }, [scanAnim]);
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[
+        styles.scanline,
+        { transform: [{ translateY: scanAnim }] },
+      ]}
+    />
+  );
+};
+
+// ── Particle ───────────────────────────────────────────────────────
+const PARTICLES = [
+  { left: '8%', duration: 9000, delay: 0, color: colors.ng },
+  { left: '22%', duration: 13000, delay: 2000, color: colors.nc },
+  { left: '48%', duration: 10000, delay: 5000, color: colors.ng },
+  { left: '72%', duration: 15000, delay: 1000, color: colors.nc },
+  { left: '88%', duration: 11000, delay: 7000, color: colors.ng },
+];
+
+const Particle: React.FC<{ left: string; duration: number; delay: number; color: string }> = ({
+  left, duration, delay, color,
+}) => {
+  const floatAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.timing(floatAnim, {
+          toValue: 1,
+          duration,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, [floatAnim, delay, duration]);
+
+  const translateY = floatAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [SCREEN_HEIGHT, -20],
+  });
+  const opacity = floatAnim.interpolate({
+    inputRange: [0, 0.1, 0.9, 1],
+    outputRange: [0, 0.5, 0.25, 0],
+  });
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[
+        styles.particle,
+        { left: left as any, backgroundColor: color, transform: [{ translateY }], opacity },
+      ]}
+    />
+  );
+};
+
+// ── HashStream ─────────────────────────────────────────────────────
+const HashStream: React.FC<{ blocksMined: number }> = ({ blocksMined }) => {
+  const scrollAnim = useRef(new Animated.Value(SCREEN_WIDTH)).current;
+  const hashText = useRef(buildHashLine(blocksMined));
+
+  useEffect(() => {
+    hashText.current = buildHashLine(blocksMined);
+  }, [blocksMined]);
+
+  useEffect(() => {
+    const start = () => {
+      scrollAnim.setValue(SCREEN_WIDTH);
+      Animated.timing(scrollAnim, {
+        toValue: -1400,
+        duration: 14000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }).start(({ finished }) => {
+        if (finished) {
+          hashText.current = buildHashLine(blocksMined);
+          start();
+        }
+      });
+    };
+    start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <View style={styles.hashStream} pointerEvents="none">
+      <Text style={styles.hashStreamLive}>LIVE</Text>
+      <Animated.Text
+        style={[styles.hashStreamText, { transform: [{ translateX: scrollAnim }] }]}
+        numberOfLines={1}
+      >
+        {hashText.current}
+      </Animated.Text>
+    </View>
+  );
+};
+
+// ── Planet resource color helper ───────────────────────────────────
 const getPlanetResourceColor = (pct: number): string => {
   if (pct > 59) return colors.ng;
   if (pct > 39) return colors.ny;
@@ -35,6 +200,7 @@ const getPlanetResourceColor = (pct: number): string => {
   return colors.nr;
 };
 
+// ── GameScreen ─────────────────────────────────────────────────────
 const GameScreen: React.FC = () => {
   const { gameState, dispatch, t } = useGame();
   const insets = useSafeAreaInsets();
@@ -43,9 +209,9 @@ const GameScreen: React.FC = () => {
   const [toastQueue, setToastQueue] = useState<Achievement[]>([]);
   const [adBannerHeight, setAdBannerHeight] = useState(0);
   const prevAchievementsRef = useRef(gameState.achievements);
-  const pulseAnim = useRef(new Animated.Value(1)).current;
 
-  // Pulsing animation for critical resource level (<5%)
+  // Planet meter pulse
+  const pulseAnim = useRef(new Animated.Value(1)).current;
   useEffect(() => {
     if (gameState.planetResourcesVisible && gameState.planetResources < 5) {
       Animated.loop(
@@ -59,7 +225,33 @@ const GameScreen: React.FC = () => {
     }
   }, [gameState.planetResourcesVisible, gameState.planetResources, pulseAnim]);
 
-  // "Ad Free" badge — shown 10s after Remove Ads purchase
+  // Hero flicker
+  const flickerAnim = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.delay(4700),
+        Animated.timing(flickerAnim, { toValue: 0.85, duration: 80, useNativeDriver: true }),
+        Animated.timing(flickerAnim, { toValue: 1, duration: 80, useNativeDriver: true }),
+        Animated.delay(100),
+        Animated.timing(flickerAnim, { toValue: 0.9, duration: 80, useNativeDriver: true }),
+        Animated.timing(flickerAnim, { toValue: 1, duration: 80, useNativeDriver: true }),
+      ])
+    ).start();
+  }, [flickerAnim]);
+
+  // Ticker dot blink
+  const dotAnim = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(dotAnim, { toValue: 0, duration: 500, useNativeDriver: true }),
+        Animated.timing(dotAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
+      ])
+    ).start();
+  }, [dotAnim]);
+
+  // "Ad Free" badge
   const adFreeBadgeOpacity = useRef(new Animated.Value(0)).current;
   const prevRemoveAds = useRef(gameState.iapState.removeAdsPurchased);
   useEffect(() => {
@@ -141,9 +333,21 @@ const GameScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+
+      {/* ── Background Effects ── */}
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <AnimatedGrid />
+        {PARTICLES.map((p, i) => (
+          <Particle key={i} left={p.left} duration={p.duration} delay={p.delay} color={p.color} />
+        ))}
+        <Scanline />
+      </View>
+
       {/* ── Top Bar ── */}
       <View style={styles.topBar}>
-        <Text style={styles.title}>{t('game.title')}</Text>
+        <Text style={styles.logo}>
+          BLOCK<Text style={styles.logoChain}>CHAIN</Text> TYCOON
+        </Text>
         <IAPBoosterBadges />
         <View style={styles.rightGroup}>
           {gameState.iapState.removeAdsPurchased && (
@@ -152,103 +356,31 @@ const GameScreen: React.FC = () => {
             </Animated.View>
           )}
           {hasPermanentOffers && (
-            <TouchableOpacity style={styles.shopButton} onPress={() => setShowShop(true)}>
-              <Text style={styles.shopButtonText}>💎</Text>
+            <TouchableOpacity style={styles.iconBtn} onPress={() => setShowShop(true)}>
+              <Text style={styles.iconBtnText}>💎</Text>
             </TouchableOpacity>
           )}
-          <TouchableOpacity style={styles.settingsButton} onPress={() => setShowSettings(true)}>
-            <Text style={styles.settingsButtonText}>⚙️</Text>
+          <TouchableOpacity style={styles.iconBtn} onPress={() => setShowSettings(true)}>
+            <Text style={styles.iconBtnText}>⚙️</Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* ── Hero: CryptoCoins ── */}
+      {/* ── Hero ── */}
       <View style={styles.heroArea}>
         <Text style={styles.heroLabel}>{t('game.cryptoCoins')}</Text>
-        <Text style={styles.heroValue}>{formatNumber(gameState.cryptoCoins)}</Text>
+        <Animated.Text style={[styles.heroValue, { opacity: flickerAnim }]}>
+          {formatNumber(gameState.cryptoCoins)}
+        </Animated.Text>
+        <Text style={styles.heroUnit}>CC</Text>
 
-        {/* Stats rows */}
-        <View style={styles.statsRow}>
-          <View style={styles.statItem}>
-            <Text style={styles.statLabel}>⚡ {t('game.stats.production')}</Text>
-            <Text style={styles.statValue}>
-              +{formatNumber(gameState.cryptoCoinsPerSecond)}{t('game.perSecond')}
-            </Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statLabel}>🖥 {t('game.stats.hashRate')}</Text>
-            <Text style={styles.statValue}>{formatNumber(gameState.totalHashRate)} H/s</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statLabel}>⛏ {t('game.stats.blocks')}</Text>
-            <Text style={styles.statValue}>{formatNumber(gameState.blocksMined)}</Text>
-          </View>
+        {/* Production ticker pill */}
+        <View style={styles.tickerPill}>
+          <Animated.View style={[styles.tickerDot, { opacity: dotAnim }]} />
+          <Text style={styles.tickerText}>
+            +{formatNumber(gameState.cryptoCoinsPerSecond)}/sec
+          </Text>
         </View>
-
-        {/* Net production row (only when electricity > 0) */}
-        {gameState.totalElectricityCost > 0 && (() => {
-          const net = gameState.cryptoCoinsPerSecond - gameState.totalElectricityCost;
-          return (
-            <View style={styles.statsRow}>
-              <View style={styles.statItem}>
-                <Text style={styles.statLabel}>🔌 {t('game.stats.power')}</Text>
-                <Text style={[styles.statValue, styles.statNegative]}>
-                  -{formatNumber(gameState.totalElectricityCost)}{t('game.perSecond')}
-                </Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <Text style={styles.statLabel}>✦ {t('game.stats.net')}</Text>
-                <Text style={[styles.statValue, net >= 0 ? styles.statPositive : styles.statNegative]}>
-                  {net >= 0 ? '+' : ''}{formatNumber(net)}{t('game.perSecond')}
-                </Text>
-              </View>
-              {gameState.realMoney > 0 && (
-                <>
-                  <View style={styles.statDivider} />
-                  <View style={styles.statItem}>
-                    <Text style={styles.statLabel}>💰 {t('game.stats.money')}</Text>
-                    <Text style={[styles.statValue, styles.moneyValue]}>${formatNumber(gameState.realMoney)}</Text>
-                  </View>
-                </>
-              )}
-            </View>
-          );
-        })()}
-
-        {/* Money row when no electricity yet */}
-        {gameState.totalElectricityCost === 0 && gameState.realMoney > 0 && (
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>💰 {t('game.stats.money')}</Text>
-              <Text style={[styles.statValue, styles.moneyValue]}>${formatNumber(gameState.realMoney)}</Text>
-            </View>
-            {gameState.totalRealMoneyEarned > 0 && (
-              <>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <Text style={styles.statLabel}>💵 {t('game.stats.totalEarned')}</Text>
-                  <Text style={[styles.statValue, styles.moneyValue]}>${formatNumber(gameState.totalRealMoneyEarned)}</Text>
-                </View>
-              </>
-            )}
-          </View>
-        )}
-
-        {/* Energy balance */}
-        {gameState.unlockedTabs?.energy && gameState.energy && (() => {
-          const { totalGeneratedMW: gen, totalRequiredMW: req } = gameState.energy;
-          const balance = gen - req;
-          const sign = balance >= 0 ? '+' : '';
-          const color = balance < 0 ? colors.nr : req > 0 && balance < req * 0.1 ? colors.ny : colors.ng;
-          return (
-            <Text style={[styles.energyBalance, { color }]}>
-              ⚡ {sign}{formatNumber(balance)} MW
-            </Text>
-          );
-        })()}
       </View>
 
       {/* ── Planet Resources Meter ── */}
@@ -271,6 +403,9 @@ const GameScreen: React.FC = () => {
           </View>
         </Animated.View>
       )}
+
+      {/* ── Hash Stream ── */}
+      <HashStream blocksMined={gameState.blocksMined} />
 
       {/* ── HorizontalTabs (fills remaining space) ── */}
       <HorizontalTabs
@@ -348,21 +483,31 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.bg,
   },
+  // ── Top Bar ──
   topBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: 'rgba(0,255,136,0.1)',
+    backgroundColor: 'rgba(2,8,16,0.95)',
   },
-  title: {
+  logo: {
     fontFamily: fonts.orbitron,
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 12,
+    fontWeight: '900',
     color: colors.ng,
-    letterSpacing: 1,
+    letterSpacing: 2.5,
+    textTransform: 'uppercase',
+    textShadowColor: 'rgba(0,255,136,0.55)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
+  },
+  logoChain: {
+    color: colors.nc,
+    textShadowColor: 'rgba(0,229,255,0.55)',
   },
   rightGroup: {
     flexDirection: 'row',
@@ -382,88 +527,81 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: colors.ng,
   },
-  shopButton: {
-    padding: 6,
+  iconBtn: {
+    width: 32,
+    height: 32,
     borderRadius: 8,
-    backgroundColor: 'rgba(168,85,247,0.15)',
     borderWidth: 1,
-    borderColor: '#a855f7',
+    borderColor: 'rgba(0,255,136,0.22)',
+    backgroundColor: 'rgba(0,255,136,0.04)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  shopButtonText: {
-    fontSize: 16,
+  iconBtnText: {
+    fontSize: 15,
   },
-  settingsButton: {
-    padding: 6,
-  },
-  settingsButtonText: {
-    fontSize: 22,
-  },
+  // ── Hero ──
   heroArea: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    backgroundColor: colors.card,
+    borderBottomColor: 'rgba(0,255,136,0.07)',
+    backgroundColor: 'rgba(2,8,16,0.6)',
   },
   heroLabel: {
-    fontFamily: fonts.rajdhani,
-    fontSize: 11,
-    color: colors.dim,
-    textAlign: 'center',
-    letterSpacing: 2,
+    fontFamily: fonts.mono,
+    fontSize: 9,
+    color: 'rgba(255,255,255,0.4)',
+    letterSpacing: 4,
     textTransform: 'uppercase',
-    marginBottom: 2,
+    marginBottom: 4,
   },
   heroValue: {
-    fontFamily: fonts.mono,
-    fontSize: 32,
+    fontFamily: fonts.orbitron,
+    fontSize: 36,
+    fontWeight: '900',
     color: colors.ng,
-    textAlign: 'center',
+    textShadowColor: 'rgba(0,255,136,0.45)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 18,
+    lineHeight: 44,
+  },
+  heroUnit: {
+    fontFamily: fonts.mono,
+    fontSize: 10,
+    color: 'rgba(0,255,136,0.55)',
+    letterSpacing: 3,
+    marginTop: 2,
     marginBottom: 8,
   },
-  statsRow: {
+  tickerPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 4,
+    gap: 6,
+    backgroundColor: 'rgba(0,255,136,0.07)',
+    borderWidth: 1,
+    borderColor: 'rgba(0,255,136,0.18)',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
   },
-  statItem: {
-    flex: 1,
-    alignItems: 'center',
+  tickerDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: colors.ng,
+    shadowColor: colors.ng,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 4,
   },
-  statLabel: {
-    fontFamily: fonts.rajdhani,
-    fontSize: 10,
-    color: colors.dim,
-    marginBottom: 1,
-    textAlign: 'center',
-  },
-  statValue: {
+  tickerText: {
     fontFamily: fonts.mono,
-    fontSize: 12,
-    color: '#ccc',
-    textAlign: 'center',
-  },
-  statPositive: {
+    fontSize: 10,
     color: colors.ng,
   },
-  statNegative: {
-    color: colors.nr,
-  },
-  moneyValue: {
-    color: colors.ny,
-  },
-  statDivider: {
-    width: 1,
-    height: 28,
-    backgroundColor: colors.borderDim,
-  },
-  energyBalance: {
-    fontFamily: fonts.mono,
-    fontSize: 12,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginTop: 4,
-  },
+  // ── Planet Meter ──
   planetMeter: {
     paddingHorizontal: 16,
     paddingVertical: 6,
@@ -496,6 +634,51 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 2,
   },
+  // ── Hash Stream ──
+  hashStream: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 28,
+    marginHorizontal: 14,
+    marginVertical: 8,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    borderWidth: 1,
+    borderColor: 'rgba(0,255,136,0.1)',
+    borderRadius: 8,
+    overflow: 'hidden',
+    paddingLeft: 8,
+  },
+  hashStreamLive: {
+    fontFamily: fonts.mono,
+    fontSize: 8,
+    color: 'rgba(0,255,136,0.55)',
+    letterSpacing: 2,
+    backgroundColor: 'rgba(2,8,16,0.85)',
+    paddingRight: 6,
+    zIndex: 1,
+  },
+  hashStreamText: {
+    fontFamily: fonts.mono,
+    fontSize: 9,
+    color: 'rgba(0,255,136,0.35)',
+    letterSpacing: 1,
+    whiteSpace: 'nowrap' as any,
+  },
+  // ── Background FX ──
+  scanline: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    height: 2,
+    backgroundColor: 'rgba(0,255,136,0.05)',
+  },
+  particle: {
+    position: 'absolute',
+    width: 2,
+    height: 2,
+    borderRadius: 1,
+  },
+  // ── Shop Modal ──
   shopModal: {
     flex: 1,
     backgroundColor: colors.bg,
