@@ -60,6 +60,8 @@ interface NodeStatProps {
   value: string;
   sub?: string;
   variant?: 'green' | 'cyan' | 'red' | 'yellow';
+  iconSize?: number;
+  iconMarginBottom?: number;
 }
 
 const VARIANT_COLOR: Record<string, string> = {
@@ -69,7 +71,7 @@ const VARIANT_COLOR: Record<string, string> = {
   yellow: '#ffd600',
 };
 
-const NodeStat: React.FC<NodeStatProps> = ({ icon, label, value, sub, variant = 'green' }) => {
+const NodeStat: React.FC<NodeStatProps> = ({ icon, label, value, sub, variant = 'green', iconSize, iconMarginBottom }) => {
   const cardStyle = variant === 'cyan' ? statStyles.cardCyan
     : variant === 'red' ? statStyles.cardRed
     : variant === 'yellow' ? statStyles.cardYellow
@@ -91,7 +93,7 @@ const NodeStat: React.FC<NodeStatProps> = ({ icon, label, value, sub, variant = 
         </Defs>
         <Rect x="0" y="0" width={200} height="2" fill={`url(#st_${variant}_${label})`} />
       </Svg>
-      <Text style={statStyles.icon}>{icon}</Text>
+      <Text style={[statStyles.icon, iconSize ? { fontSize: iconSize } : null, iconMarginBottom !== undefined ? { marginBottom: iconMarginBottom } : null]}>{icon}</Text>
       <Text style={statStyles.label}>{label}</Text>
       <Text style={[statStyles.value, valStyle]}>{value}</Text>
       {sub && <Text style={statStyles.sub}>{sub}</Text>}
@@ -129,7 +131,7 @@ const statStyles = StyleSheet.create({
     borderColor: 'rgba(255,214,0,0.22)',
   },
   icon: {
-    fontSize: 19,
+    fontSize: 25,
     marginBottom: 5,
     color: 'rgba(255,255,255,0.7)',
   },
@@ -299,7 +301,7 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
           icon="🏦"
           label="Blocks Mined"
           value={formatNumber(gameState.blocksMined)}
-          sub="all time"
+          sub="All time"
           variant="cyan"
         />
       </View>
@@ -307,7 +309,7 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
       {/* Row 3: Net Income + Net Power */}
       <View style={styles.statRow}>
         <NodeStat
-          icon="◈"
+          icon="🪙"
           label="Net Income"
           value={`+${formatNumber(hasElectricity ? netProduction : gameState.cryptoCoinsPerSecond)}`}
           sub="CC/sec"
