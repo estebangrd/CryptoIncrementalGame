@@ -10,7 +10,6 @@ import {
   Dimensions,
   Easing,
 } from 'react-native';
-import Svg, { Defs, Pattern, Rect, Line } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGame } from '../contexts/GameContext';
 import { formatNumber } from '../utils/gameLogic';
@@ -45,13 +44,17 @@ const buildHashLine = (blocksMined: number) =>
   [randomHex(), randomHex(), `BLOCK #${blocksMined.toLocaleString()} MINED ✓`, randomHex(), randomHex(), randomHex()].join(' · ');
 
 // ── AnimatedGrid ───────────────────────────────────────────────────
+const GRID_SIZE = 40;
+const H_LINES = Math.ceil(SCREEN_HEIGHT / GRID_SIZE) + 2;
+const V_LINES = Math.ceil(SCREEN_WIDTH / GRID_SIZE) + 1;
+
 const AnimatedGrid: React.FC = () => {
   const shiftAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.loop(
       Animated.timing(shiftAnim, {
-        toValue: 40,
+        toValue: GRID_SIZE,
         duration: 20000,
         easing: Easing.linear,
         useNativeDriver: true,
@@ -64,15 +67,34 @@ const AnimatedGrid: React.FC = () => {
       style={[StyleSheet.absoluteFill, { transform: [{ translateY: shiftAnim }] }]}
       pointerEvents="none"
     >
-      <Svg width={SCREEN_WIDTH} height={SCREEN_HEIGHT + 40}>
-        <Defs>
-          <Pattern id="cyberpunkGrid" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
-            <Line x1="40" y1="0" x2="40" y2="40" stroke="rgba(0,255,136,0.025)" strokeWidth="1" />
-            <Line x1="0" y1="40" x2="40" y2="40" stroke="rgba(0,255,136,0.025)" strokeWidth="1" />
-          </Pattern>
-        </Defs>
-        <Rect width={SCREEN_WIDTH} height={SCREEN_HEIGHT + 40} fill="url(#cyberpunkGrid)" />
-      </Svg>
+      {/* Horizontal lines */}
+      {Array.from({ length: H_LINES }, (_, i) => (
+        <View
+          key={`h${i}`}
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            top: i * GRID_SIZE,
+            height: 1,
+            backgroundColor: 'rgba(0,255,136,0.025)',
+          }}
+        />
+      ))}
+      {/* Vertical lines */}
+      {Array.from({ length: V_LINES }, (_, i) => (
+        <View
+          key={`v${i}`}
+          style={{
+            position: 'absolute',
+            top: 0,
+            bottom: 0,
+            left: i * GRID_SIZE,
+            width: 1,
+            backgroundColor: 'rgba(0,255,136,0.025)',
+          }}
+        />
+      ))}
     </Animated.View>
   );
 };
@@ -662,7 +684,6 @@ const styles = StyleSheet.create({
     fontSize: 9,
     color: 'rgba(0,255,136,0.35)',
     letterSpacing: 1,
-    whiteSpace: 'nowrap' as any,
   },
   // ── Background FX ──
   scanline: {
