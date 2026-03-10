@@ -18,7 +18,17 @@ interface BlockStatusProps {
 const SectionHeader: React.FC<{ label: string }> = ({ label }) => (
   <View style={hdrStyles.row}>
     <Text style={hdrStyles.text}>{label}</Text>
-    <View style={hdrStyles.line} />
+    <View style={hdrStyles.lineContainer}>
+      <Svg width="100%" height={1}>
+        <Defs>
+          <LinearGradient id={`lg_${label}`} x1="0" y1="0" x2="1" y2="0">
+            <Stop offset="0%" stopColor="#00ff88" stopOpacity="0.2" />
+            <Stop offset="100%" stopColor="#00ff88" stopOpacity="0" />
+          </LinearGradient>
+        </Defs>
+        <Rect x="0" y="0" width="100%" height="1" fill={`url(#lg_${label})`} />
+      </Svg>
+    </View>
   </View>
 );
 
@@ -37,10 +47,9 @@ const hdrStyles = StyleSheet.create({
     color: 'rgba(255,255,255,0.4)',
     textTransform: 'uppercase',
   },
-  line: {
+  lineContainer: {
     flex: 1,
     height: 1,
-    backgroundColor: 'rgba(0,255,136,0.2)',
   },
 });
 
@@ -53,6 +62,13 @@ interface NodeStatProps {
   variant?: 'green' | 'cyan' | 'red' | 'yellow';
 }
 
+const VARIANT_COLOR: Record<string, string> = {
+  green: '#00ff88',
+  cyan: '#00e5ff',
+  red: '#ff3d5a',
+  yellow: '#ffd600',
+};
+
 const NodeStat: React.FC<NodeStatProps> = ({ icon, label, value, sub, variant = 'green' }) => {
   const cardStyle = variant === 'cyan' ? statStyles.cardCyan
     : variant === 'red' ? statStyles.cardRed
@@ -62,8 +78,19 @@ const NodeStat: React.FC<NodeStatProps> = ({ icon, label, value, sub, variant = 
     : variant === 'red' ? statStyles.valRed
     : variant === 'yellow' ? statStyles.valYellow
     : statStyles.valGreen;
+  const topColor = VARIANT_COLOR[variant] ?? '#00ff88';
   return (
     <View style={[statStyles.card, cardStyle]}>
+      <Svg width={200} height={2} style={statStyles.topBorder}>
+        <Defs>
+          <LinearGradient id={`st_${variant}_${label}`} x1="0" y1="0" x2="1" y2="0">
+            <Stop offset="0%" stopColor={topColor} stopOpacity="0" />
+            <Stop offset="50%" stopColor={topColor} stopOpacity="0.55" />
+            <Stop offset="100%" stopColor={topColor} stopOpacity="0" />
+          </LinearGradient>
+        </Defs>
+        <Rect x="0" y="0" width={200} height="2" fill={`url(#st_${variant}_${label})`} />
+      </Svg>
       <Text style={statStyles.icon}>{icon}</Text>
       <Text style={statStyles.label}>{label}</Text>
       <Text style={[statStyles.value, valStyle]}>{value}</Text>
@@ -81,8 +108,13 @@ const statStyles = StyleSheet.create({
     borderRadius: 12,
     padding: 13,
     alignItems: 'center',
-    position: 'relative',
     overflow: 'hidden',
+  },
+  topBorder: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
   },
   cardCyan: {
     backgroundColor: 'rgba(0,229,255,0.04)',
@@ -112,7 +144,6 @@ const statStyles = StyleSheet.create({
   value: {
     fontFamily: fonts.orbitron,
     fontSize: 17,
-    fontWeight: '700',
     lineHeight: 22,
   },
   valGreen: {
@@ -302,6 +333,15 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
 
       {/* Phase Card */}
       <View style={styles.phaseCard}>
+        <Svg width={600} height={2} style={styles.phaseTopBorder}>
+          <Defs>
+            <LinearGradient id="phaseTop" x1="0" y1="0" x2="1" y2="0">
+              <Stop offset="0%" stopColor="#00ff88" stopOpacity="1" />
+              <Stop offset="100%" stopColor="#00e5ff" stopOpacity="1" />
+            </LinearGradient>
+          </Defs>
+          <Rect x="0" y="0" width={600} height="2" fill="url(#phaseTop)" />
+        </Svg>
         <View style={styles.phaseRow}>
           <View>
             <Text style={styles.phaseSublabel}>ACTIVE CHAIN</Text>
@@ -395,6 +435,13 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(0,255,136,0.22)',
     borderRadius: 12,
     padding: 14,
+    overflow: 'hidden',
+  },
+  phaseTopBorder: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
   },
   phaseRow: {
     flexDirection: 'row',
@@ -412,7 +459,6 @@ const styles = StyleSheet.create({
   phaseTitle: {
     fontFamily: fonts.orbitron,
     fontSize: 11,
-    fontWeight: '700',
     color: colors.ng,
     letterSpacing: 2,
   },
@@ -465,7 +511,6 @@ const styles = StyleSheet.create({
   phaseStatValue: {
     fontFamily: fonts.orbitron,
     fontSize: 12,
-    fontWeight: '700',
     color: '#fff',
   },
   blockTimeRow: {
@@ -524,7 +569,6 @@ const styles = StyleSheet.create({
   mineButtonText: {
     fontFamily: fonts.orbitron,
     fontSize: 13,
-    fontWeight: '700',
     color: colors.ng,
     letterSpacing: 4,
     textTransform: 'uppercase',

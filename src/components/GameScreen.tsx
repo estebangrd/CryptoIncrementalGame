@@ -517,9 +517,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(2,8,16,0.95)',
   },
   logo: {
-    fontFamily: fonts.orbitron,
+    fontFamily: fonts.orbitronBlack,
     fontSize: 12,
-    fontWeight: '900',
     color: colors.ng,
     letterSpacing: 2.5,
     textTransform: 'uppercase',
@@ -582,9 +581,8 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   heroValue: {
-    fontFamily: fonts.orbitron,
+    fontFamily: fonts.orbitronBlack,
     fontSize: 36,
-    fontWeight: '900',
     color: colors.ng,
     textShadowColor: 'rgba(0,255,136,0.45)',
     textShadowOffset: { width: 0, height: 0 },

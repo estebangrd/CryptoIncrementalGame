@@ -15,7 +15,9 @@ export const colors = {
 };
 
 export const fonts = {
-  orbitron: 'Orbitron',
+  orbitron: 'Orbitron-Bold',
+  orbitronBlack: 'Orbitron-Black',
+  orbitronRegular: 'Orbitron',
   mono: 'ShareTechMono-Regular',
   rajdhani: 'Rajdhani-Regular',
   rajdhaniLight: 'Rajdhani-Light',
