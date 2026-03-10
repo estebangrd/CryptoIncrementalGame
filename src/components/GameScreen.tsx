@@ -214,6 +214,44 @@ const HashStream: React.FC<{ blocksMined: number }> = ({ blocksMined }) => {
   );
 };
 
+// ── Boost time formatter ───────────────────────────────────────────
+const fmtBoostTime = (ms: number): string => {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+  return `${m}:${sec.toString().padStart(2, '0')}`;
+};
+
+// ── Boost Pill ─────────────────────────────────────────────────────
+const BoostPill: React.FC<{ expiresAt: number }> = ({ expiresAt }) => {
+  const [remaining, setRemaining] = useState(() => Math.max(0, expiresAt - Date.now()));
+  const glowAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const iv = setInterval(() => setRemaining(Math.max(0, expiresAt - Date.now())), 1000);
+    return () => clearInterval(iv);
+  }, [expiresAt]);
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(glowAnim, { toValue: 1, duration: 1000, useNativeDriver: false }),
+        Animated.timing(glowAnim, { toValue: 0, duration: 1000, useNativeDriver: false }),
+      ])
+    ).start();
+  }, [glowAnim]);
+
+  const shadowRadius = glowAnim.interpolate({ inputRange: [0, 1], outputRange: [7, 14] });
+
+  return (
+    <Animated.View style={[styles.boostPill, { shadowRadius }]}>
+      <Text style={styles.boostPillText}>⚡ 2x {fmtBoostTime(remaining)}</Text>
+    </Animated.View>
+  );
+};
+
 // ── Planet resource color helper ───────────────────────────────────
 const getPlanetResourceColor = (pct: number): string => {
   if (pct > 59) return colors.ng;
@@ -372,6 +410,9 @@ const GameScreen: React.FC = () => {
         </Text>
         <IAPBoosterBadges />
         <View style={styles.rightGroup}>
+          {gameState.adBoost?.isActive && gameState.adBoost?.expiresAt && (
+            <BoostPill expiresAt={gameState.adBoost.expiresAt} />
+          )}
           {gameState.iapState.removeAdsPurchased && (
             <Animated.View style={[styles.adFreeBadge, { opacity: adFreeBadgeOpacity }]}>
               <Text style={styles.adFreeBadgeText}>✓ Ad Free</Text>
@@ -550,6 +591,24 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: 'bold',
     color: colors.ng,
+  },
+  boostPill: {
+    backgroundColor: '#ffd600',
+    borderRadius: 20,
+    paddingHorizontal: 11,
+    paddingVertical: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#ffd600',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    elevation: 6,
+  },
+  boostPillText: {
+    fontFamily: fonts.orbitron,
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#000',
   },
   iconBtn: {
     width: 32,
