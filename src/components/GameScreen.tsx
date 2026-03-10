@@ -525,11 +525,13 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     textShadowColor: 'rgba(0,255,136,0.55)',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
+    textShadowRadius: 18,
   },
   logoChain: {
     color: colors.nc,
     textShadowColor: 'rgba(0,229,255,0.55)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 18,
   },
   rightGroup: {
     flexDirection: 'row',

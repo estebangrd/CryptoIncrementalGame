@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Easing } from 'react-native';
+import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import { GameState } from '../types/game';
-import { formatBlockInfo, calculateBlockTime } from '../utils/blockLogic';
+import { formatBlockInfo } from '../utils/blockLogic';
 import { formatNumber } from '../utils/gameLogic';
 import { colors, fonts } from '../config/theme';
 
@@ -79,6 +80,7 @@ const statStyles = StyleSheet.create({
     borderColor: 'rgba(0,255,136,0.22)',
     borderRadius: 12,
     padding: 13,
+    alignItems: 'center',
     position: 'relative',
     overflow: 'hidden',
   },
@@ -95,8 +97,9 @@ const statStyles = StyleSheet.create({
     borderColor: 'rgba(255,214,0,0.22)',
   },
   icon: {
-    fontSize: 13,
+    fontSize: 19,
     marginBottom: 5,
+    color: 'rgba(255,255,255,0.7)',
   },
   label: {
     fontFamily: fonts.mono,
@@ -147,17 +150,44 @@ const statStyles = StyleSheet.create({
 // ── BlockStatus ────────────────────────────────────────────────────
 export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock, t: _t }) => {
   const blockInfo = formatBlockInfo(gameState);
-  const blockTime = calculateBlockTime(gameState.difficulty, gameState.totalHashRate);
   const [clickBoost, setClickBoost] = useState(0);
   const clickTimestamps = useRef<number[]>([]);
   const boostPerClickRef = useRef(10);
   const decayInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const flashAnim = useRef(new Animated.Value(0)).current;
+  const shimmerAnim = useRef(new Animated.Value(-300)).current;
+  const hammerAnim = useRef(new Animated.Value(-10)).current;
 
   useEffect(() => {
     return () => {
       if (decayInterval.current) clearInterval(decayInterval.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (isComplete) return;
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(shimmerAnim, { toValue: -300, duration: 0, useNativeDriver: true }),
+        Animated.timing(shimmerAnim, { toValue: 500, duration: 3000, useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [isComplete, shimmerAnim]);
+
+  useEffect(() => {
+    if (isComplete) return;
+    const swing = Animated.loop(
+      Animated.sequence([
+        Animated.timing(hammerAnim, { toValue: 10, duration: 1000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(hammerAnim, { toValue: -10, duration: 1000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])
+    );
+    swing.start();
+    return () => swing.stop();
+  }, [isComplete, hammerAnim]);
 
   const handleMineClick = useCallback(() => {
     const clickMultiplier = gameState.upgrades
@@ -184,8 +214,18 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
       }, 100);
     }
 
+    // Scale button down then back up
+    Animated.sequence([
+      Animated.timing(scaleAnim, { toValue: 0.95, duration: 80, useNativeDriver: true }),
+      Animated.timing(scaleAnim, { toValue: 1, duration: 150, useNativeDriver: true }),
+    ]).start();
+
+    // Full-screen flash overlay
+    flashAnim.setValue(1);
+    Animated.timing(flashAnim, { toValue: 0, duration: 300, useNativeDriver: true }).start();
+
     onMineBlock();
-  }, [gameState.upgrades, blockInfo.currentReward, onMineBlock]);
+  }, [gameState.upgrades, blockInfo.currentReward, onMineBlock, scaleAnim, flashAnim]);
 
   const displayHashRate = blockInfo.totalHashRate + clickBoost;
   const hasClickBoost = clickBoost > 0;
@@ -194,16 +234,34 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
 
   const hasElectricity = gameState.totalElectricityCost > 0;
   const netProduction = gameState.cryptoCoinsPerSecond - gameState.totalElectricityCost;
-  const hasMoney = gameState.realMoney > 0;
-  const hasTotalEarned = gameState.totalRealMoneyEarned > 0;
 
   return (
+    <View style={styles.wrapper}>
+    <Animated.View style={[styles.flashOverlay, { opacity: flashAnim }]} pointerEvents="none" />
     <ScrollView style={styles.scroll} contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
 
       {/* ── NODE STATUS ── */}
       <SectionHeader label="Node Status" />
 
-      {/* Primary stat row */}
+      {/* Row 1: Cash Balance + Total Earned */}
+      <View style={styles.statRow}>
+        <NodeStat
+          icon="💰"
+          label="Cash Balance"
+          value={`$${formatNumber(gameState.realMoney)}`}
+          sub="Available"
+          variant="yellow"
+        />
+        <NodeStat
+          icon="💵"
+          label="Total Earned"
+          value={`$${formatNumber(gameState.totalRealMoneyEarned)}`}
+          sub="All time"
+          variant="yellow"
+        />
+      </View>
+
+      {/* Row 2: Hash Rate + Blocks Mined */}
       <View style={styles.statRow}>
         <NodeStat
           icon="🖥"
@@ -213,26 +271,6 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
           variant={hasClickBoost ? 'green' : 'cyan'}
         />
         <NodeStat
-          icon="◈"
-          label="Net Income"
-          value={`+${formatNumber(hasElectricity ? netProduction : gameState.cryptoCoinsPerSecond)}`}
-          sub="CC/sec"
-          variant="green"
-        />
-      </View>
-
-      {/* Secondary stat row */}
-      <View style={styles.statRow}>
-        {hasElectricity && (
-          <NodeStat
-            icon="🔌"
-            label="Power Drain"
-            value={`-${formatNumber(gameState.totalElectricityCost)}`}
-            sub="units/sec"
-            variant="red"
-          />
-        )}
-        <NodeStat
           icon="🏦"
           label="Blocks Mined"
           value={formatNumber(gameState.blocksMined)}
@@ -241,27 +279,23 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
         />
       </View>
 
-      {/* Cash row */}
-      {hasMoney && (
-        <View style={styles.statRow}>
-          <NodeStat
-            icon="💰"
-            label="Cash Balance"
-            value={`$${formatNumber(gameState.realMoney)}`}
-            sub="Available"
-            variant="yellow"
-          />
-          {hasTotalEarned && (
-            <NodeStat
-              icon="💵"
-              label="Total Earned"
-              value={`$${formatNumber(gameState.totalRealMoneyEarned)}`}
-              sub="All time"
-              variant="cyan"
-            />
-          )}
-        </View>
-      )}
+      {/* Row 3: Net Income + Net Power */}
+      <View style={styles.statRow}>
+        <NodeStat
+          icon="◈"
+          label="Net Income"
+          value={`+${formatNumber(hasElectricity ? netProduction : gameState.cryptoCoinsPerSecond)}`}
+          sub="CC/sec"
+          variant="green"
+        />
+        <NodeStat
+          icon="🔌"
+          label="Net Power"
+          value={hasElectricity ? `-${formatNumber(gameState.totalElectricityCost)}` : '0'}
+          sub="units/sec"
+          variant={hasElectricity ? 'red' : 'cyan'}
+        />
+      </View>
 
       {/* ── CURRENT PHASE ── */}
       <SectionHeader label="Current Phase" />
@@ -297,29 +331,50 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
         </View>
       </View>
 
-      {/* Block time row */}
-      <View style={styles.blockTimeRow}>
-        <Text style={styles.blockTimeLabel}>AVG BLOCK TIME</Text>
-        <Text style={styles.blockTimeValue}>{blockTime.toFixed(1)}s</Text>
-      </View>
-
       {/* Mine Button */}
-      <TouchableOpacity
-        style={[styles.mineButton, isComplete && styles.mineButtonDone]}
-        onPress={handleMineClick}
-        disabled={isComplete}
-        activeOpacity={0.75}
-      >
-        <Text style={styles.mineHammer}>⛏</Text>
-        <Text style={[styles.mineButtonText, isComplete && styles.mineButtonTextDone]}>
-          {isComplete ? 'Phase Complete' : 'Mine Block'}
-        </Text>
-      </TouchableOpacity>
+      <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+        <TouchableOpacity
+          style={[styles.mineButton, isComplete && styles.mineButtonDone]}
+          onPress={handleMineClick}
+          disabled={isComplete}
+          activeOpacity={0.85}
+        >
+          <Animated.View
+            style={[styles.shimmer, { transform: [{ translateX: shimmerAnim }] }]}
+            pointerEvents="none"
+          >
+            <Svg width={300} height="100%" style={StyleSheet.absoluteFill} preserveAspectRatio="none">
+              <Defs>
+                <LinearGradient id="shimmerGrad" x1="0" y1="0" x2="1" y2="1">
+                  <Stop offset="0%" stopColor="#00ff88" stopOpacity="0" />
+                  <Stop offset="40%" stopColor="#00ff88" stopOpacity="0.12" />
+                  <Stop offset="60%" stopColor="#00ff88" stopOpacity="0.12" />
+                  <Stop offset="100%" stopColor="#00ff88" stopOpacity="0" />
+                </LinearGradient>
+              </Defs>
+              <Rect x="0" y="0" width="300" height="100%" fill="url(#shimmerGrad)" />
+            </Svg>
+          </Animated.View>
+          <Animated.Text style={[styles.mineHammer, { transform: [{ rotate: hammerAnim.interpolate({ inputRange: [-10, 10], outputRange: ['-10deg', '10deg'] }) }] }]}>⛏</Animated.Text>
+          <Text style={[styles.mineButtonText, isComplete && styles.mineButtonTextDone]}>
+            {isComplete ? 'Phase Complete' : 'Mine Block'}
+          </Text>
+        </TouchableOpacity>
+      </Animated.View>
     </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+  },
+  flashOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,255,136,0.07)',
+    zIndex: 10,
+  },
   scroll: {
     flex: 1,
     backgroundColor: colors.bg,
@@ -445,10 +500,17 @@ const styles = StyleSheet.create({
     borderColor: colors.ng,
     borderRadius: 13,
     paddingVertical: 16,
+    overflow: 'hidden',
     shadowColor: colors.ng,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.13,
     shadowRadius: 10,
+  },
+  shimmer: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    width: 300,
   },
   mineButtonDone: {
     borderColor: colors.dim,
@@ -457,6 +519,7 @@ const styles = StyleSheet.create({
   },
   mineHammer: {
     fontSize: 18,
+    color: colors.dim,
   },
   mineButtonText: {
     fontFamily: fonts.orbitron,
