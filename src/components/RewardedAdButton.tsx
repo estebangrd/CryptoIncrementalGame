@@ -18,11 +18,6 @@ const OFFER_WINDOW_MS = 20_000;           // 20 seconds visible
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-// Must match GameScreen constants
-const SHEET_DEFAULT_TOP = SCREEN_HEIGHT * 0.5;
-const SHEET_EXPANDED_TOP = SCREEN_HEIGHT * 0.18;
-// Approx height of bottom sheet header + tabs row
-const SHEET_TABS_OFFSET = 135;
 
 const formatTime = (ms: number): string => {
   const totalSeconds = Math.max(0, Math.floor(ms / 1000));
@@ -39,33 +34,10 @@ interface Props {
   sheetTopAnim: Animated.Value | null;
 }
 
-const RewardedAdButton: React.FC<Props> = ({ sheetTopAnim }) => {
+const RewardedAdButton: React.FC<Props> = ({ sheetTopAnim: _sheetTopAnim }) => {
   const { gameState, dispatch, showToast } = useGame();
   const insets = useSafeAreaInsets();
 
-  const fixedTop = useRef(new Animated.Value(insets.top + SCREEN_HEIGHT * 0.22)).current;
-  const fixedOpacity = useRef(new Animated.Value(1)).current;
-
-  // Badge top tracks the sheet: below stats when collapsed
-  const badgeTop = sheetTopAnim
-    ? sheetTopAnim.interpolate({
-        inputRange: [SHEET_EXPANDED_TOP, SHEET_DEFAULT_TOP],
-        outputRange: [
-          SHEET_EXPANDED_TOP + SHEET_TABS_OFFSET,
-          insets.top + SCREEN_HEIGHT * 0.22,
-        ],
-        extrapolate: 'clamp',
-      })
-    : fixedTop;
-
-  // Badge hides when the sheet is expanded (non-mining tab active)
-  const badgeOpacity = sheetTopAnim
-    ? sheetTopAnim.interpolate({
-        inputRange: [SHEET_EXPANDED_TOP, SHEET_DEFAULT_TOP],
-        outputRange: [0, 1],
-        extrapolate: 'clamp',
-      })
-    : fixedOpacity;
   const cooldownMs = BOOSTER_CONFIG.REWARDED_AD_BOOST.cooldownMs;
 
   const [now, setNow] = useState(Date.now());
@@ -134,11 +106,6 @@ const RewardedAdButton: React.FC<Props> = ({ sheetTopAnim }) => {
     return () => clearInterval(interval);
   }, [cooldownMs, dispatch]);
 
-  const boostRemaining = (): number => {
-    if (!gameState.adBoost.expiresAt) return 0;
-    return Math.max(0, gameState.adBoost.expiresAt - now);
-  };
-
   const offerSecondsLeft = (): number => {
     if (!offerStartRef.current) return 0;
     return Math.max(0, Math.ceil((OFFER_WINDOW_MS - (now - offerStartRef.current)) / 1000));
@@ -179,16 +146,6 @@ const RewardedAdButton: React.FC<Props> = ({ sheetTopAnim }) => {
       doShowAd();
     }
   }, [gameState.adBoost, dispatch, showToast]);
-
-  // Small pill badge while boost is active — follows sheet position
-  const isBoostActive = gameState.adBoost.isActive && boostRemaining() > 0;
-  if (isBoostActive) {
-    return (
-      <Animated.View style={[styles.activeBadge, { top: badgeTop, opacity: badgeOpacity }]}>
-        <Text style={styles.activeBadgeText}>⚡ 2x · {formatTime(boostRemaining())}</Text>
-      </Animated.View>
-    );
-  }
 
   if (!offerVisible) {
     return null;
@@ -297,22 +254,6 @@ const styles = StyleSheet.create({
   dismissText: {
     fontSize: 9,
     color: '#666',
-    fontWeight: 'bold',
-  },
-  activeBadge: {
-    position: 'absolute',
-    right: 16,
-    backgroundColor: '#7a5c00',
-    borderWidth: 1,
-    borderColor: '#FFD700',
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    zIndex: 50,
-  },
-  activeBadgeText: {
-    color: '#FFD700',
-    fontSize: 11,
     fontWeight: 'bold',
   },
 });

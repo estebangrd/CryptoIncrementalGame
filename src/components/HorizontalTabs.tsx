@@ -121,7 +121,7 @@ const HorizontalTabs: React.FC<HorizontalTabsProps> = ({ onMineBlock, t, bottomO
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.bg,
+    backgroundColor: 'transparent',
   },
   tabBar: {
     flexGrow: 0,

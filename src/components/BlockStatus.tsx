@@ -186,7 +186,6 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
   const boostPerClickRef = useRef(10);
   const decayInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const scaleAnim = useRef(new Animated.Value(1)).current;
-  const flashAnim = useRef(new Animated.Value(0)).current;
   const shimmerAnim = useRef(new Animated.Value(-300)).current;
   const hammerAnim = useRef(new Animated.Value(-10)).current;
 
@@ -251,12 +250,8 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
       Animated.timing(scaleAnim, { toValue: 1, duration: 150, useNativeDriver: true }),
     ]).start();
 
-    // Full-screen flash overlay
-    flashAnim.setValue(1);
-    Animated.timing(flashAnim, { toValue: 0, duration: 300, useNativeDriver: true }).start();
-
     onMineBlock();
-  }, [gameState.upgrades, blockInfo.currentReward, onMineBlock, scaleAnim, flashAnim]);
+  }, [gameState.upgrades, blockInfo.currentReward, onMineBlock, scaleAnim]);
 
   const displayHashRate = blockInfo.totalHashRate + clickBoost;
   const hasClickBoost = clickBoost > 0;
@@ -268,7 +263,6 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
 
   return (
     <View style={styles.wrapper}>
-    <Animated.View style={[styles.flashOverlay, { opacity: flashAnim }]} pointerEvents="none" />
     <ScrollView style={styles.scroll} contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
 
       {/* ── NODE STATUS ── */}
@@ -410,14 +404,9 @@ const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
   },
-  flashOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,255,136,0.07)',
-    zIndex: 10,
-  },
   scroll: {
     flex: 1,
-    backgroundColor: colors.bg,
+    backgroundColor: 'transparent',
   },
   container: {
     padding: 12,
