@@ -344,8 +344,12 @@ const GameScreen: React.FC = () => {
     setToastQueue(prev => prev.slice(1));
   }, []);
 
+  const mineFlashAnim = useRef(new Animated.Value(0)).current;
+
   const handleMineBlock = () => {
     dispatch({ type: 'MINE_BLOCK' });
+    mineFlashAnim.setValue(1);
+    Animated.timing(mineFlashAnim, { toValue: 0, duration: 300, useNativeDriver: true }).start();
   };
 
   const hasPermanentOffers =
@@ -402,6 +406,12 @@ const GameScreen: React.FC = () => {
         ))}
         <Scanline />
       </View>
+
+      {/* ── Mine flash overlay (full screen) ── */}
+      <Animated.View
+        pointerEvents="none"
+        style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,255,136,0.07)', opacity: mineFlashAnim, zIndex: 5 }]}
+      />
 
       {/* ── Top Bar ── */}
       <View style={styles.topBar}>
