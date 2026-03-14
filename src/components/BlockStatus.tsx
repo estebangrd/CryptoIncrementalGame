@@ -354,11 +354,7 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
         <View style={styles.phaseStats}>
           <View style={styles.phaseStat}>
             <Text style={styles.phaseStatLabel}>Reward</Text>
-            <Text style={[styles.phaseStatValue, { color: colors.ny }]}>{formatNumber(blockInfo.currentReward)}</Text>
-          </View>
-          <View style={styles.phaseStat}>
-            <Text style={styles.phaseStatLabel}>Hash Rate</Text>
-            <Text style={[styles.phaseStatValue, { color: colors.nc }]}>{formatNumber(displayHashRate)}</Text>
+            <Text style={[styles.phaseStatValue, { color: colors.ny }]}>{Math.max(1, Math.floor(blockInfo.currentReward))} CC</Text>
           </View>
           <View style={styles.phaseStat}>
             <Text style={styles.phaseStatLabel}>Halving At</Text>
@@ -485,10 +481,9 @@ const styles = StyleSheet.create({
   },
   phaseStats: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-evenly',
   },
   phaseStat: {
-    flex: 1,
     alignItems: 'center',
   },
   phaseStatLabel: {
