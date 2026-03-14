@@ -207,6 +207,36 @@ export const UPGRADE_CONFIG = {
       minOwned: 10,
     },
   },
+
+  // Mining Farm Efficiency - Duplica velocidad de Mining Farm
+  miningFarmEfficiency: {
+    cost: 500000,
+    multiplier: 2,
+    unlockRequirement: {
+      hardwareId: 'mining_farm',
+      minOwned: 10,
+    },
+  },
+
+  // Quantum Coherence - Duplica velocidad de Quantum Miner
+  quantumCoherence: {
+    cost: 2500000,
+    multiplier: 2,
+    unlockRequirement: {
+      hardwareId: 'quantum_miner',
+      minOwned: 10,
+    },
+  },
+
+  // Supercomputer Overclock - Duplica velocidad de Supercomputer
+  supercomputerOverclock: {
+    cost: 10000000,
+    multiplier: 2,
+    unlockRequirement: {
+      hardwareId: 'supercomputer',
+      minOwned: 10,
+    },
+  },
 };
 
 // ============================================================================

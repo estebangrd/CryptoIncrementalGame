@@ -269,6 +269,36 @@ export const translations: Translation = {
     es: 'Duplica la velocidad de minería de ASIC (Todas las generaciones de ASIC)',
     pt: 'Dobra a velocidade de mineração de ASIC (Todas as gerações de ASIC)',
   },
+  'upgrade.miningFarmEfficiency': {
+    en: 'Mining Farm Efficiency',
+    es: 'Eficiencia de Mining Farm',
+    pt: 'Eficiência de Mining Farm',
+  },
+  'upgrade.miningFarmEfficiency.description': {
+    en: 'Double Mining Farm production speed',
+    es: 'Duplica la velocidad de producción de la Mining Farm',
+    pt: 'Dobra a velocidade de produção da Mining Farm',
+  },
+  'upgrade.quantumCoherence': {
+    en: 'Quantum Coherence',
+    es: 'Coherencia Cuántica',
+    pt: 'Coerência Quântica',
+  },
+  'upgrade.quantumCoherence.description': {
+    en: 'Double Quantum Miner production speed',
+    es: 'Duplica la velocidad de producción del Quantum Miner',
+    pt: 'Dobra a velocidade de produção do Quantum Miner',
+  },
+  'upgrade.supercomputerOverclock': {
+    en: 'Supercomputer Overclock',
+    es: 'Overclock de Supercomputadora',
+    pt: 'Overclock de Supercomputador',
+  },
+  'upgrade.supercomputerOverclock.description': {
+    en: 'Double Supercomputer production speed',
+    es: 'Duplica la velocidad de producción de la Supercomputadora',
+    pt: 'Dobra a velocidade de produção do Supercomputador',
+  },
 
   // UI Elements
   'ui.buy': {
