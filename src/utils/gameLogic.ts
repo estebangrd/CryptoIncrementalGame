@@ -405,6 +405,7 @@ export const getInitialGameState = (): GameState => {
   const initialCCPrice = BTC_PRICE_HISTORY[priceHistoryIndex] / priceSeed;
 
   return {
+    isHydrated: false,
     cryptoCoins: 0,
     cryptoCoinsPerSecond: 0,
     totalElectricityCost: 0,

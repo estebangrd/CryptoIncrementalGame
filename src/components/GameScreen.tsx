@@ -29,6 +29,7 @@ import { getNewlyUnlockedAchievements } from '../utils/achievementLogic';
 import { getPendingNarrativeEvent } from '../utils/narrativeLogic';
 import { Achievement } from '../types/game';
 import { colors, fonts } from '../config/theme';
+import Svg, { Defs, LinearGradient as SvgLinearGradient, Stop, Rect } from 'react-native-svg';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -219,15 +220,15 @@ const fmtBoostTime = (ms: number): string => {
   const s = Math.max(0, Math.floor(ms / 1000));
   const h = Math.floor(s / 3600);
   const m = Math.floor((s % 3600) / 60);
-  const sec = s % 60;
-  if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
-  return `${m}:${sec.toString().padStart(2, '0')}`;
+  if (h > 0) return `${h}:${m.toString().padStart(2, '0')}h`;
+  return `${m}m`;
 };
 
 // ── Boost Pill ─────────────────────────────────────────────────────
 const BoostPill: React.FC<{ expiresAt: number }> = ({ expiresAt }) => {
   const [remaining, setRemaining] = useState(() => Math.max(0, expiresAt - Date.now()));
   const glowAnim = useRef(new Animated.Value(0)).current;
+  const [pillSize, setPillSize] = useState<{ w: number; h: number } | null>(null);
 
   useEffect(() => {
     const iv = setInterval(() => setRemaining(Math.max(0, expiresAt - Date.now())), 1000);
@@ -237,17 +238,37 @@ const BoostPill: React.FC<{ expiresAt: number }> = ({ expiresAt }) => {
   useEffect(() => {
     Animated.loop(
       Animated.sequence([
-        Animated.timing(glowAnim, { toValue: 1, duration: 1000, useNativeDriver: false }),
-        Animated.timing(glowAnim, { toValue: 0, duration: 1000, useNativeDriver: false }),
+        Animated.timing(glowAnim, { toValue: 1, duration: 1000, easing: Easing.inOut(Easing.ease), useNativeDriver: false }),
+        Animated.timing(glowAnim, { toValue: 0, duration: 1000, easing: Easing.inOut(Easing.ease), useNativeDriver: false }),
       ])
     ).start();
   }, [glowAnim]);
 
-  const shadowRadius = glowAnim.interpolate({ inputRange: [0, 1], outputRange: [7, 14] });
+  const shadowRadius = glowAnim.interpolate({ inputRange: [0, 1], outputRange: [14, 26] });
+  const shadowOpacity = glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0.4, 0.7] });
+  const elevation = glowAnim.interpolate({ inputRange: [0, 1], outputRange: [14, 26] });
 
   return (
-    <Animated.View style={[styles.boostPill, { shadowRadius }]}>
-      <Text style={styles.boostPillText}>⚡ 2x {fmtBoostTime(remaining)}</Text>
+    // Outer: carries shadow/elevation, no overflow clip
+    <Animated.View style={[styles.boostPillShadow, { shadowRadius, shadowOpacity, elevation }]}>
+      {/* Inner: clips the SVG gradient to rounded bounds */}
+      <View
+        style={styles.boostPill}
+        onLayout={e => setPillSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
+      >
+        {pillSize && (
+          <Svg style={StyleSheet.absoluteFillObject} width={pillSize.w} height={pillSize.h}>
+            <Defs>
+              <SvgLinearGradient id="pillGrad" x1="0" y1="0" x2="1" y2="0">
+                <Stop offset="0%" stopColor="#ffd600" />
+                <Stop offset="100%" stopColor="#ff8c00" />
+              </SvgLinearGradient>
+            </Defs>
+            <Rect x="0" y="0" width={pillSize.w} height={pillSize.h} rx={12} fill="url(#pillGrad)" />
+          </Svg>
+        )}
+        <Text style={styles.boostPillText}>{'⚡\uFE0E'} 2x {fmtBoostTime(remaining)}</Text>
+      </View>
     </Animated.View>
   );
 };
@@ -269,6 +290,7 @@ const GameScreen: React.FC = () => {
   const [toastQueue, setToastQueue] = useState<Achievement[]>([]);
   const [adBannerHeight, setAdBannerHeight] = useState(0);
   const prevAchievementsRef = useRef(gameState.achievements);
+  const firstHydratedRef = useRef(true);
 
   // Planet meter pulse
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -325,8 +347,17 @@ const GameScreen: React.FC = () => {
     prevRemoveAds.current = gameState.iapState.removeAdsPurchased;
   }, [gameState.iapState.removeAdsPurchased, adFreeBadgeOpacity]);
 
-  // Achievement toast queue
+  // Achievement toast queue — skip until state is hydrated from storage
   useEffect(() => {
+    if (!gameState.isHydrated) {
+      return;
+    }
+    if (firstHydratedRef.current) {
+      // First run after hydration — sync ref without showing toasts
+      prevAchievementsRef.current = gameState.achievements;
+      firstHydratedRef.current = false;
+      return;
+    }
     const newlyUnlocked = getNewlyUnlockedAchievements(
       prevAchievementsRef.current || [],
       gameState.achievements || []
@@ -338,7 +369,7 @@ const GameScreen: React.FC = () => {
       setToastQueue(prev => [...prev, ...newlyUnlocked]);
     }
     prevAchievementsRef.current = gameState.achievements;
-  }, [gameState.achievements, dispatch]);
+  }, [gameState.achievements, gameState.isHydrated, dispatch]);
 
   const handleDismissToast = useCallback(() => {
     setToastQueue(prev => prev.slice(1));
@@ -418,11 +449,13 @@ const GameScreen: React.FC = () => {
         <Text style={styles.logo}>
           BLOCK<Text style={styles.logoChain}>CHAIN</Text> TYCOON
         </Text>
-        <IAPBoosterBadges />
-        <View style={styles.rightGroup}>
+        <View style={styles.topBarCenter}>
+          <IAPBoosterBadges />
           {gameState.adBoost?.isActive && gameState.adBoost?.expiresAt && (
             <BoostPill expiresAt={gameState.adBoost.expiresAt} />
           )}
+        </View>
+        <View style={styles.rightGroup}>
           {gameState.iapState.removeAdsPurchased && (
             <Animated.View style={[styles.adFreeBadge, { opacity: adFreeBadgeOpacity }]}>
               <Text style={styles.adFreeBadgeText}>✓ Ad Free</Text>
@@ -559,10 +592,10 @@ const styles = StyleSheet.create({
   // ── Top Bar ──
   topBar: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 18,
     paddingVertical: 10,
+    overflow: 'visible',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0,255,136,0.1)',
     backgroundColor: 'rgba(2,8,16,0.95)',
@@ -583,6 +616,12 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 18,
   },
+  topBarCenter: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'visible',
+  },
   rightGroup: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -601,23 +640,25 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: colors.ng,
   },
-  boostPill: {
-    backgroundColor: '#ffd600',
-    borderRadius: 20,
-    paddingHorizontal: 11,
-    paddingVertical: 5,
-    flexDirection: 'row',
-    alignItems: 'center',
+  boostPillShadow: {
+    borderRadius: 12,
     shadowColor: '#ffd600',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    elevation: 6,
+  },
+  boostPill: {
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    overflow: 'hidden',
   },
   boostPillText: {
-    fontFamily: fonts.orbitron,
-    fontSize: 9,
+    fontFamily: fonts.rajdhani,
+    fontSize: 11,
     fontWeight: '700',
     color: '#000',
+    letterSpacing: 0.5,
   },
   iconBtn: {
     width: 32,

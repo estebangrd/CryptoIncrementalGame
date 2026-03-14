@@ -204,6 +204,7 @@ export interface NarrativeEvent {
 }
 
 export interface GameState {
+  isHydrated: boolean;
   cryptoCoins: number;
   cryptoCoinsPerSecond: number;
   totalElectricityCost: number; // Total electricity cost per second

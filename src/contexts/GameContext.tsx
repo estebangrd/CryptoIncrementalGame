@@ -86,6 +86,7 @@ type GameAction =
   | { type: 'BUY_UPGRADE'; payload: string }
   | { type: 'LOAD_GAME'; payload: GameState }
   | { type: 'RESET_GAME' }
+  | { type: 'SET_HYDRATED' }
   | { type: 'UPDATE_OFFLINE_PROGRESS' }
   | { type: 'ADD_PRODUCTION' }
   | { type: 'SELECT_CURRENCY'; payload: string | null }
@@ -346,8 +347,10 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           },
         };
       }
-      return recalculateGameStats(loadedState);
+      return recalculateGameStats({ ...loadedState, isHydrated: true });
     }
+    case 'SET_HYDRATED':
+      return { ...state, isHydrated: true };
     case 'RESET_GAME':
       const resetState = {
         ...getInitialGameState(),
@@ -1246,6 +1249,8 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (savedState) {
         dispatch({ type: 'LOAD_GAME', payload: savedState });
+      } else {
+        dispatch({ type: 'SET_HYDRATED' });
       }
 
       setCurrentLanguage(savedLanguage);
