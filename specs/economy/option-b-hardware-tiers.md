@@ -352,9 +352,12 @@ describe('New Hardware Tiers', () => {
   - Cuando el jugador hace prestige habiendo tenido un Supercomputer, mostrar texto diferente.
   - Recomendación: Sí, en una futura iteración de la spec de prestige.
 
-- [ ] **¿Agregar upgrades específicos para los nuevos tiers?**
-  - Un upgrade "Megascale Optimization" que duplique producción de los tiers 9-11.
-  - Recomendación: Sí, pero como tarea separada post-implementación de las 4 opciones.
+- [x] **¿Agregar upgrades específicos para los nuevos tiers?**
+  - ✅ Implementado (2026-03-14): 3 upgrades individuales en lugar de uno grupal:
+    - `miningFarmEfficiency` ($500,000) → desbloquea al tener 10× Mining Farm, ×2 producción
+    - `quantumCoherence` ($2,500,000) → desbloquea al tener 10× Quantum Miner, ×2 producción
+    - `supercomputerOverclock` ($10,000,000) → desbloquea al tener 10× Supercomputer, ×2 producción
+  - Nota: usan `target: 'hardware_id'` en lugar de categoría `'megascale'` (la lógica ya soporta targets por id).
 
 - [ ] **¿El ícono 🌍 para Supercomputer es suficientemente claro?**
   - Alternativas: 🛸 (space-age), 💀 (apocalíptico), 🔮

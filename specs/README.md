@@ -237,6 +237,6 @@ Para preguntas sobre estas specs, consulta:
 
 ---
 
-**Última actualización**: 2026-03-04
+**Última actualización**: 2026-03-14
 **Versión del proyecto**: 0.0.1 (Phase 1-7)
 **Próxima fase**: Post-narrativa (Daily Missions, Market Events, Polish)
