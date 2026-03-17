@@ -29,7 +29,7 @@ import { getNewlyUnlockedAchievements } from '../utils/achievementLogic';
 import { getPendingNarrativeEvent } from '../utils/narrativeLogic';
 import { Achievement } from '../types/game';
 import { colors, fonts } from '../config/theme';
-import Svg, { Defs, LinearGradient as SvgLinearGradient, Stop, Rect } from 'react-native-svg';
+import LinearGradient from 'react-native-linear-gradient';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -228,7 +228,6 @@ const fmtBoostTime = (ms: number): string => {
 const BoostPill: React.FC<{ expiresAt: number }> = ({ expiresAt }) => {
   const [remaining, setRemaining] = useState(() => Math.max(0, expiresAt - Date.now()));
   const glowAnim = useRef(new Animated.Value(0)).current;
-  const [pillSize, setPillSize] = useState<{ w: number; h: number } | null>(null);
 
   useEffect(() => {
     const iv = setInterval(() => setRemaining(Math.max(0, expiresAt - Date.now())), 1000);
@@ -249,26 +248,15 @@ const BoostPill: React.FC<{ expiresAt: number }> = ({ expiresAt }) => {
   const elevation = glowAnim.interpolate({ inputRange: [0, 1], outputRange: [14, 26] });
 
   return (
-    // Outer: carries shadow/elevation, no overflow clip
     <Animated.View style={[styles.boostPillShadow, { shadowRadius, shadowOpacity, elevation }]}>
-      {/* Inner: clips the SVG gradient to rounded bounds */}
-      <View
+      <LinearGradient
+        colors={['#ffd600', '#ff8c00']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
         style={styles.boostPill}
-        onLayout={e => setPillSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
       >
-        {pillSize && (
-          <Svg style={StyleSheet.absoluteFillObject} width={pillSize.w} height={pillSize.h}>
-            <Defs>
-              <SvgLinearGradient id="pillGrad" x1="0" y1="0" x2="1" y2="0">
-                <Stop offset="0%" stopColor="#ffd600" />
-                <Stop offset="100%" stopColor="#ff8c00" />
-              </SvgLinearGradient>
-            </Defs>
-            <Rect x="0" y="0" width={pillSize.w} height={pillSize.h} rx={12} fill="url(#pillGrad)" />
-          </Svg>
-        )}
         <Text style={styles.boostPillText}>{'⚡\uFE0E'} 2x {fmtBoostTime(remaining)}</Text>
-      </View>
+      </LinearGradient>
     </Animated.View>
   );
 };
@@ -478,8 +466,6 @@ const GameScreen: React.FC = () => {
         <Animated.Text style={[styles.heroValue, { opacity: flickerAnim }]}>
           {formatNumber(gameState.cryptoCoins)}
         </Animated.Text>
-        <Text style={styles.heroUnit}>CC</Text>
-
         {/* Production ticker pill */}
         <View style={styles.tickerPill}>
           <Animated.View style={[styles.tickerDot, { opacity: dotAnim }]} />
@@ -647,11 +633,10 @@ const styles = StyleSheet.create({
   },
   boostPill: {
     borderRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
     flexDirection: 'row',
     alignItems: 'center',
-    overflow: 'hidden',
   },
   boostPillText: {
     fontFamily: fonts.rajdhani,
@@ -698,14 +683,6 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 18,
     lineHeight: 44,
-  },
-  heroUnit: {
-    fontFamily: fonts.mono,
-    fontSize: 10,
-    color: 'rgba(0,255,136,0.55)',
-    letterSpacing: 3,
-    marginTop: 2,
-    marginBottom: 8,
   },
   tickerPill: {
     flexDirection: 'row',

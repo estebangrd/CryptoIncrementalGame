@@ -38,7 +38,6 @@ const hdrStyles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     paddingHorizontal: 2,
-    paddingBottom: 10,
   },
   text: {
     fontFamily: fonts.mono,
