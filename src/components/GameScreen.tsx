@@ -141,7 +141,8 @@ const Particle: React.FC<{ left: string; duration: number; delay: number; color:
   const floatAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.loop(
+    const run = () => {
+      floatAnim.setValue(0);
       Animated.sequence([
         Animated.delay(delay),
         Animated.timing(floatAnim, {
@@ -150,8 +151,10 @@ const Particle: React.FC<{ left: string; duration: number; delay: number; color:
           easing: Easing.linear,
           useNativeDriver: true,
         }),
-      ])
-    ).start();
+      ]).start(({ finished }) => { if (finished) run(); });
+    };
+    run();
+    return () => floatAnim.stopAnimation();
   }, [floatAnim, delay, duration]);
 
   const translateY = floatAnim.interpolate({
