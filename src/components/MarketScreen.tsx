@@ -21,6 +21,14 @@ import PriceChart from './PriceChart';
 
 const formatUSD = (amount: number): string => `$${formatNumber(amount)}`;
 
+const formatPercent = (pct: number): string => {
+  const abs = Math.abs(pct);
+  const formatted = abs >= 1000
+    ? abs.toLocaleString('en-US', { maximumFractionDigits: 0 })
+    : abs.toFixed(1);
+  return `${pct >= 0 ? '+' : '-'}${formatted}%`;
+};
+
 const MarketScreen: React.FC = () => {
   const { gameState, dispatch, t } = useGame();
   const [amountPercent, setAmountPercent] = useState(50);
@@ -172,10 +180,15 @@ const MarketScreen: React.FC = () => {
       {/* Section header */}
       <View style={styles.secHdr}>
         <Text style={styles.secHdrText}>Live Market</Text>
-        <View style={styles.secHdrLine} />
+        <LinearGradient
+          colors={['rgba(0,255,136,0.2)', 'transparent']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.secHdrLine}
+        />
       </View>
 
-      <ScrollView style={styles.list} showsVerticalScrollIndicator={false} scrollEnabled={scrollEnabled}>
+      <ScrollView style={styles.list} contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false} scrollEnabled={scrollEnabled}>
         {(gameState.cryptocurrencies || []).filter(c => isCryptoUnlocked(c.id)).map((crypto) => {
           const isSelected = crypto.id === gameState.selectedCurrency;
           const priceChange = ((crypto.currentValue - crypto.baseValue) / crypto.baseValue) * 100;
@@ -211,7 +224,7 @@ const MarketScreen: React.FC = () => {
                   </Text>
                   <View style={[styles.priceBadge, isUp ? styles.priceBadgeUp : styles.priceBadgeDn]}>
                     <Text style={[styles.priceBadgeText, { color: isUp ? colors.ng : colors.nr }]}>
-                      {isUp ? '▲' : '▼'} {isUp ? '+' : ''}{priceChange.toFixed(1)}%
+                      {isUp ? '▲' : '▼'} {formatPercent(priceChange)}
                     </Text>
                   </View>
                 </View>
@@ -390,11 +403,13 @@ const styles = StyleSheet.create({
   secHdrLine: {
     flex: 1,
     height: 1,
-    backgroundColor: 'rgba(0,255,136,0.2)',
   },
 
   list: {
     flex: 1,
+  },
+  listContent: {
+    paddingBottom: 80,
   },
 
   cryptoBlock: {
@@ -406,18 +421,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: 'rgba(0,0,0,0.2)',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.07)',
-    padding: 12,
+    paddingVertical: 6,
+    marginBottom: 4,
   },
-  coinRowSelected: {
-    borderColor: colors.ng,
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
-    borderBottomWidth: 0,
-  },
+  coinRowSelected: {},
 
   coinAvatar: {
     width: 44,
@@ -436,7 +443,6 @@ const styles = StyleSheet.create({
   coinName: {
     fontFamily: fonts.orbitron,
     fontSize: 13,
-    fontWeight: '700',
     color: '#fff',
     marginBottom: 2,
   },
@@ -479,14 +485,7 @@ const styles = StyleSheet.create({
 
   /* Expanded */
   expandedContent: {
-    borderWidth: 1,
-    borderTopWidth: 0,
-    borderColor: colors.ng,
-    borderBottomLeftRadius: 12,
-    borderBottomRightRadius: 12,
-    padding: 12,
-    paddingTop: 10,
-    backgroundColor: 'rgba(0,255,136,0.02)',
+    gap: 8,
   },
 
   /* Sell card */
@@ -508,9 +507,8 @@ const styles = StyleSheet.create({
 
   /* Slider */
   sliderPct: {
-    fontFamily: fonts.orbitron,
+    fontFamily: fonts.orbitronBlack,
     fontSize: 20,
-    fontWeight: '900',
     color: colors.ny,
     textAlign: 'center',
     marginBottom: 6,
@@ -571,9 +569,8 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   earnAmount: {
-    fontFamily: fonts.orbitron,
+    fontFamily: fonts.orbitronBlack,
     fontSize: 20,
-    fontWeight: '900',
     color: colors.ny,
     textShadowColor: 'rgba(255,214,0,0.4)',
     textShadowOffset: { width: 0, height: 0 },
