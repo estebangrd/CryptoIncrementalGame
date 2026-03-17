@@ -506,9 +506,8 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   sellTitle: {
-    fontFamily: fonts.orbitron,
+    fontFamily: fonts.orbitronBlack,
     fontSize: 11,
-    fontWeight: '700',
     color: colors.ng,
     letterSpacing: 2,
     marginBottom: 12,
@@ -533,7 +532,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 3,
     position: 'relative',
-    marginBottom: 4,
+    marginBottom: 14,
   },
   sliderFill: {
     height: '100%',
@@ -601,9 +600,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   sellButtonText: {
-    fontFamily: fonts.orbitron,
+    fontFamily: fonts.orbitronBlack,
     fontSize: 13,
-    fontWeight: '700',
     color: '#fff',
     letterSpacing: 3,
   },
