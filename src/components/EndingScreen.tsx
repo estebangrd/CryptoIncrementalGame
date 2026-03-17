@@ -14,6 +14,7 @@ import {
   ScrollView,
   Animated,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGame } from '../contexts/GameContext';
 import { EndingType, EndgameStats } from '../types/game';
 import { calculateEndingBonus, calculateRenewableDiscount } from '../utils/endgameLogic';
@@ -54,6 +55,7 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
   onPrestige,
 }) => {
   const { t } = useGame();
+  const insets = useSafeAreaInsets();
   const isCollapse = endingType === 'collapse';
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -107,7 +109,7 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
         ]}
       >
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top - 20 }]}
           showsVerticalScrollIndicator={false}
         >
           <Animated.View style={{ opacity: fadeAnim, width: '100%', alignItems: 'center' }}>
