@@ -1,3 +1,10 @@
+// LinearGradient mock
+jest.mock('react-native-linear-gradient', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  return ({ children, ...props }) => React.createElement(View, props, children);
+});
+
 // AsyncStorage mock
 jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
