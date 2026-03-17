@@ -11,6 +11,7 @@ const CLICK_WINDOW_MS = 1000;
 interface BlockStatusProps {
   gameState: GameState;
   onMineBlock: () => void;
+  onClickBoostChange?: (boost: number) => void;
   t: (key: string) => string;
 }
 
@@ -180,7 +181,7 @@ const statStyles = StyleSheet.create({
 });
 
 // ── BlockStatus ────────────────────────────────────────────────────
-export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock, t: _t }) => {
+export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock, onClickBoostChange, t: _t }) => {
   const blockInfo = formatBlockInfo(gameState);
   const [clickBoost, setClickBoost] = useState(0);
   const clickTimestamps = useRef<number[]>([]);
@@ -219,6 +220,10 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
     swing.start();
     return () => swing.stop();
   }, [isComplete, hammerAnim]);
+
+  useEffect(() => {
+    onClickBoostChange?.(clickBoost);
+  }, [clickBoost, onClickBoostChange]);
 
   const handleMineClick = useCallback(() => {
     const clickMultiplier = gameState.upgrades
