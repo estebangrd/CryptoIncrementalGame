@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGame } from '../contexts/GameContext';
 import { showRewardedAd, isRewardedAdReady } from '../services/AdMobService';
 import { BOOSTER_CONFIG } from '../config/balanceConfig';
+import { saveGameState } from '../utils/storage';
 
 const OFFER_INTERVAL_MS = 3 * 60 * 1000; // 3 minutes between offers
 const OFFER_WINDOW_MS = 20_000;           // 20 seconds visible
@@ -122,7 +123,15 @@ const RewardedAdButton: React.FC<Props> = ({ sheetTopAnim: _sheetTopAnim }) => {
       if (!isRewardedAdReady()) return;
       showRewardedAd(
         () => {
+          const now = Date.now();
+          const newBoost = {
+            isActive: true,
+            activatedAt: now,
+            expiresAt: now + BOOSTER_CONFIG.REWARDED_AD_BOOST.durationMs,
+            lastWatchedAt: now,
+          };
           dispatch({ type: 'ACTIVATE_AD_BOOST' });
+          saveGameState({ ...gameState, adBoost: newBoost });
           showToast('⚡ Boost 2x activado por 4 horas', 'success');
           offerStartRef.current = null;
           lastOfferEndRef.current = Date.now();
@@ -145,7 +154,7 @@ const RewardedAdButton: React.FC<Props> = ({ sheetTopAnim: _sheetTopAnim }) => {
     } else {
       doShowAd();
     }
-  }, [gameState.adBoost, dispatch, showToast]);
+  }, [gameState, dispatch, showToast]);
 
   if (!offerVisible) {
     return null;

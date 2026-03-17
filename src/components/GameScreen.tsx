@@ -246,9 +246,10 @@ const BoostPill: React.FC<{ expiresAt: number }> = ({ expiresAt }) => {
   const shadowRadius = glowAnim.interpolate({ inputRange: [0, 1], outputRange: [14, 26] });
   const shadowOpacity = glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0.4, 0.7] });
   const elevation = glowAnim.interpolate({ inputRange: [0, 1], outputRange: [14, 26] });
+  const borderColor = glowAnim.interpolate({ inputRange: [0, 1], outputRange: ['rgba(255,240,80,0)', 'rgba(255,240,80,1)'] });
 
   return (
-    <Animated.View style={[styles.boostPillShadow, { shadowRadius, shadowOpacity, elevation }]}>
+    <Animated.View style={[styles.boostPillShadow, { shadowRadius, shadowOpacity, elevation, borderColor }]}>
       <LinearGradient
         colors={['#ffd600', '#ff8c00']}
         start={{ x: 0, y: 0 }}
@@ -628,11 +629,13 @@ const styles = StyleSheet.create({
   },
   boostPillShadow: {
     borderRadius: 12,
+    borderWidth: 1,
+    backgroundColor: '#ffd600',
     shadowColor: '#ffd600',
     shadowOffset: { width: 0, height: 0 },
   },
   boostPill: {
-    borderRadius: 12,
+    borderRadius: 11,
     paddingHorizontal: 10,
     paddingVertical: 3,
     flexDirection: 'row',
