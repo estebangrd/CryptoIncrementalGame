@@ -20,11 +20,12 @@ type ActiveTab = 'mining' | 'market' | 'hardware' | 'upgrades' | 'prestige' | 'e
 
 interface HorizontalTabsProps {
   onMineBlock: () => void;
+  onClickBoostChange?: (boost: number) => void;
   t: (key: string) => string;
   bottomOffset?: number;
 }
 
-const HorizontalTabs: React.FC<HorizontalTabsProps> = ({ onMineBlock, t, bottomOffset = 0 }) => {
+const HorizontalTabs: React.FC<HorizontalTabsProps> = ({ onMineBlock, onClickBoostChange, t, bottomOffset = 0 }) => {
   const { gameState } = useGame();
   const [activeTab, setActiveTab] = useState<ActiveTab>('mining');
 
@@ -42,7 +43,7 @@ const HorizontalTabs: React.FC<HorizontalTabsProps> = ({ onMineBlock, t, bottomO
     switch (activeTab) {
       case 'mining':
         return (
-          <BlockStatus gameState={gameState} onMineBlock={onMineBlock} t={t} />
+          <BlockStatus gameState={gameState} onMineBlock={onMineBlock} onClickBoostChange={onClickBoostChange} t={t} />
         );
       case 'hardware':
         return (

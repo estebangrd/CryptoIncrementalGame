@@ -158,6 +158,10 @@ const Particle: React.FC<{ left: string; duration: number; delay: number; color:
     inputRange: [0, 1],
     outputRange: [SCREEN_HEIGHT, -20],
   });
+  const translateX = floatAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 15],
+  });
   const opacity = floatAnim.interpolate({
     inputRange: [0, 0.1, 0.9, 1],
     outputRange: [0, 0.5, 0.25, 0],
@@ -168,7 +172,7 @@ const Particle: React.FC<{ left: string; duration: number; delay: number; color:
       pointerEvents="none"
       style={[
         styles.particle,
-        { left: left as any, backgroundColor: color, transform: [{ translateY }], opacity },
+        { left: left as any, backgroundColor: color, transform: [{ translateY }, { translateX }], opacity },
       ]}
     />
   );
@@ -278,6 +282,7 @@ const GameScreen: React.FC = () => {
   const [showShop, setShowShop] = useState(false);
   const [toastQueue, setToastQueue] = useState<Achievement[]>([]);
   const [adBannerHeight, setAdBannerHeight] = useState(0);
+  const [miningClickBoost, setMiningClickBoost] = useState(0);
   const prevAchievementsRef = useRef(gameState.achievements);
   const firstHydratedRef = useRef(true);
 
@@ -471,7 +476,7 @@ const GameScreen: React.FC = () => {
         <View style={styles.tickerPill}>
           <Animated.View style={[styles.tickerDot, { opacity: dotAnim }]} />
           <Text style={styles.tickerText}>
-            +{formatNumber(gameState.cryptoCoinsPerSecond)}/sec
+            +{formatNumber(gameState.cryptoCoinsPerSecond + miningClickBoost)} CC/s
           </Text>
         </View>
       </View>
@@ -503,6 +508,7 @@ const GameScreen: React.FC = () => {
       {/* ── HorizontalTabs (fills remaining space) ── */}
       <HorizontalTabs
         onMineBlock={handleMineBlock}
+        onClickBoostChange={setMiningClickBoost}
         t={t}
         bottomOffset={adBannerHeight}
       />
