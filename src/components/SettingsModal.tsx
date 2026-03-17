@@ -19,9 +19,10 @@ interface SettingsModalProps {
   onClose: () => void;
   onReset: () => void;
   onOpenShop: () => void;
+  onTestGoodEnding?: () => void;
 }
 
-const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose, onReset, onOpenShop }) => {
+const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose, onReset, onOpenShop, onTestGoodEnding }) => {
   const { gameState, currentLanguage, setLanguage, t, dispatch, showToast } = useGame();
   const [showAchievements, setShowAchievements] = useState(false);
 
@@ -140,6 +141,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose, onReset
 
               <TouchableOpacity style={[styles.actionButton, { marginTop: 8 }]} onPress={() => setShowAchievements(true)}>
                 <Text style={styles.actionButtonText}>🏆 Achievements</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={[styles.actionButton, { marginTop: 8 }]} onPress={onTestGoodEnding}>
+                <Text style={styles.actionButtonText}>🌍 Test Good Ending (Debug)</Text>
               </TouchableOpacity>
             </View>
 

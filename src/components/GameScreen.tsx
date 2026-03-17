@@ -286,6 +286,7 @@ const GameScreen: React.FC = () => {
   const [toastQueue, setToastQueue] = useState<Achievement[]>([]);
   const [adBannerHeight, setAdBannerHeight] = useState(0);
   const [miningClickBoost, setMiningClickBoost] = useState(0);
+  const [debugGoodEnding, setDebugGoodEnding] = useState(false);
   const prevAchievementsRef = useRef(gameState.achievements);
   const firstHydratedRef = useRef(true);
 
@@ -522,6 +523,7 @@ const GameScreen: React.FC = () => {
         onClose={() => setShowSettings(false)}
         onReset={handleReset}
         onOpenShop={() => setShowShop(true)}
+        onTestGoodEnding={() => { setShowSettings(false); setDebugGoodEnding(true); }}
       />
 
       <AdBanner onHeightChange={setAdBannerHeight} />
@@ -562,16 +564,17 @@ const GameScreen: React.FC = () => {
       />
 
       <EndingScreen
-        visible={gameState.collapseTriggered || gameState.goodEndingTriggered}
+        visible={gameState.collapseTriggered || gameState.goodEndingTriggered || debugGoodEnding}
         endingType={
           gameState.collapseTriggered ? 'collapse'
-          : gameState.goodEndingTriggered ? 'good_ending'
+          : (gameState.goodEndingTriggered || debugGoodEnding) ? 'good_ending'
           : null
         }
         stats={gameState.lastEndgameStats ?? null}
         collapseCount={gameState.collapseCount ?? 0}
         goodEndingCount={gameState.goodEndingCount ?? 0}
         onPrestige={() => {
+          if (debugGoodEnding) { setDebugGoodEnding(false); return; }
           const endingType = gameState.collapseTriggered ? 'collapse' : 'good_ending';
           dispatch({ type: 'COMPLETE_ENDING_PRESTIGE', payload: { endingType } });
         }}
