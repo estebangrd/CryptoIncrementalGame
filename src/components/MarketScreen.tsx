@@ -21,6 +21,15 @@ import PriceChart from './PriceChart';
 
 const formatUSD = (amount: number): string => `$${formatNumber(amount)}`;
 
+// Precise price formatter — matches PriceChart display (2 decimals for small values)
+const formatPriceUSD = (price: number): string => {
+  if (price >= 1000) return `$${(price / 1000).toFixed(1)}k`;
+  if (price >= 100) return `$${price.toFixed(0)}`;
+  if (price >= 1) return `$${price.toFixed(2)}`;
+  if (price >= 0.01) return `$${price.toFixed(4)}`;
+  return `$${price.toFixed(6)}`;
+};
+
 const formatPercent = (pct: number): string => {
   const abs = Math.abs(pct);
   const formatted = abs >= 1000
@@ -249,7 +258,7 @@ const MarketScreen: React.FC = () => {
                           {...panResponder.panHandlers}
                         >
                           <View style={[styles.sliderFill, { width: `${amountPercent}%` }]} />
-                          <View style={[styles.sliderThumb, { left: `${amountPercent}%` }]} />
+                          <View style={[styles.sliderThumb, { left: `${amountPercent}%`, marginLeft: -(amountPercent / 100) * 18 }]} />
                         </View>
                         <View style={styles.sliderLabels}>
                           <Text style={styles.sliderLabel}>1%</Text>
@@ -260,7 +269,7 @@ const MarketScreen: React.FC = () => {
                       <View style={styles.earnBox}>
                         <Text style={styles.earnAmount}>{formatUSD(sellPreviewMoney)}</Text>
                         <Text style={styles.earnSub}>
-                          YOU'LL EARN · PRICE {formatUSD(getSelectedCurrency()!.currentValue)} PER CC
+                          YOU'LL EARN · PRICE {formatPriceUSD(getSelectedCurrency()!.currentValue)} PER CC
                         </Text>
                       </View>
 
@@ -304,7 +313,7 @@ const MarketScreen: React.FC = () => {
                           {...panResponder.panHandlers}
                         >
                           <View style={[styles.sliderFill, { width: `${amountPercent}%` }]} />
-                          <View style={[styles.sliderThumb, { left: `${amountPercent}%` }]} />
+                          <View style={[styles.sliderThumb, { left: `${amountPercent}%`, marginLeft: -(amountPercent / 100) * 18 }]} />
                         </View>
                         <View style={styles.sliderLabels}>
                           <Text style={styles.sliderLabel}>1%</Text>
@@ -382,7 +391,7 @@ const MarketScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.bg,
+    backgroundColor: 'transparent',
     padding: 12,
   },
 
@@ -541,7 +550,6 @@ const styles = StyleSheet.create({
     borderRadius: 9,
     position: 'absolute',
     top: -6,
-    marginLeft: -9,
     shadowColor: colors.ng,
     shadowOffset: { width: 0, height: 0 },
     shadowRadius: 8,
