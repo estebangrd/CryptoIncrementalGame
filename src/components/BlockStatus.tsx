@@ -348,8 +348,10 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
             <Text style={styles.phaseTitle}>⬡ GENESIS</Text>
           </View>
           <View style={styles.phaseCountGroup}>
-            <Text style={styles.phaseCountValue}>{formatNumber(blockInfo.blocksMined)}</Text>
-            <Text style={styles.phaseCountSub}>/ {formatNumber(blockInfo.totalBlocks)} blocks</Text>
+            <Text style={styles.phaseCountSub}>
+              <Text style={styles.phaseCountValue}>{formatNumber(blockInfo.blocksMined)}</Text>
+              {' / '}{formatNumber(blockInfo.totalBlocks)} blocks
+            </Text>
           </View>
         </View>
         <View style={styles.progressBarBg}>
@@ -437,7 +439,7 @@ const styles = StyleSheet.create({
   phaseRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'flex-end',
     marginBottom: 10,
   },
   phaseSublabel: {
