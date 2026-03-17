@@ -142,9 +142,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   currentPrice: {
-    fontFamily: fonts.orbitron,
+    fontFamily: fonts.orbitronBlack,
     fontSize: 26,
-    fontWeight: '900',
     color: '#ffffff',
     textShadowColor: 'rgba(255,255,255,0.2)',
     textShadowOffset: { width: 0, height: 0 },
