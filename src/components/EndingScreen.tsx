@@ -37,6 +37,7 @@ interface EndingScreenProps {
   collapseCount: number;
   goodEndingCount: number;
   onPrestige: () => void;
+  onClose?: () => void;
 }
 
 const AI_LEVEL_LABELS: Record<number, string> = {
@@ -286,35 +287,28 @@ const NodeStat: React.FC<NodeStatProps> = ({ icon, label, value, sub, variant = 
 };
 
 const nsStyles = StyleSheet.create({
-  // padding: 16px 14px 14px per HTML spec
   card: {
     width: '48%', backgroundColor: 'rgba(0,255,136,0.04)',
-    borderWidth: 1, borderColor: 'rgba(0,255,136,0.18)',
-    borderRadius: 14, paddingTop: 16, paddingHorizontal: 14, paddingBottom: 14,
-    overflow: 'hidden', marginBottom: 8,
+    borderWidth: 1, borderColor: 'rgba(0,255,136,0.22)',
+    borderRadius: 12, padding: 13,
+    alignItems: 'center', overflow: 'hidden', marginBottom: 8,
   },
   wide: { width: '100%' },
   cardCyan: { backgroundColor: 'rgba(0,229,255,0.04)', borderColor: 'rgba(0,229,255,0.18)' },
-  cardYellow: { backgroundColor: 'rgba(255,214,0,0.04)', borderColor: 'rgba(255,214,0,0.2)' },
-  cardRed: { backgroundColor: 'rgba(255,61,90,0.04)', borderColor: 'rgba(255,61,90,0.18)' },
+  cardYellow: { backgroundColor: 'rgba(255,214,0,0.04)', borderColor: 'rgba(255,214,0,0.22)' },
+  cardRed: { backgroundColor: 'rgba(255,61,90,0.04)', borderColor: 'rgba(255,61,90,0.22)' },
   topBorder: { position: 'absolute', top: 0, left: 0, right: 0 },
-  // icon: 18px per HTML spec
-  icon: { fontSize: 18, marginBottom: 6 },
-  // label: 8px, letterSpacing 2, marginBottom 4 per HTML spec
-  label: { fontFamily: fonts.mono, fontSize: 8, letterSpacing: 2, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', marginBottom: 4 },
-  // value row: flex row to align value + badge
+  icon: { fontSize: 25, marginBottom: 5, color: 'rgba(255,255,255,0.7)' },
+  label: { fontFamily: fonts.mono, fontSize: 8, letterSpacing: 2, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: 3 },
   valueRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'nowrap' },
-  // value: 20px, weight 900, lineHeight 1 per HTML spec
-  value: { fontFamily: fonts.orbitron, fontSize: 20, fontWeight: '900', lineHeight: 20 },
-  // check-badge: green pill per HTML spec (9px Orbitron, black text, radius 4, pad 2 6)
+  value: { fontFamily: fonts.orbitron, fontSize: 17, lineHeight: 22 },
   checkBadge: { backgroundColor: colors.ng, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2, marginLeft: 5 },
   checkBadgeText: { fontFamily: fonts.orbitron, fontSize: 9, fontWeight: '900', color: '#000', letterSpacing: 1 },
-  valGreen: { color: colors.ng, textShadowColor: 'rgba(0,255,136,0.4)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 14 },
-  valCyan: { color: colors.nc, textShadowColor: 'rgba(0,229,255,0.4)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 14 },
-  valYellow: { color: '#ffd600', textShadowColor: 'rgba(255,214,0,0.4)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 14 },
-  valRed: { color: '#ff3d5a', textShadowColor: 'rgba(255,61,90,0.4)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 14 },
-  // sub: 10px, marginTop 3px per HTML spec
-  sub: { fontFamily: fonts.rajdhani, fontSize: 10, color: 'rgba(255,255,255,0.45)', marginTop: 3 },
+  valGreen: { color: colors.ng, textShadowColor: 'rgba(0,255,136,0.35)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 6 },
+  valCyan: { color: colors.nc, textShadowColor: 'rgba(0,229,255,0.35)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 6 },
+  valYellow: { color: '#ffd600', textShadowColor: 'rgba(255,214,0,0.35)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 6 },
+  valRed: { color: '#ff3d5a', textShadowColor: 'rgba(255,61,90,0.35)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 6 },
+  sub: { fontFamily: fonts.rajdhani, fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 2 },
 });
 
 // ── AI Level card ──────────────────────────────────────────────────
@@ -483,7 +477,7 @@ const GradientTitle: React.FC<{ text: string }> = ({ text }) => {
 
 // ── Main component ─────────────────────────────────────────────────
 const EndingScreen: React.FC<EndingScreenProps> = ({
-  visible, endingType, stats, collapseCount, goodEndingCount, onPrestige,
+  visible, endingType, stats, collapseCount, goodEndingCount, onPrestige, onClose,
 }) => {
   const { t } = useGame();
   const insets = useSafeAreaInsets();
@@ -601,7 +595,7 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
           ))}
         </View>
 
-        <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
+        <Animated.View style={{ flex: 1, opacity: fadeAnim }} pointerEvents="box-none">
           {/* stickyHeaderIndices={[0]} keeps the topbar pinned like position:sticky in CSS */}
           <ScrollView
             contentContainerStyle={[goodStyles.scrollContent, { paddingTop: 0 }]}
@@ -688,6 +682,16 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
                 <Text style={goodStyles.shareBtnText}>↗  SHARE YOUR LEGACY</Text>
               </TouchableOpacity>
             </View>
+
+            {/* Debug back button — inside ScrollView so touch always works */}
+            {onClose && (
+              <TouchableOpacity
+                onPress={onClose}
+                style={{ marginHorizontal: 16, marginBottom: 16, paddingVertical: 14, borderRadius: 10, borderWidth: 1, borderColor: 'rgba(0,229,255,0.4)', backgroundColor: 'rgba(0,229,255,0.08)', alignItems: 'center' }}
+              >
+                <Text style={{ fontFamily: fonts.mono, fontSize: 12, color: colors.nc, letterSpacing: 2 }}>← BACK TO GAME</Text>
+              </TouchableOpacity>
+            )}
 
             <View style={{ height: 32 }} />
           </ScrollView>

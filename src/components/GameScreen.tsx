@@ -578,6 +578,7 @@ const GameScreen: React.FC = () => {
           const endingType = gameState.collapseTriggered ? 'collapse' : 'good_ending';
           dispatch({ type: 'COMPLETE_ENDING_PRESTIGE', payload: { endingType } });
         }}
+        onClose={debugGoodEnding ? () => setDebugGoodEnding(false) : undefined}
       />
     </View>
   );
