@@ -204,18 +204,15 @@ Current branch strategy: Feature branches (e.g., `feature/phase1-genesis`) merge
 ## Bash Commands — No Permission Required
 
 Run the following commands directly without asking for approval:
-- `git add`, `git status`, `git log`, `git diff`, `git push`, `git pull`, `git rebase`, `git commit`, `git stash`, `git stash pop`
-- `grep`, `head`, `tail`
+- `git add`, `git status`, `git log`, `git diff`, `git push`, `git pull`, `git rebase`, `git commit`, `git stash`, `git stash pop`, `git merge`
+- `grep`, `head`, `tail`, `sed`, `ls`
 - `npm run lint`, `npm test`, `npm list`, `npm install`
 - `pod install`
+- `adb` (Android Debug Bridge — screenshots, device interaction)
 
 When the user explicitly instructs a change to CLAUDE.md, edit it directly without asking for permission.
 
 For destructive operations (`git reset --hard`, `git push --force`, `rm -rf`, etc.) always ask first.
-
-## Worktree por defecto
-
-Al iniciar cada sesión, crear un worktree con `EnterWorktree` antes de modificar cualquier archivo. Usar un nombre descriptivo relacionado con la tarea (ej. `fix-market-ui`, `feat-new-hardware`).
 
 ## Feature Implementation Workflow (OBLIGATORIO)
 
