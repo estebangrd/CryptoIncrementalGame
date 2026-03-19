@@ -16,7 +16,8 @@ import {
   Easing,
   Dimensions,
 } from 'react-native';
-import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
+import Svg, { Defs, LinearGradient, Stop, Rect, Text as SvgText } from 'react-native-svg';
+import RNLinearGradient from 'react-native-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGame } from '../contexts/GameContext';
 import { EndingType, EndgameStats } from '../types/game';
@@ -240,9 +241,10 @@ const VARIANT_COLOR: Record<Variant, string> = {
 interface NodeStatProps {
   icon: string; label: string; value: string; sub?: string;
   variant?: Variant; wide?: boolean; delay?: number; smallValue?: boolean;
+  checkBadge?: boolean;
 }
 
-const NodeStat: React.FC<NodeStatProps> = ({ icon, label, value, sub, variant = 'green', wide, delay = 0, smallValue }) => {
+const NodeStat: React.FC<NodeStatProps> = ({ icon, label, value, sub, variant = 'green', wide, delay = 0, smallValue, checkBadge }) => {
   const slideAnim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     Animated.sequence([
@@ -254,6 +256,8 @@ const NodeStat: React.FC<NodeStatProps> = ({ icon, label, value, sub, variant = 
   const topColor = VARIANT_COLOR[variant];
   const cardVariantStyle = variant === 'cyan' ? nsStyles.cardCyan : variant === 'yellow' ? nsStyles.cardYellow : variant === 'red' ? nsStyles.cardRed : nsStyles.card;
   const valVariantStyle = variant === 'cyan' ? nsStyles.valCyan : variant === 'yellow' ? nsStyles.valYellow : variant === 'red' ? nsStyles.valRed : nsStyles.valGreen;
+  // Strip trailing " ✓" if checkBadge prop is used
+  const displayValue = checkBadge ? value.replace(/ ✓$/, '') : value;
   return (
     <Animated.View style={[nsStyles.card, cardVariantStyle, wide && nsStyles.wide, { opacity: slideAnim, transform: [{ translateY: ty }] }]}>
       <Svg width="100%" height={2} style={nsStyles.topBorder}>
@@ -268,7 +272,14 @@ const NodeStat: React.FC<NodeStatProps> = ({ icon, label, value, sub, variant = 
       </Svg>
       <Text style={nsStyles.icon}>{icon}</Text>
       <Text style={nsStyles.label}>{label}</Text>
-      <Text style={[nsStyles.value, valVariantStyle, smallValue && { fontSize: 16 }]}>{value}</Text>
+      <View style={nsStyles.valueRow}>
+        <Text style={[nsStyles.value, valVariantStyle, smallValue && { fontSize: 16 }]}>{displayValue}</Text>
+        {checkBadge && (
+          <View style={nsStyles.checkBadge}>
+            <Text style={nsStyles.checkBadgeText}>✓</Text>
+          </View>
+        )}
+      </View>
       {sub && <Text style={nsStyles.sub}>{sub}</Text>}
     </Animated.View>
   );
@@ -291,8 +302,13 @@ const nsStyles = StyleSheet.create({
   icon: { fontSize: 18, marginBottom: 6 },
   // label: 8px, letterSpacing 2, marginBottom 4 per HTML spec
   label: { fontFamily: fonts.mono, fontSize: 8, letterSpacing: 2, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', marginBottom: 4 },
+  // value row: flex row to align value + badge
+  valueRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'nowrap' },
   // value: 20px, weight 900, lineHeight 1 per HTML spec
   value: { fontFamily: fonts.orbitron, fontSize: 20, fontWeight: '900', lineHeight: 20 },
+  // check-badge: green pill per HTML spec (9px Orbitron, black text, radius 4, pad 2 6)
+  checkBadge: { backgroundColor: colors.ng, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2, marginLeft: 5 },
+  checkBadgeText: { fontFamily: fonts.orbitron, fontSize: 9, fontWeight: '900', color: '#000', letterSpacing: 1 },
   valGreen: { color: colors.ng, textShadowColor: 'rgba(0,255,136,0.4)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 14 },
   valCyan: { color: colors.nc, textShadowColor: 'rgba(0,229,255,0.4)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 14 },
   valYellow: { color: '#ffd600', textShadowColor: 'rgba(255,214,0,0.4)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 14 },
@@ -311,7 +327,7 @@ const AILevelCard: React.FC<{ level: number; delay?: number }> = ({ level, delay
     ]).start();
   }, [slideAnim, delay]);
   const ty = slideAnim.interpolate({ inputRange: [0, 1], outputRange: [16, 0] });
-  const MAX_LEVEL = 3;
+  const MAX_LEVEL = 5;
   return (
     <Animated.View style={[nsStyles.card, nsStyles.cardCyan, nsStyles.wide, { opacity: slideAnim, transform: [{ translateY: ty }] }]}>
       <Svg width="100%" height={2} style={nsStyles.topBorder}>
@@ -349,9 +365,10 @@ const AILevelCard: React.FC<{ level: number; delay?: number }> = ({ level, delay
 };
 
 const aiStyles = StyleSheet.create({
-  pip: { width: 22, height: 22, borderRadius: 5, backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center' },
+  // pip: 18×18px per HTML spec, borderRadius 4, fontSize 10
+  pip: { width: 18, height: 18, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center' },
   pipActive: { backgroundColor: colors.nc, borderColor: colors.nc, shadowColor: colors.nc, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 1, shadowRadius: 6, elevation: 4 },
-  pipText: { fontFamily: fonts.mono, fontSize: 9, color: 'rgba(255,255,255,0.4)' },
+  pipText: { fontFamily: fonts.mono, fontSize: 10, color: 'rgba(255,255,255,0.4)' },
   pipTextActive: { color: '#000', fontWeight: '900' },
 });
 
@@ -424,6 +441,45 @@ const SectionLabel: React.FC<{ label: string }> = ({ label }) => (
     </View>
   </View>
 );
+
+// ── Gradient title (SVG text with green→cyan gradient per HTML spec) ──
+const GradientTitle: React.FC<{ text: string }> = ({ text }) => {
+  const words = text.toUpperCase().split(' ');
+  const line1 = words[0];
+  const line2 = words.slice(1).join(' ');
+  const svgWidth = SW - 48;
+  const LINE_H = 27; // fontSize 22 × lineHeight 1.2
+  const svgHeight = line2 ? LINE_H * 2 + 6 : LINE_H + 6;
+  return (
+    <Svg width={svgWidth} height={svgHeight} style={{ marginBottom: 6 }}>
+      <Defs>
+        <LinearGradient id="titleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <Stop offset="0%" stopColor={colors.ng} stopOpacity="1" />
+          <Stop offset="50%" stopColor={colors.nc} stopOpacity="1" />
+          <Stop offset="100%" stopColor={colors.ng} stopOpacity="1" />
+        </LinearGradient>
+      </Defs>
+      <SvgText
+        x={svgWidth / 2} y={22}
+        textAnchor="middle"
+        fill="url(#titleGrad)"
+        fontSize="22" fontWeight="900"
+        fontFamily="Orbitron-Regular"
+        letterSpacing="3"
+      >{line1}</SvgText>
+      {line2 ? (
+        <SvgText
+          x={svgWidth / 2} y={22 + LINE_H}
+          textAnchor="middle"
+          fill="url(#titleGrad)"
+          fontSize="22" fontWeight="900"
+          fontFamily="Orbitron-Regular"
+          letterSpacing="3"
+        >{line2}</SvgText>
+      ) : null}
+    </Svg>
+  );
+};
 
 // ── Main component ─────────────────────────────────────────────────
 const EndingScreen: React.FC<EndingScreenProps> = ({
@@ -564,7 +620,7 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
                 <OrbitGlobe />
               </View>
               <Text style={goodStyles.victorySub}>Mission Complete · Genesis Chain</Text>
-              <Text style={goodStyles.victoryTitle}>{t('endgame.good.title')}</Text>
+              <GradientTitle text={t('endgame.good.title')} />
               <View style={goodStyles.quoteBox}>
                 <Text style={goodStyles.quoteText}>{t('endgame.good.quote')}</Text>
               </View>
@@ -575,7 +631,7 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
               <View style={goodStyles.section}>
                 <SectionLabel label="YOUR LEGACY" />
                 <View style={goodStyles.cardGrid}>
-                  <NodeStat icon="⛏" label="Blocks Mined" value={`${formatNumber(stats.blocksMined)} ✓`} sub="100% Complete" variant="green" delay={200} />
+                  <NodeStat icon="⛏" label="Blocks Mined" value={`${formatNumber(stats.blocksMined)} ✓`} sub="100% Complete" variant="green" delay={200} checkBadge />
                   <NodeStat icon="◈" label="CC Earned" value={formatNumber(stats.totalCryptoCoinsEarned)} sub="CryptoCoins" variant="cyan" delay={350} />
                   <NodeStat icon="💰" label="Money Accumulated" value={`$${formatNumber(stats.totalMoneyEarned)}`} sub="Total Cash" variant="yellow" delay={500} />
                   <NodeStat icon="⏱" label="Run Duration" value={formatDuration(stats.runDurationMs)} sub="Real time" delay={650} smallValue />
@@ -588,7 +644,11 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
             {/* Bonus */}
             {statsVisible && (
               <View style={goodStyles.section}>
-                <View style={goodStyles.bonusCard}>
+                <RNLinearGradient
+                  colors={['rgba(0,229,255,0.05)', 'rgba(0,255,136,0.05)']}
+                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                  style={goodStyles.bonusCard}
+                >
                   <Svg width="100%" height={2} style={{ position: 'absolute', top: 0, left: 0, right: 0 }}>
                     <Defs>
                       <LinearGradient id="es_bonus_top" x1="0" y1="0" x2="1" y2="0">
@@ -599,7 +659,10 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
                     <Rect x="0" y="0" width="100%" height="2" fill="url(#es_bonus_top)" />
                   </Svg>
                   <Text style={goodStyles.bonusStar}>⭐</Text>
-                  <Text style={goodStyles.bonusTitle}>{t('endgame.good.bonusTitle')}</Text>
+                  <View style={goodStyles.bonusTitleRow}>
+                    <Text style={goodStyles.bonusTitleText}>{t('endgame.good.bonusTitle')}</Text>
+                    <View style={goodStyles.bonusTitleLine} />
+                  </View>
                   <Text style={goodStyles.bonusRun}>Run #{prestigeRunNumber} · Accumulated rewards unlocked</Text>
                   {collapseProductionPct > 0 && (
                     <Text style={goodStyles.bonusLine}>{t('endgame.bonus.production').replace('{{pct}}', String(collapseProductionPct))}</Text>
@@ -610,17 +673,20 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
                   <View style={goodStyles.bonusQuoteBox}>
                     <Text style={goodStyles.bonusQuote}>{t('endgame.good.narrative')}</Text>
                   </View>
-                </View>
+                </RNLinearGradient>
               </View>
             )}
 
-            {/* Action button */}
+            {/* Action buttons */}
             <View style={goodStyles.actions}>
               <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
                 <TouchableOpacity style={goodStyles.startBtn} onPress={onPrestige} activeOpacity={0.85}>
                   <Text style={goodStyles.startBtnText}>↺  {t('endgame.good.button')}</Text>
                 </TouchableOpacity>
               </Animated.View>
+              <TouchableOpacity style={goodStyles.shareBtn} activeOpacity={0.8}>
+                <Text style={goodStyles.shareBtnText}>↗  SHARE YOUR LEGACY</Text>
+              </TouchableOpacity>
             </View>
 
             <View style={{ height: 32 }} />
@@ -645,31 +711,34 @@ const goodStyles = StyleSheet.create({
   globeWrap: { marginBottom: 24 },
   // victory-sub: letterSpacing 5, marginBottom 20, opacity 0.7 per HTML spec
   victorySub: { fontFamily: fonts.mono, fontSize: 9, letterSpacing: 5, color: colors.nc, textTransform: 'uppercase', marginBottom: 20, opacity: 0.7 },
-  // victory-title: 22px, letterSpacing 3, marginBottom 6, lineHeight 1.2 per HTML spec
-  victoryTitle: { fontFamily: fonts.orbitron, fontSize: 22, fontWeight: '900', letterSpacing: 3, color: colors.ng, textShadowColor: 'rgba(0,255,136,0.45)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 18, textTransform: 'uppercase', textAlign: 'center', lineHeight: 27, marginBottom: 6 },
   // quote: padding 14px 16px, border-left 2px per HTML spec
   quoteBox: { borderLeftWidth: 2, borderLeftColor: 'rgba(0,255,136,0.3)', backgroundColor: 'rgba(0,255,136,0.03)', borderTopRightRadius: 8, borderBottomRightRadius: 8, paddingHorizontal: 16, paddingVertical: 14, maxWidth: 320, marginTop: 16 },
   quoteText: { fontFamily: fonts.rajdhani, fontSize: 14, color: 'rgba(255,255,255,0.6)', lineHeight: 22, fontStyle: 'italic' },
   // stats-section: padding 0 16px, margin-bottom 16px per HTML spec
   section: { paddingHorizontal: 16, marginBottom: 16 },
   cardGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
-  // bonus-card: linear-gradient bg, border rgba(0,229,255,0.2) per HTML spec
-  bonusCard: { borderWidth: 1, borderColor: 'rgba(0,229,255,0.2)', backgroundColor: 'rgba(0,229,255,0.03)', borderRadius: 14, padding: 16, position: 'relative', overflow: 'hidden' },
+  // bonus-card: gradient bg (135deg nc→ng), border rgba(0,229,255,0.2) per HTML spec
+  bonusCard: { borderWidth: 1, borderColor: 'rgba(0,229,255,0.2)', borderRadius: 14, padding: 16, position: 'relative', overflow: 'hidden' },
   // star: top 16px, right 16px, 24px per HTML spec
   bonusStar: { position: 'absolute', top: 16, right: 16, fontSize: 24 },
-  // bonus-title: 10px, letterSpacing 3, marginBottom 10 per HTML spec
-  bonusTitle: { fontFamily: fonts.orbitron, fontSize: 10, fontWeight: '700', letterSpacing: 3, color: colors.nc, marginBottom: 10 },
+  // bonus-title row: flex row with separator line after text per HTML spec
+  bonusTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
+  bonusTitleText: { fontFamily: fonts.orbitron, fontSize: 10, fontWeight: '700', letterSpacing: 3, color: colors.nc },
+  bonusTitleLine: { flex: 1, height: 1, backgroundColor: 'rgba(0,229,255,0.2)' },
   // bonus-run: 9px, marginBottom 12 per HTML spec
   bonusRun: { fontFamily: fonts.mono, fontSize: 9, color: 'rgba(255,255,255,0.45)', letterSpacing: 2, marginBottom: 12 },
   bonusLine: { fontFamily: fonts.rajdhani, fontSize: 13, color: colors.ng, fontWeight: '600', marginBottom: 4 },
   // bonus-quote: padding 12px, border rgba(0,229,255,0.1), borderRadius 8 per HTML spec
   bonusQuoteBox: { backgroundColor: 'rgba(0,229,255,0.04)', borderWidth: 1, borderColor: 'rgba(0,229,255,0.1)', borderRadius: 8, padding: 12 },
   bonusQuote: { fontFamily: fonts.rajdhani, fontSize: 13, color: 'rgba(255,255,255,0.65)', lineHeight: 21, fontStyle: 'italic' },
-  // actions: padding 0 16px 16px per HTML spec
-  actions: { paddingHorizontal: 16, paddingBottom: 16, paddingTop: 8 },
+  // actions: padding 0 16px 16px, gap 8 per HTML spec
+  actions: { paddingHorizontal: 16, paddingBottom: 16, paddingTop: 8, gap: 8 },
   // start-btn: padding 18px, borderRadius 14, border #00ff88, shadow 0 0 24px per HTML spec
   startBtn: { padding: 18, borderRadius: 14, borderWidth: 1, borderColor: colors.ng, backgroundColor: 'rgba(0,255,136,0.08)', alignItems: 'center', justifyContent: 'center', shadowColor: colors.ng, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.15, shadowRadius: 24, elevation: 6 },
   startBtnText: { fontFamily: fonts.orbitron, fontSize: 14, fontWeight: '700', letterSpacing: 4, color: colors.ng, textTransform: 'uppercase' },
+  // share-btn: transparent bg, dim border, dim text per HTML spec
+  shareBtn: { padding: 14, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)', backgroundColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
+  shareBtnText: { fontFamily: fonts.orbitron, fontSize: 11, fontWeight: '700', letterSpacing: 3, color: 'rgba(255,255,255,0.45)' },
 });
 
 // ── Legacy collapse styles ─────────────────────────────────────────
