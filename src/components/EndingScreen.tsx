@@ -537,13 +537,13 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
         </View>
 
         <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
-          <ScrollView contentContainerStyle={[goodStyles.scrollContent, { paddingTop: insets.top }]} showsVerticalScrollIndicator={false}>
+          {/* Topbar — fixed outside ScrollView so it never scrolls */}
+          <View style={[goodStyles.topbar, { paddingTop: insets.top + 12 }]}>
+            <Text style={goodStyles.logo}>BLOCK<Text style={{ color: colors.nc }}>CHAIN</Text> TYCOON</Text>
+            <Text style={goodStyles.runInfo}>RUN #{prestigeRunNumber}{stats ? ` · ${formatDuration(stats.runDurationMs)}` : ''}</Text>
+          </View>
 
-            {/* Topbar */}
-            <View style={goodStyles.topbar}>
-              <Text style={goodStyles.logo}>BLOCK<Text style={{ color: colors.nc }}>CHAIN</Text> TYCOON</Text>
-              <Text style={goodStyles.runInfo}>RUN #{prestigeRunNumber}{stats ? ` · ${formatDuration(stats.runDurationMs)}` : ''}</Text>
-            </View>
+          <ScrollView contentContainerStyle={goodStyles.scrollContent} showsVerticalScrollIndicator={false}>
 
             {/* Hero */}
             <View style={goodStyles.heroSection}>
@@ -620,7 +620,7 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
 const goodStyles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg, overflow: 'hidden' },
   scrollContent: { flexGrow: 1 },
-  topbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 18, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(0,255,136,0.08)', backgroundColor: 'rgba(2,8,16,0.95)' },
+  topbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 18, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(0,255,136,0.08)', backgroundColor: 'rgba(2,8,16,0.95)' },
   logo: { fontFamily: fonts.orbitron, fontSize: 11, fontWeight: '900', letterSpacing: 2, color: colors.ng, textShadowColor: 'rgba(0,255,136,0.5)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 10 },
   runInfo: { fontFamily: fonts.mono, fontSize: 9, color: 'rgba(255,255,255,0.45)', letterSpacing: 2 },
   heroSection: { alignItems: 'center', paddingTop: 32, paddingBottom: 24, paddingHorizontal: 24 },
