@@ -247,14 +247,17 @@ Three blobs. Each: `position:fixed`, `border-radius:50%`, `filter:blur(80px)`.
 | margin-bottom | 8px |
 
 ### Stat card (green default)
+> **Implemented values** — aligned to match mining screen NodeStat (BlockStatus).
+
 | Property | Value |
 |----------|-------|
 | background | `rgba(0,255,136,0.04)` |
-| border | `1px solid rgba(0,255,136,0.18)` |
-| border-radius | 14px |
-| padding | `16px 14px 14px` |
-| top border (::before) | height: 2px, `linear-gradient(90deg, transparent, #00ff88, transparent)`, opacity: 0.6 |
-| animation | cardIn 0.6s ease-out, delays: 0.2s / 0.35s / 0.5s / 0.65s / 0.8s / 0.95s |
+| border | `1px solid rgba(0,255,136,0.22)` |
+| border-radius | 12px |
+| padding | 13px (uniform) |
+| align-items | center |
+| top border (::before) | height: 2px, `linear-gradient(90deg, transparent, #00ff88, transparent)`, opacity: 0.55 |
+| animation | cardIn 0.4s ease-out, delays: 0.2s / 0.35s / 0.5s / 0.65s / 0.8s / 0.95s |
 
 ### Stat card cyan variant
 | Property | Value |
@@ -267,8 +270,15 @@ Three blobs. Each: `position:fixed`, `border-radius:50%`, `filter:blur(80px)`.
 | Property | Value |
 |----------|-------|
 | background | `rgba(255,214,0,0.04)` |
-| border-color | `rgba(255,214,0,0.2)` |
+| border-color | `rgba(255,214,0,0.22)` |
 | top border color | `#ffd600` |
+
+### Stat card red variant
+| Property | Value |
+|----------|-------|
+| background | `rgba(255,61,90,0.04)` |
+| border-color | `rgba(255,61,90,0.22)` |
+| top border color | `#ff3d5a` |
 
 ### cardIn animation
 | Keyframe | Value |
@@ -279,8 +289,9 @@ Three blobs. Each: `position:fixed`, `border-radius:50%`, `filter:blur(80px)`.
 ### Stat icon (.bs-icon)
 | Property | Value |
 |----------|-------|
-| font-size | 18px |
-| margin-bottom | 6px |
+| font-size | 25px |
+| margin-bottom | 5px |
+| color | `rgba(255,255,255,0.7)` |
 
 ### Stat label (.bs-label)
 | Property | Value |
@@ -288,27 +299,28 @@ Three blobs. Each: `position:fixed`, `border-radius:50%`, `filter:blur(80px)`.
 | font-family | Share Tech Mono |
 | font-size | 8px |
 | letter-spacing | 2px |
-| color | `rgba(255,255,255,0.45)` |
+| color | `rgba(255,255,255,0.4)` |
 | text-transform | uppercase |
-| margin-bottom | 4px |
+| margin-bottom | 3px |
 
 ### Stat value (.bs-value)
 | Property | Value |
 |----------|-------|
 | font-family | Orbitron |
-| font-size | 20px (Run Duration: 16px) |
-| font-weight | 900 |
-| color (green) | `#00ff88`, text-shadow: `0 0 14px rgba(0,255,136,0.4)` |
-| color (cyan) | `#00e5ff`, text-shadow: `0 0 14px rgba(0,229,255,0.4)` |
-| color (yellow) | `#ffd600`, text-shadow: `0 0 14px rgba(255,214,0,0.4)` |
-| line-height | 1 |
+| font-size | 17px (Run Duration: 16px via `smallValue` prop) |
+| font-weight | unset |
+| color (green) | `#00ff88`, text-shadow: `0 0 6px rgba(0,255,136,0.35)` |
+| color (cyan) | `#00e5ff`, text-shadow: `0 0 6px rgba(0,229,255,0.35)` |
+| color (yellow) | `#ffd600`, text-shadow: `0 0 6px rgba(255,214,0,0.35)` |
+| color (red) | `#ff3d5a`, text-shadow: `0 0 6px rgba(255,61,90,0.35)` |
+| line-height | 22px |
 
 ### Stat sub (.bs-sub)
 | Property | Value |
 |----------|-------|
 | font-size | 10px |
-| color | `rgba(255,255,255,0.45)` |
-| margin-top | 3px |
+| color | `rgba(255,255,255,0.4)` |
+| margin-top | 2px |
 
 ### Check badge (.check-badge)
 | Property | Value |
