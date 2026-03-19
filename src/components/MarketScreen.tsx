@@ -30,13 +30,6 @@ const formatPriceUSD = (price: number): string => {
   return `$${price.toFixed(6)}`;
 };
 
-const formatPercent = (pct: number): string => {
-  const abs = Math.abs(pct);
-  const formatted = abs >= 1000
-    ? abs.toLocaleString('en-US', { maximumFractionDigits: 0 })
-    : abs.toFixed(1);
-  return `${pct >= 0 ? '+' : '-'}${formatted}%`;
-};
 
 const MarketScreen: React.FC = () => {
   const { gameState, dispatch, t } = useGame();
@@ -200,8 +193,6 @@ const MarketScreen: React.FC = () => {
       <ScrollView style={styles.list} contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false} scrollEnabled={scrollEnabled}>
         {(gameState.cryptocurrencies || []).filter(c => isCryptoUnlocked(c.id)).map((crypto) => {
           const isSelected = crypto.id === gameState.selectedCurrency;
-          const priceChange = ((crypto.currentValue - crypto.baseValue) / crypto.baseValue) * 100;
-          const isUp = priceChange >= 0;
 
           return (
             <View key={crypto.id} style={styles.cryptoBlock}>
@@ -227,16 +218,6 @@ const MarketScreen: React.FC = () => {
                   </Text>
                 </View>
 
-                <View style={styles.coinRight}>
-                  <Text style={styles.coinPriceSm}>
-                    {formatCurrencyAmount(crypto.currentValue, crypto.symbol)}
-                  </Text>
-                  <View style={[styles.priceBadge, isUp ? styles.priceBadgeUp : styles.priceBadgeDn]}>
-                    <Text style={[styles.priceBadgeText, { color: isUp ? colors.ng : colors.nr }]}>
-                      {isUp ? '▲' : '▼'} {formatPercent(priceChange)}
-                    </Text>
-                  </View>
-                </View>
               </TouchableOpacity>
 
               {/* Expanded section */}
@@ -460,36 +441,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: colors.dim,
     letterSpacing: 2,
-  },
-
-  coinRight: {
-    alignItems: 'flex-end',
-    gap: 4,
-  },
-  coinPriceSm: {
-    fontFamily: fonts.mono,
-    fontSize: 12,
-    color: '#fff',
-  },
-  priceBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 6,
-    borderWidth: 1,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-  },
-  priceBadgeUp: {
-    backgroundColor: 'rgba(0,255,136,0.1)',
-    borderColor: 'rgba(0,255,136,0.22)',
-  },
-  priceBadgeDn: {
-    backgroundColor: 'rgba(255,61,90,0.1)',
-    borderColor: 'rgba(255,61,90,0.22)',
-  },
-  priceBadgeText: {
-    fontFamily: fonts.mono,
-    fontSize: 10,
   },
 
   /* Expanded */

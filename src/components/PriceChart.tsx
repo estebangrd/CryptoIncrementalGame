@@ -12,10 +12,10 @@ interface PriceChartProps {
   priceHistory: number[];
 }
 
-const formatPrice = (price: number): string => {
+export const formatPrice = (price: number): string => {
   if (price >= 1000) return `$${(price / 1000).toFixed(1)}k`;
   if (price >= 100) return `$${price.toFixed(0)}`;
-  if (price >= 1) return `$${price.toFixed(2)}`;
+  if (price >= 1) return `$${price.toFixed(4)}`;
   if (price >= 0.01) return `$${price.toFixed(4)}`;
   return `$${price.toFixed(6)}`;
 };
