@@ -604,7 +604,7 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
         <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
           {/* stickyHeaderIndices={[0]} keeps the topbar pinned like position:sticky in CSS */}
           <ScrollView
-            contentContainerStyle={[goodStyles.scrollContent, { paddingTop: insets.top }]}
+            contentContainerStyle={[goodStyles.scrollContent, { paddingTop: 0 }]}
             showsVerticalScrollIndicator={false}
             stickyHeaderIndices={[0]}
           >
