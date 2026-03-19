@@ -214,11 +214,15 @@ const OrbitGlobe: React.FC = () => {
 };
 
 const orbitStyles = StyleSheet.create({
-  wrap: { width: 180, height: 180, alignItems: 'center', justifyContent: 'center' },
+  // Globe wrap: 120×120px per HTML spec
+  wrap: { width: 120, height: 120, alignItems: 'center', justifyContent: 'center' },
   ring: { position: 'absolute', borderRadius: 999, borderWidth: 1, top: '50%', left: '50%' },
-  ring1: { width: 140, height: 140, marginTop: -70, marginLeft: -70, borderColor: 'rgba(0,255,136,0.28)' },
-  ring2: { width: 170, height: 170, marginTop: -85, marginLeft: -85, borderColor: 'rgba(0,229,255,0.18)' },
-  dot: { position: 'absolute', width: 7, height: 7, borderRadius: 4, backgroundColor: colors.ng, top: -3, left: '50%', marginLeft: -3, shadowColor: colors.ng, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 1, shadowRadius: 6, elevation: 4 },
+  // orbit-1: 140×140, border rgba(0,255,136,0.25), 6s
+  ring1: { width: 140, height: 140, marginTop: -70, marginLeft: -70, borderColor: 'rgba(0,255,136,0.25)' },
+  // orbit-2: 170×170, border rgba(0,229,255,0.15), 10s reverse
+  ring2: { width: 170, height: 170, marginTop: -85, marginLeft: -85, borderColor: 'rgba(0,229,255,0.15)' },
+  // dot: 6×6px per HTML spec
+  dot: { position: 'absolute', width: 6, height: 6, borderRadius: 3, backgroundColor: colors.ng, top: -3, left: '50%', marginLeft: -3, shadowColor: colors.ng, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 1, shadowRadius: 8, elevation: 4 },
   dotCyan: { backgroundColor: colors.nc, shadowColor: colors.nc },
   globe: { fontSize: 72, position: 'absolute' },
 });
@@ -235,10 +239,10 @@ const VARIANT_COLOR: Record<Variant, string> = {
 
 interface NodeStatProps {
   icon: string; label: string; value: string; sub?: string;
-  variant?: Variant; wide?: boolean; delay?: number;
+  variant?: Variant; wide?: boolean; delay?: number; smallValue?: boolean;
 }
 
-const NodeStat: React.FC<NodeStatProps> = ({ icon, label, value, sub, variant = 'green', wide, delay = 0 }) => {
+const NodeStat: React.FC<NodeStatProps> = ({ icon, label, value, sub, variant = 'green', wide, delay = 0, smallValue }) => {
   const slideAnim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     Animated.sequence([
@@ -264,32 +268,37 @@ const NodeStat: React.FC<NodeStatProps> = ({ icon, label, value, sub, variant = 
       </Svg>
       <Text style={nsStyles.icon}>{icon}</Text>
       <Text style={nsStyles.label}>{label}</Text>
-      <Text style={[nsStyles.value, valVariantStyle]}>{value}</Text>
+      <Text style={[nsStyles.value, valVariantStyle, smallValue && { fontSize: 16 }]}>{value}</Text>
       {sub && <Text style={nsStyles.sub}>{sub}</Text>}
     </Animated.View>
   );
 };
 
 const nsStyles = StyleSheet.create({
+  // padding: 16px 14px 14px per HTML spec
   card: {
     width: '48%', backgroundColor: 'rgba(0,255,136,0.04)',
-    borderWidth: 1, borderColor: 'rgba(0,255,136,0.22)',
-    borderRadius: 12, padding: 13, alignItems: 'center',
+    borderWidth: 1, borderColor: 'rgba(0,255,136,0.18)',
+    borderRadius: 14, paddingTop: 16, paddingHorizontal: 14, paddingBottom: 14,
     overflow: 'hidden', marginBottom: 8,
   },
   wide: { width: '100%' },
   cardCyan: { backgroundColor: 'rgba(0,229,255,0.04)', borderColor: 'rgba(0,229,255,0.18)' },
-  cardYellow: { backgroundColor: 'rgba(255,214,0,0.04)', borderColor: 'rgba(255,214,0,0.22)' },
-  cardRed: { backgroundColor: 'rgba(255,61,90,0.04)', borderColor: 'rgba(255,61,90,0.22)' },
+  cardYellow: { backgroundColor: 'rgba(255,214,0,0.04)', borderColor: 'rgba(255,214,0,0.2)' },
+  cardRed: { backgroundColor: 'rgba(255,61,90,0.04)', borderColor: 'rgba(255,61,90,0.18)' },
   topBorder: { position: 'absolute', top: 0, left: 0, right: 0 },
-  icon: { fontSize: 22, marginBottom: 5, color: 'rgba(255,255,255,0.7)' },
-  label: { fontFamily: fonts.mono, fontSize: 8, letterSpacing: 2, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: 3, textAlign: 'center' },
-  value: { fontFamily: fonts.orbitron, fontSize: 18, fontWeight: '700', lineHeight: 22, textAlign: 'center' },
-  valGreen: { color: colors.ng, textShadowColor: 'rgba(0,255,136,0.35)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 6 },
-  valCyan: { color: colors.nc, textShadowColor: 'rgba(0,229,255,0.35)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 6 },
-  valYellow: { color: '#ffd600', textShadowColor: 'rgba(255,214,0,0.35)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 6 },
-  valRed: { color: '#ff3d5a', textShadowColor: 'rgba(255,61,90,0.35)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 6 },
-  sub: { fontFamily: fonts.rajdhani, fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 2, textAlign: 'center' },
+  // icon: 18px per HTML spec
+  icon: { fontSize: 18, marginBottom: 6 },
+  // label: 8px, letterSpacing 2, marginBottom 4 per HTML spec
+  label: { fontFamily: fonts.mono, fontSize: 8, letterSpacing: 2, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', marginBottom: 4 },
+  // value: 20px, weight 900, lineHeight 1 per HTML spec
+  value: { fontFamily: fonts.orbitron, fontSize: 20, fontWeight: '900', lineHeight: 20 },
+  valGreen: { color: colors.ng, textShadowColor: 'rgba(0,255,136,0.4)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 14 },
+  valCyan: { color: colors.nc, textShadowColor: 'rgba(0,229,255,0.4)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 14 },
+  valYellow: { color: '#ffd600', textShadowColor: 'rgba(255,214,0,0.4)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 14 },
+  valRed: { color: '#ff3d5a', textShadowColor: 'rgba(255,61,90,0.4)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 14 },
+  // sub: 10px, marginTop 3px per HTML spec
+  sub: { fontFamily: fonts.rajdhani, fontSize: 10, color: 'rgba(255,255,255,0.45)', marginTop: 3 },
 });
 
 // ── AI Level card ──────────────────────────────────────────────────
@@ -551,7 +560,9 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
 
             {/* Hero */}
             <View style={goodStyles.heroSection}>
-              <OrbitGlobe />
+              <View style={goodStyles.globeWrap}>
+                <OrbitGlobe />
+              </View>
               <Text style={goodStyles.victorySub}>Mission Complete · Genesis Chain</Text>
               <Text style={goodStyles.victoryTitle}>{t('endgame.good.title')}</Text>
               <View style={goodStyles.quoteBox}>
@@ -567,7 +578,7 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
                   <NodeStat icon="⛏" label="Blocks Mined" value={`${formatNumber(stats.blocksMined)} ✓`} sub="100% Complete" variant="green" delay={200} />
                   <NodeStat icon="◈" label="CC Earned" value={formatNumber(stats.totalCryptoCoinsEarned)} sub="CryptoCoins" variant="cyan" delay={350} />
                   <NodeStat icon="💰" label="Money Accumulated" value={`$${formatNumber(stats.totalMoneyEarned)}`} sub="Total Cash" variant="yellow" delay={500} />
-                  <NodeStat icon="⏱" label="Run Duration" value={formatDuration(stats.runDurationMs)} sub="Real time" delay={650} />
+                  <NodeStat icon="⏱" label="Run Duration" value={formatDuration(stats.runDurationMs)} sub="Real time" delay={650} smallValue />
                 </View>
                 <AILevelCard level={stats.aiLevelReached} delay={800} />
                 <ResourcesBar pct={Math.round(stats.planetResourcesAtEnd)} />
@@ -620,29 +631,44 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
   );
 };
 
-// ── Good ending styles ─────────────────────────────────────────────
+// ── Good ending styles (values from style-reference.md) ────────────
 const goodStyles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg, overflow: 'hidden' },
-  scrollContent: { flexGrow: 1 },
+  scrollContent: { flexGrow: 1, paddingBottom: 30 },
+  // topbar: padding 14px 18px 10px per HTML spec
   topbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 18, paddingTop: 14, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(0,255,136,0.08)', backgroundColor: 'rgba(2,8,16,0.95)' },
-  logo: { fontFamily: fonts.orbitron, fontSize: 11, fontWeight: '900', letterSpacing: 2, color: colors.ng, textShadowColor: 'rgba(0,255,136,0.5)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 10 },
+  logo: { fontFamily: fonts.orbitron, fontSize: 11, fontWeight: '900', letterSpacing: 2, color: colors.ng, textShadowColor: 'rgba(0,255,136,0.5)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 14 },
   runInfo: { fontFamily: fonts.mono, fontSize: 9, color: 'rgba(255,255,255,0.45)', letterSpacing: 2 },
-  heroSection: { alignItems: 'center', paddingTop: 32, paddingBottom: 24, paddingHorizontal: 24 },
-  victorySub: { fontFamily: fonts.mono, fontSize: 9, letterSpacing: 4, color: colors.nc, textTransform: 'uppercase', marginTop: 20, marginBottom: 8, opacity: 0.75 },
-  victoryTitle: { fontFamily: fonts.orbitron, fontSize: 22, fontWeight: '900', letterSpacing: 3, color: colors.ng, textShadowColor: 'rgba(0,255,136,0.45)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 18, textTransform: 'uppercase', textAlign: 'center', lineHeight: 30, marginBottom: 16 },
-  quoteBox: { borderLeftWidth: 2, borderLeftColor: 'rgba(0,255,136,0.3)', backgroundColor: 'rgba(0,255,136,0.03)', borderTopRightRadius: 8, borderBottomRightRadius: 8, paddingHorizontal: 14, paddingVertical: 12, maxWidth: 320 },
+  // hero: padding 50px 24px 32px per HTML spec
+  heroSection: { alignItems: 'center', paddingTop: 50, paddingBottom: 32, paddingHorizontal: 24 },
+  // globe-wrap margin-bottom: 24px per HTML spec
+  globeWrap: { marginBottom: 24 },
+  // victory-sub: letterSpacing 5, marginBottom 20, opacity 0.7 per HTML spec
+  victorySub: { fontFamily: fonts.mono, fontSize: 9, letterSpacing: 5, color: colors.nc, textTransform: 'uppercase', marginBottom: 20, opacity: 0.7 },
+  // victory-title: 22px, letterSpacing 3, marginBottom 6, lineHeight 1.2 per HTML spec
+  victoryTitle: { fontFamily: fonts.orbitron, fontSize: 22, fontWeight: '900', letterSpacing: 3, color: colors.ng, textShadowColor: 'rgba(0,255,136,0.45)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 18, textTransform: 'uppercase', textAlign: 'center', lineHeight: 27, marginBottom: 6 },
+  // quote: padding 14px 16px, border-left 2px per HTML spec
+  quoteBox: { borderLeftWidth: 2, borderLeftColor: 'rgba(0,255,136,0.3)', backgroundColor: 'rgba(0,255,136,0.03)', borderTopRightRadius: 8, borderBottomRightRadius: 8, paddingHorizontal: 16, paddingVertical: 14, maxWidth: 320, marginTop: 16 },
   quoteText: { fontFamily: fonts.rajdhani, fontSize: 14, color: 'rgba(255,255,255,0.6)', lineHeight: 22, fontStyle: 'italic' },
-  section: { paddingHorizontal: 16, marginBottom: 8 },
+  // stats-section: padding 0 16px, margin-bottom 16px per HTML spec
+  section: { paddingHorizontal: 16, marginBottom: 16 },
   cardGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
-  bonusCard: { borderWidth: 1, borderColor: 'rgba(0,229,255,0.2)', backgroundColor: 'rgba(0,229,255,0.04)', borderRadius: 14, padding: 16, position: 'relative', overflow: 'hidden' },
-  bonusStar: { position: 'absolute', top: 14, right: 14, fontSize: 24 },
-  bonusTitle: { fontFamily: fonts.orbitron, fontSize: 10, fontWeight: '700', letterSpacing: 3, color: colors.nc, marginBottom: 6, marginTop: 2 },
-  bonusRun: { fontFamily: fonts.mono, fontSize: 9, color: 'rgba(255,255,255,0.45)', letterSpacing: 2, marginBottom: 10 },
+  // bonus-card: linear-gradient bg, border rgba(0,229,255,0.2) per HTML spec
+  bonusCard: { borderWidth: 1, borderColor: 'rgba(0,229,255,0.2)', backgroundColor: 'rgba(0,229,255,0.03)', borderRadius: 14, padding: 16, position: 'relative', overflow: 'hidden' },
+  // star: top 16px, right 16px, 24px per HTML spec
+  bonusStar: { position: 'absolute', top: 16, right: 16, fontSize: 24 },
+  // bonus-title: 10px, letterSpacing 3, marginBottom 10 per HTML spec
+  bonusTitle: { fontFamily: fonts.orbitron, fontSize: 10, fontWeight: '700', letterSpacing: 3, color: colors.nc, marginBottom: 10 },
+  // bonus-run: 9px, marginBottom 12 per HTML spec
+  bonusRun: { fontFamily: fonts.mono, fontSize: 9, color: 'rgba(255,255,255,0.45)', letterSpacing: 2, marginBottom: 12 },
   bonusLine: { fontFamily: fonts.rajdhani, fontSize: 13, color: colors.ng, fontWeight: '600', marginBottom: 4 },
+  // bonus-quote: padding 12px, border rgba(0,229,255,0.1), borderRadius 8 per HTML spec
   bonusQuoteBox: { backgroundColor: 'rgba(0,229,255,0.04)', borderWidth: 1, borderColor: 'rgba(0,229,255,0.1)', borderRadius: 8, padding: 12 },
-  bonusQuote: { fontFamily: fonts.rajdhani, fontSize: 13, color: 'rgba(255,255,255,0.65)', lineHeight: 20, fontStyle: 'italic' },
-  actions: { paddingHorizontal: 16, paddingTop: 8 },
-  startBtn: { padding: 18, borderRadius: 14, borderWidth: 1, borderColor: colors.ng, backgroundColor: 'rgba(0,255,136,0.08)', alignItems: 'center', justifyContent: 'center', shadowColor: colors.ng, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.3, shadowRadius: 16, elevation: 6 },
+  bonusQuote: { fontFamily: fonts.rajdhani, fontSize: 13, color: 'rgba(255,255,255,0.65)', lineHeight: 21, fontStyle: 'italic' },
+  // actions: padding 0 16px 16px per HTML spec
+  actions: { paddingHorizontal: 16, paddingBottom: 16, paddingTop: 8 },
+  // start-btn: padding 18px, borderRadius 14, border #00ff88, shadow 0 0 24px per HTML spec
+  startBtn: { padding: 18, borderRadius: 14, borderWidth: 1, borderColor: colors.ng, backgroundColor: 'rgba(0,255,136,0.08)', alignItems: 'center', justifyContent: 'center', shadowColor: colors.ng, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.15, shadowRadius: 24, elevation: 6 },
   startBtnText: { fontFamily: fonts.orbitron, fontSize: 14, fontWeight: '700', letterSpacing: 4, color: colors.ng, textTransform: 'uppercase' },
 });
 
