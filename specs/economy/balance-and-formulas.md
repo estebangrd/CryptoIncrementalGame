@@ -394,42 +394,92 @@ function calculateHardwareROI(hardware: Hardware): {
 4. Hacer prestige al llegar a 21M bloques
 5. Repetir con multipliers de prestige para runs más rápidos
 
+## Precio de CryptoCoin — Referencia de Mercado
+
+El precio de CC se genera dinámicamente usando datos históricos de BTC divididos por un seed aleatorio:
+
+```
+seed ∈ [90,000 – 96,000]
+CC_price = BTC_price_history[index] / seed
+```
+
+**Rango de precios base**: $1.03 – $1.38/CC
+**Precio promedio de referencia**: **$1.20/CC**
+**Precio efectivo de venta** (tras comisión 1%): **$1.19/CC**
+**Fuente**: `gameLogic.ts` → `PRICE_SEED_MIN = 90,000`, `PRICE_SEED_RANGE = 6,000`
+
+> La fluctuación de mercado (±20%) promedia a 0, por lo que $1.20 es el valor esperado correcto para simulaciones.
+
+---
+
 ## Progresión Temporal Esperada
 
-### Milestone Timeline (First Playthrough, Active Player)
+### Supuestos de la Simulación
 
-| Milestone | Time | Blocks Mined | Money Earned | Notes |
-|-----------|------|--------------|--------------|-------|
-| First CryptoCoin | 0s | 0 | $0 | Manual mining starts |
-| First Basic CPU | ~2 min | 10-15 | $0.50 | First hardware purchase |
-| Market Unlock | ~10 min | 15 | $1,000 CC | Can sell coins now |
-| First $100 | ~20 min | 100 | $100 | Approaching hardware unlock |
-| Hardware Tab Unlock | ~30 min | 200 | $200 | Advanced hardware available |
-| First Upgrade | ~45 min | 500 | $5,000 | CPU Efficiency probably |
-| First GPU | ~1 hour | 1,000 | $10,000 | Significant power spike |
-| First Halving | ~2 hours | 210,000 | $100,000 | Reward drops to 25 CC/block |
-| First ASIC | ~4 hours | 500,000 | $500,000 | Late game hardware |
-| Second Halving | ~6 hours | 420,000 | $2M | Reward: 12.5 CC/block |
-| ASIC Gen 3 | ~8 hours | 1M | $10M | Endgame hardware |
-| 10M Blocks | ~10 hours | 10M | $50M | Halfway to completion |
-| 20M Blocks | ~12 hours | 20M | $100M | Almost done |
-| **First Prestige** | ~15 hours | 21M | $200M | COMPLETE! |
+- **Estrategia**: comprar exactamente 5 unidades por tier antes de avanzar al siguiente
+- **Precio CC**: $1.19/CC efectivo (promedio $1.20, 1% fee)
+- **COST_MULTIPLIER**: 1.20 → 5 unidades cuestan `baseCost × 7.44`
+- **IA**: Nivel 1 y 2 comprados durante fase L10; Nivel 3 no comprado
+- **Sin offline progress**; halvings NO afectan la producción automática (`CC/s = miningSpeed × hardware.blockReward`)
+- **Rebalance Opción C (2026-03-20)**: L6–L8 baseCost ×2 · L9–L11 baseCost ×3 + miningSpeed ÷2 + blockReward ×2
 
-**Notas**:
-- Tiempos asumen juego activo (no hay offline progress)
-- Pueden variar ±30% basado en estrategia del jugador
-- Upgrades compradas pueden acelerar progresión
+### Producción por Fase — Post-Rebalance (5× cada tier)
 
-### Subsequent Runs (Con Prestige)
+Para L9–L11: miningSpeed÷2 y blockReward×2 → **CC/s idéntico**, **blk/s a la mitad**.
 
-| Prestige Level | Estimated Time | Notes |
-|----------------|----------------|-------|
-| Run #2 (Level 1, 1.1x) | ~13.6 hours | 10% más rápido |
-| Run #3 (Level 2, 1.2x) | ~12.5 hours | 20% más rápido |
-| Run #5 (Level 5, 1.5x) | ~10 hours | 50% más rápido |
-| Run #10 (Level 10, 2.0x) | ~7.5 hours | 100% más rápido |
-| Run #20 (Level 20, 3.0x) | ~5 hours | 200% más rápido |
-| Run #50 (Level 50, 6.0x) | ~2.5 hours | 500% más rápido |
+| Tier | CC/s acum. | blk/s acum. | Tiempo fase | Bloques fase | Bloques acum. |
+|---|---|---|---|---|---|
+| Early game (manual) | — | ~0 | ~30 min | ~1,000 | ~1,000 |
+| L3 advanced_cpu | 235.5 | 5.5 | ~2 min | ~360 | ~1,360 |
+| L4 basic_gpu | 710.5 | 18.0 | ~5 min | ~1,900 | ~3,260 |
+| L5 advanced_gpu | 1,760.5 | 48.0 | ~6 min | ~7,400 | ~10,660 |
+| L6 asic_gen1 | 3,560.5 | 108.0 | **~15 min** | ~65,000 | ~76,000 |
+| L7 asic_gen2 | 7,310.5 | 258.0 | **~24.5 min** | ~250,000 | ~326,000 |
+| L8 asic_gen3 | 13,310.5 | 558.0 | **~42 min** | ~978,000 | ~1,304,000 |
+| L9 mining_farm | 24,560.5 | **933** | **~139 min** | ~5,954,000 | ~7,258,000 |
+| L10 unit 1 ($150M) | 28,560.5 | 1,133 | ~86 min | ~4,789,000 | ~12,047,000 |
+| AI L1 save ($25M) | 28,560.5 | 1,133 | ~12 min | ~834,000 | ~12,881,000 |
+| AI L2 save ($100M, ×1.2) | 34,272 | 1,133 | ~41 min | ~2,778,000 | ~15,659,000 |
+| L10 unit 2 ($180M, ×1.5) | 42,840 | 1,333 | ~59 min | ~3,999,000 | ~19,658,000 |
+| Hasta 21M (1,333 blk/s) | — | 1,333 | **~17 min** | ~1,342,000 | **21,000,000** |
+
+**Duración total estimada del primer run: ~8 horas**
+
+> Nota: ×3 en baseCost no equivale a ×3 en tiempo porque el CC/s crece dentro de cada fase al ir comprando unidades (cada unidad añade producción, acelerando el ahorro para la siguiente). L9 ×3 costo → ×1.95 tiempo. L10 ×3 costo → ×1.7 tiempo (AI boost compensa parcialmente).
+
+### Milestone Timeline (First Playthrough — Post-Rebalance)
+
+| Milestone | Tiempo | Bloques acum. | Notas |
+|---|---|---|---|
+| Mercado desbloqueado | ~10 min | ~10 | 10 bloques + 500 CC |
+| Hardware tab desbloqueado | ~15 min | ~15 | $200 real money |
+| 5× basic_cpu | ~30 min | ~1,000 | 67 CC/s · 1.5 blk/s |
+| 5× ASIC Gen 1 | ~58 min | ~76,000 | 3,560 CC/s · 108 blk/s |
+| 5× ASIC Gen 2 | ~82 min | ~326,000 | 7,310 CC/s · 258 blk/s |
+| 5× ASIC Gen 3 | ~124 min | ~1,304,000 | 13,310 CC/s · 558 blk/s |
+| 5× Mining Farm | ~263 min (~4.4h) | ~7,258,000 | 24,560 CC/s · 933 blk/s |
+| 1er Quantum Miner ($150M) | ~349 min (~5.8h) | ~12,047,000 | late game |
+| AI Nivel 1 activo ($25M) | ~361 min (~6.0h) | ~12,881,000 | CC/s ×1.20 |
+| AI Nivel 2 activo ($100M) | ~402 min (~6.7h) | ~15,659,000 | CC/s ×1.50 |
+| 2do Quantum Miner ($180M) | ~461 min (~7.7h) | ~19,658,000 | 1,333 blk/s |
+| **21M bloques — PRESTIGE** | **~477 min (~8h)** | **21,000,000** | ✓ Juego completo |
+
+**Observaciones (post-rebalance)**:
+- Juego termina durante el ahorro para el **3er Quantum Miner** — Supercomputer no se alcanza en run 1
+- L9 Mining Farm es el cuello de botella principal (~2.3h)
+- AI L1+L2 se sienten como logros reales ($25M y $100M tienen peso)
+- blk/s final: 1,333 (vs 3,308 pre-rebalance) → endgame más tenso, menos "pantalla mirando"
+
+### Subsequent Runs (Con Prestige — Post-Rebalance)
+
+| Run | Prestige mult. | Tiempo estimado |
+|---|---|---|
+| Run #1 | 1.0x | ~8 horas |
+| Run #2 | 1.1x | ~7.3 horas |
+| Run #5 | 1.5x | ~5.3 horas |
+| Run #10 | 2.0x | ~4 horas |
+| Run #20 | 3.0x | ~2.7 horas |
+| Run #50 | 6.0x | ~1.3 horas |
 
 ## Break-Even Analysis
 
