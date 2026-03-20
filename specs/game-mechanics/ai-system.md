@@ -117,11 +117,11 @@ const AI_CRYPTO_MULTIPLIERS: Record<string, { production: number; energyMultipli
   singularity_coin: { production: 100, energyMultiplier: 30 },
 };
 
-// Costo de niveles de IA ($ real money)
+// Costo de niveles de IA ($ real money) — rebalanceado 2026-03-20
 const AI_LEVEL_COSTS = {
-  1: 500_000,
-  2: 5_000_000,
-  3: 50_000_000,
+  1: 25_000_000,   // ~17% del costo de un Quantum Miner ($150M) → se siente merecido
+  2: 100_000_000,  // comprable ~40 min después de L1 → milestone mid-L10
+  3: 250_000_000,  // ~costo de un Supercomputer → decisión narrativa de peso
 };
 
 // Unlock conditions
@@ -154,21 +154,21 @@ export const AI_CONFIG = {
   LEVELS: {
     1: {
       name: 'Asistente',
-      cost: 500_000,
+      cost: 25_000_000,
       productionMultiplier: 1.20,
       unlockCrypto: 'neural_coin',
       isIrreversible: false,
     },
     2: {
       name: 'Copiloto',
-      cost: 5_000_000,
+      cost: 100_000_000,
       productionMultiplier: 1.50,
       unlockCrypto: 'quantum_bit',
       isIrreversible: false,
     },
     3: {
       name: 'Autónomo',
-      cost: 50_000_000,
+      cost: 250_000_000,
       productionMultiplier: 2.50,
       unlockCrypto: 'singularity_coin',
       isIrreversible: true,
@@ -324,9 +324,9 @@ export interface AIState {
 ## Criterios de Aceptación
 
 - [ ] La sección de IA no aparece en Upgrades hasta tener Quantum Miner
-- [ ] Nivel 1 cuesta $500K y da +20% producción
-- [ ] Nivel 2 cuesta $5M, requiere Nivel 1, da +50% producción
-- [ ] Nivel 3 cuesta $50M, requiere Nivel 2, muestra modal de advertencia
+- [ ] Nivel 1 cuesta $25M y da +20% producción
+- [ ] Nivel 2 cuesta $100M, requiere Nivel 1, da +50% producción
+- [ ] Nivel 3 cuesta $250M, requiere Nivel 2, muestra modal de advertencia
 - [ ] El modal de Nivel 3 es el único paso de confirmación (no hay doble confirmación innecesaria)
 - [ ] Una vez en Nivel 3, `isAutonomous` no puede revertirse
 - [ ] Con Nivel 3, los controles no-renovables del Energy System están deshabilitados

@@ -120,7 +120,7 @@ describe('canPurchaseAILevel', () => {
   it('Level 1: available with Quantum Miner and enough money', () => {
     // AI level 0, but player owns a Quantum Miner and has enough money
     const state = makeState({
-      realMoney: 1_000_000,
+      realMoney: 25_000_000,
       ai: getInitialAIState(),
       aiCryptosUnlocked: [],
       hardware: getInitialGameState().hardware.map(h =>
@@ -141,7 +141,7 @@ describe('canPurchaseAILevel', () => {
   });
 
   it('Level 2: available when Level 1 purchased and enough money', () => {
-    const state = makeStateWithAI(1, 10_000_000);
+    const state = makeStateWithAI(1, 100_000_000);
     expect(canPurchaseAILevel(state, 2)).toBe(true);
   });
 
@@ -151,7 +151,7 @@ describe('canPurchaseAILevel', () => {
   });
 
   it('Level 3: available when Level 2 purchased and enough money', () => {
-    const state = makeStateWithAI(2, 100_000_000);
+    const state = makeStateWithAI(2, 250_000_000);
     expect(canPurchaseAILevel(state, 3)).toBe(true);
   });
 
