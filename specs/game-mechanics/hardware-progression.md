@@ -400,31 +400,26 @@ interface Hardware {
 ## UI/UX Requirements
 
 ### HardwareList Component
-- [ ] Muestra todos los hardware desbloqueados en orden de level
+- [x] Muestra todos los hardware desbloqueados en orden de level
 - [ ] Hardware bloqueado muestra "🔒" y requisito de desbloqueo
-- [ ] Cada card de hardware muestra:
-  - Icono del hardware
-  - Nombre traducido
-  - Descripción traducida
-  - "Owned: X"
-  - "Cost: X CC" o "$X" según corresponda
-  - "Production: X CC/s" (total de todas las unidades, neto de electricidad)
-  - Botón "Buy" (disabled si no puede comprar)
-- [ ] El botón "Buy" muestra el costo de la próxima unidad
-- [ ] Si no hay suficientes fondos, el botón está deshabilitado y en rojo
-- [ ] Si hay fondos, el botón está habilitado y en verde
+- [x] Cada card de hardware muestra en una fila de 5 celdas (siempre visibles):
+  - HASH RATE: producción total en H/s
+  - MINE SPEED: velocidad de minado total en blk/s
+  - REWARD: recompensa por bloque en CC/blk
+  - COINS/SEC: monedas producidas por segundo (CC/s)
+  - POWER: costo de electricidad total en $/s (muestra 0 si owned=0, nunca se oculta)
+- [x] Preview row "+1 ADDS" que muestra el incremento por unidad adicional
+- [x] "PURCHASE COST" + valor formateado
+- [x] Botón "BUY UNIT" (disabled con mensaje "INSUFFICIENT FUNDS" si no puede comprar)
+- [x] El botón "Buy" muestra el costo de la próxima unidad (precio escala con owned)
+- [x] Si no hay suficientes fondos, el botón está deshabilitado y en rojo
+- [x] Si hay fondos, el botón está habilitado y en verde
+- [x] Las 5 celdas de stats siempre se muestran en la misma fila (no wrapping)
 
-### Hardware Card Details (Expandible)
-- [ ] Al tocar un hardware, se expande mostrando:
-  - Mining Speed: X blocks/s (por unidad)
-  - Block Reward: X CC/block
-  - Electricity Cost: $X/s (por unidad)
-  - Hash Rate: X H/s (cosmético)
-  - Total Production: X CC/s (todas las unidades)
-  - Total Electricity: $X/s (todas las unidades)
-  - Net Production: X CC/s (production - electricity)
-- [ ] Botón "Buy 10x" para comprar 10 unidades a la vez (opcional, future)
-- [ ] Botón "Buy Max" para comprar todas las que pueda (opcional, future)
+**Nota sobre POWER**: El stat de electricidad (POWER) debe mostrarse siempre,
+incluso cuando `owned=0`. El valor mostrado es `electricityCost * owned` ($/ s total),
+y es consistente con los otros stats que también muestran 0 cuando owned=0.
+La visibilidad NO debe condicionar por `electricityCost > 0` — siempre renderizar la celda.
 
 ### Unlock Notification
 - [ ] Al desbloquear nuevo hardware:

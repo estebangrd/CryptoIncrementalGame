@@ -116,13 +116,11 @@ const HardwareList: React.FC = () => {
                     <Text style={[styles.statVal, styles.valGreen]}>{formatNumber(coinsPerSecond)}</Text>
                     <Text style={styles.statUnit}>CC/s</Text>
                   </View>
-                  {electricityCost > 0 && (
-                    <View style={styles.statsCell}>
-                      <Text style={styles.statLabel}>ELECTRICITY</Text>
-                      <Text style={[styles.statVal, styles.valRed]}>-{formatNumber(electricityCost)}</Text>
-                      <Text style={styles.statUnit}>/s</Text>
-                    </View>
-                  )}
+                  <View style={styles.statsCell}>
+                    <Text style={styles.statLabel}>POWER</Text>
+                    <Text style={[styles.statVal, styles.valRed]}>{electricityCost > 0 ? `-${formatNumber(electricityCost)}` : '0'}</Text>
+                    <Text style={styles.statUnit}>$/s</Text>
+                  </View>
                 </View>
               </View>
 
@@ -264,22 +262,22 @@ const styles = StyleSheet.create({
   },
   statsRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 5,
+    flexWrap: 'nowrap',
+    gap: 4,
   },
   statsCell: {
     backgroundColor: 'rgba(0,0,0,0.2)',
     borderRadius: 7,
-    padding: 6,
+    padding: 5,
     alignItems: 'flex-start',
-    minWidth: 70,
     flex: 1,
+    minWidth: 0,
   },
   statLabel: {
     fontFamily: fonts.mono,
-    fontSize: 8,
+    fontSize: 7,
     color: colors.dim,
-    letterSpacing: 1,
+    letterSpacing: 0.5,
     marginBottom: 2,
   },
   statVal: {
