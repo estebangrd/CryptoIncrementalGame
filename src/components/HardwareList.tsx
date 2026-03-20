@@ -6,40 +6,106 @@ import {
   StyleSheet,
 } from 'react-native';
 import { useGame } from '../contexts/GameContext';
-import { formatNumber, calculateHardwareProduction, calculateHardwareElectricityCost, calculateHardwareMiningSpeed, isHardwareUnlocked } from '../utils/gameLogic';
+import {
+  formatNumber,
+  calculateHardwareProduction,
+  calculateHardwareElectricityCost,
+  calculateHardwareMiningSpeed,
+  isHardwareUnlocked,
+} from '../utils/gameLogic';
 import { colors, fonts } from '../config/theme';
 
-// ── Section Header ─────────────────────────────────────────────────
+// ── Section Header ──────────────────────────────────────────────────────────
 const SectionHeader: React.FC<{ label: string }> = ({ label }) => (
   <View style={hdrStyles.row}>
     <Text style={hdrStyles.text}>{label}</Text>
     <View style={hdrStyles.line} />
   </View>
 );
-
 const hdrStyles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 2,
-    paddingBottom: 10,
-  },
-  text: {
-    fontFamily: fonts.mono,
-    fontSize: 9,
-    letterSpacing: 4,
-    color: 'rgba(255,255,255,0.4)',
-    textTransform: 'uppercase',
-  },
-  line: {
-    flex: 1,
-    height: 1,
-    backgroundColor: 'rgba(0,229,255,0.2)',
-  },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 2, paddingBottom: 10 },
+  text: { fontFamily: fonts.mono, fontSize: 9, letterSpacing: 4, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' },
+  line: { flex: 1, height: 1, backgroundColor: 'rgba(0,229,255,0.2)' },
 });
 
-// ── HardwareList ───────────────────────────────────────────────────
+// ── Metric Cell ─────────────────────────────────────────────────────────────
+type DeltaType = 'pos' | 'neg' | 'zero';
+const MetricCell: React.FC<{
+  label: string;
+  value: string;
+  unit: string;
+  delta: string;
+  valueColor: string;
+  deltaType: DeltaType;
+  noBorder?: boolean;
+}> = ({ label, value, unit, delta, valueColor, deltaType, noBorder }) => (
+  <View style={[m.cell, !noBorder && m.cellDivider]}>
+    <Text style={m.label}>{label}</Text>
+    <Text style={[m.value, { color: valueColor }]}>{value}</Text>
+    <Text style={m.unit}>{unit}</Text>
+    <View style={[m.badge, deltaType === 'pos' ? m.badgePos : deltaType === 'neg' ? m.badgeNeg : m.badgeZero]}>
+      <Text style={[m.badgeText, deltaType === 'pos' ? m.badgeTextPos : deltaType === 'neg' ? m.badgeTextNeg : m.badgeTextZero]}>
+        {delta}
+      </Text>
+    </View>
+  </View>
+);
+const m = StyleSheet.create({
+  cell: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 2,
+    paddingHorizontal: 1,
+  },
+  cellDivider: {
+    borderLeftWidth: 1,
+    borderLeftColor: 'rgba(255,255,255,0.06)',
+  },
+  label: {
+    fontFamily: fonts.mono,
+    fontSize: 7,
+    letterSpacing: 1,
+    color: 'rgba(255,255,255,0.3)',
+    textTransform: 'uppercase',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  value: {
+    fontFamily: fonts.orbitron,
+    fontSize: 12,
+    fontWeight: '700',
+    lineHeight: 13,
+    textAlign: 'center',
+  },
+  unit: {
+    fontFamily: fonts.mono,
+    fontSize: 7,
+    color: 'rgba(255,255,255,0.3)',
+    letterSpacing: 1,
+    marginBottom: 6,
+    textAlign: 'center',
+  },
+  badge: {
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+  },
+  badgePos: { backgroundColor: 'rgba(0,255,136,0.10)', borderColor: 'rgba(0,255,136,0.22)' },
+  badgeNeg: { backgroundColor: 'rgba(255,61,90,0.10)', borderColor: 'rgba(255,61,90,0.22)' },
+  badgeZero: { backgroundColor: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.08)' },
+  badgeText: {
+    fontFamily: fonts.mono,
+    fontSize: 8,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  badgeTextPos: { color: colors.ng },
+  badgeTextNeg: { color: colors.nr },
+  badgeTextZero: { color: 'rgba(255,255,255,0.3)' },
+});
+
+// ── HardwareList ─────────────────────────────────────────────────────────────
 const HardwareList: React.FC = () => {
   const { gameState, dispatch, t } = useGame();
 
@@ -62,11 +128,14 @@ const HardwareList: React.FC = () => {
           const cost = Math.floor(hardware.baseCost * Math.pow(hardware.costMultiplier, hardware.owned));
           const canAfford = gameState.realMoney >= cost;
           const hasUnits = hardware.owned > 0;
+
+          // Current totals
           const hashRate = calculateHardwareProduction(hardware, gameState.upgrades);
           const electricityCost = calculateHardwareElectricityCost(hardware);
           const miningSpeed = calculateHardwareMiningSpeed(hardware, gameState.upgrades);
           const coinsPerSecond = miningSpeed * hardware.blockReward;
 
+          // +1 unit deltas
           const unitHardware = { ...hardware, owned: 1 };
           const deltaHashRate = calculateHardwareProduction(unitHardware, gameState.upgrades);
           const deltaMiningSpeed = calculateHardwareMiningSpeed(unitHardware, gameState.upgrades);
@@ -75,84 +144,88 @@ const HardwareList: React.FC = () => {
 
           return (
             <View key={hardware.id} style={[styles.card, hasUnits && styles.cardOwned]}>
-              {/* Top accent line */}
-              <View style={[styles.cardAccent, hasUnits && styles.cardAccentOwned]} />
+              {/* Top gradient accent */}
+              <View style={[styles.cardAccent, hasUnits ? styles.cardAccentOwned : styles.cardAccentBase]} />
 
               {/* Header */}
               <View style={styles.cardHeader}>
-                <View style={[styles.cardIconWrap, hasUnits && styles.cardIconWrapOwned]}>
-                  <Text style={styles.cardIcon}>{hardware.icon}</Text>
+                <View style={[styles.iconWrap, hasUnits && styles.iconWrapOwned]}>
+                  <Text style={styles.icon}>{hardware.icon}</Text>
                 </View>
-                <View style={styles.cardTitleGroup}>
-                  <Text style={styles.cardName}>{t(hardware.nameKey)}</Text>
-                  <Text style={styles.cardDesc}>{t(hardware.descriptionKey)}</Text>
+                <View style={styles.titleGroup}>
+                  <Text style={styles.hwName}>{t(hardware.nameKey)}</Text>
+                  <Text style={styles.hwDesc}>{t(hardware.descriptionKey)}</Text>
                 </View>
-                <View style={[styles.ownedBadge, hasUnits && styles.ownedBadgeActive]}>
-                  <Text style={[styles.ownedNum, hasUnits && styles.ownedNumActive]}>{hardware.owned}</Text>
-                  <Text style={styles.ownedLabel}>OWNED</Text>
-                </View>
-              </View>
-
-              {/* Stats grid */}
-              <View style={styles.statsGrid}>
-                <View style={styles.statsRow}>
-                  <View style={styles.statsCell}>
-                    <Text style={styles.statLabel}>HASH RATE</Text>
-                    <Text style={[styles.statVal, styles.valCyan]}>{formatNumber(hashRate)}</Text>
-                    <Text style={styles.statUnit}>H/s</Text>
-                  </View>
-                  <View style={styles.statsCell}>
-                    <Text style={styles.statLabel}>MINE SPEED</Text>
-                    <Text style={[styles.statVal, styles.valGreen]}>{formatNumber(miningSpeed)}</Text>
-                    <Text style={styles.statUnit}>blk/s</Text>
-                  </View>
-                  <View style={styles.statsCell}>
-                    <Text style={styles.statLabel}>REWARD</Text>
-                    <Text style={[styles.statVal, styles.valGreen]}>{formatNumber(hardware.blockReward)}</Text>
-                    <Text style={styles.statUnit}>CC/blk</Text>
-                  </View>
-                  <View style={styles.statsCell}>
-                    <Text style={styles.statLabel}>COINS/SEC</Text>
-                    <Text style={[styles.statVal, styles.valGreen]}>{formatNumber(coinsPerSecond)}</Text>
-                    <Text style={styles.statUnit}>CC/s</Text>
-                  </View>
-                  <View style={styles.statsCell}>
-                    <Text style={styles.statLabel}>POWER</Text>
-                    <Text style={[styles.statVal, styles.valRed]}>{electricityCost > 0 ? `-${formatNumber(electricityCost)}` : '0'}</Text>
-                    <Text style={styles.statUnit}>$/s</Text>
-                  </View>
+                <View style={[styles.ownedBadge, !hasUnits && styles.ownedBadgeDim]}>
+                  <Text style={[styles.ownedNum, !hasUnits && styles.ownedNumDim]}>{hardware.owned}</Text>
+                  <Text style={[styles.ownedLbl, !hasUnits && styles.ownedLblDim]}>OWNED</Text>
                 </View>
               </View>
 
-              {/* Preview row */}
-              <View style={styles.previewRow}>
-                <Text style={styles.previewPrefix}>+1 ADDS: </Text>
-                <Text style={styles.previewGreen}>+{formatNumber(deltaCoinsPerSec)} CC/s</Text>
-                <Text style={styles.previewDim}> · </Text>
-                <Text style={styles.previewCyan}>+{formatNumber(deltaHashRate)} H/s</Text>
-                {deltaElectricity > 0 && (
-                  <>
-                    <Text style={styles.previewDim}> · </Text>
-                    <Text style={styles.previewRed}>-{formatNumber(deltaElectricity)} elec</Text>
-                  </>
-                )}
+              {/* Metrics grid */}
+              <View style={styles.metricsGrid}>
+                <MetricCell
+                  noBorder
+                  label="Reward"
+                  value={formatNumber(hasUnits ? hardware.blockReward : 0)}
+                  unit="CC/blk"
+                  delta="—"
+                  valueColor={colors.ny}
+                  deltaType="zero"
+                />
+                <MetricCell
+                  label="Hash Rate"
+                  value={formatNumber(hashRate)}
+                  unit="H/s"
+                  delta={`+${formatNumber(deltaHashRate)}`}
+                  valueColor={colors.nc}
+                  deltaType="pos"
+                />
+                <MetricCell
+                  label="Mine Spd"
+                  value={formatNumber(miningSpeed)}
+                  unit="blk/s"
+                  delta={`+${formatNumber(deltaMiningSpeed)}`}
+                  valueColor={colors.nc}
+                  deltaType="pos"
+                />
+                <MetricCell
+                  label="Coins/s"
+                  value={formatNumber(coinsPerSecond)}
+                  unit="CC/s"
+                  delta={`+${formatNumber(deltaCoinsPerSec)}`}
+                  valueColor={colors.ng}
+                  deltaType="pos"
+                />
+                <MetricCell
+                  label="Power"
+                  value={electricityCost > 0 ? `-${formatNumber(electricityCost)}` : '0'}
+                  unit="$/s"
+                  delta={deltaElectricity > 0 ? `-${formatNumber(deltaElectricity)}` : '0'}
+                  valueColor={colors.nr}
+                  deltaType={deltaElectricity > 0 ? 'neg' : 'zero'}
+                />
               </View>
 
-              {/* Cost + Buy */}
-              <View style={styles.costRow}>
-                <Text style={styles.costLabel}>PURCHASE COST</Text>
-                <Text style={[styles.costVal, !canAfford && styles.costValRed]}>${formatNumber(cost)}</Text>
+              {/* Footer */}
+              <View style={styles.footer}>
+                <View style={styles.costRow}>
+                  <Text style={styles.costLabel}>PURCHASE COST</Text>
+                  <Text style={[styles.costValue, !canAfford && styles.costValueRed]}>
+                    ${formatNumber(cost)}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={[styles.buyBtn, !canAfford && styles.buyBtnDisabled]}
+                  onPress={() => handleBuyHardware(hardware.id)}
+                  disabled={!canAfford}
+                  activeOpacity={0.75}
+                >
+                  <Text style={[styles.buyBtnText, !canAfford && styles.buyBtnTextDim]}>
+                    {canAfford ? '⬡ BUY UNIT' : '⊘ INSUFFICIENT FUNDS'}
+                  </Text>
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity
-                style={[styles.buyButton, !canAfford && styles.buyButtonDisabled]}
-                onPress={() => handleBuyHardware(hardware.id)}
-                disabled={!canAfford}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.buyButtonText, !canAfford && styles.buyButtonTextDim]}>
-                  ⬡ {canAfford ? 'BUY UNIT' : 'INSUFFICIENT FUNDS'}
-                </Text>
-              </TouchableOpacity>
             </View>
           );
         })}
@@ -165,219 +238,171 @@ const styles = StyleSheet.create({
     padding: 12,
     gap: 10,
   },
+
+  // ── Card ──
   card: {
     backgroundColor: 'rgba(255,255,255,0.03)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 13,
-    padding: 14,
+    borderRadius: 14,
+    padding: 16,
     overflow: 'hidden',
+    position: 'relative',
   },
   cardOwned: {
-    borderColor: 'rgba(0,255,136,0.18)',
+    borderColor: 'rgba(0,255,136,0.20)',
   },
+
+  // Gradient accent bar at top
   cardAccent: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
+    top: 0, left: 0, right: 0,
     height: 2,
-    backgroundColor: 'rgba(0,229,255,0.5)',
+  },
+  cardAccentBase: {
+    backgroundColor: colors.nc,
+    opacity: 0.5,
   },
   cardAccentOwned: {
-    backgroundColor: 'rgba(0,255,136,0.5)',
+    backgroundColor: colors.ng,
+    opacity: 0.5,
   },
+
+  // ── Header ──
   cardHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
+    alignItems: 'flex-start',
+    gap: 12,
+    marginBottom: 14,
     marginTop: 4,
-    gap: 10,
   },
-  cardIconWrap: {
-    width: 44,
-    height: 44,
+  iconWrap: {
+    width: 46,
+    height: 46,
     borderRadius: 10,
     backgroundColor: 'rgba(0,229,255,0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(0,229,255,0.2)',
+    borderColor: 'rgba(0,229,255,0.18)',
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
   },
-  cardIconWrapOwned: {
-    backgroundColor: 'rgba(0,255,136,0.08)',
-    borderColor: 'rgba(0,255,136,0.2)',
+  iconWrapOwned: {
+    backgroundColor: 'rgba(0,255,136,0.07)',
+    borderColor: 'rgba(0,255,136,0.20)',
   },
-  cardIcon: {
+  icon: {
     fontSize: 22,
   },
-  cardTitleGroup: {
+  titleGroup: {
     flex: 1,
   },
-  cardName: {
+  hwName: {
     fontFamily: fonts.orbitron,
-    fontSize: 13,
-    color: '#fff',
+    fontSize: 14,
     fontWeight: '700',
+    color: '#fff',
     marginBottom: 2,
   },
-  cardDesc: {
+  hwDesc: {
     fontFamily: fonts.rajdhani,
-    fontSize: 11,
+    fontSize: 12,
     color: colors.dim,
     lineHeight: 15,
   },
   ownedBadge: {
     alignItems: 'center',
-    backgroundColor: 'rgba(0,229,255,0.08)',
+    backgroundColor: 'rgba(0,255,136,0.10)',
     borderWidth: 1,
-    borderColor: 'rgba(0,229,255,0.22)',
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    flexShrink: 0,
-  },
-  ownedBadgeActive: {
-    backgroundColor: 'rgba(0,255,136,0.1)',
     borderColor: 'rgba(0,255,136,0.25)',
-  },
-  ownedNum: {
-    fontFamily: fonts.mono,
-    fontSize: 18,
-    color: colors.nc,
-    lineHeight: 22,
-  },
-  ownedNumActive: {
-    color: colors.ng,
-  },
-  ownedLabel: {
-    fontFamily: fonts.mono,
-    fontSize: 8,
-    color: colors.dim,
-    letterSpacing: 1,
-  },
-  statsGrid: {
-    marginBottom: 10,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    flexWrap: 'nowrap',
-    gap: 4,
-  },
-  statsCell: {
-    backgroundColor: 'rgba(0,0,0,0.2)',
-    borderRadius: 7,
-    padding: 5,
-    alignItems: 'flex-start',
-    flex: 1,
-    minWidth: 0,
-  },
-  statLabel: {
-    fontFamily: fonts.mono,
-    fontSize: 7,
-    color: colors.dim,
-    letterSpacing: 0.5,
-    marginBottom: 2,
-  },
-  statVal: {
-    fontFamily: fonts.orbitron,
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#fff',
-  },
-  valGreen: { color: colors.ng },
-  valCyan: { color: colors.nc },
-  valRed: { color: colors.nr },
-  statUnit: {
-    fontFamily: fonts.rajdhani,
-    fontSize: 9,
-    color: colors.dim,
-  },
-  previewRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    backgroundColor: 'rgba(0,229,255,0.04)',
-    borderWidth: 1,
-    borderColor: 'rgba(0,229,255,0.15)',
     borderRadius: 8,
     paddingHorizontal: 10,
-    paddingVertical: 7,
-    marginBottom: 10,
+    paddingVertical: 4,
+    flexShrink: 0,
+    minWidth: 52,
   },
-  previewPrefix: {
-    fontFamily: fonts.mono,
-    fontSize: 9,
-    color: colors.dim,
-    letterSpacing: 1,
+  ownedBadgeDim: {
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderColor: 'rgba(255,255,255,0.12)',
   },
-  previewGreen: {
-    fontFamily: fonts.mono,
-    fontSize: 10,
+  ownedNum: {
+    fontFamily: fonts.orbitron,
+    fontSize: 18,
+    fontWeight: '700',
     color: colors.ng,
+    lineHeight: 22,
   },
-  previewCyan: {
-    fontFamily: fonts.mono,
-    fontSize: 10,
-    color: colors.nc,
-  },
-  previewDim: {
-    fontFamily: fonts.mono,
-    fontSize: 10,
+  ownedNumDim: {
     color: colors.dim,
+    fontSize: 16,
   },
-  previewRed: {
+  ownedLbl: {
     fontFamily: fonts.mono,
-    fontSize: 10,
-    color: colors.nr,
+    fontSize: 7,
+    letterSpacing: 2,
+    color: 'rgba(0,255,136,0.55)',
+  },
+  ownedLblDim: {
+    color: 'rgba(255,255,255,0.3)',
+  },
+
+  // ── Metrics grid ──
+  metricsGrid: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(0,0,0,0.20)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    marginBottom: 14,
+  },
+
+  // ── Footer ──
+  footer: {
+    gap: 8,
   },
   costRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
   },
   costLabel: {
     fontFamily: fonts.mono,
-    fontSize: 9,
-    color: colors.dim,
+    fontSize: 8,
     letterSpacing: 2,
+    color: colors.dim,
   },
-  costVal: {
+  costValue: {
     fontFamily: fonts.orbitron,
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '700',
     color: colors.ny,
   },
-  costValRed: {
+  costValueRed: {
     color: colors.nr,
   },
-  buyButton: {
+  buyBtn: {
+    width: '100%',
+    paddingVertical: 13,
+    borderRadius: 10,
+    backgroundColor: 'rgba(0,255,136,0.06)',
     borderWidth: 1,
     borderColor: colors.ng,
-    borderRadius: 11,
-    paddingVertical: 13,
     alignItems: 'center',
-    backgroundColor: 'rgba(0,255,136,0.06)',
-    shadowColor: colors.ng,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
   },
-  buyButtonDisabled: {
-    borderColor: colors.borderDim,
-    backgroundColor: 'transparent',
-    shadowOpacity: 0,
+  buyBtnDisabled: {
+    borderColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
   },
-  buyButtonText: {
+  buyBtnText: {
     fontFamily: fonts.orbitron,
     fontSize: 12,
-    color: colors.ng,
     fontWeight: '700',
+    color: colors.ng,
     letterSpacing: 3,
   },
-  buyButtonTextDim: {
+  buyBtnTextDim: {
     color: colors.dim,
     letterSpacing: 1,
   },
