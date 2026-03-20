@@ -82,57 +82,57 @@ export const HARDWARE_CONFIG = {
       electricityCost: 7,
     },
 
-    // Nivel 6: ASIC Gen 1
+    // Nivel 6: ASIC Gen 1 — baseCost ×2 (mid-game extension)
     asic_gen1: {
-      baseCost: 180000,
+      baseCost: 360000,
       baseProduction: 1500,
       blockReward: 30,
       miningSpeed: 12,
       electricityCost: 20,
     },
 
-    // Nivel 7: ASIC Gen 2
+    // Nivel 7: ASIC Gen 2 — baseCost ×2
     asic_gen2: {
-      baseCost: 600000,
+      baseCost: 1200000,
       baseProduction: 4000,
       blockReward: 25,
       miningSpeed: 30,
       electricityCost: 45,
     },
 
-    // Nivel 8: ASIC Gen 3
+    // Nivel 8: ASIC Gen 3 — baseCost ×2
     asic_gen3: {
-      baseCost: 2000000,
+      baseCost: 4000000,
       baseProduction: 10000,
       blockReward: 20,
       miningSpeed: 60,
       electricityCost: 100,
     },
 
-    // Nivel 9: Mining Farm
+    // Nivel 9: Mining Farm — baseCost ×3, miningSpeed ÷2, blockReward ×2 (CC/s igual, blk/s mitad)
     mining_farm: {
-      baseCost: 8000000,
+      baseCost: 24000000,
       baseProduction: 50000,
-      blockReward: 15,
-      miningSpeed: 150,
+      blockReward: 30,
+      miningSpeed: 75,
       electricityCost: 300,
     },
 
-    // Nivel 10: Quantum Miner
+    // Nivel 10: Quantum Miner — baseCost ×3, miningSpeed ÷2, blockReward ×2
     quantum_miner: {
-      baseCost: 50000000,
+      baseCost: 150000000,
       baseProduction: 200000,
-      blockReward: 10,
-      miningSpeed: 400,
+      blockReward: 20,
+      miningSpeed: 200,
       electricityCost: 900,
     },
 
-    // Nivel 11: Supercomputer
+    // Nivel 11: Supercomputer — baseCost ×3, miningSpeed ÷2, blockReward ×2
     supercomputer: {
-      baseCost: 300000000,
+      baseCost: 900000000,
       baseProduction: 1000000,
-      blockReward: 5,
-      miningSpeed: 1000,
+      blockReward: 10,
+      miningSpeed: 500,
       electricityCost: 3000,
     },
   },
@@ -437,21 +437,21 @@ export const AI_CONFIG = {
   LEVELS: {
     1: {
       name: 'Asistente',
-      cost: 500_000,
+      cost: 25_000_000,
       productionMultiplier: 1.20,
       unlockCrypto: 'neural_coin',
       isIrreversible: false,
     },
     2: {
       name: 'Copiloto',
-      cost: 5_000_000,
+      cost: 100_000_000,
       productionMultiplier: 1.50,
       unlockCrypto: 'quantum_bit',
       isIrreversible: false,
     },
     3: {
       name: 'Autónomo',
-      cost: 50_000_000,
+      cost: 250_000_000,
       productionMultiplier: 2.50,
       unlockCrypto: 'singularity_coin',
       isIrreversible: true,
