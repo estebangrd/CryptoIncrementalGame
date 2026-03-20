@@ -402,13 +402,13 @@ interface Hardware {
 ### HardwareList Component
 - [x] Muestra todos los hardware desbloqueados en orden de level
 - [ ] Hardware bloqueado muestra "🔒" y requisito de desbloqueo
-- [x] Cada card de hardware muestra en una fila de 5 celdas (siempre visibles):
-  - HASH RATE: producción total en H/s
-  - MINE SPEED: velocidad de minado total en blk/s
-  - REWARD: recompensa por bloque en CC/blk
-  - COINS/SEC: monedas producidas por segundo (CC/s)
-  - POWER: costo de electricidad total en $/s (muestra 0 si owned=0, nunca se oculta)
-- [x] Preview row "+1 ADDS" que muestra el incremento por unidad adicional
+- [x] Cada card de hardware muestra en una fila de 5 celdas (siempre visibles, en este orden):
+  - REWARD: recompensa por bloque en CC/blk — color amarillo (`#ffd600`). Delta badge muestra "—" (em dash) con estilo `.zero` (gris/dim) porque `blockReward` es una constante fija por hardware, no escala con unidades owned.
+  - HASH RATE: producción total en H/s — color cyan (`#00e5ff`). Delta badge muestra `+N` (verde).
+  - MINE SPD: velocidad de minado total en blk/s — color cyan (`#00e5ff`, igual que Hash Rate, consistente con la mining screen). Delta badge muestra `+N` (verde).
+  - COINS/S: monedas producidas por segundo (CC/s) — color verde (`#00ff88`). Delta badge muestra `+N` (verde).
+  - POWER: costo de electricidad total en $/s — color rojo (`#ff3d5a`). Delta badge muestra `-N` (rojo negativo) o "0" (dim/gris) cuando no hay costo de electricidad. Siempre visible (muestra 0 si owned=0).
+- [x] Delta badges embebidos en cada celda de métrica (no hay fila "+1 ADDS" separada)
 - [x] "PURCHASE COST" + valor formateado
 - [x] Botón "BUY UNIT" (disabled con mensaje "INSUFFICIENT FUNDS" si no puede comprar)
 - [x] El botón "Buy" muestra el costo de la próxima unidad (precio escala con owned)
