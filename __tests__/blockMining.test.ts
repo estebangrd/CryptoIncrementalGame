@@ -4,7 +4,7 @@
  * Based on spec: specs/game-mechanics/block-mining-system.md
  */
 
-import { calculateTotalHashRate } from '../src/utils/gameLogic';
+import { calculateTotalHashRate, calculateTotalProduction } from '../src/utils/gameLogic';
 import { BOOSTER_CONFIG } from '../src/config/balanceConfig';
 
 // Minimal game state factory for hash rate tests
@@ -228,6 +228,76 @@ describe('calculateTotalHashRate', () => {
       const boostedRate = calculateTotalHashRate(withPrestige);
 
       expect(boostedRate / baseRate).toBe(4);
+    });
+  });
+});
+
+// Minimal production state factory (mirrors makeState but with production fields)
+const makeProductionState = (overrides: any = {}): any => ({
+  hardware: [],
+  upgrades: [],
+  energy: { totalGeneratedMW: 0, totalRequiredMW: 0, sources: {} },
+  prestigeProductionMultiplier: 1,
+  prestigeMultiplier: 1,
+  adBoost: { isActive: false, expiresAt: null },
+  iapState: {
+    permanentMultiplierPurchased: false,
+    booster2x: { isActive: false, expiresAt: null },
+    booster5x: { isActive: false, expiresAt: null },
+  },
+  ai: { level: 0 },
+  ...overrides,
+});
+
+const MANUAL_MINING = {
+  id: 'manual_mining',
+  baseProduction: 10,
+  miningSpeed: 0.1,
+  blockReward: 50,
+  owned: 1,
+  energyRequired: 0,
+};
+
+/**
+ * Regression tests for bug: after prestige, manual_mining.owned=1 causes
+ * non-zero hash rate and net income to be displayed even before the player
+ * buys any hardware. manual_mining must be excluded from auto-production calcs.
+ */
+describe('manual_mining exclusion from auto-production stats', () => {
+  describe('calculateTotalHashRate', () => {
+    it('returns 0 when only manual_mining is owned (post-prestige state)', () => {
+      const state = makeState({ hardware: [MANUAL_MINING] });
+      expect(calculateTotalHashRate(state)).toBe(0);
+    });
+
+    it('still counts real hardware alongside manual_mining', () => {
+      const state = makeState({ hardware: [MANUAL_MINING, CPU] });
+      // Only CPU contributes: 10 * 10 * 5 = 500
+      expect(calculateTotalHashRate(state)).toBe(500);
+    });
+
+    it('prestige multiplier does not inflate hash rate from manual_mining alone', () => {
+      const state = makeState({ hardware: [MANUAL_MINING], prestigeProductionMultiplier: 3 });
+      expect(calculateTotalHashRate(state)).toBe(0);
+    });
+  });
+
+  describe('calculateTotalProduction', () => {
+    it('returns 0 when only manual_mining is owned (post-prestige state)', () => {
+      const state = makeProductionState({ hardware: [MANUAL_MINING] });
+      expect(calculateTotalProduction(state)).toBe(0);
+    });
+
+    it('still counts real hardware alongside manual_mining', () => {
+      // basic_cpu: miningSpeed=1, blockReward=10 → 1*10=10 CC/s (no prestige)
+      const cpu = { id: 'basic_cpu', baseProduction: 10, miningSpeed: 1, blockReward: 10, owned: 1, energyRequired: 0 };
+      const state = makeProductionState({ hardware: [MANUAL_MINING, cpu] });
+      expect(calculateTotalProduction(state)).toBe(10);
+    });
+
+    it('prestige multiplier does not inflate production from manual_mining alone', () => {
+      const state = makeProductionState({ hardware: [MANUAL_MINING], prestigeProductionMultiplier: 3 });
+      expect(calculateTotalProduction(state)).toBe(0);
     });
   });
 });

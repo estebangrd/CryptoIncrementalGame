@@ -1050,6 +1050,14 @@ analytics().logEvent('prestige_milestone', {
 
 ## Edge Cases
 
+**Edge Case 0: Hash rate y net income en nuevo run sin hardware comprado**
+- Input: Post-prestige state con `manual_mining.owned = 1` y sin otro hardware
+- Expected: Hash rate = 0, net income = 0 CC/s
+- Razón: `manual_mining` representa el mecanismo de click manual, no producción automática.
+  Debe excluirse de `calculateTotalProduction` y `calculateTotalHashRate`. Los multiplicadores
+  de prestige solo deben aplicarse a hardware real comprado por el jugador.
+- Fix: Excluir `manual_mining` (id = 'manual_mining') de ambas funciones de cálculo en `gameLogic.ts`.
+
 **Edge Case 1: Prestige con exactamente 21M bloques**
 - Input: blocksMined = 21000000
 - Expected: Can prestige, botón habilitado

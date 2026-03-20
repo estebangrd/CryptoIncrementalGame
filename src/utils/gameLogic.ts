@@ -93,6 +93,9 @@ export const calculateTotalProduction = (gameState: GameState): number => {
   }
 
   gameState.hardware.forEach(hardware => {
+    // manual_mining represents click-based mining; exclude from auto-production stats
+    if (hardware.id === 'manual_mining') return;
+
     let effectiveOwned = hardware.owned;
 
     // For hardware requiring energy, use the constrained active units
@@ -164,6 +167,8 @@ export const calculateTotalHashRate = (gameState: GameState): number => {
   let totalHashRate = 0;
 
   gameState.hardware.forEach(hardware => {
+    // manual_mining represents click-based mining; exclude from auto-production stats
+    if (hardware.id === 'manual_mining') return;
     if (hardware.owned === 0) return;
     const baseHashRate = hardware.baseProduction * 10;
     // Apply same per-hardware upgrade multipliers as calculateHardwareMiningSpeed
