@@ -41,6 +41,8 @@ Este directorio contiene todas las especificaciones técnicas exhaustivas (Level
 | Spec | Estado | Fase | Prioridad | Descripción |
 |------|--------|------|-----------|-------------|
 | [Game Flow](ui-ux/game-flow.md) | ✅ Documented | Phase 1-2 | High | Flujo completo del jugador y FTUE |
+| [Interactive Banner Events](ui-ux/narrative-events.html) | ✅ Implemented | Phase 6 | High | 3 eventos narrativos interactivos: Reguladores UE, Oportunidad de Mercado, Protesta Local |
+| [Style Reference](style-reference.md) | ✅ Documented | All | High | Guía de estilos cyberpunk: colores, tipografía, componentes |
 
 ### 🏆 Features (Características)
 
@@ -48,18 +50,25 @@ Este directorio contiene todas las especificaciones técnicas exhaustivas (Level
 |------|--------|------|-----------|-------------|
 | [Achievement System](features/achievement-system.md) | ✅ Implemented | Phase 3 | Medium | Sistema de logros con recompensas |
 
+### 📖 Narrative (Narrativa)
+
+| Spec | Estado | Fase | Prioridad | Descripción |
+|------|--------|------|-----------|-------------|
+| [Game Narrative Arc](narrative/game-narrative-arc.md) | 📋 Planned | Phase 6 | Medium | Arco narrativo completo: del minero aficionado al colapso civilizatorio |
+
 ## 📊 Estado General
 
-- **Total de Specs**: 19
-- **Implementadas**: 15 (79%)
+- **Total de Specs**: 22
+- **Implementadas**: 16 (73%)
 - **Parciales**: 0 (0%)
-- **Documentadas**: 2 (11%)
-- **Planeadas**: 2 (10%)
+- **Documentadas**: 3 (14%)
+- **Planeadas**: 3 (14%)
 
 ### Por Fase
 - **Phase 1 (Genesis)**: 2/2 implementadas ✅
 - **Phase 2 (Expansion)**: 2/2 implementadas ✅
 - **Phase 3 (Monetization)**: 5/5 specs implementadas ✅ (misiones diarias/XP/leaderboards pendientes, sin spec aún)
+- **Phase 6 (Narrative)**: 2/3 implementadas ✅ (Narrative Events + Interactive Banners; Game Narrative Arc pendiente)
 
 ## 🎯 Roadmap de Implementación
 
@@ -237,6 +246,6 @@ Para preguntas sobre estas specs, consulta:
 
 ---
 
-**Última actualización**: 2026-03-14
+**Última actualización**: 2026-03-21
 **Versión del proyecto**: 0.0.1 (Phase 1-7)
 **Próxima fase**: Post-narrativa (Daily Missions, Market Events, Polish)
