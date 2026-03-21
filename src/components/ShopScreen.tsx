@@ -1365,10 +1365,10 @@ const st = StyleSheet.create({
   },
   na_priceBoxLabel: {
     fontFamily: fonts.mono, fontSize: 8, letterSpacing: 2,
-    color: 'rgba(255,255,255,0.4)', marginBottom: 6,
+    color: 'rgba(255,255,255,0.4)', marginBottom: 6, textAlign: 'center',
   },
   na_priceBoxValue: {
-    fontFamily: fonts.orbitronBlack, fontSize: 32, color: '#fff', lineHeight: 38,
+    fontFamily: fonts.orbitronBlack, fontSize: 32, color: '#fff', lineHeight: 38, textAlign: 'center',
   },
   /* Sale state: yellow promo banner */
   na_promoBanner: {
