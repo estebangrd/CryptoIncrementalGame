@@ -1137,7 +1137,7 @@ const st = StyleSheet.create({
   },
   pk_offerBadge: {
     backgroundColor: colors.ny, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 20,
-    marginLeft: 2,
+    marginLeft: 6,
   },
   pk_offerBadgeText: {
     fontFamily: fonts.orbitron, fontSize: 8, fontWeight: '900', letterSpacing: 1, color: '#000',
@@ -1155,7 +1155,7 @@ const st = StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)',
     borderRadius: 8, paddingVertical: 8, paddingHorizontal: 4, alignItems: 'center',
   },
-  pk_ocEmoji: { fontSize: 22, marginBottom: 4, textAlign: 'center', color: '#ffffff' },
+  pk_ocEmoji: { fontSize: 26, marginBottom: 4, textAlign: 'center', color: '#ffffff' },
   pk_ocVal: {
     fontFamily: fonts.orbitron, fontSize: 13, fontWeight: '700',
     color: colors.ng, textAlign: 'center',
