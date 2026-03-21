@@ -16,6 +16,7 @@ import { purchaseProduct } from '../services/IAPService';
 import { IAP_PRODUCT_IDS, IAP_PRICES } from '../config/iapConfig';
 import { BOOSTER_CONFIG, PACK_CONFIG } from '../config/balanceConfig';
 import { colors, fonts } from '../config/theme';
+import { computeHasActiveSale, shouldRollFlashSale } from '../utils/flashSaleLogic';
 
 // ── Animated background ───────────────────────────────────────────────────────
 
@@ -144,22 +145,34 @@ const ShopScreen: React.FC = () => {
   const [flashTimerDisplay, setFlashTimerDisplay] = useState<string>('');
   const [flashTimerColor, setFlashTimerColor] = useState<string>(colors.ny);
 
-  const hasActiveSale =
-    !iapState.removeAdsPurchased &&
-    iapState.flashSaleExpiresAt > 0 &&
-    Date.now() < iapState.flashSaleExpiresAt;
+  const hasActiveSale = computeHasActiveSale({
+    flashSaleExpiresAt: iapState.flashSaleExpiresAt,
+    removeAdsPurchased: iapState.removeAdsPurchased,
+  });
 
-  // Roll sale when the removeAds tab becomes active
+  // Ref that always holds the latest iapState so the roll effect can read it
+  // without subscribing to every flash-sale field change.
+  const iapStateRef = useRef(iapState);
+  iapStateRef.current = iapState;
+
+  // Roll sale ONLY when the removeAds tab becomes active — not on every state change.
+  // Reading iapState via ref avoids re-triggering when flashSaleExpiresAt or
+  // flashSaleCooldownUntil change (e.g. after LOAD_GAME or after a sale expires),
+  // which was causing unintended re-rolls and made the discounted offer appear too often.
   useEffect(() => {
-    if (iapState.removeAdsPurchased || activeTab !== 'removeAds') return;
+    if (activeTab !== 'removeAds') return;
     const now = Date.now();
-    const saleActive = iapState.flashSaleExpiresAt > 0 && now < iapState.flashSaleExpiresAt;
-    const inCooldown = iapState.flashSaleCooldownUntil > 0 && now < iapState.flashSaleCooldownUntil;
-    if (!saleActive && !inCooldown && Math.random() < 0.35) {
+    const snap = iapStateRef.current;
+    if (shouldRollFlashSale({
+      removeAdsPurchased: snap.removeAdsPurchased,
+      flashSaleExpiresAt: snap.flashSaleExpiresAt,
+      flashSaleCooldownUntil: snap.flashSaleCooldownUntil,
+      now,
+    }) && Math.random() < 0.35) {
       const durationMs = (8 + Math.floor(Math.random() * 7)) * 60 * 1000; // 8–14 minutes
       dispatch({ type: 'SET_FLASH_SALE', payload: { expiresAt: now + durationMs, cooldownUntil: 0 } });
     }
-  }, [activeTab, iapState.removeAdsPurchased, iapState.flashSaleExpiresAt, iapState.flashSaleCooldownUntil]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Countdown tick
   useEffect(() => {

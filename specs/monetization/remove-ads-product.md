@@ -932,6 +932,22 @@ analytics().logEvent('remove_ads_already_owned', {});
 - Input: Compra en iPhone, instala en iPad
 - Expected: Restore automático sincroniza en iPad
 
+**Edge Case 5: Flash sale re-roll due to reactive useEffect deps (bug fixed)**
+- Input: The roll `useEffect` in ShopScreen included `flashSaleExpiresAt` and
+  `flashSaleCooldownUntil` in its dependency array.
+- Problem: Whenever those values changed (e.g. after `LOAD_GAME` dispatched the
+  persisted state, or after a sale expired and set `cooldownUntil`), the effect
+  re-ran while `activeTab === 'removeAds'` was still true. If the snapshot seen
+  by the re-run had no active sale and no cooldown, another 35% roll fired —
+  effectively making the discounted flash-sale banner appear on nearly every
+  session start regardless of the intended probability.
+- Fix: The roll effect now depends **only** on `activeTab`. Current iapState
+  values are read via a `useRef` snapshot inside the effect, so changes to
+  `flashSaleExpiresAt` / `flashSaleCooldownUntil` never re-trigger the roll.
+  Logic was extracted to `src/utils/flashSaleLogic.ts` (`computeHasActiveSale`,
+  `shouldRollFlashSale`) with full unit-test coverage in
+  `__tests__/flashSale.test.ts`.
+
 ## Preguntas Abiertas
 
 - [ ] **Discount pricing**: ¿Ofrecer $0.49 promotional?
