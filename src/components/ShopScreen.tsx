@@ -182,27 +182,50 @@ const ShopScreen: React.FC = () => {
 
   const iapState = gameState.iapState;
 
-  // ── No Ads: flash sale timer ────────────────────────────────────────────────
-  const flashTimerRef = useRef<number>(66862); // 18h 34m 22s
-  const [flashTimerDisplay, setFlashTimerDisplay] = useState<string>('18:34:22');
+  // ── No Ads: flash sale logic ─────────────────────────────────────────────────
+  const [flashTimerDisplay, setFlashTimerDisplay] = useState<string>('');
   const [flashTimerColor, setFlashTimerColor] = useState<string>(colors.ny);
 
+  const hasActiveSale =
+    !iapState.removeAdsPurchased &&
+    iapState.flashSaleExpiresAt > 0 &&
+    Date.now() < iapState.flashSaleExpiresAt;
+
+  // Roll sale when the removeAds tab becomes active
   useEffect(() => {
-    if (iapState.removeAdsPurchased) return;
-    const id = setInterval(() => {
-      if (flashTimerRef.current <= 0) return;
-      flashTimerRef.current -= 1;
-      const s = flashTimerRef.current;
-      const h = Math.floor(s / 3600);
-      const m = Math.floor((s % 3600) / 60);
-      const sec = s % 60;
-      setFlashTimerDisplay(
-        `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
-      );
-      if (s < 3600) setFlashTimerColor(colors.nr);
-    }, 1000);
+    if (iapState.removeAdsPurchased || activeTab !== 'removeAds') return;
+    const now = Date.now();
+    const saleActive = iapState.flashSaleExpiresAt > 0 && now < iapState.flashSaleExpiresAt;
+    const inCooldown = iapState.flashSaleCooldownUntil > 0 && now < iapState.flashSaleCooldownUntil;
+    if (!saleActive && !inCooldown && Math.random() < 0.35) {
+      const durationMs = (8 + Math.floor(Math.random() * 7)) * 60 * 1000; // 8–14 minutes
+      dispatch({ type: 'SET_FLASH_SALE', payload: { expiresAt: now + durationMs, cooldownUntil: 0 } });
+    }
+  }, [activeTab, iapState.removeAdsPurchased, iapState.flashSaleExpiresAt, iapState.flashSaleCooldownUntil]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Countdown tick
+  useEffect(() => {
+    if (iapState.removeAdsPurchased || iapState.flashSaleExpiresAt === 0) return;
+    const update = () => {
+      const now = Date.now();
+      const remaining = Math.max(0, iapState.flashSaleExpiresAt - now);
+      if (remaining === 0) {
+        dispatch({
+          type: 'SET_FLASH_SALE',
+          payload: { expiresAt: 0, cooldownUntil: now + 24 * 60 * 60 * 1000 },
+        });
+        return;
+      }
+      const totalSec = Math.ceil(remaining / 1000);
+      const mm = Math.floor(totalSec / 60).toString().padStart(2, '0');
+      const ss = (totalSec % 60).toString().padStart(2, '0');
+      setFlashTimerDisplay(`${mm}:${ss}`);
+      setFlashTimerColor(remaining < 60000 ? colors.nr : colors.ny);
+    };
+    update();
+    const id = setInterval(update, 1000);
     return () => clearInterval(id);
-  }, [iapState.removeAdsPurchased]);
+  }, [iapState.removeAdsPurchased, iapState.flashSaleExpiresAt]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Packs: cosmetic countdown timer ────────────────────────────────────────
   const pkTimerRef = useRef<number>(11 * 60 + 42);
@@ -347,27 +370,29 @@ const ShopScreen: React.FC = () => {
             </View>
           ) : (
             <>
-              <View style={st.na_promoBanner}>
-                <View style={st.na_promoTop}>
-                  <View style={st.na_promoLeft}>
-                    <Text style={st.na_promoIcon}>⚡</Text>
-                    <Text style={st.na_promoLabel}>{t('shop.noAds.flashSale')}</Text>
+              {hasActiveSale && (
+                <View style={st.na_promoBanner}>
+                  <View style={st.na_promoTop}>
+                    <View style={st.na_promoLeft}>
+                      <Text style={st.na_promoIcon}>⚡</Text>
+                      <Text style={st.na_promoLabel}>{t('shop.noAds.flashSale')}</Text>
+                    </View>
+                    <View style={st.na_promoRight}>
+                      <Text style={st.na_promoExpiresLabel}>{t('shop.noAds.expiresIn')}</Text>
+                      <Text style={[st.na_promoTimer, { color: flashTimerColor }]}>
+                        {flashTimerDisplay}
+                      </Text>
+                    </View>
                   </View>
-                  <View style={st.na_promoRight}>
-                    <Text style={st.na_promoExpiresLabel}>{t('shop.noAds.expiresIn')}</Text>
-                    <Text style={[st.na_promoTimer, { color: flashTimerColor }]}>
-                      {flashTimerDisplay}
-                    </Text>
+                  <View style={st.na_priceRow}>
+                    <Text style={st.na_priceNormal}>$2.99</Text>
+                    <Text style={st.na_priceNow}>${IAP_PRICES.REMOVE_ADS.toFixed(2)}</Text>
+                    <View style={st.na_savingsBadge}>
+                      <Text style={st.na_savingsText}>{`${t('shop.noAds.save')} $${(2.99 - IAP_PRICES.REMOVE_ADS).toFixed(2)}`}</Text>
+                    </View>
                   </View>
                 </View>
-                <View style={st.na_priceRow}>
-                  <Text style={st.na_priceNormal}>$2.99</Text>
-                  <Text style={st.na_priceNow}>${IAP_PRICES.REMOVE_ADS.toFixed(2)}</Text>
-                  <View style={st.na_savingsBadge}>
-                    <Text style={st.na_savingsText}>{`${t('shop.noAds.save')} $${(2.99 - IAP_PRICES.REMOVE_ADS).toFixed(2)}`}</Text>
-                  </View>
-                </View>
-              </View>
+              )}
               <TouchableOpacity
                 style={st.na_buyBtn}
                 onPress={() => confirmPurchase(IAP_PRODUCT_IDS.REMOVE_ADS)}

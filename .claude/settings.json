@@ -18,7 +18,11 @@
       "Bash(npm test:*)",
       "Bash(npm list:*)",
       "Bash(npm install:*)",
-      "Bash(pod install:*)"
+      "Bash(pod install:*)",
+      "Bash(git merge:*)",
+      "Bash(sed:*)",
+      "Bash(ls:*)",
+      "Bash(adb:*)"
     ]
   }
 }

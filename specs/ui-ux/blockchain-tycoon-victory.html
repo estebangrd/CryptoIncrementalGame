@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Blockchain Complete</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ng: #00ff88;
+    --nc: #00e5ff;
+    --ny: #ffd600;
+    --nr: #ff3d5a;
+    --bg: #020810;
+    --dim: rgba(255,255,255,0.45);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;overflow:hidden;}
+
+  body {
+    background: var(--bg);
+    font-family: 'Rajdhani', sans-serif;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ── AURORA BACKGROUND ── */
+  .aurora {
+    position: fixed; inset: 0; z-index: 0; overflow: hidden;
+  }
+  .aurora-layer {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    animation: drift ease-in-out infinite;
+  }
+  .a1 {
+    width: 500px; height: 400px;
+    top: -100px; left: -100px;
+    background: radial-gradient(ellipse, rgba(0,255,136,0.18) 0%, transparent 70%);
+    animation-duration: 8s; animation-delay: 0s;
+  }
+  .a2 {
+    width: 400px; height: 500px;
+    top: -80px; right: -80px;
+    background: radial-gradient(ellipse, rgba(0,229,255,0.14) 0%, transparent 70%);
+    animation-duration: 11s; animation-delay: -3s;
+  }
+  .a3 {
+    width: 600px; height: 300px;
+    bottom: 100px; left: -150px;
+    background: radial-gradient(ellipse, rgba(0,255,136,0.1) 0%, transparent 70%);
+    animation-duration: 14s; animation-delay: -6s;
+  }
+  @keyframes drift {
+    0%,100% { transform: translate(0,0) scale(1); }
+    33% { transform: translate(40px,-30px) scale(1.05); }
+    66% { transform: translate(-20px,20px) scale(0.97); }
+  }
+
+  /* Grid */
+  .grid-bg {
+    position: fixed; inset: 0; z-index: 0;
+    background-image:
+      linear-gradient(rgba(0,255,136,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,136,0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    animation: gridShift 20s linear infinite;
+  }
+  @keyframes gridShift { 0%{transform:translateY(0)} 100%{transform:translateY(40px)} }
+
+  /* Scanline */
+  .scanline {
+    position: fixed; top:0; left:0; right:0; height:2px;
+    background: rgba(0,255,136,0.06);
+    animation: scan 8s linear infinite; pointer-events:none; z-index:200;
+  }
+  @keyframes scan { 0%{top:0} 100%{top:100vh} }
+
+  /* ── PARTICLES ── */
+  .particles { position:fixed; inset:0; z-index:1; pointer-events:none; }
+  .p {
+    position: absolute; border-radius: 50%;
+    animation: rise linear infinite;
+  }
+  @keyframes rise {
+    0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 0.5; }
+    100% { transform: translateY(-50px) rotate(720deg); opacity: 0; }
+  }
+
+  /* ── SCREEN ── */
+  .screen {
+    position: relative; z-index: 10;
+    max-width: 420px; margin: 0 auto;
+    height: 100vh;
+    overflow-y: auto; overflow-x: hidden;
+    scrollbar-width: none;
+    display: flex; flex-direction: column;
+    padding-bottom: 30px;
+  }
+  .screen::-webkit-scrollbar { display: none; }
+
+  /* ── HERO SECTION ── */
+  .hero-section {
+    padding: 50px 24px 32px;
+    text-align: center;
+    position: relative;
+  }
+
+  /* Globe with orbit rings */
+  .globe-wrap {
+    position: relative;
+    width: 120px; height: 120px;
+    margin: 0 auto 24px;
+  }
+  .globe-emoji {
+    font-size: 72px;
+    display: block;
+    animation: floatGlobe 4s ease-in-out infinite;
+    position: relative; z-index: 2;
+    filter: drop-shadow(0 0 24px rgba(0,255,136,0.5));
+  }
+  @keyframes floatGlobe {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  /* Orbit ring */
+  .orbit {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(0,255,136,0.25);
+    top: 50%; left: 50%;
+    transform-origin: center center;
+  }
+  .orbit-1 {
+    width: 140px; height: 140px;
+    margin-top: -70px; margin-left: -70px;
+    animation: spinOrbit 6s linear infinite;
+  }
+  .orbit-2 {
+    width: 170px; height: 170px;
+    margin-top: -85px; margin-left: -85px;
+    border-color: rgba(0,229,255,0.15);
+    animation: spinOrbit 10s linear infinite reverse;
+  }
+  @keyframes spinOrbit { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+
+  /* Orbit dot */
+  .orbit-dot {
+    position: absolute;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--ng);
+    top: -3px; left: 50%; margin-left: -3px;
+    box-shadow: 0 0 8px var(--ng);
+  }
+  .orbit-dot-2 {
+    background: var(--nc);
+    box-shadow: 0 0 8px var(--nc);
+  }
+
+  /* Title */
+  .victory-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 22px; font-weight: 900;
+    letter-spacing: 3px;
+    line-height: 1.2;
+    margin-bottom: 6px;
+    background: linear-gradient(135deg, var(--ng) 0%, var(--nc) 50%, var(--ng) 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: titleShine 3s linear infinite;
+    text-transform: uppercase;
+  }
+  @keyframes titleShine { 0%{background-position:0%} 100%{background-position:200%} }
+
+  .victory-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px; letter-spacing: 5px;
+    color: var(--nc);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    opacity: 0.7;
+  }
+
+  .victory-quote {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px; font-weight: 400;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.6;
+    font-style: italic;
+    max-width: 320px;
+    margin: 0 auto;
+    padding: 14px 16px;
+    border-left: 2px solid rgba(0,255,136,0.3);
+    background: rgba(0,255,136,0.03);
+    border-radius: 0 8px 8px 0;
+    text-align: left;
+  }
+
+  /* ── STATS SECTION ── */
+  .stats-section {
+    padding: 0 16px;
+    margin-bottom: 16px;
+  }
+
+  .sec-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px; letter-spacing: 5px;
+    color: var(--dim);
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .sec-label::before, .sec-label::after {
+    content: '';flex:1;height:1px;
+    background: linear-gradient(90deg, transparent, rgba(0,255,136,0.25), transparent);
+  }
+
+  /* Big stat cards */
+  .big-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .big-stat {
+    background: rgba(0,255,136,0.04);
+    border: 1px solid rgba(0,255,136,0.18);
+    border-radius: 14px;
+    padding: 16px 14px 14px;
+    position: relative; overflow: hidden;
+    animation: cardIn 0.6s ease-out forwards;
+    opacity: 0;
+  }
+  .big-stat::before {
+    content: '';position:absolute;top:0;left:0;right:0;height:2px;
+    background: linear-gradient(90deg,transparent,var(--ng),transparent);
+    opacity: 0.6;
+  }
+  .big-stat.cyan { border-color: rgba(0,229,255,0.18); background: rgba(0,229,255,0.04); }
+  .big-stat.cyan::before { background: linear-gradient(90deg,transparent,var(--nc),transparent); }
+  .big-stat.yellow { border-color: rgba(255,214,0,0.2); background: rgba(255,214,0,0.04); }
+  .big-stat.yellow::before { background: linear-gradient(90deg,transparent,var(--ny),transparent); }
+  .big-stat.wide { grid-column: 1/-1; }
+
+  @keyframes cardIn {
+    0% { opacity:0; transform: translateY(16px); }
+    100% { opacity:1; transform: translateY(0); }
+  }
+  .big-stat:nth-child(1) { animation-delay: 0.2s; }
+  .big-stat:nth-child(2) { animation-delay: 0.35s; }
+  .big-stat:nth-child(3) { animation-delay: 0.5s; }
+  .big-stat:nth-child(4) { animation-delay: 0.65s; }
+  .big-stat:nth-child(5) { animation-delay: 0.8s; }
+  .big-stat:nth-child(6) { animation-delay: 0.95s; }
+
+  .bs-icon { font-size: 18px; margin-bottom: 6px; display: block; }
+  .bs-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 8px; letter-spacing: 2px;
+    color: var(--dim); text-transform: uppercase; margin-bottom: 4px;
+  }
+  .bs-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 20px; font-weight: 900;
+    color: var(--ng);
+    text-shadow: 0 0 14px rgba(0,255,136,0.4);
+    line-height: 1;
+  }
+  .bs-value.cyan { color: var(--nc); text-shadow: 0 0 14px rgba(0,229,255,0.4); }
+  .bs-value.yellow { color: var(--ny); text-shadow: 0 0 14px rgba(255,214,0,0.4); }
+  .bs-value.green { color: var(--ng); }
+  .bs-sub { font-size: 10px; color: var(--dim); margin-top: 3px; }
+
+  /* Checkmark badge */
+  .check-badge {
+    display: inline-block;
+    background: var(--ng);
+    color: #000;
+    font-size: 9px; font-weight: 900;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 4px;
+    font-family: 'Orbitron', monospace;
+    letter-spacing: 1px;
+    vertical-align: middle;
+  }
+
+  /* Resources meter */
+  .resources-card {
+    background: rgba(0,255,136,0.04);
+    border: 1px solid rgba(0,255,136,0.18);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 8px;
+    position: relative; overflow: hidden;
+    animation: cardIn 0.6s ease-out 0.8s both;
+  }
+  .resources-card::before {
+    content:'';position:absolute;top:0;left:0;right:0;height:2px;
+    background: linear-gradient(90deg,transparent,var(--ng),transparent);opacity:.6;
+  }
+  .res-top {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px;
+  }
+  .res-label { font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--dim);text-transform:uppercase; }
+  .res-pct {
+    font-family: 'Orbitron', monospace; font-size: 22px; font-weight: 900;
+    color: var(--ng); text-shadow: 0 0 14px rgba(0,255,136,0.5);
+  }
+  .res-bar {
+    height: 8px; background: rgba(255,255,255,0.05);
+    border-radius: 4px; overflow: hidden; margin-bottom: 6px;
+  }
+  .res-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--ng), var(--nc));
+    border-radius: 4px;
+    box-shadow: 0 0 8px var(--ng);
+    transition: width 2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .res-caption {
+    font-family: 'Share Tech Mono', monospace; font-size: 9px;
+    color: var(--ng); letter-spacing: 1px;
+  }
+
+  /* ── BONUS SECTION ── */
+  .bonus-section {
+    padding: 0 16px;
+    margin-bottom: 16px;
+    animation: cardIn 0.6s ease-out 1.1s both;
+  }
+  .bonus-card {
+    background: linear-gradient(135deg, rgba(0,229,255,0.05), rgba(0,255,136,0.05));
+    border: 1px solid rgba(0,229,255,0.2);
+    border-radius: 14px;
+    padding: 16px;
+    position: relative; overflow: hidden;
+  }
+  .bonus-card::before {
+    content:'';position:absolute;top:0;left:0;right:0;height:2px;
+    background: linear-gradient(90deg, var(--nc), var(--ng));
+  }
+  .bonus-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 3px; color: var(--nc);
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .bonus-title::after { content:''; flex:1; height:1px; background: rgba(0,229,255,0.2); }
+  .bonus-run {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px; color: var(--dim);
+    letter-spacing: 2px; margin-bottom: 12px;
+  }
+  .bonus-quote {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px; font-style: italic;
+    color: rgba(255,255,255,0.65);
+    line-height: 1.6;
+    padding: 12px;
+    background: rgba(0,229,255,0.04);
+    border-radius: 8px;
+    border: 1px solid rgba(0,229,255,0.1);
+  }
+  .bonus-star {
+    position: absolute; top: 16px; right: 16px;
+    font-size: 24px;
+    animation: starPulse 2s ease-in-out infinite;
+  }
+  @keyframes starPulse {
+    0%,100%{transform:scale(1) rotate(0deg);filter:drop-shadow(0 0 4px rgba(255,214,0,.3))}
+    50%{transform:scale(1.1) rotate(10deg);filter:drop-shadow(0 0 12px rgba(255,214,0,.7))}
+  }
+
+  /* ── BOTTOM ACTIONS ── */
+  .actions {
+    padding: 0 16px 16px;
+    display: flex; flex-direction: column; gap: 8px;
+    animation: cardIn 0.6s ease-out 1.3s both;
+  }
+
+  .start-btn {
+    width: 100%; padding: 18px;
+    background: linear-gradient(135deg, rgba(0,255,136,0.15), rgba(0,229,255,0.1));
+    border: 1px solid var(--ng);
+    border-radius: 14px;
+    color: var(--ng);
+    font-family: 'Orbitron', monospace;
+    font-size: 14px; font-weight: 700; letter-spacing: 4px;
+    text-transform: uppercase;
+    cursor: pointer;
+    position: relative; overflow: hidden;
+    box-shadow: 0 0 24px rgba(0,255,136,0.15), inset 0 0 24px rgba(0,255,136,0.05);
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  .start-btn::before {
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(135deg,transparent 30%,rgba(0,255,136,.08) 50%,transparent 70%);
+    transform:translateX(-100%);animation:shimmer 2.5s infinite;
+  }
+  @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+  .start-btn:active { transform:scale(.97); }
+
+  .share-btn {
+    width: 100%; padding: 14px;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px;
+    color: var(--dim);
+    font-family: 'Orbitron', monospace;
+    font-size: 11px; font-weight: 700; letter-spacing: 3px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: all .2s;
+  }
+  .share-btn:active { background:rgba(255,255,255,.05); }
+
+  /* ── CONFETTI ── */
+  .confetti-wrap { position:fixed;inset:0;z-index:5;pointer-events:none;overflow:hidden; }
+  .confetti-piece {
+    position: absolute;
+    top: -10px;
+    width: 6px; height: 10px;
+    border-radius: 2px;
+    animation: confettiFall linear forwards;
+  }
+  @keyframes confettiFall {
+    0% { transform: translateY(-20px) rotateZ(0deg); opacity: 1; }
+    80% { opacity: 1; }
+    100% { transform: translateY(110vh) rotateZ(720deg); opacity: 0; }
+  }
+
+  /* TOPBAR */
+  .topbar {
+    flex-shrink:0;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 18px 10px;
+    border-bottom:1px solid rgba(0,255,136,0.08);
+    background:rgba(2,8,16,0.95);
+    backdrop-filter:blur(12px);
+    position: sticky; top:0; z-index:20;
+  }
+  .logo{font-family:'Orbitron',monospace;font-size:11px;font-weight:900;letter-spacing:2px;color:var(--ng);text-shadow:0 0 14px rgba(0,255,136,.5);text-transform:uppercase;}
+  .logo span{color:var(--nc);}
+  .run-info{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:2px;}
+</style>
+</head>
+<body>
+
+<div class="aurora">
+  <div class="aurora-layer a1"></div>
+  <div class="aurora-layer a2"></div>
+  <div class="aurora-layer a3"></div>
+</div>
+<div class="grid-bg"></div>
+<div class="scanline"></div>
+
+<!-- Particles -->
+<div class="particles" id="particles"></div>
+<!-- Confetti -->
+<div class="confetti-wrap" id="confetti"></div>
+
+<div class="screen">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="logo">BLOCK<span>CHAIN</span> TYCOON</div>
+    <div class="run-info">RUN #1 · 170H 24M</div>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero-section">
+    <div class="globe-wrap">
+      <div class="orbit orbit-1"><div class="orbit-dot"></div></div>
+      <div class="orbit orbit-2"><div class="orbit-dot orbit-dot-2"></div></div>
+      <span class="globe-emoji">🌍</span>
+    </div>
+
+    <div class="victory-sub">Mission Complete · Genesis Chain</div>
+    <div class="victory-title">Blockchain<br>Complete</div>
+
+    <div style="margin-top:16px;">
+      <div class="victory-quote">
+        You completed the blockchain without depleting the planet. The first energetically responsible tycoon in history. Nobody knows if it was luck, discipline — or that you simply lacked ambition.
+      </div>
+    </div>
+  </div>
+
+  <!-- LEGACY STATS -->
+  <div class="stats-section">
+    <div class="sec-label">Your Legacy</div>
+
+    <div class="big-stats">
+      <div class="big-stat">
+        <span class="bs-icon">⛏</span>
+        <div class="bs-label">Blocks Mined</div>
+        <div class="bs-value">21.0M <span class="check-badge">✓</span></div>
+        <div class="bs-sub">100% Complete</div>
+      </div>
+      <div class="big-stat cyan">
+        <span class="bs-icon">◈</span>
+        <div class="bs-label">CC Earned</div>
+        <div class="bs-value cyan">714.0M</div>
+        <div class="bs-sub">CryptoCoins</div>
+      </div>
+      <div class="big-stat yellow">
+        <span class="bs-icon">💰</span>
+        <div class="bs-label">Money Accumulated</div>
+        <div class="bs-value yellow">$568.2M</div>
+        <div class="bs-sub">Total Cash</div>
+      </div>
+      <div class="big-stat">
+        <span class="bs-icon">⏱</span>
+        <div class="bs-label">Run Duration</div>
+        <div class="bs-value" style="font-size:16px;">170h 24m</div>
+        <div class="bs-sub">Real time</div>
+      </div>
+    </div>
+
+    <!-- AI Level -->
+    <div class="big-stats" style="margin-bottom:8px;">
+      <div class="big-stat cyan" style="grid-column:1/-1;animation-delay:0.8s;">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <span class="bs-icon">🤖</span>
+            <div class="bs-label">AI Level Reached</div>
+            <div class="bs-value cyan" style="font-size:16px;">Level 2 <span style="font-family:'Rajdhani',sans-serif;font-size:13px;color:rgba(0,229,255,0.7);">Copilot</span></div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--dim);letter-spacing:2px;margin-bottom:6px;">PROGRESS</div>
+            <div style="display:flex;gap:4px;">
+              <div style="width:18px;height:18px;border-radius:4px;background:var(--nc);box-shadow:0 0 8px var(--nc);display:flex;align-items:center;justify-content:center;font-size:10px;">✓</div>
+              <div style="width:18px;height:18px;border-radius:4px;background:var(--nc);box-shadow:0 0 8px var(--nc);display:flex;align-items:center;justify-content:center;font-size:10px;">✓</div>
+              <div style="width:18px;height:18px;border-radius:4px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--dim);">3</div>
+              <div style="width:18px;height:18px;border-radius:4px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--dim);">4</div>
+              <div style="width:18px;height:18px;border-radius:4px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--dim);">5</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resources bar -->
+    <div class="resources-card">
+      <div class="res-top">
+        <div>
+          <div class="res-label">🌍 Resources at End</div>
+          <div class="res-caption">Planet survived — sustainable run</div>
+        </div>
+        <div class="res-pct">98%</div>
+      </div>
+      <div class="res-bar"><div class="res-fill" id="resFill"></div></div>
+      <div style="display:flex;justify-content:space-between;font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--dim);margin-top:2px;">
+        <span>DEPLETED</span><span>OPTIMAL</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- BONUS -->
+  <div class="bonus-section">
+    <div class="bonus-card">
+      <div class="bonus-star">⭐</div>
+      <div class="bonus-title">Sustainable Mining Bonus</div>
+      <div class="bonus-run">Run #1 · Accumulated rewards unlocked</div>
+      <div class="bonus-quote">
+        Your method was replicated. The new world colonies adopted the sustainable mining model. It was not the end of history — it was the beginning of a better one.
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="actions">
+    <button class="start-btn" id="startBtn">
+      ↺ START NEW RUN
+    </button>
+    <button class="share-btn">
+      ↗ SHARE YOUR LEGACY
+    </button>
+  </div>
+
+</div>
+
+<script>
+// ── Particles
+const pc = document.getElementById('particles');
+const cols = ['#00ff88','#00e5ff','#ffd600'];
+for(let i=0;i<20;i++){
+  const p=document.createElement('div');
+  const s=Math.random()*4+2;
+  p.className='p';
+  p.style.cssText=`
+    left:${Math.random()*100}%;
+    width:${s}px;height:${s}px;
+    background:${cols[Math.floor(Math.random()*cols.length)]};
+    opacity:0;
+    animation-duration:${Math.random()*10+8}s;
+    animation-delay:${Math.random()*8}s;
+    box-shadow:0 0 ${s*2}px currentColor;
+  `;
+  pc.appendChild(p);
+}
+
+// ── Confetti burst on load
+function launchConfetti(){
+  const cc=document.getElementById('confetti');
+  const confCols=['#00ff88','#00e5ff','#ffd600','#ff3d5a','#fff'];
+  for(let i=0;i<60;i++){
+    const piece=document.createElement('div');
+    piece.className='confetti-piece';
+    const dur=Math.random()*2.5+2;
+    piece.style.cssText=`
+      left:${Math.random()*100}%;
+      background:${confCols[Math.floor(Math.random()*confCols.length)]};
+      animation-duration:${dur}s;
+      animation-delay:${Math.random()*1.5}s;
+      width:${Math.random()*6+3}px;
+      height:${Math.random()*10+5}px;
+      transform:rotateZ(${Math.random()*360}deg);
+    `;
+    cc.appendChild(piece);
+    setTimeout(()=>piece.remove(),(dur+1.5)*1000);
+  }
+}
+setTimeout(launchConfetti, 300);
+
+// ── Animate resource bar
+setTimeout(()=>{
+  document.getElementById('resFill').style.width='98%';
+},600);
+
+// ── Start button
+document.getElementById('startBtn').addEventListener('click',function(){
+  this.style.transform='scale(.97)';
+  this.style.boxShadow='0 0 50px rgba(0,255,136,.4)';
+  setTimeout(()=>{
+    this.style.transform='';
+    this.style.boxShadow='';
+    launchConfetti();
+  },180);
+});
+</script>
+</body>
+</html>

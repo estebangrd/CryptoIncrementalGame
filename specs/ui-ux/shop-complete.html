@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Shop</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ng: #00ff88; --nc: #00e5ff; --ny: #ffd600; --nr: #ff3d5a;
+    --np: #a040ff;
+    --bg: #020810; --dim: rgba(255,255,255,0.4); --dim2: rgba(255,255,255,0.18);
+    --bng: rgba(0,255,136,0.2); --bnc: rgba(0,229,255,0.18);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;overflow:hidden;}
+  body {
+    background:var(--bg); font-family:'Rajdhani',sans-serif; color:#fff;
+    position:relative;
+  }
+  body::before {
+    content:'';position:fixed;inset:0;
+    background-image:
+      linear-gradient(rgba(0,255,136,0.025) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(0,255,136,0.025) 1px,transparent 1px);
+    background-size:40px 40px; pointer-events:none; z-index:0;
+  }
+
+  .scanline{position:fixed;top:0;left:0;right:0;height:1px;background:rgba(0,255,136,.05);animation:scan 8s linear infinite;pointer-events:none;z-index:200;}
+  @keyframes scan{0%{top:0}100%{top:100vh}}
+
+  /* ── SHELL ── */
+  .shell {
+    position:relative;z-index:1;
+    max-width:420px;margin:0 auto;
+    height:100vh;display:flex;flex-direction:column;overflow:hidden;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    flex-shrink:0;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 18px 10px;
+    border-bottom:1px solid rgba(0,255,136,0.1);
+    background:rgba(2,8,16,0.95);backdrop-filter:blur(12px);
+  }
+  .shop-title {
+    display:flex;align-items:center;gap:8px;
+    font-family:'Orbitron',monospace;font-size:15px;font-weight:900;
+    color:#fff;letter-spacing:2px;
+  }
+  .shop-title span{color:var(--ng);text-shadow:0 0 14px rgba(0,255,136,.5);}
+  .close-btn {
+    width:32px;height:32px;border-radius:8px;
+    border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);
+    color:var(--dim);font-size:16px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+  }
+
+  /* ── TABS ── */
+  .tabs {
+    flex-shrink:0;
+    display:flex;gap:0;
+    border-bottom:1px solid rgba(255,255,255,.06);
+    background:rgba(2,8,16,0.8);
+  }
+  .tab {
+    flex:1;padding:12px 8px;
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+    cursor:pointer;position:relative;
+    border-bottom:2px solid transparent;
+    transition:all .2s;
+  }
+  .tab.active { border-bottom-color:var(--ng); }
+  .tab-icon { font-size:16px; }
+  .tab-label {
+    font-family:'Share Tech Mono',monospace;font-size:8px;
+    letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;
+    transition:color .2s;
+  }
+  .tab.active .tab-label { color:var(--ng); }
+
+  /* ── CONTENT ── */
+  .content {
+    flex:1;overflow-y:auto;scrollbar-width:thin;
+    scrollbar-color:rgba(0,255,136,.2) transparent;
+  }
+  .content::-webkit-scrollbar{width:3px;}
+  .content::-webkit-scrollbar-thumb{background:rgba(0,255,136,.2);border-radius:2px;}
+
+  .tab-panel{display:none;padding:14px 16px 32px;}
+  .tab-panel.active{display:block;}
+
+  /* ── SECTION HEADER ── */
+  .sec-hdr {
+    font-family:'Share Tech Mono',monospace;font-size:9px;
+    letter-spacing:4px;color:var(--dim);text-transform:uppercase;
+    padding:0 2px 10px;display:flex;align-items:center;gap:8px;
+  }
+  .sec-hdr::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(0,255,136,.2),transparent);}
+
+  /* ════════════════════════
+     NO ADS TAB
+  ════════════════════════ */
+  .noads-hero {
+    background:linear-gradient(135deg,rgba(255,61,90,0.07),rgba(255,61,90,0.03));
+    border:1px solid rgba(255,61,90,0.2);border-radius:16px;
+    padding:20px;margin-bottom:12px;position:relative;overflow:hidden;
+    text-align:center;
+  }
+  .noads-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--nr),#ff8c42);}
+  .noads-big-icon{font-size:48px;margin-bottom:10px;display:block;filter:drop-shadow(0 0 16px rgba(255,61,90,.4));}
+  .noads-hero-title{font-family:'Orbitron',monospace;font-size:16px;font-weight:900;color:#fff;margin-bottom:6px;}
+  .noads-perks{display:flex;flex-direction:column;gap:5px;margin:12px 0;}
+  .noads-perk{display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,.65);}
+  .perk-x{width:16px;height:16px;border-radius:3px;background:rgba(255,61,90,.15);border:1px solid rgba(255,61,90,.3);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--nr);flex-shrink:0;}
+  .perk-check{width:16px;height:16px;border-radius:3px;background:rgba(0,255,136,.12);border:1px solid rgba(0,255,136,.28);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--ng);flex-shrink:0;}
+
+  /* No ads pricing */
+  .noads-price-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:14px;}
+  .noads-price-normal{font-family:'Orbitron',monospace;font-size:13px;color:var(--dim2);text-decoration:line-through;}
+  .noads-price-now{font-family:'Orbitron',monospace;font-size:28px;font-weight:900;color:#fff;text-shadow:0 0 16px rgba(255,255,255,.2);}
+
+  /* Promo countdown */
+  .promo-banner{
+    background:rgba(255,214,0,.07);border:1px solid rgba(255,214,0,.2);
+    border-radius:10px;padding:10px 14px;margin-bottom:14px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .promo-icon{font-size:18px;}
+  .promo-info{flex:1;}
+  .promo-label{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--ny);text-transform:uppercase;margin-bottom:2px;}
+  .promo-timer{font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--ny);text-shadow:0 0 12px rgba(255,214,0,.5);animation:tpulse 1s ease-in-out infinite;}
+  @keyframes tpulse{0%,100%{opacity:1}50%{opacity:.7}}
+  .promo-price{font-family:'Orbitron',monospace;font-size:22px;font-weight:900;color:var(--ny);}
+
+  /* Unlock progress */
+  .unlock-card{
+    background:rgba(0,255,136,.04);border:1px solid rgba(0,255,136,.15);
+    border-radius:12px;padding:14px;margin-bottom:14px;
+  }
+  .unlock-title{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:3px;color:var(--ng);text-transform:uppercase;margin-bottom:10px;}
+  .unlock-steps{display:flex;gap:6px;margin-bottom:10px;}
+  .unlock-step{
+    flex:1;border-radius:8px;padding:8px 6px;text-align:center;
+    border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);
+    position:relative;
+  }
+  .unlock-step.done{border-color:rgba(0,255,136,.3);background:rgba(0,255,136,.06);}
+  .unlock-step.active{border-color:rgba(255,214,0,.35);background:rgba(255,214,0,.06);animation:stepGlow 2s ease-in-out infinite;}
+  @keyframes stepGlow{0%,100%{box-shadow:none}50%{box-shadow:0 0 10px rgba(255,214,0,.2)}}
+  .step-buy{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--dim2);letter-spacing:1px;margin-bottom:4px;}
+  .step-pct{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;}
+  .step-pct.done-c{color:var(--ng);}
+  .step-pct.active-c{color:var(--ny);}
+  .step-pct.locked-c{color:var(--dim2);}
+  .step-label{font-size:9px;color:var(--dim2);margin-top:2px;}
+  .step-check{position:absolute;top:-6px;right:-6px;width:14px;height:14px;border-radius:50%;background:var(--ng);color:#000;font-size:8px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 6px var(--ng);}
+  .unlock-note{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dim2);letter-spacing:1px;line-height:1.5;}
+
+  .buy-btn-full{
+    width:100%;padding:16px;border-radius:12px;border:none;
+    font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:3px;
+    cursor:pointer;position:relative;overflow:hidden;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .buy-btn-full::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 30%,rgba(255,255,255,.07) 50%,transparent 70%);transform:translateX(-100%);animation:shimmer 3s infinite;}
+  @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+  .buy-btn-full:active{transform:scale(.97);}
+  .btn-red{background:linear-gradient(135deg,rgba(255,61,90,.18),rgba(255,61,90,.1));border:1px solid var(--nr);color:var(--nr);box-shadow:0 0 18px rgba(255,61,90,.18);}
+  .btn-green{background:linear-gradient(135deg,rgba(0,255,136,.16),rgba(0,229,255,.1));border:1px solid var(--ng);color:var(--ng);box-shadow:0 0 18px rgba(0,255,136,.16);}
+  .btn-yellow{background:linear-gradient(135deg,rgba(255,214,0,.15),rgba(255,140,0,.08));border:1px solid var(--ny);color:var(--ny);box-shadow:0 0 18px rgba(255,214,0,.15);}
+  .btn-dim{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1);color:var(--dim);}
+
+  /* ════════════════════════
+     BOOSTERS TAB
+  ════════════════════════ */
+  .booster-card{
+    background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);
+    border-radius:14px;padding:16px;margin-bottom:10px;
+    position:relative;overflow:hidden;
+  }
+  .booster-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+  .booster-card.yellow::before{background:linear-gradient(90deg,transparent,var(--ny),transparent);}
+  .booster-card.purple::before{background:linear-gradient(90deg,transparent,var(--np),transparent);}
+  .booster-card.green::before{background:linear-gradient(90deg,transparent,var(--ng),transparent);}
+
+  .booster-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;}
+  .booster-icon{width:52px;height:52px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:26px;}
+  .bi-yellow{background:rgba(255,214,0,.08);border:1px solid rgba(255,214,0,.2);}
+  .bi-purple{background:rgba(160,64,255,.08);border:1px solid rgba(160,64,255,.2);}
+  .bi-green{background:rgba(0,255,136,.07);border:1px solid rgba(0,255,136,.2);}
+  .booster-meta{flex:1;}
+  .booster-name{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:#fff;margin-bottom:3px;}
+  .booster-desc{font-family:'Rajdhani',sans-serif;font-size:12px;color:var(--dim);line-height:1.4;}
+  .booster-perks{display:flex;flex-direction:column;gap:4px;margin-bottom:12px;}
+  .b-perk{display:flex;align-items:center;gap:7px;font-size:12px;color:rgba(255,255,255,.6);}
+
+  .booster-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .b-price-wrap{}
+  .b-price-label{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--dim);margin-bottom:2px;}
+  .b-price{font-family:'Orbitron',monospace;font-size:20px;font-weight:900;}
+  .b-price.yellow{color:var(--ny);text-shadow:0 0 12px rgba(255,214,0,.4);}
+  .b-price.purple{color:var(--np);text-shadow:0 0 12px rgba(160,64,255,.4);}
+  .b-price.green{color:var(--ng);text-shadow:0 0 12px rgba(0,255,136,.4);}
+  .b-btn{
+    padding:13px 20px;border-radius:11px;
+    font-family:'Orbitron',monospace;font-size:12px;font-weight:700;letter-spacing:2px;
+    cursor:pointer;position:relative;overflow:hidden;white-space:nowrap;
+  }
+  .b-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 30%,rgba(255,255,255,.07) 50%,transparent 70%);transform:translateX(-100%);animation:shimmer 3s infinite;}
+  .b-btn:active{transform:scale(.97);}
+  .b-btn.yellow{background:linear-gradient(135deg,rgba(255,214,0,.14),rgba(255,140,0,.08));border:1px solid var(--ny);color:var(--ny);}
+  .b-btn.purple{background:linear-gradient(135deg,rgba(160,64,255,.14),rgba(160,64,255,.06));border:1px solid var(--np);color:var(--np);}
+  .b-btn.green{background:linear-gradient(135deg,rgba(0,255,136,.13),rgba(0,229,255,.08));border:1px solid var(--ng);color:var(--ng);}
+  .b-btn.owned{background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.2);color:rgba(0,255,136,.5);cursor:default;}
+  .b-btn.owned::before{display:none;}
+
+  /* Duration badge */
+  .duration-badge{
+    display:inline-flex;align-items:center;gap:4px;
+    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+    border-radius:6px;padding:3px 8px;margin-top:6px;
+    font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dim);
+    letter-spacing:1px;
+  }
+
+  /* ════════════════════════
+     PACKS TAB
+  ════════════════════════ */
+  /* Dynamic pack offer */
+  .dynamic-offer {
+    background:linear-gradient(135deg,rgba(0,255,136,.07),rgba(0,229,255,.04));
+    border:1px solid rgba(0,255,136,.25);border-radius:16px;
+    padding:16px;margin-bottom:16px;position:relative;overflow:hidden;
+  }
+  .dynamic-offer::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--ng),var(--nc));}
+
+  .offer-top-row{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;}
+  .offer-left{}
+  .offer-eyebrow{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:3px;color:var(--dim);text-transform:uppercase;margin-bottom:3px;display:flex;align-items:center;gap:6px;}
+  .offer-badge{
+    background:linear-gradient(135deg,var(--ny),#ff8c00);color:#000;
+    font-family:'Orbitron',monospace;font-size:8px;font-weight:900;letter-spacing:1px;
+    padding:2px 7px;border-radius:20px;
+    box-shadow:0 0 8px rgba(255,214,0,.4);
+    animation:badgePulse 2s ease-in-out infinite;
+  }
+  @keyframes badgePulse{0%,100%{box-shadow:0 0 8px rgba(255,214,0,.35)}50%{box-shadow:0 0 18px rgba(255,214,0,.65)}}
+  .offer-name{font-family:'Orbitron',monospace;font-size:15px;font-weight:900;color:#fff;}
+  .offer-timer-mini{text-align:right;}
+  .otm-label{font-family:'Share Tech Mono',monospace;font-size:7px;letter-spacing:2px;color:var(--dim);margin-bottom:2px;}
+  .otm-time{font-family:'Orbitron',monospace;font-size:15px;font-weight:900;color:var(--ny);animation:tpulse 1s ease-in-out infinite;}
+
+  .offer-contents-row{display:flex;gap:6px;margin-bottom:10px;}
+  .oc-item{
+    flex:1;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.07);
+    border-radius:8px;padding:8px;text-align:center;
+  }
+  .oc-emoji{font-size:18px;margin-bottom:4px;display:block;}
+  .oc-val{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:var(--ng);}
+  .oc-lbl{font-family:'Share Tech Mono',monospace;font-size:7px;letter-spacing:1px;color:var(--dim2);margin-top:2px;}
+
+  .offer-footer-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .of-pricing{}
+  .of-was{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dim2);text-decoration:line-through;letter-spacing:1px;}
+  .of-now{font-family:'Orbitron',monospace;font-size:22px;font-weight:900;color:var(--ny);}
+  .of-btn{
+    padding:13px 18px;border-radius:11px;
+    background:linear-gradient(135deg,rgba(0,255,136,.15),rgba(0,229,255,.08));
+    border:1px solid var(--ng);color:var(--ng);
+    font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:2px;
+    cursor:pointer;position:relative;overflow:hidden;white-space:nowrap;
+  }
+  .of-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 30%,rgba(0,255,136,.07) 50%,transparent 70%);transform:translateX(-100%);animation:shimmer 3s infinite;}
+  .of-btn:active{transform:scale(.97);}
+
+  /* Unlock condition note */
+  .unlock-note-bar{
+    display:flex;align-items:center;gap:6px;
+    background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.12);
+    border-radius:8px;padding:7px 12px;margin-bottom:12px;
+    font-family:'Share Tech Mono',monospace;font-size:9px;color:rgba(0,229,255,.6);
+    letter-spacing:1px;
+  }
+
+  /* Next offer countdown */
+  .next-offer{
+    background:rgba(255,255,255,.02);border:1px dashed rgba(255,255,255,.08);
+    border-radius:12px;padding:14px;text-align:center;
+  }
+  .no-label{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--dim2);text-transform:uppercase;margin-bottom:6px;}
+  .no-timer{font-family:'Orbitron',monospace;font-size:22px;font-weight:900;color:var(--dim);margin-bottom:4px;}
+  .no-sub{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--dim2);}
+
+  /* Divider */
+  .divider{height:1px;background:rgba(255,255,255,.05);margin:4px 0 14px;}
+</style>
+</head>
+<body>
+
+<div class="scanline"></div>
+
+<div class="shell">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="shop-title">💎 <span>SHOP</span></div>
+    <div class="close-btn">✕</div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab active" data-tab="noads" onclick="switchTab('noads',this)">
+      <div class="tab-icon">🚫</div>
+      <div class="tab-label">No Ads</div>
+    </div>
+    <div class="tab" data-tab="boosters" onclick="switchTab('boosters',this)">
+      <div class="tab-icon">⚡</div>
+      <div class="tab-label">Boosters</div>
+    </div>
+    <div class="tab" data-tab="packs" onclick="switchTab('packs',this)">
+      <div class="tab-icon">📦</div>
+      <div class="tab-label">Packs</div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ══════════ NO ADS ══════════ -->
+    <div class="tab-panel active" id="tab-noads">
+
+      <!-- Hero + promo unificados -->
+      <div class="noads-hero">
+        <span class="noads-big-icon">🚫</span>
+        <div class="noads-hero-title">Eliminá los ads permanentemente</div>
+
+        <div class="noads-perks">
+          <div class="noads-perk"><div class="perk-x">✕</div>Sin banner ads</div>
+          <div class="noads-perk"><div class="perk-x">✕</div>Sin interstitial ads</div>
+          <div class="noads-perk"><div class="perk-check">✓</div>Rewarded ads siguen disponibles (opcionales, te dan CC)</div>
+          <div class="noads-perk"><div class="perk-check">✓</div>Permanente — survives prestige resets</div>
+        </div>
+
+        <!-- Precio tachado + promo destacada -->
+        <div style="margin:14px 0 10px;padding:12px 14px;background:rgba(255,214,0,0.07);border:1px solid rgba(255,214,0,0.25);border-radius:12px;position:relative;overflow:hidden;">
+          <!-- Flash label + timer -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="font-size:14px;">⚡</span>
+              <span style="font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--ny);text-transform:uppercase;">Oferta Flash</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--dim2);">EXPIRA EN</span>
+              <span style="font-family:'Orbitron',monospace;font-size:14px;font-weight:900;color:var(--ny);animation:tpulse 1s ease-in-out infinite;" id="promoTimer">18:34:22</span>
+            </div>
+          </div>
+          <!-- Precios -->
+          <div style="display:flex;align-items:baseline;gap:10px;">
+            <span style="font-family:'Orbitron',monospace;font-size:15px;color:rgba(255,255,255,.3);text-decoration:line-through;">$2.99</span>
+            <span style="font-family:'Orbitron',monospace;font-size:32px;font-weight:900;color:var(--ny);text-shadow:0 0 18px rgba(255,214,0,.5);line-height:1;">$0.99</span>
+            <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--ng);background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.22);border-radius:20px;padding:2px 8px;letter-spacing:1px;">AHORRÁS $2.00</span>
+          </div>
+        </div>
+
+        <button class="buy-btn-full btn-yellow" style="margin-bottom:0;">🏷 APROVECHAR OFERTA — $0.99</button>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Unlock via purchase -->
+      <div class="sec-hdr">O desbloquealo comprando</div>
+      <div class="unlock-card">
+        <div class="unlock-title">Chance de desbloqueo con cada compra IAP</div>
+        <div class="unlock-steps">
+
+          <div class="unlock-step done">
+            <div class="step-check">✓</div>
+            <div class="step-buy">1ra compra</div>
+            <div class="step-pct done-c">50%</div>
+            <div class="step-label">chance</div>
+          </div>
+
+          <div class="unlock-step active">
+            <div class="step-buy">2da compra</div>
+            <div class="step-pct active-c">75%</div>
+            <div class="step-label">chance</div>
+          </div>
+
+          <div class="unlock-step">
+            <div class="step-buy">3ra compra</div>
+            <div class="step-pct locked-c">100%</div>
+            <div class="step-label">garantizado</div>
+          </div>
+
+        </div>
+        <div class="unlock-note">
+          Hiciste 1 compra — próxima compra: <span style="color:var(--ny)">75% de chance</span> de desbloquear No Ads gratis.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══════════ BOOSTERS ══════════ -->
+    <div class="tab-panel" id="tab-boosters">
+
+      <!-- 2x Booster -->
+      <div class="booster-card yellow">
+        <div class="booster-top">
+          <div class="booster-icon bi-yellow">⚡</div>
+          <div class="booster-meta">
+            <div class="booster-name">2x Production Booster</div>
+            <div class="booster-desc">Duplica tu producción de CC por 4 horas</div>
+            <div class="duration-badge">⏱ 4 horas · Stackeable</div>
+          </div>
+        </div>
+        <div class="booster-perks">
+          <div class="b-perk"><div class="perk-check">✓</div>Stackea con prestige multiplier y ad boost</div>
+          <div class="b-perk"><div class="perk-check">✓</div>Se puede comprar múltiples veces</div>
+        </div>
+        <div class="booster-footer">
+          <div class="b-price-wrap">
+            <div class="b-price-label">PRECIO</div>
+            <div class="b-price yellow">$0.99</div>
+          </div>
+          <button class="b-btn yellow">COMPRAR $0.99</button>
+        </div>
+      </div>
+
+      <!-- 5x Booster -->
+      <div class="booster-card" style="border-color:rgba(255,107,26,.2);">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#ff6b1a,transparent);opacity:.6;"></div>
+        <div class="booster-top">
+          <div class="booster-icon" style="background:rgba(255,107,26,.08);border-color:rgba(255,107,26,.2);">🚀</div>
+          <div class="booster-meta">
+            <div class="booster-name">5x Production Booster</div>
+            <div class="booster-desc">Multiplica tu producción por 5 durante 24 horas</div>
+            <div class="duration-badge">⏱ 24 horas · Stackeable</div>
+          </div>
+        </div>
+        <div class="booster-perks">
+          <div class="b-perk"><div class="perk-check">✓</div>Stackea con prestige multiplier y ad boost</div>
+          <div class="b-perk"><div class="perk-check">✓</div>Se puede comprar múltiples veces</div>
+        </div>
+        <div class="booster-footer">
+          <div class="b-price-wrap">
+            <div class="b-price-label">PRECIO</div>
+            <div class="b-price" style="color:#ff6b1a;text-shadow:0 0 12px rgba(255,107,26,.4);">$2.99</div>
+          </div>
+          <button class="b-btn" style="background:linear-gradient(135deg,rgba(255,107,26,.14),rgba(255,107,26,.06));border-color:#ff6b1a;color:#ff6b1a;">COMPRAR $2.99</button>
+        </div>
+      </div>
+
+      <!-- Permanent 2x -->
+      <div class="booster-card purple">
+        <div class="booster-top">
+          <div class="booster-icon bi-purple">♾</div>
+          <div class="booster-meta">
+            <div class="booster-name">Permanent 2x Multiplier</div>
+            <div class="booster-desc">Duplica tu producción para siempre, en todos los runs</div>
+            <div class="duration-badge">∞ Permanente · Survives prestige</div>
+          </div>
+        </div>
+        <div class="booster-perks">
+          <div class="b-perk"><div class="perk-check">✓</div>Stackea con TODOS los otros multiplicadores</div>
+          <div class="b-perk"><div class="perk-check">✓</div>Survives prestige resets — es tuyo para siempre</div>
+        </div>
+        <div class="booster-footer">
+          <div class="b-price-wrap">
+            <div class="b-price-label">PRECIO</div>
+            <div class="b-price purple">$9.99</div>
+          </div>
+          <button class="b-btn purple">COMPRAR $9.99</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══════════ PACKS ══════════ -->
+    <div class="tab-panel" id="tab-packs">
+
+      <div class="sec-hdr">Oferta activa</div>
+
+      <!-- Active dynamic offer -->
+      <div class="dynamic-offer">
+        <div class="offer-top-row">
+          <div class="offer-left">
+            <div class="offer-eyebrow">
+              Oferta de Milestone
+              <span class="offer-badge">EXCLUSIVO</span>
+            </div>
+            <div class="offer-name">Primer ASIC Gen 1</div>
+          </div>
+          <div class="offer-timer-mini">
+            <div class="otm-label">EXPIRA EN</div>
+            <div class="otm-time" id="packTimer">11:42</div>
+          </div>
+        </div>
+
+        <div class="offer-contents-row">
+          <div class="oc-item">
+            <span class="oc-emoji">◈</span>
+            <div class="oc-val">150K CC</div>
+            <div class="oc-lbl">CryptoCoins</div>
+          </div>
+          <div class="oc-item">
+            <span class="oc-emoji">💰</span>
+            <div class="oc-val" style="color:var(--ny);">$10K</div>
+            <div class="oc-lbl">Cash</div>
+          </div>
+          <div class="oc-item">
+            <span class="oc-emoji">⚡</span>
+            <div class="oc-val" style="color:var(--nc);">2x · 4h</div>
+            <div class="oc-lbl">Booster</div>
+          </div>
+        </div>
+
+        <div class="offer-footer-row">
+          <div class="of-pricing">
+            <div class="of-was">Valor normal $4.99</div>
+            <div class="of-now">$1.99</div>
+          </div>
+          <button class="of-btn">⬡ COMPRAR</button>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="sec-hdr">Próxima oferta</div>
+
+      <!-- Unlock condition -->
+      <div class="unlock-note-bar">
+        <span>🔒</span>
+        <span>Desbloqueada al comprar Quantum Miner × 1</span>
+      </div>
+
+      <!-- Next offer countdown -->
+      <div class="next-offer">
+        <div class="no-label">Próxima oferta disponible en</div>
+        <div class="no-timer" id="nextTimer">47:18:05</div>
+        <div class="no-sub">Al abrir el juego · Oferta de sesión</div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── Tab switching
+function switchTab(id, el) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-'+id).classList.add('active');
+}
+
+// ── Promo timer (flash sale)
+let promoSecs = 18*3600+34*60+22;
+const promoEl = document.getElementById('promoTimer');
+setInterval(()=>{
+  if(promoSecs<=0) return; promoSecs--;
+  const h=Math.floor(promoSecs/3600);
+  const m=Math.floor((promoSecs%3600)/60);
+  const s=promoSecs%60;
+  promoEl.textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  if(promoSecs<3600) promoEl.style.color='var(--nr)';
+},1000);
+
+// ── Pack offer timer
+let packSecs = 11*60+42;
+const packEl = document.getElementById('packTimer');
+setInterval(()=>{
+  if(packSecs<=0){ packEl.textContent='EXPIRÓ'; packEl.style.color='var(--nr)'; return; }
+  packSecs--;
+  const m=Math.floor(packSecs/60), s=packSecs%60;
+  packEl.textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  if(packSecs<120) packEl.style.color='var(--nr)';
+},1000);
+
+// ── Next offer countdown
+let nextSecs = 47*3600+18*60+5;
+const nextEl = document.getElementById('nextTimer');
+setInterval(()=>{
+  if(nextSecs<=0) return; nextSecs--;
+  const h=Math.floor(nextSecs/3600);
+  const m=Math.floor((nextSecs%3600)/60);
+  const s=nextSecs%60;
+  nextEl.textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+},1000);
+</script>
+</body>
+</html>

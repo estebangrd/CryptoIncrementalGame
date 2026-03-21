@@ -131,7 +131,8 @@ type GameAction =
   | { type: 'AI_BUILD_ENERGY' }
   | { type: 'DISMISS_NARRATIVE_EVENT'; payload: number }
   | { type: 'ATTEMPT_DISCONNECT' }
-  | { type: 'COMPLETE_ENDING_PRESTIGE'; payload: { endingType: EndingType } };
+  | { type: 'COMPLETE_ENDING_PRESTIGE'; payload: { endingType: EndingType } }
+  | { type: 'SET_FLASH_SALE'; payload: { expiresAt: number; cooldownUntil: number } };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
@@ -277,7 +278,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         renewableCapUpgrades: action.payload.renewableCapUpgrades ?? [],
         planetResources: action.payload.planetResources ?? 100,
         // IAP/Ad system migration: provide defaults for old saves
-        iapState: action.payload.iapState ?? {
+        iapState: {
           removeAdsPurchased: false,
           removeAdsPurchaseDate: null,
           adsSeenBeforePurchase: 0,
@@ -288,6 +289,9 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           purchaseHistory: [],
           isPurchasing: false,
           lastPurchaseTime: null,
+          flashSaleExpiresAt: 0,
+          flashSaleCooldownUntil: 0,
+          ...action.payload.iapState,
         },
         adState: action.payload.adState ?? {
           adInitialized: false,
@@ -821,6 +825,16 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         iapState: { ...state.iapState, isPurchasing: action.payload },
       };
 
+    case 'SET_FLASH_SALE':
+      return {
+        ...state,
+        iapState: {
+          ...state.iapState,
+          flashSaleExpiresAt: action.payload.expiresAt,
+          flashSaleCooldownUntil: action.payload.cooldownUntil,
+        },
+      };
+
     case 'ACTIVATE_AD_BOOST': {
       const now = Date.now();
       return {
@@ -1189,6 +1203,8 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       purchaseHistory: [],
       isPurchasing: false,
       lastPurchaseTime: null,
+      flashSaleExpiresAt: 0,
+      flashSaleCooldownUntil: 0,
     } as IAPState,
     adState: {
       adInitialized: false,

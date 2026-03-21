@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Planetary Collapse — Human</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --burn:   #ff6b1a;
+    --ember:  #c94400;
+    --ash:    #8b4513;
+    --smoke:  #3d2b1f;
+    --dim:    rgba(255,255,255,0.4);
+    --dim2:   rgba(255,255,255,0.22);
+    --bg:     #080401;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;overflow:hidden;}
+
+  body {
+    background: var(--bg);
+    font-family: 'Rajdhani', sans-serif;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ── BURNT GRID ── */
+  .grid-bg {
+    position: fixed; inset: 0; z-index: 0;
+    background-image:
+      linear-gradient(rgba(200,70,0,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(200,70,0,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* ── HEAT HAZE AURORA ── */
+  .aurora { position: fixed; inset: 0; z-index: 0; }
+  .a-layer {
+    position: absolute; border-radius: 50%;
+    filter: blur(90px);
+    animation: drift ease-in-out infinite;
+  }
+  .a1 {
+    width: 500px; height: 350px; top: -80px; left: -80px;
+    background: radial-gradient(ellipse, rgba(180,60,0,0.22) 0%, transparent 70%);
+    animation-duration: 9s; animation-delay: 0s;
+  }
+  .a2 {
+    width: 400px; height: 450px; top: -60px; right: -60px;
+    background: radial-gradient(ellipse, rgba(120,40,0,0.16) 0%, transparent 70%);
+    animation-duration: 12s; animation-delay: -4s;
+  }
+  .a3 {
+    width: 600px; height: 250px; bottom: 80px; left: -120px;
+    background: radial-gradient(ellipse, rgba(100,30,0,0.12) 0%, transparent 70%);
+    animation-duration: 15s; animation-delay: -7s;
+  }
+  @keyframes drift {
+    0%,100%{transform:translate(0,0) scale(1);}
+    33%{transform:translate(30px,-20px) scale(1.04);}
+    66%{transform:translate(-15px,15px) scale(0.97);}
+  }
+
+  /* ── EMBER PARTICLES ── */
+  .embers { position:fixed;inset:0;z-index:1;pointer-events:none; }
+  .ember {
+    position: absolute;
+    border-radius: 50%;
+    animation: rise linear infinite;
+  }
+  @keyframes rise {
+    0%   { transform: translateY(100vh) translateX(0) rotate(0deg); opacity:0; }
+    8%   { opacity: 1; }
+    85%  { opacity: 0.6; }
+    100% { transform: translateY(-60px) translateX(var(--dx)) rotate(180deg); opacity:0; }
+  }
+
+  /* Smoke wisps */
+  .smoke-layer {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 100%, rgba(30,10,0,0.5) 0%, transparent 60%);
+  }
+
+  /* ── SCANLINE ── */
+  .scanline {
+    position: fixed; top:0; left:0; right:0; height:1px;
+    background: rgba(200,70,0,0.08);
+    animation: scan 10s linear infinite; pointer-events:none; z-index:200;
+  }
+  @keyframes scan{0%{top:0}100%{top:100vh}}
+
+  /* ── SCREEN ── */
+  .screen {
+    position: relative; z-index: 10;
+    max-width: 420px; margin: 0 auto;
+    height: 100vh; overflow-y: auto; overflow-x: hidden;
+    scrollbar-width: none;
+    display: flex; flex-direction: column;
+  }
+  .screen::-webkit-scrollbar{display:none;}
+
+  /* ── TOPBAR ── */
+  .topbar {
+    flex-shrink:0;
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 14px 18px 10px;
+    border-bottom: 1px solid rgba(200,70,0,0.15);
+    background: rgba(8,4,1,0.95);
+    backdrop-filter: blur(12px);
+    position: sticky; top:0; z-index:20;
+  }
+  .logo {
+    font-family:'Orbitron',monospace;
+    font-size:11px;font-weight:900;letter-spacing:2px;
+    color: var(--burn);
+    text-shadow: 0 0 14px rgba(255,107,26,0.4);
+    text-transform:uppercase;
+  }
+  .logo span { color: var(--ember); }
+  .run-info {
+    font-family:'Share Tech Mono',monospace;
+    font-size:9px;color:var(--dim);letter-spacing:2px;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    flex-shrink:0;
+    padding: 40px 24px 28px;
+    text-align: center;
+    position: relative;
+  }
+
+  /* Dying globe */
+  .globe-wrap {
+    position: relative;
+    width: 140px; height: 140px;
+    margin: 0 auto 22px;
+  }
+  .globe-emoji {
+    font-size: 76px;
+    display: block;
+    position: relative; z-index:2;
+    animation: burnGlobe 3s ease-in-out infinite;
+    filter: drop-shadow(0 0 20px rgba(200,70,0,0.6)) saturate(0.7) sepia(0.4);
+  }
+  @keyframes burnGlobe {
+    0%,100%{transform:translateY(0) rotate(-1deg);filter:drop-shadow(0 0 20px rgba(200,70,0,.6)) saturate(.7) sepia(.4);}
+    50%{transform:translateY(-4px) rotate(1deg);filter:drop-shadow(0 0 32px rgba(255,107,26,.8)) saturate(.5) sepia(.6);}
+  }
+
+  /* Cracked orbit ring */
+  .orbit-dead {
+    position: absolute;
+    border-radius: 50%;
+    top: 50%; left: 50%;
+    transform-origin: center center;
+    border: 1px dashed rgba(200,70,0,0.2);
+  }
+  .od1 {
+    width: 150px; height: 150px;
+    margin-top:-75px; margin-left:-75px;
+    animation: slowDrift 18s linear infinite;
+  }
+  .od2 {
+    width: 180px; height: 180px;
+    margin-top:-90px; margin-left:-90px;
+    border-color: rgba(120,40,0,0.15);
+    animation: slowDrift 24s linear infinite reverse;
+  }
+  @keyframes slowDrift{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+
+  /* Skull overlay — fades in */
+  .skull-overlay {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    font-size: 28px;
+    z-index: 3;
+    opacity: 0;
+    animation: skullFade 4s ease-in-out infinite;
+    filter: drop-shadow(0 0 8px rgba(200,70,0,0.6));
+  }
+  @keyframes skullFade {
+    0%,40%{opacity:0}
+    55%,85%{opacity:0.25}
+    100%{opacity:0}
+  }
+
+  /* Title */
+  .collapse-eyebrow {
+    font-family:'Share Tech Mono',monospace;
+    font-size:9px;letter-spacing:5px;
+    color: rgba(200,70,0,0.6);
+    text-transform:uppercase;margin-bottom:6px;
+  }
+  .collapse-title {
+    font-family:'Orbitron',monospace;
+    font-size:26px;font-weight:900;
+    letter-spacing:2px;line-height:1.15;
+    color: var(--burn);
+    text-shadow: 0 0 30px rgba(255,107,26,0.5), 0 0 60px rgba(200,70,0,0.2);
+    text-transform:uppercase;
+    animation: titleFlicker 6s ease-in-out infinite;
+    margin-bottom:8px;
+  }
+  @keyframes titleFlicker {
+    0%,94%,100%{opacity:1}
+    95%{opacity:0.7}
+    97%{opacity:1}
+    98%{opacity:0.8}
+  }
+
+  /* Blame quote */
+  .blame-card {
+    margin: 16px 24px 0;
+    padding: 14px 16px;
+    background: rgba(200,70,0,0.05);
+    border-left: 3px solid rgba(200,70,0,0.4);
+    border-radius: 0 8px 8px 0;
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+  }
+  .blame-card::before {
+    content:'';position:absolute;inset:0;
+    background: linear-gradient(135deg, rgba(200,70,0,0.04), transparent);
+  }
+  .blame-text {
+    font-family:'Rajdhani',sans-serif;
+    font-size:14px;font-weight:400;
+    color: rgba(255,255,255,0.55);
+    line-height:1.65;font-style:italic;
+  }
+  .blame-text strong {
+    color: rgba(255,140,60,0.8);
+    font-style:normal;font-weight:700;
+  }
+
+  /* ── STATS ── */
+  .stats-section {
+    padding: 20px 16px 0;
+  }
+  .sec-label {
+    font-family:'Share Tech Mono',monospace;
+    font-size:9px;letter-spacing:5px;
+    color:var(--dim);text-transform:uppercase;
+    text-align:center;margin-bottom:12px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .sec-label::before,.sec-label::after {
+    content:'';flex:1;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(200,70,0,0.3),transparent);
+  }
+
+  .stats-grid {
+    display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;
+  }
+  .stat-card {
+    background: rgba(200,70,0,0.05);
+    border: 1px solid rgba(200,70,0,0.18);
+    border-radius:12px;padding:13px 13px 11px;
+    position:relative;overflow:hidden;
+    animation: cardIn 0.6s ease-out forwards; opacity:0;
+  }
+  .stat-card::before {
+    content:'';position:absolute;top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,transparent,var(--burn),transparent);opacity:.5;
+  }
+  .stat-card.ash {
+    border-color:rgba(139,69,19,0.25);
+    background:rgba(139,69,19,0.05);
+  }
+  .stat-card.ash::before {
+    background:linear-gradient(90deg,transparent,var(--ash),transparent);
+  }
+  @keyframes cardIn {
+    0%{opacity:0;transform:translateY(14px);}
+    100%{opacity:1;transform:translateY(0);}
+  }
+  .stat-card:nth-child(1){animation-delay:.2s;}
+  .stat-card:nth-child(2){animation-delay:.35s;}
+  .stat-card:nth-child(3){animation-delay:.5s;}
+  .stat-card:nth-child(4){animation-delay:.65s;}
+
+  .s-icon{font-size:14px;margin-bottom:5px;display:block;}
+  .s-label{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;margin-bottom:3px;}
+  .s-value{font-family:'Orbitron',monospace;font-size:17px;font-weight:700;color:var(--burn);text-shadow:0 0 10px rgba(255,107,26,.35);line-height:1.1;}
+  .s-value.ash{color:#c8956c;text-shadow:0 0 10px rgba(200,149,108,.3);}
+  .s-value.zero{color:var(--ember);text-shadow:0 0 14px rgba(201,68,0,.5);}
+  .s-sub{font-size:10px;color:var(--dim);margin-top:2px;}
+
+  /* Resources = 0 special card */
+  .res-card {
+    background: rgba(201,68,0,0.08);
+    border: 1px solid rgba(201,68,0,0.3);
+    border-radius:12px;padding:14px;margin-bottom:8px;
+    position:relative;overflow:hidden;
+    animation: cardIn .6s ease-out .65s both;
+  }
+  .res-card::before {
+    content:'';position:absolute;top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,var(--ember),var(--burn));
+  }
+  .res-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .res-label{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:2px;color:rgba(201,68,0,.7);text-transform:uppercase;}
+  .res-zero{font-family:'Orbitron',monospace;font-size:28px;font-weight:900;color:var(--ember);text-shadow:0 0 20px rgba(201,68,0,.6);animation:zeroPulse 2s ease-in-out infinite;}
+  @keyframes zeroPulse{0%,100%{text-shadow:0 0 20px rgba(201,68,0,.5)}50%{text-shadow:0 0 40px rgba(201,68,0,.9)}}
+  .res-bar{height:6px;background:rgba(255,255,255,.04);border-radius:3px;overflow:hidden;margin-bottom:6px;}
+  .res-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--ember),var(--burn));border-radius:3px;transition:width 2s ease-out;}
+  .res-sublabel{font-family:'Share Tech Mono',monospace;font-size:9px;color:rgba(201,68,0,.55);letter-spacing:1px;}
+
+  /* AI card */
+  .ai-card {
+    background: rgba(80,30,10,0.25);
+    border: 1px solid rgba(139,69,19,0.3);
+    border-radius:12px;padding:14px;margin-bottom:8px;
+    animation: cardIn .6s ease-out .8s both;
+    position:relative;overflow:hidden;
+  }
+  .ai-card::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,transparent,var(--ash),transparent);opacity:.6;
+  }
+  .ai-top{display:flex;align-items:center;justify-content:space-between;}
+  .ai-label{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;margin-bottom:3px;}
+  .ai-value{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;color:#a07050;}
+  .ai-note{font-family:'Share Tech Mono',monospace;font-size:9px;color:rgba(255,255,255,.25);letter-spacing:1px;margin-top:6px;}
+
+  /* ── LEGACY BONUS ── */
+  .bonus-section {
+    padding: 0 16px;
+    margin-bottom: 16px;
+    animation: cardIn .6s ease-out 1s both;
+  }
+  .bonus-card {
+    background: rgba(80,30,10,0.2);
+    border: 1px solid rgba(139,69,19,0.25);
+    border-radius:14px;padding:16px;position:relative;overflow:hidden;
+  }
+  .bonus-card::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,var(--ember),var(--burn));
+  }
+  .bonus-title{
+    font-family:'Orbitron',monospace;font-size:10px;font-weight:700;
+    letter-spacing:3px;color:rgba(200,150,80,.7);margin-bottom:8px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .bonus-title::after{content:'';flex:1;height:1px;background:rgba(139,69,19,.2);}
+  .bonus-run{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dim2);letter-spacing:2px;margin-bottom:10px;}
+  .bonus-quote{
+    font-family:'Rajdhani',sans-serif;font-size:13px;font-style:italic;
+    color:rgba(255,255,255,.5);line-height:1.6;
+    padding:10px 12px;background:rgba(0,0,0,.2);border-radius:8px;
+    border:1px solid rgba(139,69,19,.15);
+  }
+
+  /* ── ACTIONS ── */
+  .actions {
+    padding: 0 16px 24px;
+    display:flex;flex-direction:column;gap:8px;
+    animation: cardIn .6s ease-out 1.2s both;
+  }
+  .planet-btn {
+    width:100%;padding:18px;
+    background:linear-gradient(135deg,rgba(200,70,0,.15),rgba(139,69,19,.1));
+    border:1px solid var(--burn);border-radius:14px;
+    color:var(--burn);
+    font-family:'Orbitron',monospace;font-size:13px;font-weight:700;
+    letter-spacing:3px;text-transform:uppercase;cursor:pointer;
+    position:relative;overflow:hidden;
+    box-shadow:0 0 20px rgba(200,70,0,.15),inset 0 0 20px rgba(200,70,0,.05);
+    display:flex;align-items:center;justify-content:center;gap:10px;
+  }
+  .planet-btn::before{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(135deg,transparent 30%,rgba(200,70,0,.08) 50%,transparent 70%);
+    transform:translateX(-100%);animation:shimmer 3s infinite;
+  }
+  @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+  .planet-btn:active{transform:scale(.97);}
+
+  .share-btn {
+    width:100%;padding:14px;
+    background:transparent;border:1px solid rgba(255,255,255,.1);
+    border-radius:12px;color:var(--dim);
+    font-family:'Orbitron',monospace;font-size:11px;font-weight:700;
+    letter-spacing:3px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    transition:all .2s;
+  }
+  .share-btn:active{background:rgba(255,255,255,.04);}
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+<div class="aurora">
+  <div class="a-layer a1"></div>
+  <div class="a-layer a2"></div>
+  <div class="a-layer a3"></div>
+</div>
+<div class="smoke-layer"></div>
+<div class="scanline"></div>
+<div class="embers" id="embers"></div>
+
+<div class="screen">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="logo">BLOCK<span>CHAIN</span> TYCOON</div>
+    <div class="run-info">RUN #2 · 142H 5M</div>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="globe-wrap">
+      <div class="orbit-dead od1"></div>
+      <div class="orbit-dead od2"></div>
+      <span class="globe-emoji">🌍</span>
+      <span class="skull-overlay">💀</span>
+    </div>
+
+    <div class="collapse-eyebrow">Resources Depleted · Genesis Chain</div>
+    <div class="collapse-title">Planetary<br>Collapse</div>
+
+    <div class="blame-card">
+      <div class="blame-text">
+        No fue la IA. No hubo algoritmo que culpar.<br>
+        <strong>Cada megawatt lo elegiste vos.</strong><br>
+        La Tierra no tiene energía para sostener vida organizada. Lo sabías. Igual seguiste.
+      </div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-section">
+    <div class="sec-label">Tu Legado</div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="s-icon">⛏</span>
+        <div class="s-label">Blocks Mined</div>
+        <div class="s-value">9.2M</div>
+        <div class="s-sub">Incomplete</div>
+      </div>
+      <div class="stat-card ash">
+        <span class="s-icon">◈</span>
+        <div class="s-label">CC Earned</div>
+        <div class="s-value ash">464.6M</div>
+        <div class="s-sub">CryptoCoins</div>
+      </div>
+      <div class="stat-card ash">
+        <span class="s-icon">💰</span>
+        <div class="s-label">Money Accumulated</div>
+        <div class="s-value ash">$375.3M</div>
+        <div class="s-sub">Total Cash</div>
+      </div>
+      <div class="stat-card">
+        <span class="s-icon">⏱</span>
+        <div class="s-label">Run Duration</div>
+        <div class="s-value" style="font-size:15px;">142h 5m</div>
+        <div class="s-sub">Real time</div>
+      </div>
+    </div>
+
+    <!-- Resources = 0 -->
+    <div class="res-card">
+      <div class="res-top">
+        <div>
+          <div class="res-label">🌍 Resources at End</div>
+          <div class="res-sublabel">Planet resources fully depleted</div>
+        </div>
+        <div class="res-zero">0%</div>
+      </div>
+      <div class="res-bar"><div class="res-fill" id="resFill"></div></div>
+      <div style="display:flex;justify-content:space-between;font-family:'Share Tech Mono',monospace;font-size:8px;color:rgba(201,68,0,.45);margin-top:2px;">
+        <span>▲ YOU ARE HERE</span><span>OPTIMAL</span>
+      </div>
+    </div>
+
+    <!-- AI status -->
+    <div class="ai-card">
+      <div class="ai-top">
+        <div>
+          <div class="ai-label">AI Involvement</div>
+          <div class="ai-value">None — Human decisions only</div>
+        </div>
+        <span style="font-size:28px;opacity:.6;">🧑</span>
+      </div>
+      <div class="ai-note">// No algorithm to blame. This was you.</div>
+    </div>
+  </div>
+
+  <!-- LEGACY BONUS -->
+  <div class="bonus-section">
+    <div class="bonus-card">
+      <div class="bonus-title">Legacy Bonus</div>
+      <div class="bonus-run">Run #2 · Accumulated rewards unlocked</div>
+      <div class="bonus-quote">
+        Un grupo de supervivientes encontró tus registros. Aprendieron lo que no hay que hacer. Embarcaron hacia un nuevo planeta llevando esa lección — la más cara de todas.
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="actions">
+    <button class="planet-btn" id="planetBtn">
+      🚀 BEGIN ON THE NEW PLANET
+    </button>
+    <button class="share-btn">
+      ↗ SHARE YOUR LEGACY
+    </button>
+  </div>
+
+</div>
+
+<script>
+// ── Ember particles
+const ec = document.getElementById('embers');
+const burnCols = ['#ff6b1a','#c94400','#ff8c42','#e55a00','#ff4500'];
+for(let i=0;i<28;i++){
+  const e = document.createElement('div');
+  const s = Math.random()*4+1.5;
+  const dx = (Math.random()-0.5)*80;
+  e.className='ember';
+  e.style.cssText=`
+    left:${Math.random()*100}%;
+    width:${s}px;height:${s}px;
+    background:${burnCols[Math.floor(Math.random()*burnCols.length)]};
+    opacity:0;
+    --dx:${dx}px;
+    animation-duration:${Math.random()*8+6}s;
+    animation-delay:${Math.random()*8}s;
+    box-shadow:0 0 ${s*2}px currentColor;
+    border-radius:${Math.random()>0.5?'50%':'2px'};
+  `;
+  ec.appendChild(e);
+}
+
+// ── Resource bar stays at 0 (dramatic empty bar)
+// Briefly shows a sliver then snaps to 0
+setTimeout(()=>{
+  const fill = document.getElementById('resFill');
+  fill.style.width = '3%';
+  setTimeout(()=>{ fill.style.width='0%'; fill.style.transition='width 0.8s ease-in'; }, 800);
+},700);
+
+// ── Planet button
+document.getElementById('planetBtn').addEventListener('click',function(){
+  this.style.transform='scale(.97)';
+  this.style.boxShadow='0 0 40px rgba(200,70,0,.4)';
+  setTimeout(()=>{this.style.transform='';this.style.boxShadow='';},200);
+});
+</script>
+</body>
+</html>

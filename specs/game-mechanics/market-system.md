@@ -4,7 +4,7 @@
 - **Fase**: Phase 2 - Expansion (Implemented)
 - **Estado**: Implemented & Active
 - **Prioridad**: High (Monetization Bridge)
-- **Última actualización**: 2026-03-01
+- **Última actualización**: 2026-03-19
 
 ## Descripción
 
@@ -48,12 +48,11 @@ El CryptoCoin nativo deriva su precio del historial de Litecoin escalado por un 
 **Dado que** el jugador abre la lista de criptomonedas en el Market
 **Cuando** selecciona una criptomoneda
 **Entonces**
-- Se muestra el nombre y símbolo (ej: Bitcoin - BTC)
-- Se muestra el precio actual en USD
-- Se muestra el cambio de precio en 24h (%) - si disponible
-- Se muestra un chart de precios históricos
-- Se muestra el balance del jugador en esa cripto (si tiene)
-- Se muestra un botón "Sell" para vender
+- Se muestra el nombre y símbolo en la fila (ej: CryptoCoin · CC · GENESIS CHAIN)
+- Al tocar la fila, se expande mostrando el chart de precios históricos
+- El precio actual en USD se muestra en el header del chart (no en la fila)
+- Se muestra el cambio % dentro de la ventana de 30 minutos en el header del chart
+- Se muestra un botón "Sell" para vender (solo para CryptoCoin nativo)
 
 ### Caso de Uso 4: Desbloqueo del Market
 **Dado que** el jugador está en fase inicial del juego
@@ -362,18 +361,15 @@ function shouldUnlockHardware(gameState: GameState): boolean {
 ## UI/UX Requirements
 
 ### MarketScreen Component
-- [ ] Lista de todas las criptomonedas disponibles
-- [ ] Cada cripto muestra:
-  - Icono con color específico
-  - Nombre y símbolo (ej: "Bitcoin (BTC)")
-  - Precio actual en USD
-  - Cambio 24h (%) si disponible
-  - Mini chart de tendencia (opcional)
-- [ ] "Last updated: X seconds ago" en el footer
-- [ ] Botón de refresh manual
-- [ ] Input para cantidad a vender (solo para CryptoCoin)
-- [ ] Botón "Sell" prominente
-- [ ] Balance actual de Real Money: "$X.XX"
+- [x] Lista de todas las criptomonedas disponibles
+- [x] Cada fila de cripto muestra solo:
+  - Avatar (gradiente dorado con ícono emoji)
+  - Nombre y símbolo/ticker (ej: "CryptoCoin / CC · GENESIS CHAIN")
+  - **No muestra precio ni badge % en la fila** — solo en el chart header al expandir
+- [x] Al tocar una fila se expande mostrando el chart + sección de venta/exchange
+- [x] Slider de porcentaje (1%–100%) para seleccionar cantidad a vender
+- [x] Preview de earnings en USD antes de confirmar
+- [x] Botón "Sell" con confirmación de 2 pasos (anti-accidental)
 
 ### Sell Confirmation
 - [ ] Modal de confirmación antes de vender
@@ -382,12 +378,17 @@ function shouldUnlockHardware(gameState: GameState): boolean {
 - [ ] Después de vender: Toast "✅ Sold X CC for $Y"
 
 ### Price Chart (PriceChart Component)
-- [ ] Gráfico de línea con historial de precios
-- [ ] Eje X: Tiempo (últimos 30 minutos, 1 punto por minuto)
-- [ ] Eje Y: Precio en USD
-- [ ] Color de línea: Color de la cripto
-- [ ] Tooltips al tocar puntos del chart
-- [ ] Smoothing para que no se vea muy abrupto
+- [x] Gráfico de línea con historial de precios (últimos 30 minutos, 1 punto por minuto)
+- [x] Header del chart muestra precio actual + badge de cambio % en la ventana de 30min
+- [x] Precisión del precio en el header:
+  - `>= $1000` → `$X.Xk`
+  - `$100–$999` → `$X` (sin decimales)
+  - `$1–$99.99` → `$X.XXXX` (4 decimales) — necesario para que los cambios minuto-a-minuto del dataset sean visibles
+  - `$0.01–$0.99` → `$X.XXXX`
+  - `< $0.01` → `$X.XXXXXX`
+- [x] Punto animado en el extremo derecho indicando precio en tiempo real
+- [x] Gradiente bajo la curva para visualizar tendencia
+- [ ] Tooltips al tocar puntos del chart (pendiente)
 
 ### Unlock Notification
 - [ ] Al desbloquear Market:

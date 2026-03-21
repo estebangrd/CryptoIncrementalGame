@@ -9,6 +9,7 @@ import {
   Alert,
   Dimensions,
   Easing,
+  StatusBar,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGame } from '../contexts/GameContext';
@@ -806,7 +807,6 @@ const styles = StyleSheet.create({
   shopModal: {
     flex: 1,
     backgroundColor: colors.bg,
-    paddingTop: 50,
   },
   shopModalHeader: {
     flexDirection: 'row',

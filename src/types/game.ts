@@ -69,6 +69,8 @@ export interface IAPState {
   purchaseHistory: PurchaseRecord[];
   isPurchasing: boolean;
   lastPurchaseTime: number | null;
+  flashSaleExpiresAt: number;      // unix ms, 0 = no active sale
+  flashSaleCooldownUntil: number;  // unix ms, 0 = no cooldown
 }
 
 export interface AdState {

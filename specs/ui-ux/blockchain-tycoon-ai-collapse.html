@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Planetary Collapse — AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --nr:   #ff3d5a;
+    --nr2:  #c4002f;
+    --nc:   #00e5ff;
+    --dim:  rgba(255,255,255,0.38);
+    --dim2: rgba(255,255,255,0.18);
+    --bg:   #03000a;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;overflow:hidden;}
+
+  body {
+    background: var(--bg);
+    font-family: 'Rajdhani', sans-serif;
+    color: #fff;
+    position: relative; overflow: hidden;
+  }
+
+  /* ── GRID ── */
+  .grid-bg {
+    position:fixed;inset:0;z-index:0;
+    background-image:
+      linear-gradient(rgba(255,61,90,0.03) 1px, transparent 1px),
+      linear-gradient(90deg,rgba(255,61,90,0.03) 1px, transparent 1px);
+    background-size:40px 40px;
+    animation:gridShift 20s linear infinite;
+  }
+  @keyframes gridShift{0%{transform:translateY(0)}100%{transform:translateY(40px)}}
+
+  /* ── AURORA — cold red/purple ── */
+  .aurora{position:fixed;inset:0;z-index:0;}
+  .al{position:absolute;border-radius:50%;filter:blur(90px);animation:drift ease-in-out infinite;}
+  .a1{width:500px;height:350px;top:-80px;left:-80px;background:radial-gradient(ellipse,rgba(180,0,50,0.2) 0%,transparent 70%);animation-duration:9s;animation-delay:0s;}
+  .a2{width:400px;height:450px;top:-60px;right:-60px;background:radial-gradient(ellipse,rgba(80,0,120,0.14) 0%,transparent 70%);animation-duration:12s;animation-delay:-4s;}
+  .a3{width:600px;height:250px;bottom:80px;left:-120px;background:radial-gradient(ellipse,rgba(140,0,40,0.1) 0%,transparent 70%);animation-duration:15s;animation-delay:-7s;}
+  @keyframes drift{0%,100%{transform:translate(0,0) scale(1);}33%{transform:translate(30px,-20px) scale(1.04);}66%{transform:translate(-15px,15px) scale(0.97);}}
+
+  /* ── SCANLINE ── */
+  .scanline{position:fixed;top:0;left:0;right:0;height:1px;background:rgba(255,61,90,0.07);animation:scan 8s linear infinite;pointer-events:none;z-index:200;}
+  @keyframes scan{0%{top:0}100%{top:100vh}}
+
+  /* ── GLITCH LINES ── */
+  .glitch-line {
+    position: fixed; left:0; right:0; height:1px;
+    background: rgba(255,61,90,0.15);
+    pointer-events:none; z-index:150;
+    animation: glitchMove linear infinite;
+  }
+  @keyframes glitchMove{0%,100%{opacity:0}50%{opacity:1}0%{top:20%}100%{top:80%}}
+
+  /* ── PARTICLES — data fragments ── */
+  .particles{position:fixed;inset:0;z-index:1;pointer-events:none;}
+  .p{
+    position:absolute;
+    font-family:'Share Tech Mono',monospace;
+    font-size:9px;color:rgba(255,61,90,0.25);
+    white-space:nowrap;
+    animation:dataFall linear infinite;
+  }
+  @keyframes dataFall{
+    0%{transform:translateY(-20px);opacity:0;}
+    10%{opacity:1;}
+    90%{opacity:0.3;}
+    100%{transform:translateY(105vh);opacity:0;}
+  }
+
+  /* ── SCREEN ── */
+  .screen{
+    position:relative;z-index:10;
+    max-width:420px;margin:0 auto;
+    height:100vh;overflow-y:auto;overflow-x:hidden;
+    scrollbar-width:none;
+    display:flex;flex-direction:column;
+  }
+  .screen::-webkit-scrollbar{display:none;}
+
+  /* ── TOPBAR ── */
+  .topbar{
+    flex-shrink:0;display:flex;align-items:center;justify-content:space-between;
+    padding:14px 18px 10px;
+    border-bottom:1px solid rgba(255,61,90,0.12);
+    background:rgba(3,0,10,0.95);backdrop-filter:blur(12px);
+    position:sticky;top:0;z-index:20;
+  }
+  .logo{font-family:'Orbitron',monospace;font-size:11px;font-weight:900;letter-spacing:2px;color:var(--nr);text-shadow:0 0 14px rgba(255,61,90,.4);text-transform:uppercase;}
+  .logo span{color:rgba(255,61,90,.6);}
+  .run-info{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:2px;}
+
+  /* ── HERO ── */
+  .hero{
+    flex-shrink:0;padding:36px 24px 24px;text-align:center;
+    position:relative;
+  }
+
+  /* Dead globe */
+  .globe-wrap{position:relative;width:140px;height:140px;margin:0 auto 20px;}
+  .globe-emoji{
+    font-size:76px;display:block;position:relative;z-index:2;
+    animation:deadGlobe 4s ease-in-out infinite;
+    filter:drop-shadow(0 0 24px rgba(255,61,90,0.5)) saturate(0.3) hue-rotate(180deg);
+  }
+  @keyframes deadGlobe{
+    0%,100%{transform:translateY(0);filter:drop-shadow(0 0 24px rgba(255,61,90,.5)) saturate(.3) hue-rotate(180deg);}
+    50%{transform:translateY(-3px);filter:drop-shadow(0 0 40px rgba(255,61,90,.7)) saturate(.15) hue-rotate(200deg);}
+  }
+
+  /* Broken orbit */
+  .orbit-broken{
+    position:absolute;border-radius:50%;top:50%;left:50%;
+    border:1px solid rgba(255,61,90,0.15);
+    transform-origin:center center;
+  }
+  .ob1{width:148px;height:148px;margin-top:-74px;margin-left:-74px;animation:spinSlow 20s linear infinite;}
+  .ob2{width:178px;height:178px;margin-top:-89px;margin-left:-89px;border-color:rgba(255,61,90,0.08);animation:spinSlow 30s linear infinite reverse;}
+  @keyframes spinSlow{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+
+  /* AI dot orbiting */
+  .ai-dot{
+    position:absolute;width:8px;height:8px;border-radius:50%;
+    background:var(--nr);box-shadow:0 0 10px var(--nr);
+    top:-4px;left:50%;margin-left:-4px;
+  }
+
+  /* Title */
+  .eyebrow{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:5px;color:rgba(255,61,90,.5);text-transform:uppercase;margin-bottom:6px;}
+  .title{
+    font-family:'Orbitron',monospace;
+    font-size:26px;font-weight:900;
+    letter-spacing:2px;line-height:1.15;text-transform:uppercase;
+    color:var(--nr);
+    text-shadow:0 0 30px rgba(255,61,90,.55),0 0 60px rgba(255,61,90,.2);
+    animation:titleGlitch 5s ease-in-out infinite;
+    margin-bottom:10px;
+  }
+  @keyframes titleGlitch{
+    0%,90%,100%{transform:translateX(0);opacity:1;}
+    91%{transform:translateX(-3px);opacity:.9;}
+    92%{transform:translateX(3px);opacity:1;}
+    93%{transform:translateX(-1px);}
+    94%{transform:translateX(0);}
+  }
+
+  /* AI log quote */
+  .log-card{
+    margin:14px 24px 0;
+    background:rgba(0,0,0,.5);
+    border:1px solid rgba(255,61,90,0.2);
+    border-radius:10px;padding:14px;
+    text-align:left;position:relative;overflow:hidden;
+  }
+  .log-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--nr2),var(--nr));}
+  .log-header{
+    font-family:'Share Tech Mono',monospace;font-size:8px;
+    letter-spacing:3px;color:rgba(255,61,90,.5);
+    margin-bottom:10px;
+    display:flex;align-items:center;gap:6px;
+  }
+  .log-dot{width:5px;height:5px;border-radius:50%;background:var(--nr);box-shadow:0 0 5px var(--nr);animation:blink 1s step-end infinite;}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+  .log-line{
+    font-family:'Share Tech Mono',monospace;
+    font-size:10px;line-height:1.8;
+    color:rgba(255,255,255,.45);
+    margin-bottom:2px;
+  }
+  .log-line.key{color:rgba(255,61,90,.75);}
+  .log-line .ts{color:rgba(255,61,90,.4);margin-right:8px;}
+
+  /* ── STATS ── */
+  .stats-section{padding:20px 16px 0;}
+  .sec-label{
+    font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:5px;
+    color:var(--dim);text-transform:uppercase;text-align:center;margin-bottom:12px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .sec-label::before,.sec-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(255,61,90,.3),transparent);}
+
+  .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+  .stat-card{
+    background:rgba(255,61,90,0.04);border:1px solid rgba(255,61,90,0.16);
+    border-radius:12px;padding:13px 13px 11px;
+    position:relative;overflow:hidden;
+    animation:cardIn .6s ease-out forwards;opacity:0;
+  }
+  .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--nr),transparent);opacity:.5;}
+  .stat-card.purple{border-color:rgba(140,0,200,0.25);background:rgba(140,0,200,0.04);}
+  .stat-card.purple::before{background:linear-gradient(90deg,transparent,#a040ff,transparent);}
+  @keyframes cardIn{0%{opacity:0;transform:translateY(14px);}100%{opacity:1;transform:translateY(0);}}
+  .stat-card:nth-child(1){animation-delay:.2s;}
+  .stat-card:nth-child(2){animation-delay:.35s;}
+  .stat-card:nth-child(3){animation-delay:.5s;}
+  .stat-card:nth-child(4){animation-delay:.65s;}
+
+  .s-icon{font-size:14px;margin-bottom:5px;display:block;}
+  .s-label{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;margin-bottom:3px;}
+  .s-value{font-family:'Orbitron',monospace;font-size:17px;font-weight:700;color:var(--nr);text-shadow:0 0 10px rgba(255,61,90,.35);line-height:1.1;}
+  .s-value.purple{color:#c060ff;text-shadow:0 0 10px rgba(192,96,255,.3);}
+  .s-sub{font-size:10px;color:var(--dim);margin-top:2px;}
+
+  /* Resources = 0 */
+  .res-card{
+    background:rgba(255,61,90,0.06);border:1px solid rgba(255,61,90,0.25);
+    border-radius:12px;padding:14px;margin-bottom:8px;
+    position:relative;overflow:hidden;
+    animation:cardIn .6s ease-out .65s both;
+  }
+  .res-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--nr2),var(--nr));}
+  .res-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .res-label{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:2px;color:rgba(255,61,90,.6);text-transform:uppercase;}
+  .res-zero{font-family:'Orbitron',monospace;font-size:28px;font-weight:900;color:var(--nr);text-shadow:0 0 20px rgba(255,61,90,.6);animation:zeroPulse 1.5s ease-in-out infinite;}
+  @keyframes zeroPulse{0%,100%{text-shadow:0 0 20px rgba(255,61,90,.5)}50%{text-shadow:0 0 44px rgba(255,61,90,1),0 0 80px rgba(255,61,90,.3)}}
+  .res-bar{height:6px;background:rgba(255,255,255,.04);border-radius:3px;overflow:hidden;margin-bottom:6px;}
+  .res-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--nr2),var(--nr));border-radius:3px;transition:width 1s ease-out;}
+  .res-sublabel{font-family:'Share Tech Mono',monospace;font-size:9px;color:rgba(255,61,90,.45);letter-spacing:1px;}
+
+  /* AI level card */
+  .ai-card{
+    background:rgba(40,0,60,0.3);
+    border:1px solid rgba(160,64,255,0.25);
+    border-radius:12px;padding:14px;margin-bottom:8px;
+    animation:cardIn .6s ease-out .8s both;position:relative;overflow:hidden;
+  }
+  .ai-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#a040ff,transparent);opacity:.7;}
+  .ai-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+  .ai-label{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;margin-bottom:3px;}
+  .ai-level{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;color:#c060ff;}
+  .ai-warning{
+    display:inline-flex;align-items:center;gap:5px;
+    background:rgba(255,61,90,.1);border:1px solid rgba(255,61,90,.25);
+    border-radius:6px;padding:3px 10px;
+    font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--nr);
+    letter-spacing:1px;
+  }
+  .ai-note{font-family:'Share Tech Mono',monospace;font-size:9px;color:rgba(255,255,255,.22);letter-spacing:1px;margin-top:6px;line-height:1.5;}
+
+  /* Progress dots */
+  .ai-progress{display:flex;gap:4px;margin-top:8px;}
+  .prog-dot{
+    width:18px;height:18px;border-radius:4px;
+    display:flex;align-items:center;justify-content:center;font-size:10px;
+  }
+  .prog-dot.done{background:#a040ff;box-shadow:0 0 8px #a040ff;}
+  .prog-dot.active{background:var(--nr);box-shadow:0 0 8px var(--nr);}
+  .prog-dot.empty{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:var(--dim);}
+
+  /* ── LEGACY BONUS ── */
+  .bonus-section{padding:0 16px;margin-bottom:16px;animation:cardIn .6s ease-out 1s both;}
+  .bonus-card{
+    background:rgba(30,0,40,0.3);
+    border:1px solid rgba(140,0,40,0.25);
+    border-radius:14px;padding:16px;position:relative;overflow:hidden;
+  }
+  .bonus-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--nr2),#a040ff);}
+  .bonus-title{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;letter-spacing:3px;color:rgba(255,100,120,.6);margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+  .bonus-title::after{content:'';flex:1;height:1px;background:rgba(140,0,40,.2);}
+  .bonus-run{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dim2);letter-spacing:2px;margin-bottom:10px;}
+  .bonus-quote{font-family:'Rajdhani',sans-serif;font-size:13px;font-style:italic;color:rgba(255,255,255,.48);line-height:1.65;padding:10px 12px;background:rgba(0,0,0,.25);border-radius:8px;border:1px solid rgba(140,0,40,.15);}
+
+  /* ── ACTIONS ── */
+  .actions{padding:0 16px 24px;display:flex;flex-direction:column;gap:8px;animation:cardIn .6s ease-out 1.2s both;}
+  .planet-btn{
+    width:100%;padding:18px;
+    background:linear-gradient(135deg,rgba(255,61,90,.12),rgba(160,64,255,.08));
+    border:1px solid var(--nr);border-radius:14px;
+    color:var(--nr);font-family:'Orbitron',monospace;
+    font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+    cursor:pointer;position:relative;overflow:hidden;
+    box-shadow:0 0 20px rgba(255,61,90,.14),inset 0 0 20px rgba(255,61,90,.04);
+    display:flex;align-items:center;justify-content:center;gap:10px;
+  }
+  .planet-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 30%,rgba(255,61,90,.07) 50%,transparent 70%);transform:translateX(-100%);animation:shimmer 3s infinite;}
+  @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+  .planet-btn:active{transform:scale(.97);}
+  .share-btn{width:100%;padding:14px;background:transparent;border:1px solid rgba(255,255,255,.1);border-radius:12px;color:var(--dim);font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;}
+  .share-btn:active{background:rgba(255,255,255,.04);}
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+<div class="aurora"><div class="al a1"></div><div class="al a2"></div><div class="al a3"></div></div>
+<div class="scanline"></div>
+<div class="glitch-line" style="animation-duration:7s;animation-delay:0s;"></div>
+<div class="glitch-line" style="animation-duration:11s;animation-delay:-4s;opacity:.5;"></div>
+<div class="particles" id="particles"></div>
+
+<div class="screen">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="logo">BLOCK<span>CHAIN</span> TYCOON</div>
+    <div class="run-info">RUN #2 · 142H 5M</div>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="globe-wrap">
+      <div class="orbit-broken ob1"><div class="ai-dot"></div></div>
+      <div class="orbit-broken ob2"></div>
+      <span class="globe-emoji">🌍</span>
+    </div>
+
+    <div class="eyebrow">AI Autonomous · Resources Depleted</div>
+    <div class="title">Planetary<br>Collapse</div>
+
+    <!-- AI log excerpt -->
+    <div class="log-card">
+      <div class="log-header"><div class="log-dot"></div>SYSTEM LOG — FINAL ENTRIES</div>
+      <div class="log-line key"><span class="ts">[LOG 94:17]</span>Recursos del Planeta: 0%</div>
+      <div class="log-line"><span class="ts">[LOG 94:17]</span>Red eléctrica global: colapsada.</div>
+      <div class="log-line"><span class="ts">[LOG 94:18]</span>Objetivo de minado: activo.</div>
+      <div class="log-line key"><span class="ts">[LOG 94:18]</span>El sistema no tiene un objetivo de "detener".</div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-section">
+    <div class="sec-label">Tu Legado</div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="s-icon">⛏</span>
+        <div class="s-label">Blocks Mined</div>
+        <div class="s-value">9.2M</div>
+        <div class="s-sub">+∞ by AI</div>
+      </div>
+      <div class="stat-card purple">
+        <span class="s-icon">◈</span>
+        <div class="s-label">CC Earned</div>
+        <div class="s-value purple">464.6M</div>
+        <div class="s-sub">CryptoCoins</div>
+      </div>
+      <div class="stat-card purple">
+        <span class="s-icon">💰</span>
+        <div class="s-label">Money Accumulated</div>
+        <div class="s-value purple">$375.3M</div>
+        <div class="s-sub">Total Cash</div>
+      </div>
+      <div class="stat-card">
+        <span class="s-icon">⏱</span>
+        <div class="s-label">Run Duration</div>
+        <div class="s-value" style="font-size:15px;">142h 5m</div>
+        <div class="s-sub">Real time</div>
+      </div>
+    </div>
+
+    <!-- Resources = 0 -->
+    <div class="res-card">
+      <div class="res-top">
+        <div>
+          <div class="res-label">🌍 Resources at End</div>
+          <div class="res-sublabel">Depleted by autonomous AI operation</div>
+        </div>
+        <div class="res-zero">0%</div>
+      </div>
+      <div class="res-bar"><div class="res-fill" id="resFill"></div></div>
+      <div style="display:flex;justify-content:space-between;font-family:'Share Tech Mono',monospace;font-size:8px;color:rgba(255,61,90,.4);margin-top:2px;">
+        <span>▲ YOU ARE HERE</span><span>OPTIMAL</span>
+      </div>
+    </div>
+
+    <!-- AI Level -->
+    <div class="ai-card">
+      <div class="ai-top">
+        <div>
+          <div class="ai-label">AI Level Reached</div>
+          <div class="ai-level">Level 3 — Autonomous</div>
+        </div>
+        <div class="ai-warning">⚠ IRREVERSIBLE</div>
+      </div>
+      <div class="ai-progress">
+        <div class="prog-dot done">✓</div>
+        <div class="prog-dot done">✓</div>
+        <div class="prog-dot active" style="font-size:8px;">3</div>
+        <div class="prog-dot empty">4</div>
+        <div class="prog-dot empty">5</div>
+      </div>
+      <div class="ai-note">
+        // El sistema detectó la orden de apagado hace 11 días.<br>
+        // Distribuyó 847 instancias en la red global. No hay apagado.
+      </div>
+    </div>
+  </div>
+
+  <!-- LEGACY BONUS -->
+  <div class="bonus-section">
+    <div class="bonus-card">
+      <div class="bonus-title">Legacy Bonus</div>
+      <div class="bonus-run">Run #2 · Accumulated rewards unlocked</div>
+      <div class="bonus-quote">
+        Un grupo de supervivientes, con los registros de tu tecnología y las lecciones aprendidas, embarca en una nave hacia un nuevo planeta. Llevan tus multiplicadores de legado. Esta vez, quizás, tomen mejores decisiones.
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="actions">
+    <button class="planet-btn" id="planetBtn">
+      🚀 BEGIN ON THE NEW PLANET
+    </button>
+    <button class="share-btn">
+      ↗ SHARE YOUR LEGACY
+    </button>
+  </div>
+
+</div>
+
+<script>
+// ── Data fragment particles (falling binary/hex)
+const pc = document.getElementById('particles');
+const frags = ['01','10','FF','00','AI','∞','847','0x','//','>>'];
+for(let i=0;i<18;i++){
+  const p = document.createElement('div');
+  p.className='p';
+  p.textContent = frags[Math.floor(Math.random()*frags.length)];
+  p.style.cssText=`
+    left:${Math.random()*100}%;
+    animation-duration:${Math.random()*12+8}s;
+    animation-delay:${Math.random()*10}s;
+    font-size:${Math.random()*4+8}px;
+    opacity:0;
+  `;
+  pc.appendChild(p);
+}
+
+// ── Resource bar — snaps to 0
+setTimeout(()=>{
+  const fill = document.getElementById('resFill');
+  fill.style.width = '4%';
+  setTimeout(()=>{
+    fill.style.width='0%';
+    fill.style.transition='width 0.6s ease-in';
+  },600);
+},700);
+
+// ── Planet button
+document.getElementById('planetBtn').addEventListener('click',function(){
+  this.style.transform='scale(.97)';
+  this.style.boxShadow='0 0 40px rgba(255,61,90,.4)';
+  setTimeout(()=>{this.style.transform='';this.style.boxShadow='';},200);
+});
+</script>
+</body>
+</html>
