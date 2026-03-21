@@ -38,10 +38,10 @@ interface PackMeta {
   key: PackKey;
   productId: string;
   name: string;
-  eyebrow: string;
+  eyebrowKey: string;
   wasPrice: number;
   price: number;
-  unlockNote: string;
+  unlockNoteKey: string;
   contents: PackContent[];
 }
 
@@ -50,10 +50,10 @@ const PK_META: PackMeta[] = [
     key: 'small',
     productId: IAP_PRODUCT_IDS.STARTER_SMALL,
     name: 'Starter Pack',
-    eyebrow: 'Oferta de Milestone',
+    eyebrowKey: 'shop.packs.small.eyebrow',
     wasPrice: 1.99,
     price: IAP_PRICES.STARTER_SMALL,
-    unlockNote: '🔒 Desbloqueada al completar Growth Pack',
+    unlockNoteKey: 'shop.packs.small.unlockNote',
     contents: [
       { emoji: '◈', val: '10K CC', lbl: 'CryptoCoins', color: colors.ng },
       { emoji: '💰', val: '$500', lbl: 'Cash', color: colors.ny },
@@ -64,10 +64,10 @@ const PK_META: PackMeta[] = [
     key: 'medium',
     productId: IAP_PRODUCT_IDS.STARTER_MEDIUM,
     name: 'Growth Pack',
-    eyebrow: 'Oferta de Temporada',
+    eyebrowKey: 'shop.packs.medium.eyebrow',
     wasPrice: 4.99,
     price: IAP_PRICES.STARTER_MEDIUM,
-    unlockNote: '🔒 Desbloqueada al completar Mining Empire',
+    unlockNoteKey: 'shop.packs.medium.unlockNote',
     contents: [
       { emoji: '◈', val: '50K CC', lbl: 'CryptoCoins', color: colors.ng },
       { emoji: '💰', val: '$2.5K', lbl: 'Cash', color: colors.ny },
@@ -78,10 +78,10 @@ const PK_META: PackMeta[] = [
     key: 'large',
     productId: IAP_PRODUCT_IDS.STARTER_LARGE,
     name: 'Mining Empire',
-    eyebrow: 'Oferta Premium',
+    eyebrowKey: 'shop.packs.large.eyebrow',
     wasPrice: 7.99,
     price: IAP_PRICES.STARTER_LARGE,
-    unlockNote: '🔒 Desbloqueada al completar Crypto Titan',
+    unlockNoteKey: 'shop.packs.large.unlockNote',
     contents: [
       { emoji: '◈', val: '150K CC', lbl: 'CryptoCoins', color: colors.ng },
       { emoji: '💰', val: '$10K', lbl: 'Cash', color: colors.ny },
@@ -92,10 +92,10 @@ const PK_META: PackMeta[] = [
     key: 'mega',
     productId: IAP_PRODUCT_IDS.STARTER_MEGA,
     name: 'Crypto Titan',
-    eyebrow: 'Oferta Élite',
+    eyebrowKey: 'shop.packs.mega.eyebrow',
     wasPrice: 14.99,
     price: IAP_PRICES.STARTER_MEGA,
-    unlockNote: '🔒 Último pack disponible',
+    unlockNoteKey: 'shop.packs.mega.unlockNote',
     contents: [
       { emoji: '◈', val: '500K CC', lbl: 'CryptoCoins', color: colors.ng },
       { emoji: '💰', val: '$50K', lbl: 'Cash', color: colors.ny },
@@ -109,7 +109,7 @@ const PK_META: PackMeta[] = [
 type ShopTab = 'removeAds' | 'boosters' | 'packs';
 
 const ShopScreen: React.FC = () => {
-  const { gameState, dispatch, showToast } = useGame();
+  const { gameState, dispatch, showToast, t } = useGame();
   const [activeTab, setActiveTab] = useState<ShopTab>('removeAds');
   const [purchasing, setPurchasing] = useState<string | null>(null);
 
@@ -228,9 +228,9 @@ const ShopScreen: React.FC = () => {
     };
 
     const nextChanceText = (): string => {
-      if (purchaseCount === 0) return 'primera compra: 50% de chance';
-      if (purchaseCount === 1) return 'próxima compra: 75% de chance';
-      return 'próxima compra: 100% garantizado';
+      if (purchaseCount === 0) return t('shop.noAds.nextChance50');
+      if (purchaseCount === 1) return t('shop.noAds.nextChance75');
+      return t('shop.noAds.nextChance100');
     };
 
     return (
@@ -244,30 +244,30 @@ const ShopScreen: React.FC = () => {
             style={st.na_heroAccent}
           />
           <Text style={st.na_bigIcon}>🚫</Text>
-          <Text style={st.na_heroTitle}>Eliminá los ads permanentemente</Text>
+          <Text style={st.na_heroTitle}>{t('shop.noAds.title')}</Text>
 
           <View style={st.na_perks}>
             <View style={st.na_perk}>
               <View style={st.na_perkX}><Text style={st.na_perkXText}>✕</Text></View>
-              <Text style={st.na_perkText}>Sin banner ads</Text>
+              <Text style={st.na_perkText}>{t('shop.noAds.perk.noBanners')}</Text>
             </View>
             <View style={st.na_perk}>
               <View style={st.na_perkX}><Text style={st.na_perkXText}>✕</Text></View>
-              <Text style={st.na_perkText}>Sin interstitial ads</Text>
+              <Text style={st.na_perkText}>{t('shop.noAds.perk.noInterstitials')}</Text>
             </View>
             <View style={st.na_perk}>
               <View style={st.na_perkCheck}><Text style={st.na_perkCheckText}>✓</Text></View>
-              <Text style={st.na_perkText}>Rewarded ads siguen disponibles (te dan CC)</Text>
+              <Text style={st.na_perkText}>{t('shop.noAds.perk.rewardedAvailable')}</Text>
             </View>
             <View style={st.na_perk}>
               <View style={st.na_perkCheck}><Text style={st.na_perkCheckText}>✓</Text></View>
-              <Text style={st.na_perkText}>Permanente — survives prestige resets</Text>
+              <Text style={st.na_perkText}>{t('shop.noAds.perk.permanent')}</Text>
             </View>
           </View>
 
           {purchased ? (
             <View style={st.na_ownedBanner}>
-              <Text style={st.na_ownedText}>✓ AD-FREE ACTIVO</Text>
+              <Text style={st.na_ownedText}>{t('shop.noAds.owned')}</Text>
             </View>
           ) : (
             <>
@@ -275,10 +275,10 @@ const ShopScreen: React.FC = () => {
                 <View style={st.na_promoTop}>
                   <View style={st.na_promoLeft}>
                     <Text style={st.na_promoIcon}>⚡</Text>
-                    <Text style={st.na_promoLabel}>Oferta Flash</Text>
+                    <Text style={st.na_promoLabel}>{t('shop.noAds.flashSale')}</Text>
                   </View>
                   <View style={st.na_promoRight}>
-                    <Text style={st.na_promoExpiresLabel}>EXPIRA EN</Text>
+                    <Text style={st.na_promoExpiresLabel}>{t('shop.noAds.expiresIn')}</Text>
                     <Text style={[st.na_promoTimer, { color: flashTimerColor }]}>
                       {flashTimerDisplay}
                     </Text>
@@ -288,7 +288,7 @@ const ShopScreen: React.FC = () => {
                   <Text style={st.na_priceNormal}>$2.99</Text>
                   <Text style={st.na_priceNow}>${IAP_PRICES.REMOVE_ADS.toFixed(2)}</Text>
                   <View style={st.na_savingsBadge}>
-                    <Text style={st.na_savingsText}>AHORRÁS $2.00</Text>
+                    <Text style={st.na_savingsText}>{`${t('shop.noAds.save')} $${(2.99 - IAP_PRICES.REMOVE_ADS).toFixed(2)}`}</Text>
                   </View>
                 </View>
               </View>
@@ -302,7 +302,7 @@ const ShopScreen: React.FC = () => {
                   <ActivityIndicator color={colors.ny} />
                 ) : (
                   <Text style={st.na_buyBtnText}>
-                    {'🏷 APROVECHAR OFERTA — $'}{IAP_PRICES.REMOVE_ADS.toFixed(2)}
+                    {t('shop.noAds.buyBtn')}{' — $'}{IAP_PRICES.REMOVE_ADS.toFixed(2)}
                   </Text>
                 )}
               </TouchableOpacity>
@@ -313,42 +313,42 @@ const ShopScreen: React.FC = () => {
         <View style={st.na_divider} />
 
         <View style={st.na_secHdrRow}>
-          <Text style={st.na_secHdr}>O desbloquealo comprando</Text>
+          <Text style={st.na_secHdr}>{t('shop.noAds.unlockHeader')}</Text>
           <View style={st.na_secHdrLine} />
         </View>
 
         <View style={st.na_unlockCard}>
-          <Text style={st.na_unlockTitle}>Chance de desbloqueo con cada compra IAP</Text>
+          <Text style={st.na_unlockTitle}>{t('shop.noAds.unlockTitle')}</Text>
           <View style={st.na_stepsRow}>
             <View style={stepContainerStyle(step1)}>
               {step1 === 'done' && (
                 <View style={st.na_stepCheck}><Text style={st.na_stepCheckText}>✓</Text></View>
               )}
-              <Text style={st.na_stepBuy}>1ra compra</Text>
+              <Text style={st.na_stepBuy}>{t('shop.noAds.purchase1st')}</Text>
               <Text style={[st.na_stepPct, { color: stepPctColor(step1) }]}>50%</Text>
-              <Text style={st.na_stepLabel}>chance</Text>
+              <Text style={st.na_stepLabel}>{t('shop.noAds.chance')}</Text>
             </View>
             <View style={stepContainerStyle(step2)}>
               {step2 === 'done' && (
                 <View style={st.na_stepCheck}><Text style={st.na_stepCheckText}>✓</Text></View>
               )}
-              <Text style={st.na_stepBuy}>2da compra</Text>
+              <Text style={st.na_stepBuy}>{t('shop.noAds.purchase2nd')}</Text>
               <Text style={[st.na_stepPct, { color: stepPctColor(step2) }]}>75%</Text>
-              <Text style={st.na_stepLabel}>chance</Text>
+              <Text style={st.na_stepLabel}>{t('shop.noAds.chance')}</Text>
             </View>
             <View style={stepContainerStyle(step3)}>
               {step3 === 'done' && (
                 <View style={st.na_stepCheck}><Text style={st.na_stepCheckText}>✓</Text></View>
               )}
-              <Text style={st.na_stepBuy}>3ra compra</Text>
+              <Text style={st.na_stepBuy}>{t('shop.noAds.purchase3rd')}</Text>
               <Text style={[st.na_stepPct, { color: stepPctColor(step3) }]}>100%</Text>
-              <Text style={st.na_stepLabel}>garantizado</Text>
+              <Text style={st.na_stepLabel}>{t('shop.noAds.guaranteed')}</Text>
             </View>
           </View>
           <Text style={st.na_unlockNote}>
             {purchaseCount > 0
-              ? `Hiciste ${purchaseCount} compra${purchaseCount > 1 ? 's' : ''} — ${nextChanceText()}`
-              : `Sin compras aún — ${nextChanceText()}`}
+              ? `${t('shop.noAds.youMade')} ${purchaseCount} ${purchaseCount > 1 ? t('shop.noAds.purchasePlural') : t('shop.noAds.purchaseSingular')} — ${nextChanceText()}`
+              : `${t('shop.noAds.noPurchasesYet')} — ${nextChanceText()}`}
           </Text>
         </View>
       </View>
@@ -386,17 +386,16 @@ const ShopScreen: React.FC = () => {
               <Text style={st.bo_name}>2x Production Booster</Text>
               {b2x.isActive && b2xRemaining > 0 && (
                 <View style={st.bo_activeBadge}>
-                  <Text style={st.bo_activeBadgeText}>{'⚡ ACTIVO — '}{formatTime(b2xRemaining)}</Text>
+                  <Text style={st.bo_activeBadgeText}>{'⚡ '}{t('shop.boosters.active')}{' — '}{formatTime(b2xRemaining)}</Text>
                 </View>
               )}
               <Text style={st.bo_desc}>
-                {'Duplica tu producción de CC por '}
-                {BOOSTER_CONFIG.BOOSTER_2X.durationMs / 3600000}
-                {' horas'}
+                {t('shop.boosters.2x.desc')}
+                {' '}{BOOSTER_CONFIG.BOOSTER_2X.durationMs / 3600000}{' '}{t('shop.boosters.hours')}
               </Text>
               <View style={st.bo_durationBadge}>
                 <Text style={st.bo_durationBadgeText}>
-                  {'⏱ '}{BOOSTER_CONFIG.BOOSTER_2X.durationMs / 3600000}{' horas · Stackeable'}
+                  {'⏱ '}{BOOSTER_CONFIG.BOOSTER_2X.durationMs / 3600000}{' '}{t('shop.boosters.hours')}{' · '}{t('shop.boosters.stackable')}
                 </Text>
               </View>
             </View>
@@ -404,16 +403,16 @@ const ShopScreen: React.FC = () => {
           <View style={st.bo_perks}>
             <View style={st.bo_perkRow}>
               <View style={st.bo_perkCheck}><Text style={st.bo_perkCheckText}>✓</Text></View>
-              <Text style={st.bo_perkText}>Stackea con prestige multiplier y ad boost</Text>
+              <Text style={st.bo_perkText}>{t('shop.boosters.2x.perk1')}</Text>
             </View>
             <View style={st.bo_perkRow}>
               <View style={st.bo_perkCheck}><Text style={st.bo_perkCheckText}>✓</Text></View>
-              <Text style={st.bo_perkText}>Se puede comprar múltiples veces</Text>
+              <Text style={st.bo_perkText}>{t('shop.boosters.2x.perk2')}</Text>
             </View>
           </View>
           <View style={st.bo_footer}>
             <View style={st.bo_priceWrap}>
-              <Text style={st.bo_priceLabel}>PRECIO</Text>
+              <Text style={st.bo_priceLabel}>{t('shop.boosters.price')}</Text>
               <Text style={[st.bo_price, st.bo_priceYellow]}>${IAP_PRICES.BOOSTER_2X.toFixed(2)}</Text>
             </View>
             <TouchableOpacity
@@ -426,7 +425,7 @@ const ShopScreen: React.FC = () => {
                 <ActivityIndicator color={colors.ny} size="small" />
               ) : (
                 <Text style={[st.bo_btnText, st.bo_btnTextYellow]}>
-                  {'COMPRAR $'}{IAP_PRICES.BOOSTER_2X.toFixed(2)}
+                  {t('shop.boosters.buy')}{' $'}{IAP_PRICES.BOOSTER_2X.toFixed(2)}
                 </Text>
               )}
             </TouchableOpacity>
@@ -450,18 +449,17 @@ const ShopScreen: React.FC = () => {
               {b5x.isActive && b5xRemaining > 0 && (
                 <View style={[st.bo_activeBadge, st.bo_activeBadgeOrange]}>
                   <Text style={[st.bo_activeBadgeText, st.bo_activeBadgeTextOrange]}>
-                    {'🚀 ACTIVO — '}{formatTime(b5xRemaining)}
+                    {'🚀 '}{t('shop.boosters.active')}{' — '}{formatTime(b5xRemaining)}
                   </Text>
                 </View>
               )}
               <Text style={st.bo_desc}>
-                {'Multiplica tu producción por 5 durante '}
-                {BOOSTER_CONFIG.BOOSTER_5X.durationMs / 3600000}
-                {' horas'}
+                {t('shop.boosters.5x.desc')}
+                {' '}{BOOSTER_CONFIG.BOOSTER_5X.durationMs / 3600000}{' '}{t('shop.boosters.hours')}
               </Text>
               <View style={st.bo_durationBadge}>
                 <Text style={st.bo_durationBadgeText}>
-                  {'⏱ '}{BOOSTER_CONFIG.BOOSTER_5X.durationMs / 3600000}{' horas · Stackeable'}
+                  {'⏱ '}{BOOSTER_CONFIG.BOOSTER_5X.durationMs / 3600000}{' '}{t('shop.boosters.hours')}{' · '}{t('shop.boosters.stackable')}
                 </Text>
               </View>
             </View>
@@ -469,16 +467,16 @@ const ShopScreen: React.FC = () => {
           <View style={st.bo_perks}>
             <View style={st.bo_perkRow}>
               <View style={st.bo_perkCheck}><Text style={st.bo_perkCheckText}>✓</Text></View>
-              <Text style={st.bo_perkText}>Stackea con prestige multiplier y ad boost</Text>
+              <Text style={st.bo_perkText}>{t('shop.boosters.5x.perk1')}</Text>
             </View>
             <View style={st.bo_perkRow}>
               <View style={st.bo_perkCheck}><Text style={st.bo_perkCheckText}>✓</Text></View>
-              <Text style={st.bo_perkText}>Se puede comprar múltiples veces</Text>
+              <Text style={st.bo_perkText}>{t('shop.boosters.5x.perk2')}</Text>
             </View>
           </View>
           <View style={st.bo_footer}>
             <View style={st.bo_priceWrap}>
-              <Text style={st.bo_priceLabel}>PRECIO</Text>
+              <Text style={st.bo_priceLabel}>{t('shop.boosters.price')}</Text>
               <Text style={[st.bo_price, st.bo_priceOrange]}>${IAP_PRICES.BOOSTER_5X.toFixed(2)}</Text>
             </View>
             <TouchableOpacity
@@ -491,7 +489,7 @@ const ShopScreen: React.FC = () => {
                 <ActivityIndicator color="#ff6b1a" size="small" />
               ) : (
                 <Text style={[st.bo_btnText, st.bo_btnTextOrange]}>
-                  {'COMPRAR $'}{IAP_PRICES.BOOSTER_5X.toFixed(2)}
+                  {t('shop.boosters.buy')}{' $'}{IAP_PRICES.BOOSTER_5X.toFixed(2)}
                 </Text>
               )}
             </TouchableOpacity>
@@ -515,29 +513,29 @@ const ShopScreen: React.FC = () => {
               {perm && (
                 <View style={[st.bo_activeBadge, st.bo_activeBadgePurple]}>
                   <Text style={[st.bo_activeBadgeText, st.bo_activeBadgeTextPurple]}>
-                    ♾ ACTIVO — Permanente
+                    {'♾ '}{t('shop.boosters.perm.active')}
                   </Text>
                 </View>
               )}
-              <Text style={st.bo_desc}>Duplica tu producción para siempre, en todos los runs</Text>
+              <Text style={st.bo_desc}>{t('shop.boosters.perm.desc')}</Text>
               <View style={st.bo_durationBadge}>
-                <Text style={st.bo_durationBadgeText}>∞ Permanente · Survives prestige</Text>
+                <Text style={st.bo_durationBadgeText}>{t('shop.boosters.perm.duration')}</Text>
               </View>
             </View>
           </View>
           <View style={st.bo_perks}>
             <View style={st.bo_perkRow}>
               <View style={st.bo_perkCheck}><Text style={st.bo_perkCheckText}>✓</Text></View>
-              <Text style={st.bo_perkText}>Stackea con TODOS los otros multiplicadores</Text>
+              <Text style={st.bo_perkText}>{t('shop.boosters.perm.perk1')}</Text>
             </View>
             <View style={st.bo_perkRow}>
               <View style={st.bo_perkCheck}><Text style={st.bo_perkCheckText}>✓</Text></View>
-              <Text style={st.bo_perkText}>Survives prestige resets — es tuyo para siempre</Text>
+              <Text style={st.bo_perkText}>{t('shop.boosters.perm.perk2')}</Text>
             </View>
           </View>
           <View style={st.bo_footer}>
             <View style={st.bo_priceWrap}>
-              <Text style={st.bo_priceLabel}>PRECIO</Text>
+              <Text style={st.bo_priceLabel}>{t('shop.boosters.price')}</Text>
               <Text style={[st.bo_price, st.bo_pricePurple]}>${IAP_PRICES.PERMANENT_MULTIPLIER.toFixed(2)}</Text>
             </View>
             <TouchableOpacity
@@ -550,7 +548,7 @@ const ShopScreen: React.FC = () => {
                 <ActivityIndicator color="#a040ff" size="small" />
               ) : (
                 <Text style={[st.bo_btnText, perm ? st.bo_btnTextOwned : st.bo_btnTextPurple]}>
-                  {perm ? 'COMPRADO ✓' : `COMPRAR $${IAP_PRICES.PERMANENT_MULTIPLIER.toFixed(2)}`}
+                  {perm ? t('shop.boosters.purchased') : `${t('shop.boosters.buy')} $${IAP_PRICES.PERMANENT_MULTIPLIER.toFixed(2)}`}
                 </Text>
               )}
             </TouchableOpacity>
@@ -578,16 +576,16 @@ const ShopScreen: React.FC = () => {
     return (
       <View>
         <View style={st.pk_sectionHdrRow}>
-          <Text style={st.pk_sectionHdr}>Oferta activa</Text>
+          <Text style={st.pk_sectionHdr}>{t('shop.packs.activeOffer')}</Text>
           <View style={st.pk_sectionHdrLine} />
         </View>
 
         {allOwned ? (
           <View style={st.pk_allOwnedBox}>
             <Text style={st.pk_allOwnedEmoji}>◈</Text>
-            <Text style={st.pk_allOwnedTitle}>Todo adquirido</Text>
+            <Text style={st.pk_allOwnedTitle}>{t('shop.packs.allOwned.title')}</Text>
             <Text style={st.pk_allOwnedSub}>
-              Eres un Crypto Titan. No hay más packs disponibles.
+              {t('shop.packs.allOwned.sub')}
             </Text>
           </View>
         ) : (
@@ -606,15 +604,15 @@ const ShopScreen: React.FC = () => {
             <View style={st.pk_offerTopRow}>
               <View style={st.pk_offerLeft}>
                 <View style={st.pk_offerEyebrowRow}>
-                  <Text style={st.pk_offerEyebrow}>{activePack!.eyebrow}</Text>
+                  <Text style={st.pk_offerEyebrow}>{t(activePack!.eyebrowKey)}</Text>
                   <Animated.View style={[st.pk_offerBadge, { transform: [{ scale: pkBadgePulse }] }]}>
-                    <Text style={st.pk_offerBadgeText}>EXCLUSIVO</Text>
+                    <Text style={st.pk_offerBadgeText}>{t('shop.packs.exclusive')}</Text>
                   </Animated.View>
                 </View>
                 <Text style={st.pk_offerName}>{activePack!.name}</Text>
               </View>
               <View style={st.pk_offerTimerMini}>
-                <Text style={st.pk_otmLabel}>EXPIRA EN</Text>
+                <Text style={st.pk_otmLabel}>{t('shop.packs.expiresIn')}</Text>
                 <Animated.Text
                   style={[
                     st.pk_otmTime,
@@ -624,7 +622,7 @@ const ShopScreen: React.FC = () => {
                     },
                   ]}
                 >
-                  {pkTimerExpired ? 'EXPIRÓ' : pkTimerDisplay}
+                  {pkTimerExpired ? t('shop.packs.expired') : pkTimerDisplay}
                 </Animated.Text>
               </View>
             </View>
@@ -641,7 +639,7 @@ const ShopScreen: React.FC = () => {
 
             <View style={st.pk_offerFooterRow}>
               <View style={st.pk_ofPricing}>
-                <Text style={st.pk_ofWas}>{'Valor normal $'}{activePack!.wasPrice.toFixed(2)}</Text>
+                <Text style={st.pk_ofWas}>{t('shop.packs.normalPrice')}{' $'}{activePack!.wasPrice.toFixed(2)}</Text>
                 <Text style={st.pk_ofNow}>${activePack!.price.toFixed(2)}</Text>
               </View>
               <TouchableOpacity
@@ -653,7 +651,7 @@ const ShopScreen: React.FC = () => {
                 {purchasing === activePack!.productId ? (
                   <ActivityIndicator color={colors.ng} size="small" />
                 ) : (
-                  <Text style={st.pk_ofBtnText}>⬡ COMPRAR</Text>
+                  <Text style={st.pk_ofBtnText}>{t('shop.packs.buy')}</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -663,26 +661,26 @@ const ShopScreen: React.FC = () => {
         <View style={st.pk_divider} />
 
         <View style={st.pk_sectionHdrRow}>
-          <Text style={st.pk_sectionHdr}>Próxima oferta</Text>
+          <Text style={st.pk_sectionHdr}>{t('shop.packs.nextOffer')}</Text>
           <View style={st.pk_sectionHdrLine} />
         </View>
 
         {nextPack ? (
           <>
             <View style={st.pk_unlockNoteBar}>
-              <Text style={st.pk_unlockNoteText}>{nextPack.unlockNote}</Text>
+              <Text style={st.pk_unlockNoteText}>{t(nextPack.unlockNoteKey)}</Text>
             </View>
             <View style={st.pk_nextOffer}>
-              <Text style={st.pk_noLabel}>Próxima oferta disponible en</Text>
+              <Text style={st.pk_noLabel}>{t('shop.packs.nextOfferIn')}</Text>
               <Text style={st.pk_noTimer}>47:18:05</Text>
-              <Text style={st.pk_noSub}>Al abrir el juego · Oferta de sesión</Text>
+              <Text style={st.pk_noSub}>{t('shop.packs.sessionOffer')}</Text>
             </View>
           </>
         ) : (
           <View style={st.pk_nextOffer}>
-            <Text style={st.pk_noLabel}>Sin más ofertas</Text>
+            <Text style={st.pk_noLabel}>{t('shop.packs.noMoreOffers')}</Text>
             <Text style={st.pk_noTimer}>—</Text>
-            <Text style={st.pk_noSub}>Todas las ofertas han sido reclamadas</Text>
+            <Text style={st.pk_noSub}>{t('shop.packs.allClaimed')}</Text>
           </View>
         )}
       </View>

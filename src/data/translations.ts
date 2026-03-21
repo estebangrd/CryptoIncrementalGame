@@ -1321,4 +1321,320 @@ export const translations: Translation = {
     es: '(run #{{n}} — acumulado)',
     pt: '(run #{{n}} — acumulado)',
   },
+
+  // Shop — No Ads tab
+  'shop.noAds.title': {
+    en: 'Permanently remove ads',
+    es: 'Eliminá los ads permanentemente',
+    pt: 'Remova os anúncios permanentemente',
+  },
+  'shop.noAds.perk.noBanners': {
+    en: 'No banner ads',
+    es: 'Sin banner ads',
+    pt: 'Sem banner de anúncios',
+  },
+  'shop.noAds.perk.noInterstitials': {
+    en: 'No interstitial ads',
+    es: 'Sin interstitial ads',
+    pt: 'Sem anúncios intersticiais',
+  },
+  'shop.noAds.perk.rewardedAvailable': {
+    en: 'Rewarded ads still available (give you CC)',
+    es: 'Rewarded ads siguen disponibles (te dan CC)',
+    pt: 'Anúncios recompensados ainda disponíveis (te dão CC)',
+  },
+  'shop.noAds.perk.permanent': {
+    en: 'Permanent — survives prestige resets',
+    es: 'Permanente — survives prestige resets',
+    pt: 'Permanente — sobrevive ao prestígio',
+  },
+  'shop.noAds.owned': {
+    en: '✓ AD-FREE ACTIVE',
+    es: '✓ AD-FREE ACTIVO',
+    pt: '✓ SEM ANÚNCIOS ATIVO',
+  },
+  'shop.noAds.flashSale': {
+    en: 'Flash Sale',
+    es: 'Oferta Flash',
+    pt: 'Oferta Relâmpago',
+  },
+  'shop.noAds.expiresIn': {
+    en: 'EXPIRES IN',
+    es: 'EXPIRA EN',
+    pt: 'EXPIRA EM',
+  },
+  'shop.noAds.save': {
+    en: 'SAVE',
+    es: 'AHORRÁS',
+    pt: 'ECONOMIZE',
+  },
+  'shop.noAds.buyBtn': {
+    en: '🏷 CLAIM OFFER',
+    es: '🏷 APROVECHAR OFERTA',
+    pt: '🏷 APROVEITAR OFERTA',
+  },
+  'shop.noAds.unlockHeader': {
+    en: 'Or unlock it by purchasing',
+    es: 'O desbloquealo comprando',
+    pt: 'Ou desbloqueie comprando',
+  },
+  'shop.noAds.unlockTitle': {
+    en: 'Unlock chance with each IAP purchase',
+    es: 'Chance de desbloqueo con cada compra IAP',
+    pt: 'Chance de desbloqueio a cada compra IAP',
+  },
+  'shop.noAds.purchase1st': {
+    en: '1st purchase',
+    es: '1ra compra',
+    pt: '1ª compra',
+  },
+  'shop.noAds.purchase2nd': {
+    en: '2nd purchase',
+    es: '2da compra',
+    pt: '2ª compra',
+  },
+  'shop.noAds.purchase3rd': {
+    en: '3rd purchase',
+    es: '3ra compra',
+    pt: '3ª compra',
+  },
+  'shop.noAds.chance': {
+    en: 'chance',
+    es: 'chance',
+    pt: 'chance',
+  },
+  'shop.noAds.guaranteed': {
+    en: 'guaranteed',
+    es: 'garantizado',
+    pt: 'garantido',
+  },
+  'shop.noAds.youMade': {
+    en: 'You made',
+    es: 'Hiciste',
+    pt: 'Você fez',
+  },
+  'shop.noAds.purchaseSingular': {
+    en: 'purchase',
+    es: 'compra',
+    pt: 'compra',
+  },
+  'shop.noAds.purchasePlural': {
+    en: 'purchases',
+    es: 'compras',
+    pt: 'compras',
+  },
+  'shop.noAds.noPurchasesYet': {
+    en: 'No purchases yet',
+    es: 'Sin compras aún',
+    pt: 'Sem compras ainda',
+  },
+  'shop.noAds.nextChance50': {
+    en: 'first purchase: 50% chance',
+    es: 'primera compra: 50% de chance',
+    pt: 'primeira compra: 50% de chance',
+  },
+  'shop.noAds.nextChance75': {
+    en: 'next purchase: 75% chance',
+    es: 'próxima compra: 75% de chance',
+    pt: 'próxima compra: 75% de chance',
+  },
+  'shop.noAds.nextChance100': {
+    en: 'next purchase: 100% guaranteed',
+    es: 'próxima compra: 100% garantizado',
+    pt: 'próxima compra: 100% garantido',
+  },
+
+  // Shop — Boosters tab
+  'shop.boosters.active': {
+    en: 'ACTIVE',
+    es: 'ACTIVO',
+    pt: 'ATIVO',
+  },
+  'shop.boosters.price': {
+    en: 'PRICE',
+    es: 'PRECIO',
+    pt: 'PREÇO',
+  },
+  'shop.boosters.buy': {
+    en: 'BUY',
+    es: 'COMPRAR',
+    pt: 'COMPRAR',
+  },
+  'shop.boosters.purchased': {
+    en: 'PURCHASED ✓',
+    es: 'COMPRADO ✓',
+    pt: 'COMPRADO ✓',
+  },
+  'shop.boosters.hours': {
+    en: 'hours',
+    es: 'horas',
+    pt: 'horas',
+  },
+  'shop.boosters.stackable': {
+    en: 'Stackable',
+    es: 'Stackeable',
+    pt: 'Acumulável',
+  },
+  'shop.boosters.2x.desc': {
+    en: 'Doubles your CC production for',
+    es: 'Duplica tu producción de CC por',
+    pt: 'Dobra sua produção de CC por',
+  },
+  'shop.boosters.2x.perk1': {
+    en: 'Stacks with prestige multiplier and ad boost',
+    es: 'Stackea con prestige multiplier y ad boost',
+    pt: 'Acumula com multiplicador de prestígio e boost de anúncio',
+  },
+  'shop.boosters.2x.perk2': {
+    en: 'Can be purchased multiple times',
+    es: 'Se puede comprar múltiples veces',
+    pt: 'Pode ser comprado múltiplas vezes',
+  },
+  'shop.boosters.5x.desc': {
+    en: 'Multiplies your production by 5 for',
+    es: 'Multiplica tu producción por 5 durante',
+    pt: 'Multiplica sua produção por 5 por',
+  },
+  'shop.boosters.5x.perk1': {
+    en: 'Stacks with prestige multiplier and ad boost',
+    es: 'Stackea con prestige multiplier y ad boost',
+    pt: 'Acumula com multiplicador de prestígio e boost de anúncio',
+  },
+  'shop.boosters.5x.perk2': {
+    en: 'Can be purchased multiple times',
+    es: 'Se puede comprar múltiples veces',
+    pt: 'Pode ser comprado múltiplas vezes',
+  },
+  'shop.boosters.perm.desc': {
+    en: 'Doubles your production forever, across all runs',
+    es: 'Duplica tu producción para siempre, en todos los runs',
+    pt: 'Dobra sua produção para sempre, em todas as rodadas',
+  },
+  'shop.boosters.perm.duration': {
+    en: '∞ Permanent · Survives prestige',
+    es: '∞ Permanente · Survives prestige',
+    pt: '∞ Permanente · Sobrevive ao prestígio',
+  },
+  'shop.boosters.perm.active': {
+    en: 'ACTIVE — Permanent',
+    es: 'ACTIVO — Permanente',
+    pt: 'ATIVO — Permanente',
+  },
+  'shop.boosters.perm.perk1': {
+    en: 'Stacks with ALL other multipliers',
+    es: 'Stackea con TODOS los otros multiplicadores',
+    pt: 'Acumula com TODOS os outros multiplicadores',
+  },
+  'shop.boosters.perm.perk2': {
+    en: 'Survives prestige resets — yours forever',
+    es: 'Survives prestige resets — es tuyo para siempre',
+    pt: 'Sobrevive ao prestígio — é seu para sempre',
+  },
+
+  // Shop — Packs tab
+  'shop.packs.activeOffer': {
+    en: 'Active offer',
+    es: 'Oferta activa',
+    pt: 'Oferta ativa',
+  },
+  'shop.packs.allOwned.title': {
+    en: 'All acquired',
+    es: 'Todo adquirido',
+    pt: 'Tudo adquirido',
+  },
+  'shop.packs.allOwned.sub': {
+    en: "You're a Crypto Titan. No more packs available.",
+    es: 'Eres un Crypto Titan. No hay más packs disponibles.',
+    pt: 'Você é um Crypto Titan. Não há mais packs disponíveis.',
+  },
+  'shop.packs.exclusive': {
+    en: 'EXCLUSIVE',
+    es: 'EXCLUSIVO',
+    pt: 'EXCLUSIVO',
+  },
+  'shop.packs.expiresIn': {
+    en: 'EXPIRES IN',
+    es: 'EXPIRA EN',
+    pt: 'EXPIRA EM',
+  },
+  'shop.packs.expired': {
+    en: 'EXPIRED',
+    es: 'EXPIRÓ',
+    pt: 'EXPIROU',
+  },
+  'shop.packs.normalPrice': {
+    en: 'Regular price',
+    es: 'Valor normal',
+    pt: 'Preço normal',
+  },
+  'shop.packs.buy': {
+    en: '⬡ BUY',
+    es: '⬡ COMPRAR',
+    pt: '⬡ COMPRAR',
+  },
+  'shop.packs.nextOffer': {
+    en: 'Next offer',
+    es: 'Próxima oferta',
+    pt: 'Próxima oferta',
+  },
+  'shop.packs.nextOfferIn': {
+    en: 'Next offer available in',
+    es: 'Próxima oferta disponible en',
+    pt: 'Próxima oferta disponível em',
+  },
+  'shop.packs.sessionOffer': {
+    en: 'On game open · Session offer',
+    es: 'Al abrir el juego · Oferta de sesión',
+    pt: 'Ao abrir o jogo · Oferta de sessão',
+  },
+  'shop.packs.noMoreOffers': {
+    en: 'No more offers',
+    es: 'Sin más ofertas',
+    pt: 'Sem más ofertas',
+  },
+  'shop.packs.allClaimed': {
+    en: 'All offers have been claimed',
+    es: 'Todas las ofertas han sido reclamadas',
+    pt: 'Todas as ofertas foram resgatadas',
+  },
+  'shop.packs.small.eyebrow': {
+    en: 'Milestone Offer',
+    es: 'Oferta de Milestone',
+    pt: 'Oferta de Marco',
+  },
+  'shop.packs.small.unlockNote': {
+    en: '🔒 Unlocked upon completing Growth Pack',
+    es: '🔒 Desbloqueada al completar Growth Pack',
+    pt: '🔒 Desbloqueado ao completar Growth Pack',
+  },
+  'shop.packs.medium.eyebrow': {
+    en: 'Seasonal Offer',
+    es: 'Oferta de Temporada',
+    pt: 'Oferta de Temporada',
+  },
+  'shop.packs.medium.unlockNote': {
+    en: '🔒 Unlocked upon completing Mining Empire',
+    es: '🔒 Desbloqueada al completar Mining Empire',
+    pt: '🔒 Desbloqueado ao completar Mining Empire',
+  },
+  'shop.packs.large.eyebrow': {
+    en: 'Premium Offer',
+    es: 'Oferta Premium',
+    pt: 'Oferta Premium',
+  },
+  'shop.packs.large.unlockNote': {
+    en: '🔒 Unlocked upon completing Crypto Titan',
+    es: '🔒 Desbloqueada al completar Crypto Titan',
+    pt: '🔒 Desbloqueado ao completar Crypto Titan',
+  },
+  'shop.packs.mega.eyebrow': {
+    en: 'Elite Offer',
+    es: 'Oferta Élite',
+    pt: 'Oferta Élite',
+  },
+  'shop.packs.mega.unlockNote': {
+    en: '🔒 Last pack available',
+    es: '🔒 Último pack disponible',
+    pt: '🔒 Último pack disponível',
+  },
 };
