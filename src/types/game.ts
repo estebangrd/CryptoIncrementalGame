@@ -208,6 +208,34 @@ export interface EnergyState {
 
 // ─── Narrative Events (Phase 6) ───────────────────────────────────────────────
 
+// ─── Banner Events (Phase 6 — interactive) ───────────────────────────────────
+
+export type RegulatoryPressureStatus = 'active' | 'appealing' | 'resolved';
+
+export interface RegulatoryPressureEvent {
+  status: RegulatoryPressureStatus;
+  triggeredAt: number;
+  decisionDeadline: number;           // triggeredAt + 2h
+  appealResultTime: number | null;    // if appealing, timestamp when result shows
+  hashRatePenaltyUntil: number | null;
+  outcome: 'paid' | 'appealed_success' | 'appealed_partial_paid' | 'appealed_partial_penalty' | 'appealed_rejected_paid' | 'appealed_rejected_penalty' | 'ignored' | null;
+  planetResourcesAtTrigger: number;
+}
+
+export interface MarketOpportunityEvent {
+  status: 'active' | 'resolved';
+  triggeredAt: number;
+  expiresAt: number;
+  priceMultiplier: number;
+  outcome: 'went_to_market' | 'auto_sold' | 'expired' | null;
+}
+
+export interface LocalProtestEvent {
+  status: 'active' | 'resolved';
+  triggeredAt: number;
+  resourcesConsumedAtTrigger: number; // exact % consumed = 100 - planetResources
+}
+
 // ─── Endgame (Phase 7) ────────────────────────────────────────────────────────
 
 export type EndingType = 'collapse' | 'good_ending' | null;
@@ -304,6 +332,11 @@ export interface GameState {
   goodEndingCount: number;         // total good endings
   lastEndgameStats: EndgameStats | null;
   disconnectAttempted: boolean;    // player already saw the disconnect popup
+  // Banner Events (Phase 6 — interactive narrative)
+  regulatoryPressureEvent: RegulatoryPressureEvent | null;
+  marketOpportunityEvent: MarketOpportunityEvent | null;
+  localProtestEvent: LocalProtestEvent | null;
+  activeBannerEvent: 'regulatory_pressure' | 'market_opportunity' | 'local_protest' | null;
 }
 
 export interface Hardware {

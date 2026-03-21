@@ -634,6 +634,39 @@ export const PACK_CONFIG = {
 } as const;
 
 // ============================================================================
+// EVENTOS NARRATIVOS INTERACTIVOS (PHASE 6)
+// ============================================================================
+export const REGULATORY_EVENT_CONFIG = {
+  TAX_AMOUNT: 48200,
+  LEGAL_FEE: 5000,
+  PARTIAL_AMOUNT: 9640,           // 20% of TAX_AMOUNT
+  REJECTED_TOTAL: 56200,          // TAX_AMOUNT + $8K late penalty
+  HASH_RATE_PENALTY: 0.30,
+  HASH_RATE_PENALTY_DURATION_MS: 24 * 60 * 60 * 1000,
+  DECISION_WINDOW_MS: 2 * 60 * 60 * 1000,
+  APPEAL_RESULT_DELAY_MS: 60 * 60 * 1000,
+  TRIGGER_MIN_REAL_MONEY: 60000,
+  TRIGGER_PROBABILITY: 0.20,
+  APPEAL_SUCCESS_BASE: 40,
+  APPEAL_PARTIAL_BASE: 35,
+  APPEAL_BONUS_THRESHOLD: 80,
+  APPEAL_PENALTY_THRESHOLD: 50,
+  APPEAL_BONUS_CLEAN: 15,
+  APPEAL_PENALTY_DEPLETED: 15,
+};
+
+export const MARKET_OPPORTUNITY_CONFIG = {
+  PRICE_MULTIPLIER: 3.0,
+  DURATION_MS: 20 * 60 * 1000,
+  TRIGGER_PROBABILITY: 0.15,
+  COOLDOWN_MS: 30 * 60 * 1000,
+};
+
+export const LOCAL_PROTEST_CONFIG = {
+  TRIGGER_RESOURCES_THRESHOLD: 66, // fire when planetResources <= 66 (34% consumed)
+};
+
+// ============================================================================
 // NOTAS DE BALANCE
 // ============================================================================
 /*

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect, useState, useCallback, ReactNode } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
-import { GameState, Cryptocurrency, IAPState, AdState, AdBoostState, PrestigeRun, RunStats, AILevel, EndingType, OfflineMinerState, LuckyBlockState, MarketPumpState } from '../types/game';
+import { GameState, Cryptocurrency, IAPState, AdState, AdBoostState, PrestigeRun, RunStats, AILevel, EndingType, OfflineMinerState, LuckyBlockState, MarketPumpState, RegulatoryPressureEvent, MarketOpportunityEvent } from '../types/game';
 import { hardwareProgression } from '../data/hardwareData';
 import { initialUpgrades } from '../data/gameData';
 import { cryptocurrencies } from '../data/cryptocurrencies';
@@ -42,7 +42,7 @@ import {
   isStarterPack,
 } from '../services/IAPService';
 import { purchaseUpdatedListener, purchaseErrorListener } from 'react-native-iap';
-import { BOOSTER_CONFIG, STARTER_PACK_REWARDS, ENERGY_CONFIG, PACK_CONFIG } from '../config/balanceConfig';
+import { BOOSTER_CONFIG, STARTER_PACK_REWARDS, ENERGY_CONFIG, PACK_CONFIG, REGULATORY_EVENT_CONFIG, MARKET_OPPORTUNITY_CONFIG, LOCAL_PROTEST_CONFIG } from '../config/balanceConfig';
 import { buildEndgameStats, calculateTotalEndgameProductionMultiplier } from '../utils/endgameLogic';
 import Toast, { ToastInfo } from '../components/Toast';
 import { IAP_PRODUCT_IDS } from '../config/iapConfig';
@@ -138,7 +138,16 @@ type GameAction =
   | { type: 'PURCHASE_LUCKY_BLOCK'; payload: { record: PurchaseRecord; blocks: number } }
   | { type: 'PURCHASE_MARKET_PUMP'; payload: { record: PurchaseRecord; durationMs: number } }
   | { type: 'EXPIRE_MARKET_PUMP' }
-  | { type: 'CHECK_MARKET_PUMP_EXPIRATION' };
+  | { type: 'CHECK_MARKET_PUMP_EXPIRATION' }
+  // Banner Events
+  | { type: 'RESOLVE_REGULATORY_PRESSURE'; payload: 'pay' | 'appeal' | 'ignore' }
+  | { type: 'RESOLVE_REGULATORY_APPEAL'; payload: { outcome: 'success' | 'partial' | 'rejected'; choice?: 'pay' | 'accept_penalty' } }
+  | { type: 'EXPIRE_REGULATORY_DECISION' }
+  | { type: 'CHECK_REGULATORY_STATUS' }
+  | { type: 'TRIGGER_MARKET_OPPORTUNITY' }
+  | { type: 'RESOLVE_MARKET_OPPORTUNITY'; payload: 'went_to_market' | 'auto_sold' | 'expired' }
+  | { type: 'TRIGGER_LOCAL_PROTEST'; payload: { resourcesConsumed: number } }
+  | { type: 'DISMISS_LOCAL_PROTEST' };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
@@ -162,13 +171,20 @@ const recalculateGameStats = (state: GameState): GameState => {
   const totalProduction = calculateTotalProduction(stateWithEnergy);
 
   // Calculate total hash rate from hardware
-  const totalHashRate = calculateTotalHashRate(stateWithEnergy);
+  let totalHashRate = calculateTotalHashRate(stateWithEnergy);
 
   // Calculate total electricity cost
   const totalElectricityCost = calculateTotalElectricityCost(stateWithEnergy.hardware);
 
   // Calculate net production (production - electricity cost)
-  const netProduction = Math.max(0, totalProduction - totalElectricityCost);
+  let netProduction = Math.max(0, totalProduction - totalElectricityCost);
+
+  // Apply regulatory hash rate penalty if active
+  const penaltyUntil = stateWithEnergy.regulatoryPressureEvent?.hashRatePenaltyUntil ?? null;
+  if (penaltyUntil && Date.now() < penaltyUntil) {
+    totalHashRate = totalHashRate * (1 - REGULATORY_EVENT_CONFIG.HASH_RATE_PENALTY);
+    netProduction = netProduction * (1 - REGULATORY_EVENT_CONFIG.HASH_RATE_PENALTY);
+  }
 
   const updatedState = {
     ...stateWithEnergy,
@@ -202,8 +218,27 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         cryptoCoins: state.cryptoCoins - cost,
         hardware: newHardware,
       };
-
-      return recalculateGameStats(newState);
+      const recalcedHw = recalculateGameStats(newState);
+      const lastOppBuyHw = recalcedHw.marketOpportunityEvent?.triggeredAt ?? 0;
+      const cooldownOkBuyHw = Date.now() - lastOppBuyHw > MARKET_OPPORTUNITY_CONFIG.COOLDOWN_MS;
+      const totalOwnedBuyHw = recalcedHw.hardware.reduce((s, h) => s + h.owned, 0);
+      if (
+        totalOwnedBuyHw >= 1 &&
+        !recalcedHw.activeBannerEvent &&
+        cooldownOkBuyHw &&
+        Math.random() < MARKET_OPPORTUNITY_CONFIG.TRIGGER_PROBABILITY
+      ) {
+        const nowOpp = Date.now();
+        const marketOpp: MarketOpportunityEvent = {
+          status: 'active',
+          triggeredAt: nowOpp,
+          expiresAt: nowOpp + MARKET_OPPORTUNITY_CONFIG.DURATION_MS,
+          priceMultiplier: MARKET_OPPORTUNITY_CONFIG.PRICE_MULTIPLIER,
+          outcome: null,
+        };
+        return { ...recalcedHw, marketOpportunityEvent: marketOpp, activeBannerEvent: 'market_opportunity' };
+      }
+      return recalcedHw;
     }
     case 'BUY_UPGRADE':
       const upgradeIndex = state.upgrades.findIndex(u => u.id === action.payload);
@@ -341,6 +376,10 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         // Narrative Events migration: provide defaults for old saves
         narrativeEvents: action.payload.narrativeEvents ?? [],
         planetResourcesVisible: action.payload.planetResourcesVisible ?? false,
+        regulatoryPressureEvent: action.payload.regulatoryPressureEvent ?? null,
+        marketOpportunityEvent: action.payload.marketOpportunityEvent ?? null,
+        localProtestEvent: action.payload.localProtestEvent ?? null,
+        activeBannerEvent: action.payload.activeBannerEvent ?? null,
         collapseTriggered: action.payload.collapseTriggered ?? false,
         goodEndingTriggered: action.payload.goodEndingTriggered ?? false,
         collapseCount: action.payload.collapseCount ?? 0,
@@ -407,6 +446,10 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         goodEndingCount: 0,
         lastEndgameStats: null,
         disconnectAttempted: false,
+        regulatoryPressureEvent: null,
+        marketOpportunityEvent: null,
+        localProtestEvent: null,
+        activeBannerEvent: null,
       };
       return recalculateGameStats(resetState);
     case 'UPDATE_OFFLINE_PROGRESS':
@@ -486,6 +529,21 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
             newState.narrativeEvents = [...(newState.narrativeEvents ?? []), ...newNarrativeEvents];
           }
 
+          // Local protest trigger: 34% consumed (resources <= 66), once per game
+          if (
+            newResources <= LOCAL_PROTEST_CONFIG.TRIGGER_RESOURCES_THRESHOLD &&
+            !newState.localProtestEvent &&
+            (newState.activeBannerEvent === null || newState.activeBannerEvent === undefined)
+          ) {
+            const resourcesConsumed = Math.round(100 - newResources);
+            newState.localProtestEvent = {
+              status: 'active',
+              triggeredAt: Date.now(),
+              resourcesConsumedAtTrigger: resourcesConsumed,
+            };
+            newState.activeBannerEvent = 'local_protest';
+          }
+
           // Trigger collapse when planet reaches 0% (collapse takes priority)
           if (newResources === 0 && !newState.collapseTriggered) {
             newState.collapseTriggered = true;
@@ -525,6 +583,33 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
               'autonomous',
             );
           }
+        }
+
+        // Auto-expire market opportunity if window ran out
+        if (
+          newState.marketOpportunityEvent?.status === 'active' &&
+          Date.now() > newState.marketOpportunityEvent.expiresAt
+        ) {
+          newState.marketOpportunityEvent = {
+            ...newState.marketOpportunityEvent,
+            status: 'resolved',
+            outcome: 'expired',
+          };
+          newState.activeBannerEvent = null;
+        }
+
+        // Auto-expire regulatory decision if deadline passed (same as ignore)
+        if (
+          newState.regulatoryPressureEvent?.status === 'active' &&
+          Date.now() > newState.regulatoryPressureEvent.decisionDeadline
+        ) {
+          newState.regulatoryPressureEvent = {
+            ...newState.regulatoryPressureEvent,
+            status: 'resolved',
+            hashRatePenaltyUntil: Date.now() + REGULATORY_EVENT_CONFIG.HASH_RATE_PENALTY_DURATION_MS,
+            outcome: 'ignored',
+          };
+          newState.activeBannerEvent = null;
         }
 
         return recalculateGameStats(newState);
@@ -621,6 +706,10 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         priceSeed: generatePriceSeed(),
         priceHistoryIndex: generatePriceStartIndex(),
         priceHistory: undefined,
+        regulatoryPressureEvent: null,
+        marketOpportunityEvent: null,
+        localProtestEvent: null,
+        activeBannerEvent: null,
       };
       return recalculateGameStats(prestigedState);
     }
@@ -688,12 +777,41 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       const moneyEarned = coinsToSell * action.payload.price * pumpMultiplier;
       if (!isFinite(moneyEarned) || moneyEarned <= 0) return state;
 
-      return recalculateGameStats({
+      const newRealMoneyAfterSell = state.realMoney + moneyEarned;
+      const hasMiningFarm = state.hardware.find(h => h.id === 'mining_farm' && h.owned >= 1);
+      const shouldTriggerRegulatory =
+        hasMiningFarm &&
+        newRealMoneyAfterSell >= REGULATORY_EVENT_CONFIG.TRIGGER_MIN_REAL_MONEY &&
+        !state.regulatoryPressureEvent &&
+        (state.activeBannerEvent === null || state.activeBannerEvent === undefined) &&
+        Math.random() < REGULATORY_EVENT_CONFIG.TRIGGER_PROBABILITY;
+
+      const sellBase = {
         ...state,
         cryptoCoins: state.cryptoCoins - coinsToSell,
-        realMoney: state.realMoney + moneyEarned,
+        realMoney: newRealMoneyAfterSell,
         totalRealMoneyEarned: state.totalRealMoneyEarned + moneyEarned,
-      });
+      };
+
+      if (shouldTriggerRegulatory) {
+        const now = Date.now();
+        const regulatoryEvent: RegulatoryPressureEvent = {
+          status: 'active',
+          triggeredAt: now,
+          decisionDeadline: now + REGULATORY_EVENT_CONFIG.DECISION_WINDOW_MS,
+          appealResultTime: null,
+          hashRatePenaltyUntil: null,
+          outcome: null,
+          planetResourcesAtTrigger: state.planetResources ?? 100,
+        };
+        return recalculateGameStats({
+          ...sellBase,
+          regulatoryPressureEvent: regulatoryEvent,
+          activeBannerEvent: 'regulatory_pressure',
+        });
+      }
+
+      return recalculateGameStats(sellBase);
 
     case 'BUY_HARDWARE_WITH_MONEY':
       const moneyHardwareIndex = state.hardware.findIndex(h => h.id === action.payload);
@@ -712,8 +830,27 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         realMoney: state.realMoney - moneyCost,
         hardware: moneyNewHardware,
       };
-
-      return recalculateGameStats(moneyNewState);
+      const recalcedMoneyHw = recalculateGameStats(moneyNewState);
+      const lastOppMoneyHw = recalcedMoneyHw.marketOpportunityEvent?.triggeredAt ?? 0;
+      const cooldownOkMoneyHw = Date.now() - lastOppMoneyHw > MARKET_OPPORTUNITY_CONFIG.COOLDOWN_MS;
+      const totalOwnedMoneyHw = recalcedMoneyHw.hardware.reduce((s, h) => s + h.owned, 0);
+      if (
+        totalOwnedMoneyHw >= 1 &&
+        !recalcedMoneyHw.activeBannerEvent &&
+        cooldownOkMoneyHw &&
+        Math.random() < MARKET_OPPORTUNITY_CONFIG.TRIGGER_PROBABILITY
+      ) {
+        const nowOpp2 = Date.now();
+        const marketOpp2: MarketOpportunityEvent = {
+          status: 'active',
+          triggeredAt: nowOpp2,
+          expiresAt: nowOpp2 + MARKET_OPPORTUNITY_CONFIG.DURATION_MS,
+          priceMultiplier: MARKET_OPPORTUNITY_CONFIG.PRICE_MULTIPLIER,
+          outcome: null,
+        };
+        return { ...recalcedMoneyHw, marketOpportunityEvent: marketOpp2, activeBannerEvent: 'market_opportunity' };
+      }
+      return recalcedMoneyHw;
     case 'UPDATE_CRYPTO_PRICES':
       // Esta acción se manejará de forma asíncrona en el useEffect
       return state;
@@ -1327,8 +1464,197 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         goodEndingCount: newGoodEndingCount,
         lastEndgameStats: state.lastEndgameStats,
         disconnectAttempted: false,
+        regulatoryPressureEvent: null,
+        marketOpportunityEvent: null,
+        localProtestEvent: null,
+        activeBannerEvent: null,
       };
       return recalculateGameStats(prestigedState);
+    }
+
+    // ── Regulatory Pressure ─────────────────────────────────────────────────
+    case 'RESOLVE_REGULATORY_PRESSURE': {
+      if (!state.regulatoryPressureEvent) return state;
+      const choice = action.payload;
+      if (choice === 'pay') {
+        if (state.realMoney < REGULATORY_EVENT_CONFIG.TAX_AMOUNT) return state;
+        return recalculateGameStats({
+          ...state,
+          realMoney: state.realMoney - REGULATORY_EVENT_CONFIG.TAX_AMOUNT,
+          regulatoryPressureEvent: { ...state.regulatoryPressureEvent, status: 'resolved', outcome: 'paid' },
+          activeBannerEvent: null,
+        });
+      }
+      if (choice === 'appeal') {
+        if (state.realMoney < REGULATORY_EVENT_CONFIG.LEGAL_FEE) return state;
+        return {
+          ...state,
+          realMoney: state.realMoney - REGULATORY_EVENT_CONFIG.LEGAL_FEE,
+          regulatoryPressureEvent: {
+            ...state.regulatoryPressureEvent,
+            status: 'appealing',
+            appealResultTime: Date.now() + REGULATORY_EVENT_CONFIG.APPEAL_RESULT_DELAY_MS,
+          },
+          // keep activeBannerEvent = 'regulatory_pressure' while awaiting result
+        };
+      }
+      // ignore
+      return recalculateGameStats({
+        ...state,
+        regulatoryPressureEvent: {
+          ...state.regulatoryPressureEvent,
+          status: 'resolved',
+          outcome: 'ignored',
+          hashRatePenaltyUntil: Date.now() + REGULATORY_EVENT_CONFIG.HASH_RATE_PENALTY_DURATION_MS,
+        },
+        activeBannerEvent: null,
+      });
+    }
+    case 'RESOLVE_REGULATORY_APPEAL': {
+      if (!state.regulatoryPressureEvent) return state;
+      const { outcome, choice } = action.payload;
+      if (outcome === 'success') {
+        return recalculateGameStats({
+          ...state,
+          regulatoryPressureEvent: { ...state.regulatoryPressureEvent, status: 'resolved', outcome: 'appealed_success' },
+          activeBannerEvent: null,
+        });
+      }
+      if (outcome === 'partial') {
+        if (choice === 'pay') {
+          if (state.realMoney < REGULATORY_EVENT_CONFIG.PARTIAL_AMOUNT) return state;
+          return recalculateGameStats({
+            ...state,
+            realMoney: state.realMoney - REGULATORY_EVENT_CONFIG.PARTIAL_AMOUNT,
+            regulatoryPressureEvent: { ...state.regulatoryPressureEvent, status: 'resolved', outcome: 'appealed_partial_paid' },
+            activeBannerEvent: null,
+          });
+        }
+        return recalculateGameStats({
+          ...state,
+          regulatoryPressureEvent: {
+            ...state.regulatoryPressureEvent,
+            status: 'resolved',
+            outcome: 'appealed_partial_penalty',
+            hashRatePenaltyUntil: Date.now() + REGULATORY_EVENT_CONFIG.HASH_RATE_PENALTY_DURATION_MS,
+          },
+          activeBannerEvent: null,
+        });
+      }
+      // rejected
+      if (choice === 'pay') {
+        if (state.realMoney < REGULATORY_EVENT_CONFIG.REJECTED_TOTAL) return state;
+        return recalculateGameStats({
+          ...state,
+          realMoney: state.realMoney - REGULATORY_EVENT_CONFIG.REJECTED_TOTAL,
+          regulatoryPressureEvent: { ...state.regulatoryPressureEvent, status: 'resolved', outcome: 'appealed_rejected_paid' },
+          activeBannerEvent: null,
+        });
+      }
+      return recalculateGameStats({
+        ...state,
+        regulatoryPressureEvent: {
+          ...state.regulatoryPressureEvent,
+          status: 'resolved',
+          outcome: 'appealed_rejected_penalty',
+          hashRatePenaltyUntil: Date.now() + REGULATORY_EVENT_CONFIG.HASH_RATE_PENALTY_DURATION_MS,
+        },
+        activeBannerEvent: null,
+      });
+    }
+    case 'EXPIRE_REGULATORY_DECISION': {
+      if (!state.regulatoryPressureEvent || state.regulatoryPressureEvent.status !== 'active') return state;
+      return recalculateGameStats({
+        ...state,
+        regulatoryPressureEvent: {
+          ...state.regulatoryPressureEvent,
+          status: 'resolved',
+          outcome: 'ignored',
+          hashRatePenaltyUntil: Date.now() + REGULATORY_EVENT_CONFIG.HASH_RATE_PENALTY_DURATION_MS,
+        },
+        activeBannerEvent: null,
+      });
+    }
+    case 'CHECK_REGULATORY_STATUS':
+      return state; // Auto-expiry handled in ADD_PRODUCTION
+    // ── Market Opportunity ──────────────────────────────────────────────────
+    case 'TRIGGER_MARKET_OPPORTUNITY': {
+      const now = Date.now();
+      return {
+        ...state,
+        marketOpportunityEvent: {
+          status: 'active',
+          triggeredAt: now,
+          expiresAt: now + MARKET_OPPORTUNITY_CONFIG.DURATION_MS,
+          priceMultiplier: MARKET_OPPORTUNITY_CONFIG.PRICE_MULTIPLIER,
+          outcome: null,
+        },
+        activeBannerEvent: 'market_opportunity',
+      };
+    }
+    case 'RESOLVE_MARKET_OPPORTUNITY': {
+      const oppChoice = action.payload;
+      if (oppChoice === 'auto_sold') {
+        const currentPrice = state.marketState?.currentPrice ?? 0.001;
+        const coinsToSellOpp = state.cryptoCoins;
+        const moneyFromOpp = coinsToSellOpp * currentPrice * MARKET_OPPORTUNITY_CONFIG.PRICE_MULTIPLIER;
+        const baseOpp = {
+          ...state,
+          marketOpportunityEvent: state.marketOpportunityEvent
+            ? { ...state.marketOpportunityEvent, status: 'resolved' as const, outcome: 'auto_sold' as const }
+            : null,
+          activeBannerEvent: null as null,
+        };
+        if (coinsToSellOpp <= 0) return baseOpp;
+        return recalculateGameStats({
+          ...baseOpp,
+          cryptoCoins: 0,
+          realMoney: state.realMoney + moneyFromOpp,
+          totalRealMoneyEarned: state.totalRealMoneyEarned + moneyFromOpp,
+        });
+      }
+      if (oppChoice === 'went_to_market') {
+        return {
+          ...state,
+          marketOpportunityEvent: state.marketOpportunityEvent
+            ? { ...state.marketOpportunityEvent, status: 'resolved' as const, outcome: 'went_to_market' as const }
+            : null,
+          activeBannerEvent: null,
+          marketState: state.marketState
+            ? { ...state.marketState, currentPrice: state.marketState.currentPrice * MARKET_OPPORTUNITY_CONFIG.PRICE_MULTIPLIER }
+            : state.marketState,
+        };
+      }
+      // expired
+      return {
+        ...state,
+        marketOpportunityEvent: state.marketOpportunityEvent
+          ? { ...state.marketOpportunityEvent, status: 'resolved' as const, outcome: 'expired' as const }
+          : null,
+        activeBannerEvent: null,
+      };
+    }
+    // ── Local Protest ───────────────────────────────────────────────────────
+    case 'TRIGGER_LOCAL_PROTEST': {
+      const now = Date.now();
+      return {
+        ...state,
+        localProtestEvent: {
+          status: 'active',
+          triggeredAt: now,
+          resourcesConsumedAtTrigger: action.payload.resourcesConsumed,
+        },
+        activeBannerEvent: 'local_protest',
+      };
+    }
+    case 'DISMISS_LOCAL_PROTEST': {
+      return {
+        ...state,
+        localProtestEvent: state.localProtestEvent
+          ? { ...state.localProtestEvent, status: 'resolved' as const }
+          : null,
+        activeBannerEvent: null,
+      };
     }
 
     default:

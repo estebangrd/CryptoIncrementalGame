@@ -23,6 +23,9 @@ import IAPBoosterBadges from './IAPBoosterBadges';
 import { REMOVE_ADS_CONFIG } from '../config/iapConfig';
 import AchievementToast from './AchievementToast';
 import NarrativeEventModal from './NarrativeEventModal';
+import RegulatoryPressureModal from './RegulatoryPressureModal';
+import MarketOpportunityModal from './MarketOpportunityModal';
+import LocalProtestModal from './LocalProtestModal';
 import DisconnectModal from './DisconnectModal';
 import EndingScreen from './EndingScreen';
 import ShopScreen from './ShopScreen';
@@ -541,6 +544,9 @@ const GameScreen: React.FC = () => {
         event={pendingNarrativeEvent}
         onDismiss={handleDismissNarrativeEvent}
       />
+      <RegulatoryPressureModal event={gameState.regulatoryPressureEvent ?? null} />
+      <MarketOpportunityModal event={gameState.marketOpportunityEvent ?? null} />
+      <LocalProtestModal event={gameState.localProtestEvent ?? null} />
 
       <Modal
         visible={showShop}
