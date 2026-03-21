@@ -7,6 +7,8 @@ import {
   StyleSheet,
   ActivityIndicator,
   Animated,
+  Dimensions,
+  Easing,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useGame } from '../contexts/GameContext';
@@ -14,6 +16,71 @@ import { purchaseProduct } from '../services/IAPService';
 import { IAP_PRODUCT_IDS, IAP_PRICES } from '../config/iapConfig';
 import { BOOSTER_CONFIG } from '../config/balanceConfig';
 import { colors, fonts } from '../config/theme';
+
+// ── Animated background ───────────────────────────────────────────────────────
+
+const { width: SHOP_W, height: SHOP_H } = Dimensions.get('window');
+const SHOP_GRID = 40;
+const SHOP_H_LINES = Math.ceil(SHOP_H / SHOP_GRID) + 2;
+const SHOP_V_LINES = Math.ceil(SHOP_W / SHOP_GRID) + 1;
+
+const ShopGrid: React.FC = () => {
+  const shift = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(shift, { toValue: SHOP_GRID, duration: 20000, easing: Easing.linear, useNativeDriver: true })
+    ).start();
+  }, [shift]);
+  return (
+    <Animated.View style={[StyleSheet.absoluteFill, { transform: [{ translateY: shift }] }]} pointerEvents="none">
+      {Array.from({ length: SHOP_H_LINES }, (_, i) => (
+        <View key={`h${i}`} style={{ position: 'absolute', left: 0, right: 0, top: i * SHOP_GRID, height: 1, backgroundColor: 'rgba(0,255,136,0.025)' }} />
+      ))}
+      {Array.from({ length: SHOP_V_LINES }, (_, i) => (
+        <View key={`v${i}`} style={{ position: 'absolute', top: 0, bottom: 0, left: i * SHOP_GRID, width: 1, backgroundColor: 'rgba(0,255,136,0.025)' }} />
+      ))}
+    </Animated.View>
+  );
+};
+
+const ShopScanline: React.FC = () => {
+  const scan = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(scan, { toValue: SHOP_H, duration: 7000, easing: Easing.linear, useNativeDriver: true })
+    ).start();
+  }, [scan]);
+  return (
+    <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, height: 1, backgroundColor: 'rgba(0,255,136,0.05)', transform: [{ translateY: scan }] }} />
+  );
+};
+
+const SHOP_PARTICLES = [
+  { left: '15%', duration: 10000, delay: 0, color: colors.ng },
+  { left: '40%', duration: 14000, delay: 3000, color: colors.nc },
+  { left: '65%', duration: 11000, delay: 6000, color: colors.ng },
+  { left: '85%', duration: 13000, delay: 2000, color: colors.nc },
+];
+
+const ShopParticle: React.FC<{ left: string; duration: number; delay: number; color: string }> = ({ left, duration, delay, color }) => {
+  const float = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const run = () => {
+      float.setValue(0);
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.timing(float, { toValue: 1, duration, easing: Easing.linear, useNativeDriver: true }),
+      ]).start(({ finished }) => { if (finished) run(); });
+    };
+    run();
+    return () => float.stopAnimation();
+  }, [float, delay, duration]);
+  const translateY = float.interpolate({ inputRange: [0, 1], outputRange: [SHOP_H, -20] });
+  const opacity = float.interpolate({ inputRange: [0, 0.1, 0.9, 1], outputRange: [0, 0.4, 0.2, 0] });
+  return (
+    <Animated.View pointerEvents="none" style={{ position: 'absolute', left: left as any, width: 3, height: 3, borderRadius: 1.5, backgroundColor: color, transform: [{ translateY }], opacity }} />
+  );
+};
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -160,6 +227,7 @@ const ShopScreen: React.FC = () => {
   // ── Packs: animations ─────────────────────────────────────────────────────
   const pkBadgePulse = useRef(new Animated.Value(1)).current;
   const pkTimerOpacity = useRef(new Animated.Value(1)).current;
+  const pkBuyShimmerAnim = useRef(new Animated.Value(-200)).current;
 
   useEffect(() => {
     Animated.loop(
@@ -174,7 +242,15 @@ const ShopScreen: React.FC = () => {
         Animated.timing(pkTimerOpacity, { toValue: 1.0, duration: 900, useNativeDriver: true }),
       ])
     ).start();
-  }, [pkBadgePulse, pkTimerOpacity]);
+    const shimmerLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pkBuyShimmerAnim, { toValue: -200, duration: 0, useNativeDriver: true }),
+        Animated.timing(pkBuyShimmerAnim, { toValue: 300, duration: 3000, easing: Easing.linear, useNativeDriver: true }),
+      ])
+    );
+    shimmerLoop.start();
+    return () => shimmerLoop.stop();
+  }, [pkBadgePulse, pkTimerOpacity, pkBuyShimmerAnim]);
 
   // ── Purchase logic ────────────────────────────────────────────────────────
   const doPurchase = useCallback(async (productId: string) => {
@@ -648,6 +724,17 @@ const ShopScreen: React.FC = () => {
                 disabled={!!purchasing}
                 activeOpacity={0.8}
               >
+                <Animated.View
+                  pointerEvents="none"
+                  style={[st.pk_ofBtnShimmer, { transform: [{ translateX: pkBuyShimmerAnim }] }]}
+                >
+                  <LinearGradient
+                    colors={['transparent', 'rgba(0,255,136,0.14)', 'transparent']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={StyleSheet.absoluteFill}
+                  />
+                </Animated.View>
                 {purchasing === activePack!.productId ? (
                   <ActivityIndicator color={colors.ng} size="small" />
                 ) : (
@@ -699,6 +786,15 @@ const ShopScreen: React.FC = () => {
 
   return (
     <View style={st.container}>
+      {/* Animated background: grid + particles + scanline */}
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <ShopGrid />
+        {SHOP_PARTICLES.map((p, i) => (
+          <ShopParticle key={i} left={p.left} duration={p.duration} delay={p.delay} color={p.color} />
+        ))}
+        <ShopScanline />
+      </View>
+
       <View style={st.tabBar}>
         {tabs.map((tab) => (
           <TouchableOpacity
@@ -1034,13 +1130,14 @@ const st = StyleSheet.create({
     alignItems: 'flex-start', marginBottom: 10, marginTop: 4,
   },
   pk_offerLeft: { flex: 1, marginRight: 8 },
-  pk_offerEyebrowRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 3 },
+  pk_offerEyebrowRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 3 },
   pk_offerEyebrow: {
     fontFamily: fonts.mono, fontSize: 8, letterSpacing: 3,
     color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase',
   },
   pk_offerBadge: {
     backgroundColor: colors.ny, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 20,
+    marginLeft: 2,
   },
   pk_offerBadgeText: {
     fontFamily: fonts.orbitron, fontSize: 8, fontWeight: '900', letterSpacing: 1, color: '#000',
@@ -1058,7 +1155,7 @@ const st = StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)',
     borderRadius: 8, paddingVertical: 8, paddingHorizontal: 4, alignItems: 'center',
   },
-  pk_ocEmoji: { fontSize: 18, marginBottom: 4, textAlign: 'center' },
+  pk_ocEmoji: { fontSize: 22, marginBottom: 4, textAlign: 'center', color: '#ffffff' },
   pk_ocVal: {
     fontFamily: fonts.orbitron, fontSize: 13, fontWeight: '700',
     color: colors.ng, textAlign: 'center',
@@ -1080,6 +1177,10 @@ const st = StyleSheet.create({
     paddingVertical: 13, paddingHorizontal: 18, borderRadius: 11,
     backgroundColor: 'rgba(0,255,136,0.15)',
     borderWidth: 1, borderColor: colors.ng, minWidth: 110, alignItems: 'center',
+    overflow: 'hidden',
+  },
+  pk_ofBtnShimmer: {
+    position: 'absolute', top: 0, bottom: 0, left: 0, width: 120,
   },
   pk_ofBtnDisabled: { opacity: 0.5 },
   pk_ofBtnText: {
