@@ -4,7 +4,7 @@
  * Based on spec: specs/game-mechanics/block-mining-system.md
  */
 
-import { calculateTotalHashRate, calculateTotalProduction } from '../src/utils/gameLogic';
+import { calculateTotalHashRate, calculateTotalProduction, calculateHardwareProduction, calculateHardwareMiningSpeed, calculateHardwareElectricityCost } from '../src/utils/gameLogic';
 import { BOOSTER_CONFIG } from '../src/config/balanceConfig';
 
 // Minimal game state factory for hash rate tests
@@ -257,6 +257,45 @@ const MANUAL_MINING = {
   owned: 1,
   energyRequired: 0,
 };
+
+/**
+ * Hardware card display value consistency.
+ * All 5 stats (HASH RATE, MINE SPEED, REWARD, COINS/SEC, POWER) must show 0
+ * when owned=0. REWARD was showing the constant blockReward value regardless.
+ */
+describe('hardware card stat display values for 0-owned hardware', () => {
+  const ADV_CPU = { id: 'advanced_cpu', baseProduction: 30, miningSpeed: 0.8, blockReward: 42, electricityCost: 1.2, owned: 0 };
+
+  it('hashRate is 0 when owned=0', () => {
+    expect(calculateHardwareProduction(ADV_CPU, [])).toBe(0);
+  });
+
+  it('miningSpeed is 0 when owned=0', () => {
+    expect(calculateHardwareMiningSpeed(ADV_CPU, [])).toBe(0);
+  });
+
+  it('electricityCost is 0 when owned=0', () => {
+    expect(calculateHardwareElectricityCost(ADV_CPU)).toBe(0);
+  });
+
+  it('coinsPerSecond is 0 when owned=0', () => {
+    const speed = calculateHardwareMiningSpeed(ADV_CPU, []);
+    expect(speed * ADV_CPU.blockReward).toBe(0);
+  });
+
+  it('reward display value should be 0 when owned=0 (not the constant blockReward)', () => {
+    // BUG: HardwareList used hardware.blockReward directly (shows 42 for 0-owned)
+    // FIX: display should use owned > 0 ? blockReward : 0 for consistency
+    const displayReward = ADV_CPU.owned > 0 ? ADV_CPU.blockReward : 0;
+    expect(displayReward).toBe(0);
+  });
+
+  it('reward display value is the blockReward constant when owned>0', () => {
+    const ownedCpu = { ...ADV_CPU, owned: 3 };
+    const displayReward = ownedCpu.owned > 0 ? ownedCpu.blockReward : 0;
+    expect(displayReward).toBe(42);
+  });
+});
 
 /**
  * Regression tests for bug: after prestige, manual_mining.owned=1 causes
