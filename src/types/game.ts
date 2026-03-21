@@ -71,6 +71,11 @@ export interface IAPState {
   lastPurchaseTime: number | null;
   flashSaleExpiresAt: number;      // unix ms, 0 = no active sale
   flashSaleCooldownUntil: number;  // unix ms, 0 = no cooldown
+  packOfferExpiresAt: number;           // unix ms, 0 = no active offer
+  packNextOfferAt: number;              // unix ms, 0 = can offer immediately
+  packCurrentCC: number;                // randomized CC for current active offer
+  packCurrentCash: number;              // randomized cash for current active offer
+  packCurrentElectricityHours: number;  // 0 if no electricity for this pack
 }
 
 export interface AdState {

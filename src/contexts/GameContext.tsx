@@ -42,7 +42,7 @@ import {
   isStarterPack,
 } from '../services/IAPService';
 import { purchaseUpdatedListener, purchaseErrorListener } from 'react-native-iap';
-import { BOOSTER_CONFIG, STARTER_PACK_REWARDS, ENERGY_CONFIG } from '../config/balanceConfig';
+import { BOOSTER_CONFIG, STARTER_PACK_REWARDS, ENERGY_CONFIG, PACK_CONFIG } from '../config/balanceConfig';
 import { buildEndgameStats, calculateTotalEndgameProductionMultiplier } from '../utils/endgameLogic';
 import Toast, { ToastInfo } from '../components/Toast';
 import { IAP_PRODUCT_IDS } from '../config/iapConfig';
@@ -132,7 +132,8 @@ type GameAction =
   | { type: 'DISMISS_NARRATIVE_EVENT'; payload: number }
   | { type: 'ATTEMPT_DISCONNECT' }
   | { type: 'COMPLETE_ENDING_PRESTIGE'; payload: { endingType: EndingType } }
-  | { type: 'SET_FLASH_SALE'; payload: { expiresAt: number; cooldownUntil: number } };
+  | { type: 'SET_FLASH_SALE'; payload: { expiresAt: number; cooldownUntil: number } }
+  | { type: 'SET_PACK_OFFER'; payload: { expiresAt: number; nextOfferAt: number; cc: number; cash: number; electricityHours: number } };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
@@ -291,6 +292,11 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           lastPurchaseTime: null,
           flashSaleExpiresAt: 0,
           flashSaleCooldownUntil: 0,
+          packOfferExpiresAt: 0,
+          packNextOfferAt: 0,
+          packCurrentCC: 0,
+          packCurrentCash: 0,
+          packCurrentElectricityHours: 0,
           ...action.payload.iapState,
         },
         adState: action.payload.adState ?? {
@@ -783,18 +789,34 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     case 'PURCHASE_STARTER_PACK': {
       const { packType, record } = action.payload;
       if (state.iapState.starterPacksPurchased[packType]) return state;
-      const rewards = STARTER_PACK_REWARDS[packType];
+      // Use dynamic offer rewards if available, otherwise fall back to static
+      const staticRewards = STARTER_PACK_REWARDS[packType];
+      const ccReward = state.iapState.packCurrentCC > 0
+        ? state.iapState.packCurrentCC
+        : staticRewards.cryptoCoins;
+      const cashReward = state.iapState.packCurrentCash > 0
+        ? state.iapState.packCurrentCash + (state.iapState.packCurrentElectricityHours > 0
+            ? state.totalElectricityCost * state.iapState.packCurrentElectricityHours * 3600
+            : 0)
+        : staticRewards.realMoney;
+      const now = Date.now();
       return {
         ...state,
-        cryptoCoins: state.cryptoCoins + rewards.cryptoCoins,
-        totalCryptoCoins: state.totalCryptoCoins + rewards.cryptoCoins,
-        realMoney: state.realMoney + rewards.realMoney,
-        totalRealMoneyEarned: state.totalRealMoneyEarned + rewards.realMoney,
+        cryptoCoins: state.cryptoCoins + ccReward,
+        totalCryptoCoins: state.totalCryptoCoins + ccReward,
+        realMoney: state.realMoney + cashReward,
+        totalRealMoneyEarned: state.totalRealMoneyEarned + cashReward,
         iapState: {
           ...state.iapState,
           starterPacksPurchased: { ...state.iapState.starterPacksPurchased, [packType]: true },
           purchaseHistory: [...state.iapState.purchaseHistory, { ...record, delivered: true }],
           isPurchasing: false,
+          // Clear current offer, set cooldown for next one
+          packOfferExpiresAt: 0,
+          packNextOfferAt: now + PACK_CONFIG.COOLDOWN_MS,
+          packCurrentCC: 0,
+          packCurrentCash: 0,
+          packCurrentElectricityHours: 0,
         },
       };
     }
@@ -832,6 +854,19 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           ...state.iapState,
           flashSaleExpiresAt: action.payload.expiresAt,
           flashSaleCooldownUntil: action.payload.cooldownUntil,
+        },
+      };
+
+    case 'SET_PACK_OFFER':
+      return {
+        ...state,
+        iapState: {
+          ...state.iapState,
+          packOfferExpiresAt: action.payload.expiresAt,
+          packNextOfferAt: action.payload.nextOfferAt,
+          packCurrentCC: action.payload.cc,
+          packCurrentCash: action.payload.cash,
+          packCurrentElectricityHours: action.payload.electricityHours,
         },
       };
 
@@ -1205,6 +1240,11 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       lastPurchaseTime: null,
       flashSaleExpiresAt: 0,
       flashSaleCooldownUntil: 0,
+      packOfferExpiresAt: 0,
+      packNextOfferAt: 0,
+      packCurrentCC: 0,
+      packCurrentCash: 0,
+      packCurrentElectricityHours: 0,
     } as IAPState,
     adState: {
       adInitialized: false,

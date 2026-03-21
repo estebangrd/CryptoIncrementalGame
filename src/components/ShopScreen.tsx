@@ -14,7 +14,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { useGame } from '../contexts/GameContext';
 import { purchaseProduct } from '../services/IAPService';
 import { IAP_PRODUCT_IDS, IAP_PRICES } from '../config/iapConfig';
-import { BOOSTER_CONFIG } from '../config/balanceConfig';
+import { BOOSTER_CONFIG, PACK_CONFIG } from '../config/balanceConfig';
 import { colors, fonts } from '../config/theme';
 
 // ── Animated background ───────────────────────────────────────────────────────
@@ -109,66 +109,13 @@ interface PackMeta {
   wasPrice: number;
   price: number;
   unlockNoteKey: string;
-  contents: PackContent[];
 }
 
 const PK_META: PackMeta[] = [
-  {
-    key: 'small',
-    productId: IAP_PRODUCT_IDS.STARTER_SMALL,
-    name: 'Starter Pack',
-    eyebrowKey: 'shop.packs.small.eyebrow',
-    wasPrice: 1.99,
-    price: IAP_PRICES.STARTER_SMALL,
-    unlockNoteKey: 'shop.packs.small.unlockNote',
-    contents: [
-      { emoji: '◈', val: '10K CC', lbl: 'CryptoCoins', color: colors.ng },
-      { emoji: '💰', val: '$500', lbl: 'Cash', color: colors.ny },
-      { emoji: '—', val: '—', lbl: 'Booster', color: 'rgba(255,255,255,0.4)' },
-    ],
-  },
-  {
-    key: 'medium',
-    productId: IAP_PRODUCT_IDS.STARTER_MEDIUM,
-    name: 'Growth Pack',
-    eyebrowKey: 'shop.packs.medium.eyebrow',
-    wasPrice: 4.99,
-    price: IAP_PRICES.STARTER_MEDIUM,
-    unlockNoteKey: 'shop.packs.medium.unlockNote',
-    contents: [
-      { emoji: '◈', val: '50K CC', lbl: 'CryptoCoins', color: colors.ng },
-      { emoji: '💰', val: '$2.5K', lbl: 'Cash', color: colors.ny },
-      { emoji: '—', val: '—', lbl: 'Booster', color: 'rgba(255,255,255,0.4)' },
-    ],
-  },
-  {
-    key: 'large',
-    productId: IAP_PRODUCT_IDS.STARTER_LARGE,
-    name: 'Mining Empire',
-    eyebrowKey: 'shop.packs.large.eyebrow',
-    wasPrice: 7.99,
-    price: IAP_PRICES.STARTER_LARGE,
-    unlockNoteKey: 'shop.packs.large.unlockNote',
-    contents: [
-      { emoji: '◈', val: '150K CC', lbl: 'CryptoCoins', color: colors.ng },
-      { emoji: '💰', val: '$10K', lbl: 'Cash', color: colors.ny },
-      { emoji: '⚡', val: '2x · 4h', lbl: 'Booster', color: colors.nc },
-    ],
-  },
-  {
-    key: 'mega',
-    productId: IAP_PRODUCT_IDS.STARTER_MEGA,
-    name: 'Crypto Titan',
-    eyebrowKey: 'shop.packs.mega.eyebrow',
-    wasPrice: 14.99,
-    price: IAP_PRICES.STARTER_MEGA,
-    unlockNoteKey: 'shop.packs.mega.unlockNote',
-    contents: [
-      { emoji: '◈', val: '500K CC', lbl: 'CryptoCoins', color: colors.ng },
-      { emoji: '💰', val: '$50K', lbl: 'Cash', color: colors.ny },
-      { emoji: '⚡', val: '2x · 24h', lbl: 'Booster', color: colors.nc },
-    ],
-  },
+  { key: 'small',  productId: IAP_PRODUCT_IDS.STARTER_SMALL,  name: 'Starter Pack',   eyebrowKey: 'shop.packs.small.eyebrow',  wasPrice: 1.99,  price: IAP_PRICES.STARTER_SMALL,  unlockNoteKey: 'shop.packs.small.unlockNote' },
+  { key: 'medium', productId: IAP_PRODUCT_IDS.STARTER_MEDIUM, name: 'Growth Pack',    eyebrowKey: 'shop.packs.medium.eyebrow', wasPrice: 4.99,  price: IAP_PRICES.STARTER_MEDIUM, unlockNoteKey: 'shop.packs.medium.unlockNote' },
+  { key: 'large',  productId: IAP_PRODUCT_IDS.STARTER_LARGE,  name: 'Mining Empire',  eyebrowKey: 'shop.packs.large.eyebrow',  wasPrice: 7.99,  price: IAP_PRICES.STARTER_LARGE,  unlockNoteKey: 'shop.packs.large.unlockNote' },
+  { key: 'mega',   productId: IAP_PRODUCT_IDS.STARTER_MEGA,   name: 'Crypto Titan',   eyebrowKey: 'shop.packs.mega.eyebrow',   wasPrice: 14.99, price: IAP_PRICES.STARTER_MEGA,   unlockNoteKey: 'shop.packs.mega.unlockNote' },
 ];
 
 // ── Main Component ────────────────────────────────────────────────────────────
@@ -227,25 +174,91 @@ const ShopScreen: React.FC = () => {
     return () => clearInterval(id);
   }, [iapState.removeAdsPurchased, iapState.flashSaleExpiresAt]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Packs: cosmetic countdown timer ────────────────────────────────────────
-  const pkTimerRef = useRef<number>(11 * 60 + 42);
-  const [pkTimerDisplay, setPkTimerDisplay] = useState<string>('11:42');
+  // ── Packs: offer roll when packs tab becomes active ──────────────────────
+  useEffect(() => {
+    if (activeTab !== 'packs') return;
+    const now = Date.now();
+
+    // Determine currently eligible pack
+    const ownedCount = (id: string) => gameState.hardware.find(h => h.id === id)?.owned ?? 0;
+    const purchased = iapState.starterPacksPurchased;
+    let eligibleKey: PackKey | null = null;
+    if (!purchased.small && ownedCount('asic_gen3') === 0) eligibleKey = 'small';
+    else if (!purchased.medium && ownedCount('asic_gen3') >= 1 && ownedCount('quantum_miner') === 0) eligibleKey = 'medium';
+    else if (!purchased.large && ownedCount('quantum_miner') >= 1 && ownedCount('supercomputer') === 0) eligibleKey = 'large';
+    else if (!purchased.mega && ownedCount('supercomputer') >= 1) eligibleKey = 'mega';
+
+    if (!eligibleKey) return; // no eligible pack at this stage
+
+    const hasActiveOffer = iapState.packOfferExpiresAt > 0 && now < iapState.packOfferExpiresAt;
+    const inCooldown = iapState.packNextOfferAt > 0 && now < iapState.packNextOfferAt;
+
+    if (hasActiveOffer || inCooldown) return; // already has offer or waiting
+
+    // Roll new offer
+    const cfg = PACK_CONFIG[eligibleKey];
+    const randInRange = (range: readonly [number, number]) =>
+      Math.round(range[0] + Math.random() * (range[1] - range[0]));
+
+    const cc = randInRange(cfg.ccRange);
+    const cash = randInRange(cfg.cashRange);
+    const hasNonRenewableEnergyNow = Object.values(gameState.energy?.sources ?? {})
+      .some(s => !s.isRenewable && s.quantity > 0);
+    const electricityHours = 'electricityHoursRange' in cfg && hasNonRenewableEnergyNow
+      ? randInRange(cfg.electricityHoursRange as [number, number])
+      : 0;
+
+    dispatch({
+      type: 'SET_PACK_OFFER',
+      payload: {
+        expiresAt: now + PACK_CONFIG.OFFER_DURATION_MS,
+        nextOfferAt: 0,
+        cc,
+        cash,
+        electricityHours,
+      },
+    });
+  }, [activeTab, iapState.starterPacksPurchased, iapState.packOfferExpiresAt, iapState.packNextOfferAt]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Packs: real offer countdown using persisted timestamp ─────────────────
+  const [pkTimerDisplay, setPkTimerDisplay] = useState<string>('');
   const [pkTimerExpired, setPkTimerExpired] = useState<boolean>(false);
 
   useEffect(() => {
-    const id = setInterval(() => {
-      if (pkTimerRef.current <= 0) {
+    if (iapState.packOfferExpiresAt === 0) {
+      setPkTimerExpired(true);
+      return;
+    }
+    const update = () => {
+      const now = Date.now();
+      const remaining = Math.max(0, iapState.packOfferExpiresAt - now);
+      if (remaining === 0) {
         setPkTimerExpired(true);
+        // Set cooldown
+        dispatch({
+          type: 'SET_PACK_OFFER',
+          payload: { expiresAt: 0, nextOfferAt: now + PACK_CONFIG.COOLDOWN_MS, cc: 0, cash: 0, electricityHours: 0 },
+        });
         return;
       }
-      pkTimerRef.current -= 1;
-      const s = pkTimerRef.current;
-      const mm = Math.floor(s / 60).toString().padStart(2, '0');
-      const ss = (s % 60).toString().padStart(2, '0');
+      setPkTimerExpired(false);
+      const totalSec = Math.ceil(remaining / 1000);
+      const mm = Math.floor(totalSec / 60).toString().padStart(2, '0');
+      const ss = (totalSec % 60).toString().padStart(2, '0');
       setPkTimerDisplay(`${mm}:${ss}`);
-    }, 1000);
+    };
+    update();
+    const id = setInterval(update, 1000);
     return () => clearInterval(id);
-  }, []);
+  }, [iapState.packOfferExpiresAt]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Packs: tick to refresh next offer countdown ───────────────────────────
+  const [, forceUpdate] = useState(0);
+  useEffect(() => {
+    if (iapState.packNextOfferAt === 0 || Date.now() >= iapState.packNextOfferAt) return;
+    const id = setInterval(() => forceUpdate(n => n + 1), 1000);
+    return () => clearInterval(id);
+  }, [iapState.packNextOfferAt]);
 
   // ── Packs: animations ─────────────────────────────────────────────────────
   const pkBadgePulse = useRef(new Animated.Value(1)).current;
@@ -665,14 +678,71 @@ const ShopScreen: React.FC = () => {
 
   const renderPacks = () => {
     const purchased = iapState.starterPacksPurchased;
-    const activeIdx = PK_META.findIndex(p => !purchased[p.key]);
-    const allOwned = activeIdx === -1;
-    const activePack = allOwned ? null : PK_META[activeIdx];
-    const nextPack = (!allOwned && activeIdx + 1 < PK_META.length)
-      ? PK_META[activeIdx + 1]
+
+    const getOwnedCount = (hardwareId: string): number =>
+      gameState.hardware.find(h => h.id === hardwareId)?.owned ?? 0;
+
+    // Determine which pack is currently appropriate for the player's stage
+    const eligiblePackIdx = PK_META.findIndex(p => {
+      if (purchased[p.key]) return false; // already bought
+      if (p.key === 'small')  return getOwnedCount('asic_gen3') === 0;
+      if (p.key === 'medium') return getOwnedCount('asic_gen3') >= 1 && getOwnedCount('quantum_miner') === 0;
+      if (p.key === 'large')  return getOwnedCount('quantum_miner') >= 1 && getOwnedCount('supercomputer') === 0;
+      if (p.key === 'mega')   return getOwnedCount('supercomputer') >= 1;
+      return false;
+    });
+
+    const allOwned = eligiblePackIdx === -1 && PK_META.every(p => purchased[p.key]);
+    const activePack = eligiblePackIdx >= 0 ? PK_META[eligiblePackIdx] : null;
+
+    // Next pack: the one after eligible (for "Next Offer" section)
+    const nextPack = eligiblePackIdx >= 0 && eligiblePackIdx + 1 < PK_META.length
+      ? PK_META[eligiblePackIdx + 1]
       : null;
 
-    const timerIsLow = pkTimerRef.current < 120;
+    const timerIsLow = pkTimerExpired || (iapState.packOfferExpiresAt > 0 && (iapState.packOfferExpiresAt - Date.now()) < 120000);
+
+    // Build dynamic contents for active pack
+    const packContents: PackContent[] = activePack ? (() => {
+      const items: PackContent[] = [];
+      // CryptoCoins
+      const cc = iapState.packCurrentCC;
+      const ccLabel = cc >= 1_000_000 ? `${(cc / 1_000_000).toFixed(1)}M CC`
+        : cc >= 1_000 ? `${(cc / 1_000).toFixed(0)}K CC`
+        : `${cc} CC`;
+      items.push({ emoji: '◈', val: ccLabel, lbl: 'CryptoCoins', color: colors.ng });
+
+      // Cash
+      const cash = iapState.packCurrentCash;
+      const cashLabel = cash >= 1_000_000 ? `$${(cash / 1_000_000).toFixed(1)}M`
+        : cash >= 1_000 ? `$${(cash / 1_000).toFixed(0)}K`
+        : `$${cash}`;
+      items.push({ emoji: '💰', val: cashLabel, lbl: 'Cash', color: colors.ny });
+
+      // Electricity credits (large/mega only, when non-renewable energy present)
+      if (iapState.packCurrentElectricityHours > 0) {
+        items.push({ emoji: '⚡', val: `${iapState.packCurrentElectricityHours}h`, lbl: 'Energy Credits', color: colors.nc });
+      } else if (activePack.key === 'large' || activePack.key === 'mega') {
+        // Booster for large/mega when no electricity active
+        const boosterVal = activePack.key === 'large' ? '2x · 4h' : '2x · 24h';
+        items.push({ emoji: '⚡', val: boosterVal, lbl: 'Booster', color: colors.nc });
+      } else {
+        items.push({ emoji: '—', val: '—', lbl: 'Booster', color: 'rgba(255,255,255,0.4)' });
+      }
+      return items;
+    })() : [];
+
+    // Compute next offer display
+    const nextOfferDisplay = (() => {
+      if (iapState.packNextOfferAt === 0) return null; // can offer immediately
+      const remaining = Math.max(0, iapState.packNextOfferAt - Date.now());
+      if (remaining === 0) return null;
+      const totalSec = Math.ceil(remaining / 1000);
+      const hh = Math.floor(totalSec / 3600).toString().padStart(2, '0');
+      const mm = Math.floor((totalSec % 3600) / 60).toString().padStart(2, '0');
+      const ss = (totalSec % 60).toString().padStart(2, '0');
+      return `${hh}:${mm}:${ss}`;
+    })();
 
     return (
       <View>
@@ -735,7 +805,7 @@ const ShopScreen: React.FC = () => {
             </View>
 
             <View style={st.pk_offerContentsRow}>
-              {activePack!.contents.map((item, idx) => (
+              {packContents.map((item, idx) => (
                 <View key={idx} style={st.pk_ocItem}>
                   <Text style={st.pk_ocEmoji}>{item.emoji}</Text>
                   <Text style={[st.pk_ocVal, { color: item.color }]}>{item.val}</Text>
@@ -790,7 +860,11 @@ const ShopScreen: React.FC = () => {
             </View>
             <View style={st.pk_nextOffer}>
               <Text style={st.pk_noLabel}>{t('shop.packs.nextOfferIn')}</Text>
-              <Text style={st.pk_noTimer}>47:18:05</Text>
+              {nextOfferDisplay ? (
+                <Text style={st.pk_noTimer}>{nextOfferDisplay}</Text>
+              ) : (
+                <Text style={st.pk_noTimer}>—</Text>
+              )}
               <Text style={st.pk_noSub}>{t('shop.packs.sessionOffer')}</Text>
             </View>
           </>
