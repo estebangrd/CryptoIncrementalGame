@@ -562,6 +562,26 @@ export const BOOSTER_CONFIG = {
     durationMs: 4 * 60 * 60 * 1000,   // 4 horas
     cooldownMs: 5 * 60 * 1000,         // 5 minutos
   },
+  OFFLINE_MINER: {
+    baseDurationMs: 8 * 60 * 60 * 1000,      // 8h
+    extendedDurationMs: 12 * 60 * 60 * 1000,  // 12h (extended offer)
+    extendedOfferChance: 0.30,
+    earningsMultiplier: 0.5,                   // uses BALANCE_CONFIG.OFFLINE_EARNINGS_MULTIPLIER
+  },
+  LUCKY_BLOCK: {
+    rewardMultiplier: 10,
+    earlyBlocks: 500,
+    midBlocks: 2500,
+    lateBlocks: 10000,
+    earlyHashThreshold: 5000,
+    lateHashThreshold: 100000,
+  },
+  MARKET_PUMP: {
+    priceMultiplier: 2.0,
+    baseDurationMs: 30 * 60 * 1000,          // 30 min
+    extendedDurationMs: 37 * 60 * 1000,       // 37 min (≈ +25%)
+    extendedOfferChance: 0.30,
+  },
 } as const;
 
 // ============================================================================

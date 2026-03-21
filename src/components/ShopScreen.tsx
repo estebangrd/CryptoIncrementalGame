@@ -11,7 +11,7 @@ import {
   Easing,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { useGame } from '../contexts/GameContext';
+import { useGame, pendingBoosterMetaRef } from '../contexts/GameContext';
 import { purchaseProduct } from '../services/IAPService';
 import { IAP_PRODUCT_IDS, IAP_PRICES } from '../config/iapConfig';
 import { BOOSTER_CONFIG, PACK_CONFIG } from '../config/balanceConfig';
@@ -128,6 +128,17 @@ const ShopScreen: React.FC = () => {
   const [purchasing, setPurchasing] = useState<string | null>(null);
 
   const iapState = gameState.iapState;
+
+  // Pre-roll extended offers for offline miner and market pump (decided when tab opens)
+  const [offlineMinerExtended, setOfflineMinerExtended] = useState(() => Math.random() < BOOSTER_CONFIG.OFFLINE_MINER.extendedOfferChance);
+  const [marketPumpExtended, setMarketPumpExtended] = useState(() => Math.random() < BOOSTER_CONFIG.MARKET_PUMP.extendedOfferChance);
+
+  // Re-roll when boosters tab becomes active (fresh offer each visit)
+  useEffect(() => {
+    if (activeTab !== 'boosters') return;
+    setOfflineMinerExtended(Math.random() < BOOSTER_CONFIG.OFFLINE_MINER.extendedOfferChance);
+    setMarketPumpExtended(Math.random() < BOOSTER_CONFIG.MARKET_PUMP.extendedOfferChance);
+  }, [activeTab]);
 
   // ── No Ads: flash sale logic ─────────────────────────────────────────────────
   const [flashTimerDisplay, setFlashTimerDisplay] = useState<string>('');
@@ -308,6 +319,35 @@ const ShopScreen: React.FC = () => {
   const confirmPurchase = useCallback((productId: string) => {
     doPurchase(productId);
   }, [doPurchase]);
+
+  // ── Lucky Block block count ───────────────────────────────────────────────
+  const getLuckyBlockCount = (): number => {
+    const hashRate = gameState.totalHashRate ?? 0;
+    if (hashRate < BOOSTER_CONFIG.LUCKY_BLOCK.earlyHashThreshold) return BOOSTER_CONFIG.LUCKY_BLOCK.earlyBlocks;
+    if (hashRate < BOOSTER_CONFIG.LUCKY_BLOCK.lateHashThreshold) return BOOSTER_CONFIG.LUCKY_BLOCK.midBlocks;
+    return BOOSTER_CONFIG.LUCKY_BLOCK.lateBlocks;
+  };
+
+  // ── New booster purchase handlers ─────────────────────────────────────────
+  const purchaseOfflineMiner = useCallback(() => {
+    const durationMs = offlineMinerExtended
+      ? BOOSTER_CONFIG.OFFLINE_MINER.extendedDurationMs
+      : BOOSTER_CONFIG.OFFLINE_MINER.baseDurationMs;
+    pendingBoosterMetaRef.current = { ...pendingBoosterMetaRef.current, offlineMinerDurationMs: durationMs };
+    doPurchase(IAP_PRODUCT_IDS.OFFLINE_MINER);
+  }, [offlineMinerExtended, doPurchase]);
+
+  const purchaseLuckyBlock = useCallback(() => {
+    doPurchase(IAP_PRODUCT_IDS.LUCKY_BLOCK);
+  }, [doPurchase]);
+
+  const purchaseMarketPump = useCallback(() => {
+    const durationMs = marketPumpExtended
+      ? BOOSTER_CONFIG.MARKET_PUMP.extendedDurationMs
+      : BOOSTER_CONFIG.MARKET_PUMP.baseDurationMs;
+    pendingBoosterMetaRef.current = { ...pendingBoosterMetaRef.current, marketPumpDurationMs: durationMs };
+    doPurchase(IAP_PRODUCT_IDS.MARKET_PUMP);
+  }, [marketPumpExtended, doPurchase]);
 
   // ══════════════════════════════════════════════════════════════════════════
   // NO ADS TAB
@@ -663,6 +703,193 @@ const ShopScreen: React.FC = () => {
               ) : (
                 <Text style={[st.bo_btnText, perm ? st.bo_btnTextOwned : st.bo_btnTextPurple]}>
                   {perm ? t('shop.boosters.purchased') : `${t('shop.boosters.buy')} $${IAP_PRICES.PERMANENT_MULTIPLIER.toFixed(2)}`}
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Offline Miner (teal/cyan) */}
+        <View style={[st.bo_card, { borderColor: 'rgba(0,229,255,0.25)' }]}>
+          <LinearGradient
+            colors={['transparent', colors.nc, 'transparent']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={st.bo_topAccent}
+          />
+          <View style={st.bo_top}>
+            <View style={[st.bo_icon, { backgroundColor: 'rgba(0,229,255,0.15)' }]}>
+              <Text style={st.bo_iconEmoji}>🌙</Text>
+            </View>
+            <View style={st.bo_meta}>
+              <Text style={st.bo_name}>Offline Miner</Text>
+              {iapState.offlineMiner.isActive && iapState.offlineMiner.expiresAt && (
+                <View style={[st.bo_activeBadge, { backgroundColor: 'rgba(0,229,255,0.15)' }]}>
+                  <Text style={[st.bo_activeBadgeText, { color: colors.nc }]}>
+                    {'🌙 Active — '}{formatTime(Math.max(0, iapState.offlineMiner.expiresAt - now))}
+                  </Text>
+                </View>
+              )}
+              <Text style={st.bo_desc}>
+                {`Mine at 50% speed while offline for ${offlineMinerExtended ? '12' : '8'} hours`}
+              </Text>
+              <View style={st.bo_durationBadge}>
+                <Text style={st.bo_durationBadgeText}>
+                  {`⏱ ${offlineMinerExtended ? '12' : '8'}h · One-time use`}
+                  {offlineMinerExtended ? ' · ✨ Extended offer!' : ''}
+                </Text>
+              </View>
+            </View>
+          </View>
+          <View style={st.bo_perks}>
+            <View style={st.bo_perkRow}>
+              <View style={st.bo_perkCheck}><Text style={st.bo_perkCheckText}>✓</Text></View>
+              <Text style={st.bo_perkText}>Earn coins while the app is closed</Text>
+            </View>
+            <View style={st.bo_perkRow}>
+              <View style={st.bo_perkCheck}><Text style={st.bo_perkCheckText}>✓</Text></View>
+              <Text style={st.bo_perkText}>50% of your current production rate</Text>
+            </View>
+          </View>
+          <View style={st.bo_footer}>
+            <View style={st.bo_priceWrap}>
+              <Text style={st.bo_priceLabel}>{t('shop.boosters.price')}</Text>
+              <Text style={[st.bo_price, { color: colors.nc }]}>${IAP_PRICES.OFFLINE_MINER.toFixed(2)}</Text>
+            </View>
+            <TouchableOpacity
+              style={[st.bo_btn, { borderColor: colors.nc }, !!purchasing && st.bo_btnDisabled]}
+              onPress={purchaseOfflineMiner}
+              disabled={!!purchasing}
+              activeOpacity={0.8}
+            >
+              {purchasing === IAP_PRODUCT_IDS.OFFLINE_MINER ? (
+                <ActivityIndicator color={colors.nc} size="small" />
+              ) : (
+                <Text style={[st.bo_btnText, { color: colors.nc }]}>
+                  {t('shop.boosters.buy')}{' $'}{IAP_PRICES.OFFLINE_MINER.toFixed(2)}
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Lucky Block (green) */}
+        <View style={[st.bo_card, { borderColor: 'rgba(0,255,136,0.25)' }]}>
+          <LinearGradient
+            colors={['transparent', colors.ng, 'transparent']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={st.bo_topAccent}
+          />
+          <View style={st.bo_top}>
+            <View style={[st.bo_icon, { backgroundColor: 'rgba(0,255,136,0.15)' }]}>
+              <Text style={st.bo_iconEmoji}>🎲</Text>
+            </View>
+            <View style={st.bo_meta}>
+              <Text style={st.bo_name}>Lucky Block</Text>
+              {iapState.luckyBlock.isActive && (
+                <View style={[st.bo_activeBadge, { backgroundColor: 'rgba(0,255,136,0.15)' }]}>
+                  <Text style={[st.bo_activeBadgeText, { color: colors.ng }]}>
+                    {`🎲 Active — ${iapState.luckyBlock.blocksRemaining.toLocaleString()} blocks left`}
+                  </Text>
+                </View>
+              )}
+              <Text style={st.bo_desc}>{`Next ${getLuckyBlockCount().toLocaleString()} blocks give 10x rewards`}</Text>
+              <View style={st.bo_durationBadge}>
+                <Text style={st.bo_durationBadgeText}>
+                  {`◈ ${getLuckyBlockCount().toLocaleString()} blocks · One-time use`}
+                </Text>
+              </View>
+            </View>
+          </View>
+          <View style={st.bo_perks}>
+            <View style={st.bo_perkRow}>
+              <View style={st.bo_perkCheck}><Text style={st.bo_perkCheckText}>✓</Text></View>
+              <Text style={st.bo_perkText}>10x CryptoCoins per block mined</Text>
+            </View>
+            <View style={st.bo_perkRow}>
+              <View style={st.bo_perkCheck}><Text style={st.bo_perkCheckText}>✓</Text></View>
+              <Text style={st.bo_perkText}>Block count scales with your mining stage</Text>
+            </View>
+          </View>
+          <View style={st.bo_footer}>
+            <View style={st.bo_priceWrap}>
+              <Text style={st.bo_priceLabel}>{t('shop.boosters.price')}</Text>
+              <Text style={[st.bo_price, { color: colors.ng }]}>${IAP_PRICES.LUCKY_BLOCK.toFixed(2)}</Text>
+            </View>
+            <TouchableOpacity
+              style={[st.bo_btn, { borderColor: colors.ng }, !!purchasing && st.bo_btnDisabled]}
+              onPress={purchaseLuckyBlock}
+              disabled={!!purchasing}
+              activeOpacity={0.8}
+            >
+              {purchasing === IAP_PRODUCT_IDS.LUCKY_BLOCK ? (
+                <ActivityIndicator color={colors.ng} size="small" />
+              ) : (
+                <Text style={[st.bo_btnText, { color: colors.ng }]}>
+                  {t('shop.boosters.buy')}{' $'}{IAP_PRICES.LUCKY_BLOCK.toFixed(2)}
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Market Pump (pink/magenta) */}
+        <View style={[st.bo_card, { borderColor: 'rgba(255,64,129,0.25)' }]}>
+          <LinearGradient
+            colors={['transparent', '#ff4081', 'transparent']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={st.bo_topAccent}
+          />
+          <View style={st.bo_top}>
+            <View style={[st.bo_icon, { backgroundColor: 'rgba(255,64,129,0.15)' }]}>
+              <Text style={st.bo_iconEmoji}>📈</Text>
+            </View>
+            <View style={st.bo_meta}>
+              <Text style={st.bo_name}>Market Pump</Text>
+              {iapState.marketPump.isActive && iapState.marketPump.expiresAt && (
+                <View style={[st.bo_activeBadge, { backgroundColor: 'rgba(255,64,129,0.15)' }]}>
+                  <Text style={[st.bo_activeBadgeText, { color: '#ff4081' }]}>
+                    {'📈 Active — '}{formatTime(Math.max(0, iapState.marketPump.expiresAt - now))}
+                  </Text>
+                </View>
+              )}
+              <Text style={st.bo_desc}>{`+100% sell price for ${marketPumpExtended ? '37' : '30'} minutes`}</Text>
+              <View style={st.bo_durationBadge}>
+                <Text style={st.bo_durationBadgeText}>
+                  {`⏱ ${marketPumpExtended ? '37' : '30'} min · Stackable`}
+                  {marketPumpExtended ? ' · ✨ Extended offer!' : ''}
+                </Text>
+              </View>
+            </View>
+          </View>
+          <View style={st.bo_perks}>
+            <View style={st.bo_perkRow}>
+              <View style={st.bo_perkCheck}><Text style={st.bo_perkCheckText}>✓</Text></View>
+              <Text style={st.bo_perkText}>Double the price when selling CryptoCoins</Text>
+            </View>
+            <View style={st.bo_perkRow}>
+              <View style={st.bo_perkCheck}><Text style={st.bo_perkCheckText}>✓</Text></View>
+              <Text style={st.bo_perkText}>Works on all market sales</Text>
+            </View>
+          </View>
+          <View style={st.bo_footer}>
+            <View style={st.bo_priceWrap}>
+              <Text style={st.bo_priceLabel}>{t('shop.boosters.price')}</Text>
+              <Text style={[st.bo_price, { color: '#ff4081' }]}>${IAP_PRICES.MARKET_PUMP.toFixed(2)}</Text>
+            </View>
+            <TouchableOpacity
+              style={[st.bo_btn, { borderColor: '#ff4081' }, !!purchasing && st.bo_btnDisabled]}
+              onPress={purchaseMarketPump}
+              disabled={!!purchasing}
+              activeOpacity={0.8}
+            >
+              {purchasing === IAP_PRODUCT_IDS.MARKET_PUMP ? (
+                <ActivityIndicator color="#ff4081" size="small" />
+              ) : (
+                <Text style={[st.bo_btnText, { color: '#ff4081' }]}>
+                  {t('shop.boosters.buy')}{' $'}{IAP_PRICES.MARKET_PUMP.toFixed(2)}
                 </Text>
               )}
             </TouchableOpacity>

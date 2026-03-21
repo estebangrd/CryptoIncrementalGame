@@ -12,6 +12,9 @@ export const IAP_PRODUCT_IDS = {
   STARTER_MEDIUM: 'com.blockchaintycoon.starter_medium',
   STARTER_LARGE: 'com.blockchaintycoon.starter_large',
   STARTER_MEGA: 'com.blockchaintycoon.starter_mega',
+  OFFLINE_MINER: 'com.blockchaintycoon.offlineminer',
+  LUCKY_BLOCK: 'com.blockchaintycoon.luckyblock',
+  MARKET_PUMP: 'com.blockchaintycoon.marketpump',
 } as const;
 
 export const IAP_PRICES = {
@@ -23,6 +26,9 @@ export const IAP_PRICES = {
   STARTER_MEDIUM: 2.99,
   STARTER_LARGE: 4.99,
   STARTER_MEGA: 9.99,
+  OFFLINE_MINER: 1.99,
+  LUCKY_BLOCK: 0.99,
+  MARKET_PUMP: 0.99,
 } as const;
 
 export const IAP_RECEIPT_VALIDATION = {

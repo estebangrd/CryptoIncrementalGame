@@ -288,7 +288,39 @@ export const buyUpgrade = (gameState: GameState, upgradeId: string): GameState =
 
 
 export const updateOfflineProgress = (gameState: GameState): GameState => {
-  return { ...gameState, lastSaveTime: Date.now() };
+  const now = Date.now();
+  const lastSave = gameState.lastSaveTime ?? now;
+
+  // Only apply offline earnings if offline miner is active
+  const offlineMiner = gameState.iapState?.offlineMiner;
+  if (!offlineMiner?.isActive || !offlineMiner.expiresAt) {
+    return { ...gameState, lastSaveTime: now };
+  }
+
+  // Cap offline time to the miner's remaining active window
+  const offlineEnd = Math.min(now, offlineMiner.expiresAt);
+  const offlineMs = Math.max(0, offlineEnd - lastSave);
+  const offlineSec = offlineMs / 1000;
+
+  if (offlineSec <= 0) {
+    return { ...gameState, lastSaveTime: now };
+  }
+
+  const earnings = (gameState.cryptoCoinsPerSecond ?? 0) * offlineSec * BALANCE_CONFIG.OFFLINE_EARNINGS_MULTIPLIER;
+  const offlineMinerExpired = now >= offlineMiner.expiresAt;
+
+  return {
+    ...gameState,
+    cryptoCoins: gameState.cryptoCoins + earnings,
+    totalCryptoCoins: gameState.totalCryptoCoins + earnings,
+    lastSaveTime: now,
+    iapState: gameState.iapState ? {
+      ...gameState.iapState,
+      offlineMiner: offlineMinerExpired
+        ? { isActive: false, activatedAt: null, expiresAt: null }
+        : offlineMiner,
+    } : gameState.iapState,
+  };
 };
 
 export const formatNumber = (num: number): string => {
@@ -299,7 +331,7 @@ export const formatNumber = (num: number): string => {
   return (num / 1000000000000).toFixed(1) + 'T';
 };
 
-import { UNLOCK_CONFIG, HARDWARE_CONFIG, BOOSTER_CONFIG } from '../config/balanceConfig';
+import { UNLOCK_CONFIG, HARDWARE_CONFIG, BOOSTER_CONFIG, BALANCE_CONFIG } from '../config/balanceConfig';
 
 // Rango del seed: 90000–96000 → CC price ≈ BTC/seed ≈ $1.03–$1.38
 const PRICE_SEED_MIN = 90000;

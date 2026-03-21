@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect, useState, useCallback, ReactNode } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
-import { GameState, Cryptocurrency, IAPState, AdState, AdBoostState, PrestigeRun, RunStats, AILevel, EndingType } from '../types/game';
+import { GameState, Cryptocurrency, IAPState, AdState, AdBoostState, PrestigeRun, RunStats, AILevel, EndingType, OfflineMinerState, LuckyBlockState, MarketPumpState } from '../types/game';
 import { hardwareProgression } from '../data/hardwareData';
 import { initialUpgrades } from '../data/gameData';
 import { cryptocurrencies } from '../data/cryptocurrencies';
@@ -133,9 +133,18 @@ type GameAction =
   | { type: 'ATTEMPT_DISCONNECT' }
   | { type: 'COMPLETE_ENDING_PRESTIGE'; payload: { endingType: EndingType } }
   | { type: 'SET_FLASH_SALE'; payload: { expiresAt: number; cooldownUntil: number } }
-  | { type: 'SET_PACK_OFFER'; payload: { expiresAt: number; nextOfferAt: number; cc: number; cash: number; electricityHours: number } };
+  | { type: 'SET_PACK_OFFER'; payload: { expiresAt: number; nextOfferAt: number; cc: number; cash: number; electricityHours: number } }
+  | { type: 'PURCHASE_OFFLINE_MINER'; payload: { record: PurchaseRecord; durationMs: number } }
+  | { type: 'PURCHASE_LUCKY_BLOCK'; payload: { record: PurchaseRecord; blocks: number } }
+  | { type: 'PURCHASE_MARKET_PUMP'; payload: { record: PurchaseRecord; durationMs: number } }
+  | { type: 'EXPIRE_MARKET_PUMP' }
+  | { type: 'CHECK_MARKET_PUMP_EXPIRATION' };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
+
+// Module-level ref for passing purchase metadata from ShopScreen to the IAP listener
+// (offline miner duration, market pump duration — decided at purchase initiation time)
+export const pendingBoosterMetaRef: { current: { offlineMinerDurationMs?: number; marketPumpDurationMs?: number } } = { current: {} };
 
 // Helper function to recalculate all game stats
 const recalculateGameStats = (state: GameState): GameState => {
@@ -297,6 +306,9 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           packCurrentCC: 0,
           packCurrentCash: 0,
           packCurrentElectricityHours: 0,
+          offlineMiner: { isActive: false, activatedAt: null, expiresAt: null } as OfflineMinerState,
+          luckyBlock: { isActive: false, blocksRemaining: 0 } as LuckyBlockState,
+          marketPump: { isActive: false, activatedAt: null, expiresAt: null } as MarketPumpState,
           ...action.payload.iapState,
         },
         adState: action.payload.adState ?? {
@@ -426,6 +438,24 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           newState.blocksMined += 1;
           newState.currentReward = calculateCurrentReward(newState.blocksMined);
           newState.nextHalving = calculateNextHalving(newState.blocksMined);
+        }
+
+        // Lucky Block bonus: 10x reward per block while active
+        if (state.iapState.luckyBlock.isActive && state.iapState.luckyBlock.blocksRemaining > 0 && blocksToMine > 0) {
+          const blocksConsumed = Math.min(blocksToMine, state.iapState.luckyBlock.blocksRemaining);
+          const luckyBonus = newState.currentReward * 9 * blocksConsumed; // 9x extra = 10x total
+          newState.cryptoCoins = (newState.cryptoCoins ?? 0) + luckyBonus;
+          newState.totalCryptoCoins = (newState.totalCryptoCoins ?? 0) + luckyBonus;
+          const newBlocksRemaining = state.iapState.luckyBlock.blocksRemaining - blocksConsumed;
+          newState = {
+            ...newState,
+            iapState: {
+              ...state.iapState,
+              luckyBlock: newBlocksRemaining > 0
+                ? { isActive: true, blocksRemaining: newBlocksRemaining }
+                : { isActive: false, blocksRemaining: 0 },
+            },
+          };
         }
 
         // Coins are based on steady-state production rate, independent of halving rewards
@@ -650,7 +680,12 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         return state;
       }
 
-      const moneyEarned = coinsToSell * action.payload.price;
+      const pumpMultiplier = state.iapState.marketPump.isActive &&
+        state.iapState.marketPump.expiresAt !== null &&
+        Date.now() < state.iapState.marketPump.expiresAt
+        ? BOOSTER_CONFIG.MARKET_PUMP.priceMultiplier
+        : 1;
+      const moneyEarned = coinsToSell * action.payload.price * pumpMultiplier;
       if (!isFinite(moneyEarned) || moneyEarned <= 0) return state;
 
       return recalculateGameStats({
@@ -770,6 +805,14 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         newIapState = { ...newIapState, booster5x: { isActive: false, activatedAt: null, expiresAt: null } };
         changed = true;
       }
+      if (state.iapState.marketPump.isActive && state.iapState.marketPump.expiresAt !== null && now >= state.iapState.marketPump.expiresAt) {
+        newIapState = { ...newIapState, marketPump: { isActive: false, activatedAt: null, expiresAt: null } };
+        changed = true;
+      }
+      if (state.iapState.offlineMiner.isActive && state.iapState.offlineMiner.expiresAt !== null && now >= state.iapState.offlineMiner.expiresAt) {
+        newIapState = { ...newIapState, offlineMiner: { isActive: false, activatedAt: null, expiresAt: null } };
+        changed = true;
+      }
       if (!changed) return state;
       return { ...state, iapState: newIapState };
     }
@@ -869,6 +912,66 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           packCurrentElectricityHours: action.payload.electricityHours,
         },
       };
+
+    case 'PURCHASE_OFFLINE_MINER': {
+      const now = Date.now();
+      return {
+        ...state,
+        iapState: {
+          ...state.iapState,
+          offlineMiner: { isActive: true, activatedAt: now, expiresAt: now + action.payload.durationMs },
+          purchaseHistory: [...state.iapState.purchaseHistory, { ...action.payload.record, delivered: true }],
+          isPurchasing: false,
+        },
+      };
+    }
+
+    case 'PURCHASE_LUCKY_BLOCK': {
+      return {
+        ...state,
+        iapState: {
+          ...state.iapState,
+          luckyBlock: { isActive: true, blocksRemaining: action.payload.blocks },
+          purchaseHistory: [...state.iapState.purchaseHistory, { ...action.payload.record, delivered: true }],
+          isPurchasing: false,
+        },
+      };
+    }
+
+    case 'PURCHASE_MARKET_PUMP': {
+      const now = Date.now();
+      return {
+        ...state,
+        iapState: {
+          ...state.iapState,
+          marketPump: { isActive: true, activatedAt: now, expiresAt: now + action.payload.durationMs },
+          purchaseHistory: [...state.iapState.purchaseHistory, { ...action.payload.record, delivered: true }],
+          isPurchasing: false,
+        },
+      };
+    }
+
+    case 'EXPIRE_MARKET_PUMP':
+      if (!state.iapState.marketPump.isActive) return state;
+      return {
+        ...state,
+        iapState: {
+          ...state.iapState,
+          marketPump: { isActive: false, activatedAt: null, expiresAt: null },
+        },
+      };
+
+    case 'CHECK_MARKET_PUMP_EXPIRATION': {
+      const now = Date.now();
+      if (!state.iapState.marketPump.isActive || !state.iapState.marketPump.expiresAt || now < state.iapState.marketPump.expiresAt) return state;
+      return {
+        ...state,
+        iapState: {
+          ...state.iapState,
+          marketPump: { isActive: false, activatedAt: null, expiresAt: null },
+        },
+      };
+    }
 
     case 'ACTIVATE_AD_BOOST': {
       const now = Date.now();
@@ -1245,6 +1348,9 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       packCurrentCC: 0,
       packCurrentCash: 0,
       packCurrentElectricityHours: 0,
+      offlineMiner: { isActive: false, activatedAt: null, expiresAt: null },
+      luckyBlock: { isActive: false, blocksRemaining: 0 },
+      marketPump: { isActive: false, activatedAt: null, expiresAt: null },
     } as IAPState,
     adState: {
       adInitialized: false,
@@ -1444,6 +1550,24 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           if (packType) {
             dispatch({ type: 'PURCHASE_STARTER_PACK', payload: { packType, record } });
           }
+        } else if (productId === IAP_PRODUCT_IDS.OFFLINE_MINER) {
+          // Use the pending booster meta stored by ShopScreen via the ref, fall back to base duration
+          const durationMs = pendingBoosterMetaRef.current?.offlineMinerDurationMs ?? BOOSTER_CONFIG.OFFLINE_MINER.baseDurationMs;
+          dispatch({ type: 'PURCHASE_OFFLINE_MINER', payload: { record, durationMs } });
+          pendingBoosterMetaRef.current = {};
+        } else if (productId === IAP_PRODUCT_IDS.LUCKY_BLOCK) {
+          const hashRate = gameStateRef.current.totalHashRate ?? 0;
+          let blocks = BOOSTER_CONFIG.LUCKY_BLOCK.earlyBlocks;
+          if (hashRate >= BOOSTER_CONFIG.LUCKY_BLOCK.lateHashThreshold) {
+            blocks = BOOSTER_CONFIG.LUCKY_BLOCK.lateBlocks;
+          } else if (hashRate >= BOOSTER_CONFIG.LUCKY_BLOCK.earlyHashThreshold) {
+            blocks = BOOSTER_CONFIG.LUCKY_BLOCK.midBlocks;
+          }
+          dispatch({ type: 'PURCHASE_LUCKY_BLOCK', payload: { record, blocks } });
+        } else if (productId === IAP_PRODUCT_IDS.MARKET_PUMP) {
+          const durationMs = pendingBoosterMetaRef.current?.marketPumpDurationMs ?? BOOSTER_CONFIG.MARKET_PUMP.baseDurationMs;
+          dispatch({ type: 'PURCHASE_MARKET_PUMP', payload: { record, durationMs } });
+          pendingBoosterMetaRef.current = {};
         }
 
         dispatch({ type: 'SET_IAP_PURCHASING', payload: false });

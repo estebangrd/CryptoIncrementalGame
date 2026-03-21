@@ -53,6 +53,23 @@ export interface IAPBoosterState {
   expiresAt: number | null;
 }
 
+export interface OfflineMinerState {
+  isActive: boolean;
+  activatedAt: number | null;
+  expiresAt: number | null;
+}
+
+export interface LuckyBlockState {
+  isActive: boolean;
+  blocksRemaining: number;
+}
+
+export interface MarketPumpState {
+  isActive: boolean;
+  activatedAt: number | null;
+  expiresAt: number | null;
+}
+
 export interface IAPState {
   removeAdsPurchased: boolean;
   removeAdsPurchaseDate: number | null;
@@ -76,6 +93,9 @@ export interface IAPState {
   packCurrentCC: number;                // randomized CC for current active offer
   packCurrentCash: number;              // randomized cash for current active offer
   packCurrentElectricityHours: number;  // 0 if no electricity for this pack
+  offlineMiner: OfflineMinerState;
+  luckyBlock: LuckyBlockState;
+  marketPump: MarketPumpState;
 }
 
 export interface AdState {
