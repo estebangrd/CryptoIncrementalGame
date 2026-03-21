@@ -1146,15 +1146,15 @@ const st = StyleSheet.create({
     marginLeft: 6, overflow: 'hidden',
   },
   pk_offerBadgeText: {
-    fontFamily: fonts.orbitron, fontSize: 8, fontWeight: '900', letterSpacing: 1, color: '#000',
+    fontFamily: fonts.orbitronBlack, fontSize: 8, letterSpacing: 1, color: '#000',
   },
-  pk_offerName: { fontFamily: fonts.orbitron, fontSize: 15, fontWeight: '900', color: '#ffffff' },
+  pk_offerName: { fontFamily: fonts.orbitronBlack, fontSize: 15, color: '#ffffff' },
   pk_offerTimerMini: { alignItems: 'flex-end' },
   pk_otmLabel: {
     fontFamily: fonts.mono, fontSize: 7, letterSpacing: 2,
     color: 'rgba(255,255,255,0.4)', marginBottom: 2,
   },
-  pk_otmTime: { fontFamily: fonts.orbitron, fontSize: 15, fontWeight: '900', color: colors.ny },
+  pk_otmTime: { fontFamily: fonts.orbitronBlack, fontSize: 15, color: colors.ny },
   pk_offerContentsRow: { flexDirection: 'row', gap: 6, marginBottom: 10 },
   pk_ocItem: {
     flex: 1, backgroundColor: 'rgba(0,0,0,0.25)',
@@ -1178,7 +1178,7 @@ const st = StyleSheet.create({
     fontFamily: fonts.mono, fontSize: 9, letterSpacing: 1,
     color: 'rgba(255,255,255,0.18)', textDecorationLine: 'line-through',
   },
-  pk_ofNow: { fontFamily: fonts.orbitron, fontSize: 22, fontWeight: '900', color: colors.ny },
+  pk_ofNow: { fontFamily: fonts.orbitronBlack, fontSize: 22, color: colors.ny },
   pk_ofBtn: {
     paddingVertical: 13, paddingHorizontal: 18, borderRadius: 11,
     backgroundColor: 'rgba(0,255,136,0.15)',
@@ -1214,7 +1214,7 @@ const st = StyleSheet.create({
     color: 'rgba(255,255,255,0.18)', marginBottom: 6, textTransform: 'uppercase',
   },
   pk_noTimer: {
-    fontFamily: fonts.orbitron, fontSize: 22, fontWeight: '900',
+    fontFamily: fonts.orbitronBlack, fontSize: 22,
     color: 'rgba(255,255,255,0.4)', marginBottom: 4,
   },
   pk_noSub: {
@@ -1227,7 +1227,7 @@ const st = StyleSheet.create({
   },
   pk_allOwnedEmoji: { fontSize: 36, color: colors.ng, marginBottom: 8, textAlign: 'center' },
   pk_allOwnedTitle: {
-    fontFamily: fonts.orbitron, fontSize: 16, fontWeight: '900', color: '#ffffff', marginBottom: 6,
+    fontFamily: fonts.orbitronBlack, fontSize: 16, color: '#ffffff', marginBottom: 6,
   },
   pk_allOwnedSub: {
     fontFamily: fonts.mono, fontSize: 9, letterSpacing: 2,
