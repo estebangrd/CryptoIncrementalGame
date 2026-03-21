@@ -1498,9 +1498,10 @@ const st = StyleSheet.create({
   /* TEMP: demo toggle styles (remove before ship) */
   na_demoToggle: { flexDirection: 'row', gap: 6, marginBottom: 12 },
   na_demoToggleBtn: {
-    flex: 1, paddingVertical: 7, borderRadius: 8,
+    flex: 1, padding: 7, borderRadius: 8,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
-    alignItems: 'center',
+    backgroundColor: 'transparent',
+    alignItems: 'center', justifyContent: 'center',
   },
   na_demoToggleBtnActive: { borderColor: colors.ng, backgroundColor: 'rgba(0,255,136,0.1)' },
   na_demoToggleBtnText: { fontFamily: fonts.mono, fontSize: 9, letterSpacing: 1, color: 'rgba(255,255,255,0.4)' },
