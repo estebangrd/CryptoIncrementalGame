@@ -843,6 +843,19 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
             : 0)
         : staticRewards.realMoney;
       const now = Date.now();
+      // Deliver 2x booster: small/medium always; large/mega only when no electricity credits
+      const boosterDurations: Record<string, number> = {
+        small: PACK_CONFIG.small.boosterDurationMs,
+        medium: PACK_CONFIG.medium.boosterDurationMs,
+        large: PACK_CONFIG.large.boosterDurationMs,
+        mega: PACK_CONFIG.mega.boosterDurationMs,
+      };
+      const shouldActivateBooster =
+        packType === 'small' || packType === 'medium' ||
+        ((packType === 'large' || packType === 'mega') && state.iapState.packCurrentElectricityHours === 0);
+      const booster2xUpdate = shouldActivateBooster
+        ? { booster2x: { isActive: true, activatedAt: now, expiresAt: now + boosterDurations[packType] } }
+        : {};
       return {
         ...state,
         cryptoCoins: state.cryptoCoins + ccReward,
@@ -851,10 +864,10 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         totalRealMoneyEarned: state.totalRealMoneyEarned + cashReward,
         iapState: {
           ...state.iapState,
+          ...booster2xUpdate,
           starterPacksPurchased: { ...state.iapState.starterPacksPurchased, [packType]: true },
           purchaseHistory: [...state.iapState.purchaseHistory, { ...record, delivered: true }],
           isPurchasing: false,
-          // Clear current offer, set cooldown for next one
           packOfferExpiresAt: 0,
           packNextOfferAt: now + PACK_CONFIG.COOLDOWN_MS,
           packCurrentCC: 0,

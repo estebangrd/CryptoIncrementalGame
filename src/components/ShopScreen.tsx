@@ -946,15 +946,14 @@ const ShopScreen: React.FC = () => {
         : `$${cash}`;
       items.push({ emoji: '💰', val: cashLabel, lbl: 'Cash', color: colors.ny });
 
-      // Electricity credits (large/mega only, when non-renewable energy present)
+      // Third benefit: energy credits (non-renewable stage) or production booster
       if (iapState.packCurrentElectricityHours > 0) {
         items.push({ emoji: '⚡', val: `${iapState.packCurrentElectricityHours}h`, lbl: 'Energy Credits', color: colors.nc });
-      } else if (activePack.key === 'large' || activePack.key === 'mega') {
-        // Booster for large/mega when no electricity active
-        const boosterVal = activePack.key === 'large' ? '2x · 4h' : '2x · 24h';
-        items.push({ emoji: '⚡', val: boosterVal, lbl: 'Booster', color: colors.nc });
       } else {
-        items.push({ emoji: '—', val: '—', lbl: 'Booster', color: 'rgba(255,255,255,0.4)' });
+        // Every pack always includes a 2x production booster (duration scales with tier)
+        const boosterHours: Record<PackKey, number> = { small: 1, medium: 2, large: 4, mega: 24 };
+        const h = boosterHours[activePack.key];
+        items.push({ emoji: '⚡', val: `2x · ${h}h`, lbl: 'Booster', color: colors.ny });
       }
       return items;
     })() : [];

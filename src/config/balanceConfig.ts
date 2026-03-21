@@ -604,19 +604,21 @@ export const PACK_CONFIG = {
   small: {
     ccRange: [10_000, 12_000] as [number, number],
     cashRange: [500, 700] as [number, number],
-    // Show until player owns first asic_gen3 (then it's too late for starter)
+    boosterDurationMs: 1 * 60 * 60 * 1000,  // 1h 2x production booster (always included)
     showUntilHardwareId: 'asic_gen3',
   },
   medium: {
     ccRange: [200_000, 300_000] as [number, number],
     cashRange: [8_000, 12_000] as [number, number],
-    showAfterHardwareId: 'asic_gen3',    // requires ≥1 asic_gen3 owned
+    boosterDurationMs: 2 * 60 * 60 * 1000,  // 2h 2x production booster (always included)
+    showAfterHardwareId: 'asic_gen3',
     showUntilHardwareId: 'quantum_miner',
   },
   large: {
     ccRange: [1_000_000, 1_500_000] as [number, number],
     cashRange: [50_000, 75_000] as [number, number],
-    showAfterHardwareId: 'quantum_miner', // requires ≥1 quantum_miner owned
+    boosterDurationMs: 4 * 60 * 60 * 1000,  // 4h booster (when no electricity credits)
+    showAfterHardwareId: 'quantum_miner',
     showUntilHardwareId: 'supercomputer',
     includeElectricity: true,
     electricityHoursRange: [24, 48] as [number, number],
@@ -624,7 +626,8 @@ export const PACK_CONFIG = {
   mega: {
     ccRange: [10_000_000, 15_000_000] as [number, number],
     cashRange: [500_000, 750_000] as [number, number],
-    showAfterHardwareId: 'supercomputer', // requires ≥1 supercomputer owned
+    boosterDurationMs: 24 * 60 * 60 * 1000, // 24h booster (when no electricity credits)
+    showAfterHardwareId: 'supercomputer',
     includeElectricity: true,
     electricityHoursRange: [72, 120] as [number, number],
   },
