@@ -1,5 +1,63 @@
-# Good Ending Screen — Style Reference
-Extracted from `blockchain-tycoon-victory (1).html`. All values are exact.
+# Style Reference — Blockchain Tycoon
+Applies to all screens. Extracted from HTML prototypes in `specs/ui-ux/`.
+
+---
+
+## ⚠️ Typography Rules (Android/React Native)
+
+### Font stack
+
+| Role | Font file | `theme.ts` key | HTML equivalent |
+|------|-----------|----------------|----------------|
+| Display / headings | `Orbitron-Bold.ttf` | `fonts.orbitron` | `font-family:'Orbitron'; font-weight:700` |
+| Display / heavy numbers | `Orbitron-Black.ttf` | `fonts.orbitronBlack` | `font-family:'Orbitron'; font-weight:900` |
+| Display / light | `Orbitron-Regular.ttf` | `fonts.orbitronRegular` | `font-family:'Orbitron'; font-weight:400` |
+| Mono labels / tags | `ShareTechMono-Regular.ttf` | `fonts.mono` | `font-family:'Share Tech Mono'` |
+| Body / descriptions | `Rajdhani-Regular.ttf` | `fonts.rajdhani` | `font-family:'Rajdhani'` |
+
+### ⛔ Orbitron weight rule — DO NOT break this
+
+On Android, `fontWeight` is **ignored** when a named font-file variant is specified as `fontFamily`. The weight comes from the TTF file, not the StyleSheet property. Combining both causes Android to apply **synthetic bold on top of the named variant**, producing incorrect character rendering.
+
+**Wrong — causes Android to synthesize bold:**
+```ts
+// ❌ fontWeight: '700' is ignored / causes double-bold on Orbitron-Bold
+fontFamily: fonts.orbitron, fontWeight: '700'
+
+// ❌ fontWeight: '900' is silently ignored — still renders as Bold, not Black
+fontFamily: fonts.orbitron, fontWeight: '900'
+```
+
+**Correct — weight encoded in the font file:**
+```ts
+// ✓ Weight 700 (Bold)
+fontFamily: fonts.orbitron          // Orbitron-Bold.ttf — never add fontWeight
+
+// ✓ Weight 900 (Black)
+fontFamily: fonts.orbitronBlack     // Orbitron-Black.ttf — never add fontWeight
+
+// ✓ Weight 400 (Regular)
+fontFamily: fonts.orbitronRegular   // Orbitron-Regular.ttf — never add fontWeight
+```
+
+### Mapping HTML `font-weight` → React Native font key
+
+| HTML spec value | React Native key |
+|-----------------|-----------------|
+| `font-weight: 900` with Orbitron | `fonts.orbitronBlack` (no `fontWeight` prop) |
+| `font-weight: 700` with Orbitron | `fonts.orbitron` (no `fontWeight` prop) |
+| `font-weight: 400` with Orbitron | `fonts.orbitronRegular` (no `fontWeight` prop) |
+| Any weight with Share Tech Mono | `fonts.mono` (single weight, no `fontWeight` prop) |
+| Any weight with Rajdhani | use `fonts.rajdhani` / `fonts.rajdhaniBold` / etc. per weight |
+
+### Rajdhani variants (static files, all safe)
+
+| Weight | `theme.ts` key |
+|--------|----------------|
+| 300 Light | `fonts.rajdhaniLight` |
+| 400 Regular | `fonts.rajdhani` |
+| 600 SemiBold | `fonts.rajdhaniSemi` |
+| 700 Bold | `fonts.rajdhaniBold` |
 
 ---
 
