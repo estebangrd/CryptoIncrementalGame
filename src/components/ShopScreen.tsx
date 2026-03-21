@@ -1,15 +1,21 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, ActivityIndicator,
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  Animated,
 } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import { useGame } from '../contexts/GameContext';
-
 import { purchaseProduct } from '../services/IAPService';
 import { IAP_PRODUCT_IDS, IAP_PRICES } from '../config/iapConfig';
-import { BOOSTER_CONFIG, STARTER_PACK_REWARDS } from '../config/balanceConfig';
+import { BOOSTER_CONFIG } from '../config/balanceConfig';
+import { colors, fonts } from '../config/theme';
 
-// ─── helpers ──────────────────────────────────────────────────────────────────
+// ── helpers ──────────────────────────────────────────────────────────────────
 
 const formatTime = (ms: number): string => {
   const h = Math.floor(ms / 3600000);
@@ -17,16 +23,88 @@ const formatTime = (ms: number): string => {
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
 };
 
-// ─── Sub-components ──────────────────────────────────────────────────────────
+// ── Pack metadata (static) ────────────────────────────────────────────────────
 
-interface BadgeProps { label: string; color: string; }
-const Badge: React.FC<BadgeProps> = ({ label, color }) => (
-  <View style={[styles.badge, { backgroundColor: color }]}>
-    <Text style={styles.badgeText}>{label}</Text>
-  </View>
-);
+type PackKey = 'small' | 'medium' | 'large' | 'mega';
 
-// ─── Main Component ──────────────────────────────────────────────────────────
+interface PackContent {
+  emoji: string;
+  val: string;
+  lbl: string;
+  color: string;
+}
+
+interface PackMeta {
+  key: PackKey;
+  productId: string;
+  name: string;
+  eyebrow: string;
+  wasPrice: number;
+  price: number;
+  unlockNote: string;
+  contents: PackContent[];
+}
+
+const PK_META: PackMeta[] = [
+  {
+    key: 'small',
+    productId: IAP_PRODUCT_IDS.STARTER_SMALL,
+    name: 'Starter Pack',
+    eyebrow: 'Oferta de Milestone',
+    wasPrice: 1.99,
+    price: IAP_PRICES.STARTER_SMALL,
+    unlockNote: '🔒 Desbloqueada al completar Growth Pack',
+    contents: [
+      { emoji: '◈', val: '10K CC', lbl: 'CryptoCoins', color: colors.ng },
+      { emoji: '💰', val: '$500', lbl: 'Cash', color: colors.ny },
+      { emoji: '—', val: '—', lbl: 'Booster', color: 'rgba(255,255,255,0.4)' },
+    ],
+  },
+  {
+    key: 'medium',
+    productId: IAP_PRODUCT_IDS.STARTER_MEDIUM,
+    name: 'Growth Pack',
+    eyebrow: 'Oferta de Temporada',
+    wasPrice: 4.99,
+    price: IAP_PRICES.STARTER_MEDIUM,
+    unlockNote: '🔒 Desbloqueada al completar Mining Empire',
+    contents: [
+      { emoji: '◈', val: '50K CC', lbl: 'CryptoCoins', color: colors.ng },
+      { emoji: '💰', val: '$2.5K', lbl: 'Cash', color: colors.ny },
+      { emoji: '—', val: '—', lbl: 'Booster', color: 'rgba(255,255,255,0.4)' },
+    ],
+  },
+  {
+    key: 'large',
+    productId: IAP_PRODUCT_IDS.STARTER_LARGE,
+    name: 'Mining Empire',
+    eyebrow: 'Oferta Premium',
+    wasPrice: 7.99,
+    price: IAP_PRICES.STARTER_LARGE,
+    unlockNote: '🔒 Desbloqueada al completar Crypto Titan',
+    contents: [
+      { emoji: '◈', val: '150K CC', lbl: 'CryptoCoins', color: colors.ng },
+      { emoji: '💰', val: '$10K', lbl: 'Cash', color: colors.ny },
+      { emoji: '⚡', val: '2x · 4h', lbl: 'Booster', color: colors.nc },
+    ],
+  },
+  {
+    key: 'mega',
+    productId: IAP_PRODUCT_IDS.STARTER_MEGA,
+    name: 'Crypto Titan',
+    eyebrow: 'Oferta Élite',
+    wasPrice: 14.99,
+    price: IAP_PRICES.STARTER_MEGA,
+    unlockNote: '🔒 Último pack disponible',
+    contents: [
+      { emoji: '◈', val: '500K CC', lbl: 'CryptoCoins', color: colors.ng },
+      { emoji: '💰', val: '$50K', lbl: 'Cash', color: colors.ny },
+      { emoji: '⚡', val: '2x · 24h', lbl: 'Booster', color: colors.nc },
+    ],
+  },
+];
+
+// ── Main Component ────────────────────────────────────────────────────────────
 
 type ShopTab = 'removeAds' | 'boosters' | 'packs';
 
@@ -37,13 +115,74 @@ const ShopScreen: React.FC = () => {
 
   const iapState = gameState.iapState;
 
+  // ── No Ads: flash sale timer ────────────────────────────────────────────────
+  const flashTimerRef = useRef<number>(66862); // 18h 34m 22s
+  const [flashTimerDisplay, setFlashTimerDisplay] = useState<string>('18:34:22');
+  const [flashTimerColor, setFlashTimerColor] = useState<string>(colors.ny);
+
+  useEffect(() => {
+    if (iapState.removeAdsPurchased) return;
+    const id = setInterval(() => {
+      if (flashTimerRef.current <= 0) return;
+      flashTimerRef.current -= 1;
+      const s = flashTimerRef.current;
+      const h = Math.floor(s / 3600);
+      const m = Math.floor((s % 3600) / 60);
+      const sec = s % 60;
+      setFlashTimerDisplay(
+        `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
+      );
+      if (s < 3600) setFlashTimerColor(colors.nr);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [iapState.removeAdsPurchased]);
+
+  // ── Packs: cosmetic countdown timer ────────────────────────────────────────
+  const pkTimerRef = useRef<number>(11 * 60 + 42);
+  const [pkTimerDisplay, setPkTimerDisplay] = useState<string>('11:42');
+  const [pkTimerExpired, setPkTimerExpired] = useState<boolean>(false);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (pkTimerRef.current <= 0) {
+        setPkTimerExpired(true);
+        return;
+      }
+      pkTimerRef.current -= 1;
+      const s = pkTimerRef.current;
+      const mm = Math.floor(s / 60).toString().padStart(2, '0');
+      const ss = (s % 60).toString().padStart(2, '0');
+      setPkTimerDisplay(`${mm}:${ss}`);
+    }, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  // ── Packs: animations ─────────────────────────────────────────────────────
+  const pkBadgePulse = useRef(new Animated.Value(1)).current;
+  const pkTimerOpacity = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pkBadgePulse, { toValue: 1.1, duration: 1000, useNativeDriver: true }),
+        Animated.timing(pkBadgePulse, { toValue: 1.0, duration: 1000, useNativeDriver: true }),
+      ])
+    ).start();
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pkTimerOpacity, { toValue: 0.5, duration: 900, useNativeDriver: true }),
+        Animated.timing(pkTimerOpacity, { toValue: 1.0, duration: 900, useNativeDriver: true }),
+      ])
+    ).start();
+  }, [pkBadgePulse, pkTimerOpacity]);
+
+  // ── Purchase logic ────────────────────────────────────────────────────────
   const doPurchase = useCallback(async (productId: string) => {
     if (iapState.isPurchasing || purchasing) return;
     try {
       setPurchasing(productId);
       dispatch({ type: 'SET_IAP_PURCHASING', payload: true });
       await purchaseProduct(productId);
-      // Result handled via purchaseUpdatedListener in GameContext
     } catch (error: any) {
       if (error?.code !== 'E_USER_CANCELLED') {
         showToast(error?.message || 'Purchase failed', 'error');
@@ -58,36 +197,167 @@ const ShopScreen: React.FC = () => {
     doPurchase(productId);
   }, [doPurchase]);
 
-  // ── Remove Ads tab ───────────────────────────────────────────────────────
+  // ══════════════════════════════════════════════════════════════════════════
+  // NO ADS TAB
+  // ══════════════════════════════════════════════════════════════════════════
 
-  const renderRemoveAds = () => {
+  const renderNoAds = () => {
     const purchased = iapState.removeAdsPurchased;
+    const purchaseCount = iapState.purchaseHistory.length;
+
+    const getStepState = (stepIndex: number): 'done' | 'active' | 'locked' => {
+      if (purchaseCount > stepIndex) return 'done';
+      if (purchaseCount === stepIndex) return 'active';
+      return 'locked';
+    };
+
+    const step1 = getStepState(1);
+    const step2 = getStepState(2);
+    const step3 = getStepState(3);
+
+    const stepContainerStyle = (s: 'done' | 'active' | 'locked') => {
+      if (s === 'done') return [st.na_step, st.na_stepDone];
+      if (s === 'active') return [st.na_step, st.na_stepActive];
+      return [st.na_step];
+    };
+
+    const stepPctColor = (s: 'done' | 'active' | 'locked'): string => {
+      if (s === 'done') return colors.ng;
+      if (s === 'active') return colors.ny;
+      return 'rgba(255,255,255,0.18)';
+    };
+
+    const nextChanceText = (): string => {
+      if (purchaseCount === 0) return 'primera compra: 50% de chance';
+      if (purchaseCount === 1) return 'próxima compra: 75% de chance';
+      return 'próxima compra: 100% garantizado';
+    };
+
     return (
-      <View style={styles.card}>
-        <Text style={styles.cardIcon}>🚫</Text>
-        <Text style={styles.cardTitle}>Remove Ads</Text>
-        {purchased && <Badge label="Purchased ✓" color="#00ff88" />}
-        <View style={styles.benefitBox}>
-          <Text style={styles.benefitText}>✓ No more banner ads</Text>
-          <Text style={styles.benefitText}>✓ No more interstitial ads</Text>
-          <Text style={styles.benefitText}>✓ Rewarded ads still available</Text>
+      <View>
+        {/* Hero card */}
+        <View style={st.na_hero}>
+          <LinearGradient
+            colors={['#ff3d5a', '#ff8c42']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={st.na_heroAccent}
+          />
+          <Text style={st.na_bigIcon}>🚫</Text>
+          <Text style={st.na_heroTitle}>Eliminá los ads permanentemente</Text>
+
+          <View style={st.na_perks}>
+            <View style={st.na_perk}>
+              <View style={st.na_perkX}><Text style={st.na_perkXText}>✕</Text></View>
+              <Text style={st.na_perkText}>Sin banner ads</Text>
+            </View>
+            <View style={st.na_perk}>
+              <View style={st.na_perkX}><Text style={st.na_perkXText}>✕</Text></View>
+              <Text style={st.na_perkText}>Sin interstitial ads</Text>
+            </View>
+            <View style={st.na_perk}>
+              <View style={st.na_perkCheck}><Text style={st.na_perkCheckText}>✓</Text></View>
+              <Text style={st.na_perkText}>Rewarded ads siguen disponibles (te dan CC)</Text>
+            </View>
+            <View style={st.na_perk}>
+              <View style={st.na_perkCheck}><Text style={st.na_perkCheckText}>✓</Text></View>
+              <Text style={st.na_perkText}>Permanente — survives prestige resets</Text>
+            </View>
+          </View>
+
+          {purchased ? (
+            <View style={st.na_ownedBanner}>
+              <Text style={st.na_ownedText}>✓ AD-FREE ACTIVO</Text>
+            </View>
+          ) : (
+            <>
+              <View style={st.na_promoBanner}>
+                <View style={st.na_promoTop}>
+                  <View style={st.na_promoLeft}>
+                    <Text style={st.na_promoIcon}>⚡</Text>
+                    <Text style={st.na_promoLabel}>Oferta Flash</Text>
+                  </View>
+                  <View style={st.na_promoRight}>
+                    <Text style={st.na_promoExpiresLabel}>EXPIRA EN</Text>
+                    <Text style={[st.na_promoTimer, { color: flashTimerColor }]}>
+                      {flashTimerDisplay}
+                    </Text>
+                  </View>
+                </View>
+                <View style={st.na_priceRow}>
+                  <Text style={st.na_priceNormal}>$2.99</Text>
+                  <Text style={st.na_priceNow}>${IAP_PRICES.REMOVE_ADS.toFixed(2)}</Text>
+                  <View style={st.na_savingsBadge}>
+                    <Text style={st.na_savingsText}>AHORRÁS $2.00</Text>
+                  </View>
+                </View>
+              </View>
+              <TouchableOpacity
+                style={st.na_buyBtn}
+                onPress={() => confirmPurchase(IAP_PRODUCT_IDS.REMOVE_ADS)}
+                disabled={!!purchasing}
+                activeOpacity={0.8}
+              >
+                {purchasing === IAP_PRODUCT_IDS.REMOVE_ADS ? (
+                  <ActivityIndicator color={colors.ny} />
+                ) : (
+                  <Text style={st.na_buyBtnText}>
+                    {'🏷 APROVECHAR OFERTA — $'}{IAP_PRICES.REMOVE_ADS.toFixed(2)}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </>
+          )}
         </View>
-        <Text style={styles.priceText}>${IAP_PRICES.REMOVE_ADS.toFixed(2)}</Text>
-        <TouchableOpacity
-          style={[styles.buyButton, purchased && styles.buyButtonDisabled]}
-          onPress={() => !purchased && confirmPurchase(IAP_PRODUCT_IDS.REMOVE_ADS)}
-          disabled={purchased || !!purchasing}
-        >
-          {purchasing === IAP_PRODUCT_IDS.REMOVE_ADS
-            ? <ActivityIndicator color="#fff" />
-            : <Text style={styles.buyButtonText}>{purchased ? 'Purchased' : `Buy $${IAP_PRICES.REMOVE_ADS.toFixed(2)}`}</Text>
-          }
-        </TouchableOpacity>
+
+        <View style={st.na_divider} />
+
+        <View style={st.na_secHdrRow}>
+          <Text style={st.na_secHdr}>O desbloquealo comprando</Text>
+          <View style={st.na_secHdrLine} />
+        </View>
+
+        <View style={st.na_unlockCard}>
+          <Text style={st.na_unlockTitle}>Chance de desbloqueo con cada compra IAP</Text>
+          <View style={st.na_stepsRow}>
+            <View style={stepContainerStyle(step1)}>
+              {step1 === 'done' && (
+                <View style={st.na_stepCheck}><Text style={st.na_stepCheckText}>✓</Text></View>
+              )}
+              <Text style={st.na_stepBuy}>1ra compra</Text>
+              <Text style={[st.na_stepPct, { color: stepPctColor(step1) }]}>50%</Text>
+              <Text style={st.na_stepLabel}>chance</Text>
+            </View>
+            <View style={stepContainerStyle(step2)}>
+              {step2 === 'done' && (
+                <View style={st.na_stepCheck}><Text style={st.na_stepCheckText}>✓</Text></View>
+              )}
+              <Text style={st.na_stepBuy}>2da compra</Text>
+              <Text style={[st.na_stepPct, { color: stepPctColor(step2) }]}>75%</Text>
+              <Text style={st.na_stepLabel}>chance</Text>
+            </View>
+            <View style={stepContainerStyle(step3)}>
+              {step3 === 'done' && (
+                <View style={st.na_stepCheck}><Text style={st.na_stepCheckText}>✓</Text></View>
+              )}
+              <Text style={st.na_stepBuy}>3ra compra</Text>
+              <Text style={[st.na_stepPct, { color: stepPctColor(step3) }]}>100%</Text>
+              <Text style={st.na_stepLabel}>garantizado</Text>
+            </View>
+          </View>
+          <Text style={st.na_unlockNote}>
+            {purchaseCount > 0
+              ? `Hiciste ${purchaseCount} compra${purchaseCount > 1 ? 's' : ''} — ${nextChanceText()}`
+              : `Sin compras aún — ${nextChanceText()}`}
+          </Text>
+        </View>
       </View>
     );
   };
 
-  // ── Boosters tab ─────────────────────────────────────────────────────────
+  // ══════════════════════════════════════════════════════════════════════════
+  // BOOSTERS TAB
+  // ══════════════════════════════════════════════════════════════════════════
 
   const renderBoosters = () => {
     const now = Date.now();
@@ -99,157 +369,356 @@ const ShopScreen: React.FC = () => {
     const b5xRemaining = b5x.isActive && b5x.expiresAt ? Math.max(0, b5x.expiresAt - now) : 0;
 
     return (
-      <ScrollView>
-        {/* 2x Booster */}
-        <View style={[styles.card, { borderColor: '#FFD700' }]}>
-          <Text style={styles.cardIcon}>⚡</Text>
-          <Text style={styles.cardTitle}>2x Production Booster</Text>
-          {b2x.isActive && b2xRemaining > 0 && <Badge label={`Active — ${formatTime(b2xRemaining)}`} color="#FFD700" />}
-          <View style={styles.benefitBox}>
-            <Text style={styles.benefitText}>⚡ 2x production for {BOOSTER_CONFIG.BOOSTER_2X.durationMs / 3600000}h</Text>
-            <Text style={styles.benefitText}>✓ Stacks with prestige & ad boost</Text>
-            <Text style={styles.benefitText}>✓ Can be purchased multiple times</Text>
+      <>
+        {/* 2x Production Booster (yellow) */}
+        <View style={[st.bo_card, st.bo_cardYellow]}>
+          <LinearGradient
+            colors={['transparent', colors.ny, 'transparent']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={st.bo_topAccent}
+          />
+          <View style={st.bo_top}>
+            <View style={[st.bo_icon, st.bo_iconYellow]}>
+              <Text style={st.bo_iconEmoji}>⚡</Text>
+            </View>
+            <View style={st.bo_meta}>
+              <Text style={st.bo_name}>2x Production Booster</Text>
+              {b2x.isActive && b2xRemaining > 0 && (
+                <View style={st.bo_activeBadge}>
+                  <Text style={st.bo_activeBadgeText}>{'⚡ ACTIVO — '}{formatTime(b2xRemaining)}</Text>
+                </View>
+              )}
+              <Text style={st.bo_desc}>
+                {'Duplica tu producción de CC por '}
+                {BOOSTER_CONFIG.BOOSTER_2X.durationMs / 3600000}
+                {' horas'}
+              </Text>
+              <View style={st.bo_durationBadge}>
+                <Text style={st.bo_durationBadgeText}>
+                  {'⏱ '}{BOOSTER_CONFIG.BOOSTER_2X.durationMs / 3600000}{' horas · Stackeable'}
+                </Text>
+              </View>
+            </View>
           </View>
-          <Text style={styles.priceText}>${IAP_PRICES.BOOSTER_2X.toFixed(2)}</Text>
-          <TouchableOpacity
-            style={[styles.buyButton, styles.buyButtonGold, !!purchasing && styles.buyButtonDisabled]}
-            onPress={() => confirmPurchase(IAP_PRODUCT_IDS.BOOSTER_2X)}
-            disabled={!!purchasing}
-          >
-            {purchasing === IAP_PRODUCT_IDS.BOOSTER_2X
-              ? <ActivityIndicator color="#000" />
-              : <Text style={[styles.buyButtonText, { color: '#000' }]}>{`Buy $${IAP_PRICES.BOOSTER_2X.toFixed(2)}`}</Text>
-            }
-          </TouchableOpacity>
+          <View style={st.bo_perks}>
+            <View style={st.bo_perkRow}>
+              <View style={st.bo_perkCheck}><Text style={st.bo_perkCheckText}>✓</Text></View>
+              <Text style={st.bo_perkText}>Stackea con prestige multiplier y ad boost</Text>
+            </View>
+            <View style={st.bo_perkRow}>
+              <View style={st.bo_perkCheck}><Text style={st.bo_perkCheckText}>✓</Text></View>
+              <Text style={st.bo_perkText}>Se puede comprar múltiples veces</Text>
+            </View>
+          </View>
+          <View style={st.bo_footer}>
+            <View style={st.bo_priceWrap}>
+              <Text style={st.bo_priceLabel}>PRECIO</Text>
+              <Text style={[st.bo_price, st.bo_priceYellow]}>${IAP_PRICES.BOOSTER_2X.toFixed(2)}</Text>
+            </View>
+            <TouchableOpacity
+              style={[st.bo_btn, st.bo_btnYellow, !!purchasing && st.bo_btnDisabled]}
+              onPress={() => confirmPurchase(IAP_PRODUCT_IDS.BOOSTER_2X)}
+              disabled={!!purchasing}
+              activeOpacity={0.8}
+            >
+              {purchasing === IAP_PRODUCT_IDS.BOOSTER_2X ? (
+                <ActivityIndicator color={colors.ny} size="small" />
+              ) : (
+                <Text style={[st.bo_btnText, st.bo_btnTextYellow]}>
+                  {'COMPRAR $'}{IAP_PRICES.BOOSTER_2X.toFixed(2)}
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
 
-        {/* 5x Booster */}
-        <View style={[styles.card, { borderColor: '#a855f7' }]}>
-          <Text style={styles.cardIcon}>🚀</Text>
-          <Text style={styles.cardTitle}>5x Production Booster</Text>
-          {b5x.isActive && b5xRemaining > 0 && <Badge label={`Active — ${formatTime(b5xRemaining)}`} color="#a855f7" />}
-          <View style={styles.benefitBox}>
-            <Text style={styles.benefitText}>🚀 5x production for {BOOSTER_CONFIG.BOOSTER_5X.durationMs / 3600000}h</Text>
-            <Text style={styles.benefitText}>✓ Stacks with prestige & ad boost</Text>
-            <Text style={styles.benefitText}>✓ Can be purchased multiple times</Text>
+        {/* 5x Production Booster (orange) */}
+        <View style={[st.bo_card, st.bo_cardOrange]}>
+          <LinearGradient
+            colors={['transparent', '#ff6b1a', 'transparent']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={st.bo_topAccent}
+          />
+          <View style={st.bo_top}>
+            <View style={[st.bo_icon, st.bo_iconOrange]}>
+              <Text style={st.bo_iconEmoji}>🚀</Text>
+            </View>
+            <View style={st.bo_meta}>
+              <Text style={st.bo_name}>5x Production Booster</Text>
+              {b5x.isActive && b5xRemaining > 0 && (
+                <View style={[st.bo_activeBadge, st.bo_activeBadgeOrange]}>
+                  <Text style={[st.bo_activeBadgeText, st.bo_activeBadgeTextOrange]}>
+                    {'🚀 ACTIVO — '}{formatTime(b5xRemaining)}
+                  </Text>
+                </View>
+              )}
+              <Text style={st.bo_desc}>
+                {'Multiplica tu producción por 5 durante '}
+                {BOOSTER_CONFIG.BOOSTER_5X.durationMs / 3600000}
+                {' horas'}
+              </Text>
+              <View style={st.bo_durationBadge}>
+                <Text style={st.bo_durationBadgeText}>
+                  {'⏱ '}{BOOSTER_CONFIG.BOOSTER_5X.durationMs / 3600000}{' horas · Stackeable'}
+                </Text>
+              </View>
+            </View>
           </View>
-          <Text style={styles.priceText}>${IAP_PRICES.BOOSTER_5X.toFixed(2)}</Text>
-          <TouchableOpacity
-            style={[styles.buyButton, styles.buyButtonPurple, !!purchasing && styles.buyButtonDisabled]}
-            onPress={() => confirmPurchase(IAP_PRODUCT_IDS.BOOSTER_5X)}
-            disabled={!!purchasing}
-          >
-            {purchasing === IAP_PRODUCT_IDS.BOOSTER_5X
-              ? <ActivityIndicator color="#fff" />
-              : <Text style={styles.buyButtonText}>{`Buy $${IAP_PRICES.BOOSTER_5X.toFixed(2)}`}</Text>
-            }
-          </TouchableOpacity>
+          <View style={st.bo_perks}>
+            <View style={st.bo_perkRow}>
+              <View style={st.bo_perkCheck}><Text style={st.bo_perkCheckText}>✓</Text></View>
+              <Text style={st.bo_perkText}>Stackea con prestige multiplier y ad boost</Text>
+            </View>
+            <View style={st.bo_perkRow}>
+              <View style={st.bo_perkCheck}><Text style={st.bo_perkCheckText}>✓</Text></View>
+              <Text style={st.bo_perkText}>Se puede comprar múltiples veces</Text>
+            </View>
+          </View>
+          <View style={st.bo_footer}>
+            <View style={st.bo_priceWrap}>
+              <Text style={st.bo_priceLabel}>PRECIO</Text>
+              <Text style={[st.bo_price, st.bo_priceOrange]}>${IAP_PRICES.BOOSTER_5X.toFixed(2)}</Text>
+            </View>
+            <TouchableOpacity
+              style={[st.bo_btn, st.bo_btnOrange, !!purchasing && st.bo_btnDisabled]}
+              onPress={() => confirmPurchase(IAP_PRODUCT_IDS.BOOSTER_5X)}
+              disabled={!!purchasing}
+              activeOpacity={0.8}
+            >
+              {purchasing === IAP_PRODUCT_IDS.BOOSTER_5X ? (
+                <ActivityIndicator color="#ff6b1a" size="small" />
+              ) : (
+                <Text style={[st.bo_btnText, st.bo_btnTextOrange]}>
+                  {'COMPRAR $'}{IAP_PRICES.BOOSTER_5X.toFixed(2)}
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
 
-        {/* Permanent 2x */}
-        <View style={[styles.card, { borderColor: '#00ff88' }]}>
-          <Text style={styles.cardIcon}>♾️</Text>
-          <Text style={styles.cardTitle}>Permanent 2x Multiplier</Text>
-          {perm && <Badge label="Purchased ✓" color="#00ff88" />}
-          <View style={styles.benefitBox}>
-            <Text style={styles.benefitText}>♾️ PERMANENTLY double production</Text>
-            <Text style={styles.benefitText}>✓ Stacks with ALL other multipliers</Text>
-            <Text style={styles.benefitText}>✓ Survives prestige resets</Text>
+        {/* Permanent 2x Multiplier (purple) */}
+        <View style={[st.bo_card, st.bo_cardPurple]}>
+          <LinearGradient
+            colors={['transparent', '#a040ff', 'transparent']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={st.bo_topAccent}
+          />
+          <View style={st.bo_top}>
+            <View style={[st.bo_icon, st.bo_iconPurple]}>
+              <Text style={st.bo_iconEmoji}>♾</Text>
+            </View>
+            <View style={st.bo_meta}>
+              <Text style={st.bo_name}>Permanent 2x Multiplier</Text>
+              {perm && (
+                <View style={[st.bo_activeBadge, st.bo_activeBadgePurple]}>
+                  <Text style={[st.bo_activeBadgeText, st.bo_activeBadgeTextPurple]}>
+                    ♾ ACTIVO — Permanente
+                  </Text>
+                </View>
+              )}
+              <Text style={st.bo_desc}>Duplica tu producción para siempre, en todos los runs</Text>
+              <View style={st.bo_durationBadge}>
+                <Text style={st.bo_durationBadgeText}>∞ Permanente · Survives prestige</Text>
+              </View>
+            </View>
           </View>
-          <Text style={styles.priceText}>${IAP_PRICES.PERMANENT_MULTIPLIER.toFixed(2)}</Text>
-          <TouchableOpacity
-            style={[styles.buyButton, perm && styles.buyButtonDisabled]}
-            onPress={() => !perm && confirmPurchase(IAP_PRODUCT_IDS.PERMANENT_MULTIPLIER)}
-            disabled={perm || !!purchasing}
-          >
-            {purchasing === IAP_PRODUCT_IDS.PERMANENT_MULTIPLIER
-              ? <ActivityIndicator color="#fff" />
-              : <Text style={styles.buyButtonText}>{perm ? 'Purchased' : `Buy $${IAP_PRICES.PERMANENT_MULTIPLIER.toFixed(2)}`}</Text>
-            }
-          </TouchableOpacity>
+          <View style={st.bo_perks}>
+            <View style={st.bo_perkRow}>
+              <View style={st.bo_perkCheck}><Text style={st.bo_perkCheckText}>✓</Text></View>
+              <Text style={st.bo_perkText}>Stackea con TODOS los otros multiplicadores</Text>
+            </View>
+            <View style={st.bo_perkRow}>
+              <View style={st.bo_perkCheck}><Text style={st.bo_perkCheckText}>✓</Text></View>
+              <Text style={st.bo_perkText}>Survives prestige resets — es tuyo para siempre</Text>
+            </View>
+          </View>
+          <View style={st.bo_footer}>
+            <View style={st.bo_priceWrap}>
+              <Text style={st.bo_priceLabel}>PRECIO</Text>
+              <Text style={[st.bo_price, st.bo_pricePurple]}>${IAP_PRICES.PERMANENT_MULTIPLIER.toFixed(2)}</Text>
+            </View>
+            <TouchableOpacity
+              style={[st.bo_btn, perm ? st.bo_btnOwned : st.bo_btnPurple]}
+              onPress={() => !perm && confirmPurchase(IAP_PRODUCT_IDS.PERMANENT_MULTIPLIER)}
+              disabled={perm || !!purchasing}
+              activeOpacity={perm ? 1 : 0.8}
+            >
+              {purchasing === IAP_PRODUCT_IDS.PERMANENT_MULTIPLIER ? (
+                <ActivityIndicator color="#a040ff" size="small" />
+              ) : (
+                <Text style={[st.bo_btnText, perm ? st.bo_btnTextOwned : st.bo_btnTextPurple]}>
+                  {perm ? 'COMPRADO ✓' : `COMPRAR $${IAP_PRICES.PERMANENT_MULTIPLIER.toFixed(2)}`}
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
-      </ScrollView>
+      </>
     );
   };
 
-  // ── Starter Packs tab ────────────────────────────────────────────────────
+  // ══════════════════════════════════════════════════════════════════════════
+  // PACKS TAB
+  // ══════════════════════════════════════════════════════════════════════════
 
-  type PackKey = 'small' | 'medium' | 'large' | 'mega';
+  const renderPacks = () => {
+    const purchased = iapState.starterPacksPurchased;
+    const activeIdx = PK_META.findIndex(p => !purchased[p.key]);
+    const allOwned = activeIdx === -1;
+    const activePack = allOwned ? null : PK_META[activeIdx];
+    const nextPack = (!allOwned && activeIdx + 1 < PK_META.length)
+      ? PK_META[activeIdx + 1]
+      : null;
 
-  const packs: Array<{
-    key: PackKey;
-    productId: string;
-    icon: string;
-    title: string;
-    badge?: string;
-    price: number;
-  }> = [
-    { key: 'small',  productId: IAP_PRODUCT_IDS.STARTER_SMALL,  icon: '💼', title: 'Small Pack',  price: IAP_PRICES.STARTER_SMALL },
-    { key: 'medium', productId: IAP_PRODUCT_IDS.STARTER_MEDIUM, icon: '📦', title: 'Medium Pack', price: IAP_PRICES.STARTER_MEDIUM, badge: 'Most Popular' },
-    { key: 'large',  productId: IAP_PRODUCT_IDS.STARTER_LARGE,  icon: '🏆', title: 'Large Pack',  price: IAP_PRICES.STARTER_LARGE },
-    { key: 'mega',   productId: IAP_PRODUCT_IDS.STARTER_MEGA,   icon: '💎', title: 'Mega Pack',   price: IAP_PRICES.STARTER_MEGA, badge: 'Best Value' },
-  ];
+    const timerIsLow = pkTimerRef.current < 120;
 
-  const renderPacks = () => (
-    <View style={styles.packsGrid}>
-      {packs.map((pack) => {
-        const owned = iapState.starterPacksPurchased[pack.key];
-        const rewards = STARTER_PACK_REWARDS[pack.key];
-        return (
-          <View key={pack.key} style={styles.packCard}>
-            <Text style={styles.packIcon}>{pack.icon}</Text>
-            <Text style={styles.packTitle}>{pack.title}</Text>
-            {pack.badge && !owned && <Badge label={pack.badge} color="#FFD700" />}
-            {owned && <Badge label="Owned ✓" color="#555" />}
-            <View style={styles.packRewards}>
-              <Text style={styles.packRewardText}>🪙 {(rewards.cryptoCoins / 1000).toFixed(0)}K CC</Text>
-              <Text style={styles.packRewardText}>💵 ${rewards.realMoney.toLocaleString()}</Text>
-            </View>
-            <Text style={styles.packPrice}>${pack.price.toFixed(2)}</Text>
-            <TouchableOpacity
-              style={[styles.packBuyButton, owned && styles.buyButtonDisabled]}
-              onPress={() => !owned && confirmPurchase(pack.productId)}
-              disabled={owned || !!purchasing}
-            >
-              {purchasing === pack.productId
-                ? <ActivityIndicator color="#fff" size="small" />
-                : <Text style={styles.packBuyButtonText}>{owned ? 'Owned' : `Buy $${pack.price.toFixed(2)}`}</Text>
-              }
-            </TouchableOpacity>
+    return (
+      <View>
+        <View style={st.pk_sectionHdrRow}>
+          <Text style={st.pk_sectionHdr}>Oferta activa</Text>
+          <View style={st.pk_sectionHdrLine} />
+        </View>
+
+        {allOwned ? (
+          <View style={st.pk_allOwnedBox}>
+            <Text style={st.pk_allOwnedEmoji}>◈</Text>
+            <Text style={st.pk_allOwnedTitle}>Todo adquirido</Text>
+            <Text style={st.pk_allOwnedSub}>
+              Eres un Crypto Titan. No hay más packs disponibles.
+            </Text>
           </View>
-        );
-      })}
-    </View>
-  );
+        ) : (
+          <LinearGradient
+            colors={['rgba(0,255,136,0.07)', 'rgba(0,229,255,0.04)']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={st.pk_dynamicOffer}
+          >
+            <LinearGradient
+              colors={[colors.ng, colors.nc]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={st.pk_offerAccentBar}
+            />
+            <View style={st.pk_offerTopRow}>
+              <View style={st.pk_offerLeft}>
+                <View style={st.pk_offerEyebrowRow}>
+                  <Text style={st.pk_offerEyebrow}>{activePack!.eyebrow}</Text>
+                  <Animated.View style={[st.pk_offerBadge, { transform: [{ scale: pkBadgePulse }] }]}>
+                    <Text style={st.pk_offerBadgeText}>EXCLUSIVO</Text>
+                  </Animated.View>
+                </View>
+                <Text style={st.pk_offerName}>{activePack!.name}</Text>
+              </View>
+              <View style={st.pk_offerTimerMini}>
+                <Text style={st.pk_otmLabel}>EXPIRA EN</Text>
+                <Animated.Text
+                  style={[
+                    st.pk_otmTime,
+                    {
+                      opacity: pkTimerOpacity,
+                      color: pkTimerExpired ? colors.nr : (timerIsLow ? colors.nr : colors.ny),
+                    },
+                  ]}
+                >
+                  {pkTimerExpired ? 'EXPIRÓ' : pkTimerDisplay}
+                </Animated.Text>
+              </View>
+            </View>
 
-  // ── Tabs & render ─────────────────────────────────────────────────────────
+            <View style={st.pk_offerContentsRow}>
+              {activePack!.contents.map((item, idx) => (
+                <View key={idx} style={st.pk_ocItem}>
+                  <Text style={st.pk_ocEmoji}>{item.emoji}</Text>
+                  <Text style={[st.pk_ocVal, { color: item.color }]}>{item.val}</Text>
+                  <Text style={st.pk_ocLbl}>{item.lbl}</Text>
+                </View>
+              ))}
+            </View>
 
-  const tabs: Array<{ id: ShopTab; label: string }> = [
-    { id: 'removeAds', label: '🚫 No Ads' },
-    { id: 'boosters',  label: '⚡ Boosters' },
-    { id: 'packs',     label: '📦 Packs' },
+            <View style={st.pk_offerFooterRow}>
+              <View style={st.pk_ofPricing}>
+                <Text style={st.pk_ofWas}>{'Valor normal $'}{activePack!.wasPrice.toFixed(2)}</Text>
+                <Text style={st.pk_ofNow}>${activePack!.price.toFixed(2)}</Text>
+              </View>
+              <TouchableOpacity
+                style={[st.pk_ofBtn, !!purchasing && st.pk_ofBtnDisabled]}
+                onPress={() => confirmPurchase(activePack!.productId)}
+                disabled={!!purchasing}
+                activeOpacity={0.8}
+              >
+                {purchasing === activePack!.productId ? (
+                  <ActivityIndicator color={colors.ng} size="small" />
+                ) : (
+                  <Text style={st.pk_ofBtnText}>⬡ COMPRAR</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </LinearGradient>
+        )}
+
+        <View style={st.pk_divider} />
+
+        <View style={st.pk_sectionHdrRow}>
+          <Text style={st.pk_sectionHdr}>Próxima oferta</Text>
+          <View style={st.pk_sectionHdrLine} />
+        </View>
+
+        {nextPack ? (
+          <>
+            <View style={st.pk_unlockNoteBar}>
+              <Text style={st.pk_unlockNoteText}>{nextPack.unlockNote}</Text>
+            </View>
+            <View style={st.pk_nextOffer}>
+              <Text style={st.pk_noLabel}>Próxima oferta disponible en</Text>
+              <Text style={st.pk_noTimer}>47:18:05</Text>
+              <Text style={st.pk_noSub}>Al abrir el juego · Oferta de sesión</Text>
+            </View>
+          </>
+        ) : (
+          <View style={st.pk_nextOffer}>
+            <Text style={st.pk_noLabel}>Sin más ofertas</Text>
+            <Text style={st.pk_noTimer}>—</Text>
+            <Text style={st.pk_noSub}>Todas las ofertas han sido reclamadas</Text>
+          </View>
+        )}
+      </View>
+    );
+  };
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // TAB BAR + RENDER
+  // ══════════════════════════════════════════════════════════════════════════
+
+  const tabs: Array<{ id: ShopTab; icon: string; label: string }> = [
+    { id: 'removeAds', icon: '🚫', label: 'No Ads' },
+    { id: 'boosters', icon: '⚡', label: 'Boosters' },
+    { id: 'packs', icon: '📦', label: 'Packs' },
   ];
 
   return (
-    <View style={styles.container}>
-      {/* Tab bar */}
-      <View style={styles.tabBar}>
+    <View style={st.container}>
+      <View style={st.tabBar}>
         {tabs.map((tab) => (
           <TouchableOpacity
             key={tab.id}
-            style={[styles.tabBtn, activeTab === tab.id && styles.tabBtnActive]}
+            style={[st.tabBtn, activeTab === tab.id && st.tabBtnActive]}
             onPress={() => setActiveTab(tab.id)}
+            activeOpacity={0.8}
           >
-            <Text style={[styles.tabBtnText, activeTab === tab.id && styles.tabBtnTextActive]}>
+            <Text style={st.tabIcon}>{tab.icon}</Text>
+            <Text style={[st.tabLabel, activeTab === tab.id && st.tabLabelActive]}>
               {tab.label}
             </Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      {/* Content */}
-      <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
-        {activeTab === 'removeAds' && renderRemoveAds()}
+      <ScrollView style={st.content} contentContainerStyle={st.contentContainer}>
+        {activeTab === 'removeAds' && renderNoAds()}
         {activeTab === 'boosters' && renderBoosters()}
         {activeTab === 'packs' && renderPacks()}
       </ScrollView>
@@ -257,66 +726,408 @@ const ShopScreen: React.FC = () => {
   );
 };
 
-// ─── Styles ──────────────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+// STYLES
+// ══════════════════════════════════════════════════════════════════════════════
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#1a1a1a' },
+const st = StyleSheet.create({
+  // ── Shell ──────────────────────────────────────────────────────────────────
+  container: { flex: 1, backgroundColor: colors.bg },
 
-  tabBar: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#333' },
-  tabBtn: { flex: 1, paddingVertical: 12, alignItems: 'center' },
-  tabBtnActive: { borderBottomWidth: 2, borderBottomColor: '#00ff88' },
-  tabBtnText: { fontSize: 12, color: '#666' },
-  tabBtnTextActive: { color: '#00ff88', fontWeight: 'bold' },
+  // ── Tab bar ────────────────────────────────────────────────────────────────
+  tabBar: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'rgba(2,8,16,0.8)',
+  },
+  tabBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    alignItems: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+    gap: 3,
+  },
+  tabBtnActive: { borderBottomColor: colors.ng },
+  tabIcon: { fontSize: 16 },
+  tabLabel: {
+    fontFamily: fonts.mono,
+    fontSize: 8,
+    letterSpacing: 1.5,
+    color: 'rgba(255,255,255,0.4)',
+    textTransform: 'uppercase',
+  },
+  tabLabelActive: { color: colors.ng },
 
+  // ── Content ────────────────────────────────────────────────────────────────
   content: { flex: 1 },
-  contentContainer: { padding: 16 },
+  contentContainer: { padding: 14, paddingBottom: 32 },
 
-  card: {
-    backgroundColor: '#2a2a2a',
-    borderRadius: 12,
-    padding: 16,
+  // ════════════════════════
+  // NO ADS
+  // ════════════════════════
+  na_hero: {
+    backgroundColor: 'rgba(255,61,90,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,61,90,0.2)',
+    borderRadius: 16,
+    padding: 20,
     marginBottom: 12,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#333',
+    overflow: 'hidden',
   },
-  cardIcon: { fontSize: 40, marginBottom: 8 },
-  cardTitle: { fontSize: 18, fontWeight: 'bold', color: '#fff', marginBottom: 8 },
-
-  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, marginBottom: 8 },
-  badgeText: { fontSize: 11, fontWeight: 'bold', color: '#000' },
-
-  benefitBox: { backgroundColor: '#1a1a1a', borderRadius: 8, padding: 10, width: '100%', marginBottom: 12 },
-  benefitText: { fontSize: 13, color: '#aaa', marginBottom: 2 },
-
-  priceText: { fontSize: 24, fontWeight: 'bold', color: '#FFD700', marginBottom: 12 },
-
-  buyButton: {
-    backgroundColor: '#00aa55',
-    borderRadius: 8, paddingVertical: 12, paddingHorizontal: 24,
-    width: '100%', alignItems: 'center',
+  na_heroAccent: { position: 'absolute', top: 0, left: 0, right: 0, height: 2 },
+  na_bigIcon: { fontSize: 48, marginBottom: 10, marginTop: 8 },
+  na_heroTitle: {
+    fontFamily: fonts.orbitron,
+    fontSize: 16,
+    color: '#fff',
+    textAlign: 'center',
+    marginBottom: 6,
   },
-  buyButtonGold: { backgroundColor: '#FFD700' },
-  buyButtonPurple: { backgroundColor: '#a855f7' },
-  buyButtonDisabled: { backgroundColor: '#444' },
-  buyButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  na_perks: { width: '100%', marginTop: 12, marginBottom: 12 },
+  na_perk: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 5 },
+  na_perkX: {
+    width: 16, height: 16, borderRadius: 3,
+    backgroundColor: 'rgba(255,61,90,0.15)',
+    borderWidth: 1, borderColor: 'rgba(255,61,90,0.3)',
+    alignItems: 'center', justifyContent: 'center',
+    marginRight: 8, flexShrink: 0, marginTop: 1,
+  },
+  na_perkXText: { fontSize: 8, color: '#ff3d5a', lineHeight: 10 },
+  na_perkCheck: {
+    width: 16, height: 16, borderRadius: 3,
+    backgroundColor: 'rgba(0,255,136,0.12)',
+    borderWidth: 1, borderColor: 'rgba(0,255,136,0.28)',
+    alignItems: 'center', justifyContent: 'center',
+    marginRight: 8, flexShrink: 0, marginTop: 1,
+  },
+  na_perkCheckText: { fontSize: 8, color: '#00ff88', lineHeight: 10 },
+  na_perkText: {
+    fontSize: 13, color: 'rgba(255,255,255,0.65)',
+    flex: 1, lineHeight: 18, fontFamily: fonts.rajdhani,
+  },
+  na_promoBanner: {
+    width: '100%', marginTop: 14, marginBottom: 10,
+    padding: 12, paddingHorizontal: 14,
+    backgroundColor: 'rgba(255,214,0,0.07)',
+    borderWidth: 1, borderColor: 'rgba(255,214,0,0.25)', borderRadius: 12,
+  },
+  na_promoTop: {
+    flexDirection: 'row', alignItems: 'center',
+    justifyContent: 'space-between', marginBottom: 8,
+  },
+  na_promoLeft: { flexDirection: 'row', alignItems: 'center' },
+  na_promoIcon: { fontSize: 14, marginRight: 6 },
+  na_promoLabel: {
+    fontFamily: fonts.mono, fontSize: 8, letterSpacing: 2,
+    color: colors.ny, textTransform: 'uppercase',
+  },
+  na_promoRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  na_promoExpiresLabel: {
+    fontFamily: fonts.mono, fontSize: 8, letterSpacing: 1,
+    color: 'rgba(255,255,255,0.18)',
+  },
+  na_promoTimer: {
+    fontFamily: fonts.orbitron, fontSize: 14, fontWeight: '900', color: colors.ny,
+  },
+  na_priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 10 },
+  na_priceNormal: {
+    fontFamily: fonts.orbitron, fontSize: 15,
+    color: 'rgba(255,255,255,0.3)', textDecorationLine: 'line-through',
+  },
+  na_priceNow: {
+    fontFamily: fonts.orbitron, fontSize: 32, fontWeight: '900',
+    color: colors.ny, lineHeight: 38,
+  },
+  na_savingsBadge: {
+    backgroundColor: 'rgba(0,255,136,0.1)',
+    borderWidth: 1, borderColor: 'rgba(0,255,136,0.22)',
+    borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2, alignSelf: 'center',
+  },
+  na_savingsText: {
+    fontFamily: fonts.mono, fontSize: 9, color: colors.ng, letterSpacing: 1,
+  },
+  na_buyBtn: {
+    width: '100%', paddingVertical: 16, borderRadius: 12,
+    borderWidth: 1, borderColor: colors.ny,
+    backgroundColor: 'rgba(255,214,0,0.15)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  na_buyBtnText: {
+    fontFamily: fonts.orbitron, fontSize: 13, fontWeight: '700',
+    letterSpacing: 3, color: colors.ny,
+  },
+  na_ownedBanner: {
+    width: '100%', marginTop: 14, paddingVertical: 14, borderRadius: 12,
+    borderWidth: 1, borderColor: 'rgba(0,255,136,0.4)',
+    backgroundColor: 'rgba(0,255,136,0.08)', alignItems: 'center',
+  },
+  na_ownedText: {
+    fontFamily: fonts.orbitron, fontSize: 13, fontWeight: '700',
+    letterSpacing: 3, color: colors.ng,
+  },
+  na_divider: {
+    height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginVertical: 14,
+  },
+  na_secHdrRow: {
+    flexDirection: 'row', alignItems: 'center', marginBottom: 10, gap: 8,
+  },
+  na_secHdr: {
+    fontFamily: fonts.mono, fontSize: 9, letterSpacing: 4,
+    color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase',
+  },
+  na_secHdrLine: { flex: 1, height: 1, backgroundColor: 'rgba(0,255,136,0.2)' },
+  na_unlockCard: {
+    backgroundColor: 'rgba(0,255,136,0.04)',
+    borderWidth: 1, borderColor: 'rgba(0,255,136,0.15)',
+    borderRadius: 12, padding: 14, marginBottom: 14,
+  },
+  na_unlockTitle: {
+    fontFamily: fonts.mono, fontSize: 8, letterSpacing: 3,
+    color: colors.ng, textTransform: 'uppercase', marginBottom: 10,
+  },
+  na_stepsRow: { flexDirection: 'row', marginBottom: 10, gap: 6 },
+  na_step: {
+    flex: 1, borderRadius: 8, padding: 8, paddingHorizontal: 6,
+    alignItems: 'center', borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+  },
+  na_stepDone: {
+    borderColor: 'rgba(0,255,136,0.3)', backgroundColor: 'rgba(0,255,136,0.06)',
+  },
+  na_stepActive: {
+    borderColor: 'rgba(255,214,0,0.35)', backgroundColor: 'rgba(255,214,0,0.06)',
+  },
+  na_stepCheck: {
+    position: 'absolute', top: -6, right: -6,
+    width: 14, height: 14, borderRadius: 7,
+    backgroundColor: colors.ng, alignItems: 'center', justifyContent: 'center', zIndex: 1,
+  },
+  na_stepCheckText: { fontSize: 8, color: '#000', fontWeight: '900', lineHeight: 10 },
+  na_stepBuy: {
+    fontFamily: fonts.mono, fontSize: 8, color: 'rgba(255,255,255,0.18)',
+    letterSpacing: 1, marginBottom: 4, textAlign: 'center',
+  },
+  na_stepPct: {
+    fontFamily: fonts.orbitron, fontSize: 14, fontWeight: '700',
+    textAlign: 'center', lineHeight: 18,
+  },
+  na_stepLabel: {
+    fontSize: 9, color: 'rgba(255,255,255,0.18)',
+    marginTop: 2, textAlign: 'center', fontFamily: fonts.mono,
+  },
+  na_unlockNote: {
+    fontFamily: fonts.mono, fontSize: 9,
+    color: 'rgba(255,255,255,0.18)', letterSpacing: 1, lineHeight: 14,
+  },
 
-  packsGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
-  packCard: {
-    width: '48%', backgroundColor: '#2a2a2a', borderRadius: 12,
-    padding: 12, marginBottom: 12, alignItems: 'center',
-    borderWidth: 1, borderColor: '#333',
+  // ════════════════════════
+  // BOOSTERS
+  // ════════════════════════
+  bo_card: {
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 14, padding: 16, marginBottom: 10, overflow: 'hidden',
   },
-  packIcon: { fontSize: 32, marginBottom: 4 },
-  packTitle: { fontSize: 14, fontWeight: 'bold', color: '#fff', marginBottom: 6, textAlign: 'center' },
-  packRewards: { backgroundColor: '#1a1a1a', borderRadius: 6, padding: 6, width: '100%', marginBottom: 6 },
-  packRewardText: { fontSize: 12, color: '#aaa', textAlign: 'center' },
-  packPrice: { fontSize: 16, fontWeight: 'bold', color: '#FFD700', marginBottom: 8 },
-  packBuyButton: {
-    backgroundColor: '#00aa55', borderRadius: 6, paddingVertical: 8,
-    width: '100%', alignItems: 'center',
+  bo_cardYellow: { borderColor: 'rgba(255,214,0,0.2)' },
+  bo_cardOrange: { borderColor: 'rgba(255,107,26,0.2)' },
+  bo_cardPurple: { borderColor: 'rgba(160,64,255,0.2)' },
+  bo_topAccent: { position: 'absolute', top: 0, left: 0, right: 0, height: 2 },
+  bo_top: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 12 },
+  bo_icon: {
+    width: 52, height: 52, borderRadius: 12, borderWidth: 1,
+    flexShrink: 0, alignItems: 'center', justifyContent: 'center',
   },
-  packBuyButtonText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
+  bo_iconYellow: { backgroundColor: 'rgba(255,214,0,0.08)', borderColor: 'rgba(255,214,0,0.2)' },
+  bo_iconOrange: { backgroundColor: 'rgba(255,107,26,0.08)', borderColor: 'rgba(255,107,26,0.2)' },
+  bo_iconPurple: { backgroundColor: 'rgba(160,64,255,0.08)', borderColor: 'rgba(160,64,255,0.2)' },
+  bo_iconEmoji: { fontSize: 26 },
+  bo_meta: { flex: 1 },
+  bo_name: { fontFamily: fonts.orbitron, fontSize: 13, color: '#ffffff', marginBottom: 3 },
+  bo_desc: {
+    fontFamily: fonts.rajdhani, fontSize: 12,
+    color: 'rgba(255,255,255,0.4)', lineHeight: 17,
+  },
+  bo_activeBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(255,214,0,0.12)',
+    borderWidth: 1, borderColor: 'rgba(255,214,0,0.35)',
+    borderRadius: 5, paddingHorizontal: 7, paddingVertical: 2, marginBottom: 4,
+  },
+  bo_activeBadgeOrange: {
+    backgroundColor: 'rgba(255,107,26,0.12)', borderColor: 'rgba(255,107,26,0.35)',
+  },
+  bo_activeBadgePurple: {
+    backgroundColor: 'rgba(160,64,255,0.12)', borderColor: 'rgba(160,64,255,0.35)',
+  },
+  bo_activeBadgeText: { fontFamily: fonts.mono, fontSize: 9, letterSpacing: 0.8, color: colors.ny },
+  bo_activeBadgeTextOrange: { color: '#ff6b1a' },
+  bo_activeBadgeTextPurple: { color: '#a040ff' },
+  bo_durationBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)',
+    borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, marginTop: 6,
+  },
+  bo_durationBadgeText: {
+    fontFamily: fonts.mono, fontSize: 9, color: 'rgba(255,255,255,0.4)', letterSpacing: 1,
+  },
+  bo_perks: { flexDirection: 'column', gap: 4, marginBottom: 12 },
+  bo_perkRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  bo_perkCheck: {
+    width: 16, height: 16, borderRadius: 3,
+    backgroundColor: 'rgba(0,255,136,0.12)',
+    borderWidth: 1, borderColor: 'rgba(0,255,136,0.28)',
+    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+  },
+  bo_perkCheckText: { fontSize: 9, color: colors.ng, lineHeight: 11 },
+  bo_perkText: {
+    fontSize: 12, color: 'rgba(255,255,255,0.6)', flex: 1, fontFamily: fonts.rajdhani,
+  },
+  bo_footer: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+  },
+  bo_priceWrap: { flexDirection: 'column' },
+  bo_priceLabel: {
+    fontFamily: fonts.mono, fontSize: 8, letterSpacing: 2,
+    color: 'rgba(255,255,255,0.4)', marginBottom: 2,
+  },
+  bo_price: { fontFamily: fonts.orbitron, fontSize: 20, fontWeight: '900' },
+  bo_priceYellow: { color: colors.ny },
+  bo_priceOrange: { color: '#ff6b1a' },
+  bo_pricePurple: { color: '#a040ff' },
+  bo_btn: {
+    paddingVertical: 13, paddingHorizontal: 20, borderRadius: 11,
+    borderWidth: 1, alignItems: 'center', justifyContent: 'center', minWidth: 150,
+  },
+  bo_btnYellow: { backgroundColor: 'rgba(255,214,0,0.14)', borderColor: colors.ny },
+  bo_btnOrange: { backgroundColor: 'rgba(255,107,26,0.14)', borderColor: '#ff6b1a' },
+  bo_btnPurple: { backgroundColor: 'rgba(160,64,255,0.14)', borderColor: '#a040ff' },
+  bo_btnOwned: {
+    backgroundColor: 'rgba(0,255,136,0.06)', borderColor: 'rgba(0,255,136,0.2)',
+  },
+  bo_btnDisabled: { opacity: 0.5 },
+  bo_btnText: { fontFamily: fonts.orbitron, fontSize: 12, fontWeight: '700', letterSpacing: 2 },
+  bo_btnTextYellow: { color: colors.ny },
+  bo_btnTextOrange: { color: '#ff6b1a' },
+  bo_btnTextPurple: { color: '#a040ff' },
+  bo_btnTextOwned: { color: 'rgba(0,255,136,0.5)' },
+
+  // ════════════════════════
+  // PACKS
+  // ════════════════════════
+  pk_sectionHdrRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  pk_sectionHdr: {
+    fontFamily: fonts.mono, fontSize: 9, letterSpacing: 4,
+    color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase',
+  },
+  pk_sectionHdrLine: { flex: 1, height: 1, backgroundColor: 'rgba(0,229,255,0.2)' },
+  pk_dynamicOffer: {
+    borderWidth: 1, borderColor: 'rgba(0,255,136,0.25)',
+    borderRadius: 16, padding: 16, marginBottom: 16, overflow: 'hidden',
+  },
+  pk_offerAccentBar: { position: 'absolute', top: 0, left: 0, right: 0, height: 2 },
+  pk_offerTopRow: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    alignItems: 'flex-start', marginBottom: 10, marginTop: 4,
+  },
+  pk_offerLeft: { flex: 1, marginRight: 8 },
+  pk_offerEyebrowRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 3 },
+  pk_offerEyebrow: {
+    fontFamily: fonts.mono, fontSize: 8, letterSpacing: 3,
+    color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase',
+  },
+  pk_offerBadge: {
+    backgroundColor: colors.ny, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 20,
+  },
+  pk_offerBadgeText: {
+    fontFamily: fonts.orbitron, fontSize: 8, fontWeight: '900', letterSpacing: 1, color: '#000',
+  },
+  pk_offerName: { fontFamily: fonts.orbitron, fontSize: 15, fontWeight: '900', color: '#ffffff' },
+  pk_offerTimerMini: { alignItems: 'flex-end' },
+  pk_otmLabel: {
+    fontFamily: fonts.mono, fontSize: 7, letterSpacing: 2,
+    color: 'rgba(255,255,255,0.4)', marginBottom: 2,
+  },
+  pk_otmTime: { fontFamily: fonts.orbitron, fontSize: 15, fontWeight: '900', color: colors.ny },
+  pk_offerContentsRow: { flexDirection: 'row', gap: 6, marginBottom: 10 },
+  pk_ocItem: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.25)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)',
+    borderRadius: 8, paddingVertical: 8, paddingHorizontal: 4, alignItems: 'center',
+  },
+  pk_ocEmoji: { fontSize: 18, marginBottom: 4, textAlign: 'center' },
+  pk_ocVal: {
+    fontFamily: fonts.orbitron, fontSize: 13, fontWeight: '700',
+    color: colors.ng, textAlign: 'center',
+  },
+  pk_ocLbl: {
+    fontFamily: fonts.mono, fontSize: 7, letterSpacing: 1,
+    color: 'rgba(255,255,255,0.18)', marginTop: 2, textAlign: 'center',
+  },
+  pk_offerFooterRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+  },
+  pk_ofPricing: { flex: 1 },
+  pk_ofWas: {
+    fontFamily: fonts.mono, fontSize: 9, letterSpacing: 1,
+    color: 'rgba(255,255,255,0.18)', textDecorationLine: 'line-through',
+  },
+  pk_ofNow: { fontFamily: fonts.orbitron, fontSize: 22, fontWeight: '900', color: colors.ny },
+  pk_ofBtn: {
+    paddingVertical: 13, paddingHorizontal: 18, borderRadius: 11,
+    backgroundColor: 'rgba(0,255,136,0.15)',
+    borderWidth: 1, borderColor: colors.ng, minWidth: 110, alignItems: 'center',
+  },
+  pk_ofBtnDisabled: { opacity: 0.5 },
+  pk_ofBtnText: {
+    fontFamily: fonts.orbitron, fontSize: 11, fontWeight: '700', letterSpacing: 2, color: colors.ng,
+  },
+  pk_divider: {
+    height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginTop: 4, marginBottom: 14,
+  },
+  pk_unlockNoteBar: {
+    flexDirection: 'row', gap: 6,
+    backgroundColor: 'rgba(0,229,255,0.05)',
+    borderWidth: 1, borderColor: 'rgba(0,229,255,0.12)',
+    borderRadius: 8, paddingVertical: 7, paddingHorizontal: 12, marginBottom: 12,
+  },
+  pk_unlockNoteText: {
+    fontFamily: fonts.mono, fontSize: 9, letterSpacing: 1, color: 'rgba(0,229,255,0.6)',
+  },
+  pk_nextOffer: {
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 12, padding: 14, alignItems: 'center',
+  },
+  pk_noLabel: {
+    fontFamily: fonts.mono, fontSize: 9, letterSpacing: 3,
+    color: 'rgba(255,255,255,0.18)', marginBottom: 6, textTransform: 'uppercase',
+  },
+  pk_noTimer: {
+    fontFamily: fonts.orbitron, fontSize: 22, fontWeight: '900',
+    color: 'rgba(255,255,255,0.4)', marginBottom: 4,
+  },
+  pk_noSub: {
+    fontFamily: fonts.mono, fontSize: 8, letterSpacing: 2, color: 'rgba(255,255,255,0.18)',
+  },
+  pk_allOwnedBox: {
+    backgroundColor: 'rgba(0,255,136,0.04)',
+    borderWidth: 1, borderColor: 'rgba(0,255,136,0.18)',
+    borderRadius: 16, padding: 24, alignItems: 'center', marginBottom: 16,
+  },
+  pk_allOwnedEmoji: { fontSize: 36, color: colors.ng, marginBottom: 8, textAlign: 'center' },
+  pk_allOwnedTitle: {
+    fontFamily: fonts.orbitron, fontSize: 16, fontWeight: '900', color: '#ffffff', marginBottom: 6,
+  },
+  pk_allOwnedSub: {
+    fontFamily: fonts.mono, fontSize: 9, letterSpacing: 2,
+    color: 'rgba(255,255,255,0.4)', textAlign: 'center', lineHeight: 16,
+  },
 });
 
 export default ShopScreen;
