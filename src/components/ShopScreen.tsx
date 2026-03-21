@@ -460,16 +460,16 @@ const ShopScreen: React.FC = () => {
                 </View>
               )}
               <TouchableOpacity
-                style={st.na_buyBtn}
+                style={hasActiveSale ? st.na_buyBtn : st.na_buyBtnNormal}
                 onPress={() => confirmPurchase(IAP_PRODUCT_IDS.REMOVE_ADS)}
                 disabled={!!purchasing}
                 activeOpacity={0.8}
               >
                 {purchasing === IAP_PRODUCT_IDS.REMOVE_ADS ? (
-                  <ActivityIndicator color={colors.ny} />
+                  <ActivityIndicator color={hasActiveSale ? colors.ny : colors.nr} />
                 ) : (
-                  <Text style={st.na_buyBtnText}>
-                    {t('shop.noAds.buyBtn')}{' — $'}{IAP_PRICES.REMOVE_ADS.toFixed(2)}
+                  <Text style={hasActiveSale ? st.na_buyBtnText : st.na_buyBtnNormalText}>
+                    {hasActiveSale ? t('shop.noAds.buyBtn') : t('shop.noAds.buyBtnNormal')}{' — $'}{IAP_PRICES.REMOVE_ADS.toFixed(2)}
                   </Text>
                 )}
               </TouchableOpacity>
@@ -1297,6 +1297,16 @@ const st = StyleSheet.create({
   na_buyBtnText: {
     fontFamily: fonts.orbitron, fontSize: 13,
     letterSpacing: 3, color: colors.ny,
+  },
+  na_buyBtnNormal: {
+    width: '100%', paddingVertical: 16, borderRadius: 12,
+    borderWidth: 1, borderColor: colors.nr,
+    backgroundColor: 'rgba(255,61,90,0.12)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  na_buyBtnNormalText: {
+    fontFamily: fonts.orbitron, fontSize: 13,
+    letterSpacing: 3, color: colors.nr,
   },
   na_ownedBanner: {
     width: '100%', marginTop: 14, paddingVertical: 14, borderRadius: 12,

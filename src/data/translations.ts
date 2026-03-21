@@ -1373,6 +1373,11 @@ export const translations: Translation = {
     es: '🏷 APROVECHAR OFERTA',
     pt: '🏷 APROVEITAR OFERTA',
   },
+  'shop.noAds.buyBtnNormal': {
+    en: 'REMOVE ADS',
+    es: 'ELIMINAR ADS',
+    pt: 'REMOVER ADS',
+  },
   'shop.noAds.unlockHeader': {
     en: 'Or unlock it by purchasing',
     es: 'O desbloquealo comprando',
