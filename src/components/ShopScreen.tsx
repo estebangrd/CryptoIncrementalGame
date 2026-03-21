@@ -931,7 +931,7 @@ const st = StyleSheet.create({
     color: 'rgba(255,255,255,0.18)',
   },
   na_promoTimer: {
-    fontFamily: fonts.orbitron, fontSize: 14, fontWeight: '900', color: colors.ny,
+    fontFamily: fonts.orbitronBlack, fontSize: 14, color: colors.ny,
   },
   na_priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 10 },
   na_priceNormal: {
@@ -939,7 +939,7 @@ const st = StyleSheet.create({
     color: 'rgba(255,255,255,0.3)', textDecorationLine: 'line-through',
   },
   na_priceNow: {
-    fontFamily: fonts.orbitron, fontSize: 32, fontWeight: '900',
+    fontFamily: fonts.orbitronBlack, fontSize: 32,
     color: colors.ny, lineHeight: 38,
   },
   na_savingsBadge: {
@@ -957,7 +957,7 @@ const st = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   na_buyBtnText: {
-    fontFamily: fonts.orbitron, fontSize: 13, fontWeight: '700',
+    fontFamily: fonts.orbitron, fontSize: 13,
     letterSpacing: 3, color: colors.ny,
   },
   na_ownedBanner: {
@@ -966,7 +966,7 @@ const st = StyleSheet.create({
     backgroundColor: 'rgba(0,255,136,0.08)', alignItems: 'center',
   },
   na_ownedText: {
-    fontFamily: fonts.orbitron, fontSize: 13, fontWeight: '700',
+    fontFamily: fonts.orbitron, fontSize: 13,
     letterSpacing: 3, color: colors.ng,
   },
   na_divider: {
@@ -1013,7 +1013,7 @@ const st = StyleSheet.create({
     letterSpacing: 1, marginBottom: 4, textAlign: 'center',
   },
   na_stepPct: {
-    fontFamily: fonts.orbitron, fontSize: 14, fontWeight: '700',
+    fontFamily: fonts.orbitron, fontSize: 14,
     textAlign: 'center', lineHeight: 18,
   },
   na_stepLabel: {
@@ -1096,7 +1096,7 @@ const st = StyleSheet.create({
     fontFamily: fonts.mono, fontSize: 8, letterSpacing: 2,
     color: 'rgba(255,255,255,0.4)', marginBottom: 2,
   },
-  bo_price: { fontFamily: fonts.orbitron, fontSize: 20, fontWeight: '900' },
+  bo_price: { fontFamily: fonts.orbitronBlack, fontSize: 20 },
   bo_priceYellow: { color: colors.ny },
   bo_priceOrange: { color: '#ff6b1a' },
   bo_pricePurple: { color: '#a040ff' },
@@ -1111,7 +1111,7 @@ const st = StyleSheet.create({
     backgroundColor: 'rgba(0,255,136,0.06)', borderColor: 'rgba(0,255,136,0.2)',
   },
   bo_btnDisabled: { opacity: 0.5 },
-  bo_btnText: { fontFamily: fonts.orbitron, fontSize: 12, fontWeight: '700', letterSpacing: 2 },
+  bo_btnText: { fontFamily: fonts.orbitron, fontSize: 12, letterSpacing: 2 },
   bo_btnTextYellow: { color: colors.ny },
   bo_btnTextOrange: { color: '#ff6b1a' },
   bo_btnTextPurple: { color: '#a040ff' },
@@ -1163,7 +1163,7 @@ const st = StyleSheet.create({
   },
   pk_ocEmoji: { fontSize: 26, marginBottom: 4, textAlign: 'center', color: '#ffffff' },
   pk_ocVal: {
-    fontFamily: fonts.orbitron, fontSize: 13, fontWeight: '700',
+    fontFamily: fonts.orbitron, fontSize: 13,
     color: colors.ng, textAlign: 'center',
   },
   pk_ocLbl: {
@@ -1190,7 +1190,7 @@ const st = StyleSheet.create({
   },
   pk_ofBtnDisabled: { opacity: 0.5 },
   pk_ofBtnText: {
-    fontFamily: fonts.orbitron, fontSize: 11, fontWeight: '700', letterSpacing: 2, color: colors.ng,
+    fontFamily: fonts.orbitron, fontSize: 11, letterSpacing: 2, color: colors.ng,
   },
   pk_divider: {
     height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginTop: 4, marginBottom: 14,
