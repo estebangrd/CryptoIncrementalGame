@@ -144,6 +144,7 @@ const ShopScreen: React.FC = () => {
   // ── No Ads: flash sale logic ─────────────────────────────────────────────────
   const [flashTimerDisplay, setFlashTimerDisplay] = useState<string>('');
   const [flashTimerColor, setFlashTimerColor] = useState<string>(colors.ny);
+  const flashTimerPulse = useRef(new Animated.Value(1)).current;
 
   const hasActiveSale = computeHasActiveSale({
     flashSaleExpiresAt: iapState.flashSaleExpiresAt,
@@ -197,6 +198,23 @@ const ShopScreen: React.FC = () => {
     const id = setInterval(update, 1000);
     return () => clearInterval(id);
   }, [iapState.removeAdsPurchased, iapState.flashSaleExpiresAt]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Timer pulse animation (mirrors CSS tpulse)
+  useEffect(() => {
+    if (!hasActiveSale) {
+      flashTimerPulse.stopAnimation();
+      flashTimerPulse.setValue(1);
+      return;
+    }
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(flashTimerPulse, { toValue: 0.5, duration: 500, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(flashTimerPulse, { toValue: 1.0, duration: 500, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [hasActiveSale, flashTimerPulse]);
 
   // ── Packs: offer roll when packs tab becomes active ──────────────────────
   useEffect(() => {
@@ -401,7 +419,12 @@ const ShopScreen: React.FC = () => {
     return (
       <View>
         {/* Hero card */}
-        <View style={st.na_hero}>
+        <LinearGradient
+          colors={['rgba(255,61,90,0.07)', 'rgba(255,61,90,0.03)']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={st.na_hero}
+        >
           <LinearGradient
             colors={['#ff3d5a', '#ff8c42']}
             start={{ x: 0, y: 0 }}
@@ -445,9 +468,9 @@ const ShopScreen: React.FC = () => {
                     </View>
                     <View style={st.na_promoRight}>
                       <Text style={st.na_promoExpiresLabel}>{t('shop.noAds.expiresIn')}</Text>
-                      <Text style={[st.na_promoTimer, { color: flashTimerColor }]}>
+                      <Animated.Text style={[st.na_promoTimer, { color: flashTimerColor, opacity: flashTimerPulse }]}>
                         {flashTimerDisplay}
-                      </Text>
+                      </Animated.Text>
                     </View>
                   </View>
                   <View style={st.na_priceRow}>
@@ -460,22 +483,31 @@ const ShopScreen: React.FC = () => {
                 </View>
               )}
               <TouchableOpacity
-                style={hasActiveSale ? st.na_buyBtn : st.na_buyBtnNormal}
+                style={hasActiveSale ? st.na_buyBtnOuter : st.na_buyBtnNormalOuter}
                 onPress={() => confirmPurchase(IAP_PRODUCT_IDS.REMOVE_ADS)}
                 disabled={!!purchasing}
                 activeOpacity={0.8}
               >
-                {purchasing === IAP_PRODUCT_IDS.REMOVE_ADS ? (
-                  <ActivityIndicator color={hasActiveSale ? colors.ny : colors.nr} />
-                ) : (
-                  <Text style={hasActiveSale ? st.na_buyBtnText : st.na_buyBtnNormalText}>
-                    {hasActiveSale ? t('shop.noAds.buyBtn') : t('shop.noAds.buyBtnNormal')}{' — $'}{IAP_PRICES.REMOVE_ADS.toFixed(2)}
-                  </Text>
-                )}
+                <LinearGradient
+                  colors={hasActiveSale
+                    ? ['rgba(255,214,0,0.15)', 'rgba(255,140,0,0.08)']
+                    : ['rgba(255,61,90,0.18)', 'rgba(255,61,90,0.10)']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={st.na_buyBtnInner}
+                >
+                  {purchasing === IAP_PRODUCT_IDS.REMOVE_ADS ? (
+                    <ActivityIndicator color={hasActiveSale ? colors.ny : colors.nr} />
+                  ) : (
+                    <Text style={hasActiveSale ? st.na_buyBtnText : st.na_buyBtnNormalText}>
+                      {hasActiveSale ? t('shop.noAds.buyBtn') : t('shop.noAds.buyBtnNormal')}{' — $'}{IAP_PRICES.REMOVE_ADS.toFixed(2)}
+                    </Text>
+                  )}
+                </LinearGradient>
               </TouchableOpacity>
             </>
           )}
-        </View>
+        </LinearGradient>
 
         <View style={st.na_divider} />
 
@@ -1207,7 +1239,6 @@ const st = StyleSheet.create({
   // NO ADS
   // ════════════════════════
   na_hero: {
-    backgroundColor: 'rgba(255,61,90,0.05)',
     borderWidth: 1,
     borderColor: 'rgba(255,61,90,0.2)',
     borderRadius: 16,
@@ -1219,7 +1250,7 @@ const st = StyleSheet.create({
   na_heroAccent: { position: 'absolute', top: 0, left: 0, right: 0, height: 2 },
   na_bigIcon: { fontSize: 48, marginBottom: 10, marginTop: 8 },
   na_heroTitle: {
-    fontFamily: fonts.orbitron,
+    fontFamily: fonts.orbitronBlack,
     fontSize: 16,
     color: '#fff',
     textAlign: 'center',
@@ -1288,21 +1319,24 @@ const st = StyleSheet.create({
   na_savingsText: {
     fontFamily: fonts.mono, fontSize: 9, color: colors.ng, letterSpacing: 1,
   },
-  na_buyBtn: {
-    width: '100%', paddingVertical: 16, borderRadius: 12,
+  na_buyBtnOuter: {
+    width: '100%', borderRadius: 12, overflow: 'hidden',
     borderWidth: 1, borderColor: colors.ny,
-    backgroundColor: 'rgba(255,214,0,0.15)',
-    alignItems: 'center', justifyContent: 'center',
+    shadowColor: colors.ny, shadowOpacity: 0.25, shadowRadius: 10,
+    shadowOffset: { width: 0, height: 0 }, elevation: 3,
+  },
+  na_buyBtnNormalOuter: {
+    width: '100%', borderRadius: 12, overflow: 'hidden',
+    borderWidth: 1, borderColor: colors.nr,
+    shadowColor: colors.nr, shadowOpacity: 0.25, shadowRadius: 10,
+    shadowOffset: { width: 0, height: 0 }, elevation: 3,
+  },
+  na_buyBtnInner: {
+    paddingVertical: 16, alignItems: 'center', justifyContent: 'center',
   },
   na_buyBtnText: {
     fontFamily: fonts.orbitron, fontSize: 13,
     letterSpacing: 3, color: colors.ny,
-  },
-  na_buyBtnNormal: {
-    width: '100%', paddingVertical: 16, borderRadius: 12,
-    borderWidth: 1, borderColor: colors.nr,
-    backgroundColor: 'rgba(255,61,90,0.12)',
-    alignItems: 'center', justifyContent: 'center',
   },
   na_buyBtnNormalText: {
     fontFamily: fonts.orbitron, fontSize: 13,
