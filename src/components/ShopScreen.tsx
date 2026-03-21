@@ -145,6 +145,8 @@ const ShopScreen: React.FC = () => {
   const [flashTimerDisplay, setFlashTimerDisplay] = useState<string>('');
   const [flashTimerColor, setFlashTimerColor] = useState<string>(colors.ny);
   const flashTimerPulse = useRef(new Animated.Value(1)).current;
+  const buyBtnShimmerAnim = useRef(new Animated.Value(-120)).current;
+  const stepGlowAnim = useRef(new Animated.Value(0)).current;
 
   const hasActiveSale = computeHasActiveSale({
     flashSaleExpiresAt: iapState.flashSaleExpiresAt,
@@ -215,6 +217,30 @@ const ShopScreen: React.FC = () => {
     anim.start();
     return () => anim.stop();
   }, [hasActiveSale, flashTimerPulse]);
+
+  // Active step glow pulse (matches spec stepGlow animation)
+  useEffect(() => {
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(stepGlowAnim, { toValue: 1, duration: 1000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(stepGlowAnim, { toValue: 0, duration: 1000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [stepGlowAnim]);
+
+  // Buy button shimmer (matches spec ::before shimmer animation)
+  useEffect(() => {
+    const shimmerLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(buyBtnShimmerAnim, { toValue: -120, duration: 0, useNativeDriver: true }),
+        Animated.timing(buyBtnShimmerAnim, { toValue: 320, duration: 3000, easing: Easing.linear, useNativeDriver: true }),
+      ])
+    );
+    shimmerLoop.start();
+    return () => shimmerLoop.stop();
+  }, [buyBtnShimmerAnim]);
 
   // ── Packs: offer roll when packs tab becomes active ──────────────────────
   useEffect(() => {
@@ -388,9 +414,9 @@ const ShopScreen: React.FC = () => {
     const purchased = iapState.removeAdsPurchased;
     const purchaseCount = iapState.purchaseHistory.length;
 
-    const getStepState = (stepIndex: number): 'done' | 'active' | 'locked' => {
-      if (purchaseCount > stepIndex) return 'done';
-      if (purchaseCount === stepIndex) return 'active';
+    const getStepState = (stepNumber: number): 'done' | 'active' | 'locked' => {
+      if (purchaseCount >= stepNumber) return 'done';
+      if (purchaseCount === stepNumber - 1) return 'active';
       return 'locked';
     };
 
@@ -496,6 +522,17 @@ const ShopScreen: React.FC = () => {
                   end={{ x: 1, y: 1 }}
                   style={st.na_buyBtnInner}
                 >
+                  <Animated.View
+                    pointerEvents="none"
+                    style={[st.na_buyBtnShimmer, { transform: [{ translateX: buyBtnShimmerAnim }] }]}
+                  >
+                    <LinearGradient
+                      colors={['transparent', 'rgba(255,255,255,0.07)', 'transparent']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={StyleSheet.absoluteFill}
+                    />
+                  </Animated.View>
                   {purchasing === IAP_PRODUCT_IDS.REMOVE_ADS ? (
                     <ActivityIndicator color={hasActiveSale ? colors.ny : colors.nr} />
                   ) : (
@@ -520,6 +557,9 @@ const ShopScreen: React.FC = () => {
           <Text style={st.na_unlockTitle}>{t('shop.noAds.unlockTitle')}</Text>
           <View style={st.na_stepsRow}>
             <View style={stepContainerStyle(step1)}>
+              {step1 === 'active' && (
+                <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: 8, backgroundColor: 'rgba(255,214,0,0.15)', opacity: stepGlowAnim }]} />
+              )}
               {step1 === 'done' && (
                 <View style={st.na_stepCheck}><Text style={st.na_stepCheckText}>✓</Text></View>
               )}
@@ -528,6 +568,9 @@ const ShopScreen: React.FC = () => {
               <Text style={st.na_stepLabel}>{t('shop.noAds.chance')}</Text>
             </View>
             <View style={stepContainerStyle(step2)}>
+              {step2 === 'active' && (
+                <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: 8, backgroundColor: 'rgba(255,214,0,0.15)', opacity: stepGlowAnim }]} />
+              )}
               {step2 === 'done' && (
                 <View style={st.na_stepCheck}><Text style={st.na_stepCheckText}>✓</Text></View>
               )}
@@ -536,6 +579,9 @@ const ShopScreen: React.FC = () => {
               <Text style={st.na_stepLabel}>{t('shop.noAds.chance')}</Text>
             </View>
             <View style={stepContainerStyle(step3)}>
+              {step3 === 'active' && (
+                <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: 8, backgroundColor: 'rgba(255,214,0,0.15)', opacity: stepGlowAnim }]} />
+              )}
               {step3 === 'done' && (
                 <View style={st.na_stepCheck}><Text style={st.na_stepCheckText}>✓</Text></View>
               )}
@@ -1332,7 +1378,10 @@ const st = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 }, elevation: 3,
   },
   na_buyBtnInner: {
-    paddingVertical: 16, alignItems: 'center', justifyContent: 'center',
+    paddingVertical: 16, alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+  },
+  na_buyBtnShimmer: {
+    position: 'absolute', top: 0, bottom: 0, width: 100,
   },
   na_buyBtnText: {
     fontFamily: fonts.orbitron, fontSize: 13,
@@ -1352,7 +1401,7 @@ const st = StyleSheet.create({
     letterSpacing: 3, color: colors.ng,
   },
   na_divider: {
-    height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginVertical: 14,
+    height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginTop: 4, marginBottom: 14,
   },
   na_secHdrRow: {
     flexDirection: 'row', alignItems: 'center', marginBottom: 10, gap: 8,
