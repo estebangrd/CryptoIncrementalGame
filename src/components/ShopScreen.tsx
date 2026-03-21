@@ -682,6 +682,12 @@ const ShopScreen: React.FC = () => {
                 <View style={st.pk_offerEyebrowRow}>
                   <Text style={st.pk_offerEyebrow}>{t(activePack!.eyebrowKey)}</Text>
                   <Animated.View style={[st.pk_offerBadge, { transform: [{ scale: pkBadgePulse }] }]}>
+                    <LinearGradient
+                      colors={[colors.ny, '#ff8c00']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={StyleSheet.absoluteFill}
+                    />
                     <Text style={st.pk_offerBadgeText}>{t('shop.packs.exclusive')}</Text>
                   </Animated.View>
                 </View>
@@ -1136,8 +1142,8 @@ const st = StyleSheet.create({
     color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase',
   },
   pk_offerBadge: {
-    backgroundColor: colors.ny, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 20,
-    marginLeft: 6,
+    paddingHorizontal: 7, paddingVertical: 2, borderRadius: 20,
+    marginLeft: 6, overflow: 'hidden',
   },
   pk_offerBadgeText: {
     fontFamily: fonts.orbitron, fontSize: 8, fontWeight: '900', letterSpacing: 1, color: '#000',
