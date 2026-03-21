@@ -134,6 +134,9 @@ const ShopScreen: React.FC = () => {
   const [offlineMinerExtended, setOfflineMinerExtended] = useState(() => Math.random() < BOOSTER_CONFIG.OFFLINE_MINER.extendedOfferChance);
   const [marketPumpExtended, setMarketPumpExtended] = useState(() => Math.random() < BOOSTER_CONFIG.MARKET_PUMP.extendedOfferChance);
 
+  // TEMP: demo toggle for No Ads tab (remove before ship)
+  const [demoForcePromo, setDemoForcePromo] = useState<boolean>(false);
+
   // Re-roll when boosters tab becomes active (fresh offer each visit)
   useEffect(() => {
     if (activeTab !== 'boosters') return;
@@ -436,14 +439,39 @@ const ShopScreen: React.FC = () => {
       return 'rgba(255,255,255,0.18)';
     };
 
-    const nextChanceText = (): string => {
-      if (purchaseCount === 0) return t('shop.noAds.nextChance50');
-      if (purchaseCount === 1) return t('shop.noAds.nextChance75');
-      return t('shop.noAds.nextChance100');
+    const effectiveSale = demoForcePromo;
+
+    const getUnlockNoteParts = () => {
+      if (purchaseCount === 0) return { pre: t('shop.noAds.unlockNote.pre0'), pct: t('shop.noAds.unlockNote.pct50'), post: t('shop.noAds.unlockNote.post') };
+      if (purchaseCount === 1) return { pre: t('shop.noAds.unlockNote.preNext'), pct: t('shop.noAds.unlockNote.pct75'), post: t('shop.noAds.unlockNote.post') };
+      return { pre: t('shop.noAds.unlockNote.preNext'), pct: t('shop.noAds.unlockNote.pct100'), post: t('shop.noAds.unlockNote.post') };
     };
+    const noteParts = getUnlockNoteParts();
 
     return (
       <View>
+        {/* === TEMP DEBUG TOGGLE (remove before ship) === */}
+        <View style={st.na_demoToggle}>
+          <TouchableOpacity
+            style={[st.na_demoToggleBtn, !demoForcePromo && st.na_demoToggleBtnActive]}
+            onPress={() => setDemoForcePromo(false)}
+            activeOpacity={0.8}
+          >
+            <Text style={[st.na_demoToggleBtnText, !demoForcePromo && st.na_demoToggleBtnTextActive]}>
+              Sin promo activa
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[st.na_demoToggleBtn, demoForcePromo && st.na_demoToggleBtnActive]}
+            onPress={() => setDemoForcePromo(true)}
+            activeOpacity={0.8}
+          >
+            <Text style={[st.na_demoToggleBtnText, demoForcePromo && st.na_demoToggleBtnTextActive]}>
+              Con oferta flash
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Hero card */}
         <LinearGradient
           colors={['rgba(255,61,90,0.07)', 'rgba(255,61,90,0.03)']}
@@ -485,7 +513,14 @@ const ShopScreen: React.FC = () => {
             </View>
           ) : (
             <>
-              {hasActiveSale && (
+              {!effectiveSale ? (
+                /* Normal state: neutral price box */
+                <View style={st.na_priceBox}>
+                  <Text style={st.na_priceBoxLabel}>PRECIO</Text>
+                  <Text style={st.na_priceBoxValue}>$2.99</Text>
+                </View>
+              ) : (
+                /* Sale state: yellow banner with centered stacked prices */
                 <View style={st.na_promoBanner}>
                   <View style={st.na_promoTop}>
                     <View style={st.na_promoLeft}>
@@ -495,27 +530,24 @@ const ShopScreen: React.FC = () => {
                     <View style={st.na_promoRight}>
                       <Text style={st.na_promoExpiresLabel}>{t('shop.noAds.expiresIn')}</Text>
                       <Animated.Text style={[st.na_promoTimer, { color: flashTimerColor, opacity: flashTimerPulse }]}>
-                        {flashTimerDisplay}
+                        {hasActiveSale && flashTimerDisplay ? flashTimerDisplay : '08:30'}
                       </Animated.Text>
                     </View>
                   </View>
-                  <View style={st.na_priceRow}>
+                  <View style={st.na_priceCentered}>
                     <Text style={st.na_priceNormal}>$2.99</Text>
                     <Text style={st.na_priceNow}>${IAP_PRICES.REMOVE_ADS.toFixed(2)}</Text>
-                    <View style={st.na_savingsBadge}>
-                      <Text style={st.na_savingsText}>{`${t('shop.noAds.save')} $${(2.99 - IAP_PRICES.REMOVE_ADS).toFixed(2)}`}</Text>
-                    </View>
                   </View>
                 </View>
               )}
               <TouchableOpacity
-                style={hasActiveSale ? st.na_buyBtnOuter : st.na_buyBtnNormalOuter}
+                style={effectiveSale ? st.na_buyBtnOuter : st.na_buyBtnNormalOuter}
                 onPress={() => confirmPurchase(IAP_PRODUCT_IDS.REMOVE_ADS)}
                 disabled={!!purchasing}
                 activeOpacity={0.8}
               >
                 <LinearGradient
-                  colors={hasActiveSale
+                  colors={effectiveSale
                     ? ['rgba(255,214,0,0.15)', 'rgba(255,140,0,0.08)']
                     : ['rgba(255,61,90,0.18)', 'rgba(255,61,90,0.10)']}
                   start={{ x: 0, y: 0 }}
@@ -534,10 +566,10 @@ const ShopScreen: React.FC = () => {
                     />
                   </Animated.View>
                   {purchasing === IAP_PRODUCT_IDS.REMOVE_ADS ? (
-                    <ActivityIndicator color={hasActiveSale ? colors.ny : colors.nr} />
+                    <ActivityIndicator color={effectiveSale ? colors.ny : colors.nr} />
                   ) : (
-                    <Text style={hasActiveSale ? st.na_buyBtnText : st.na_buyBtnNormalText}>
-                      {hasActiveSale ? t('shop.noAds.buyBtn') : t('shop.noAds.buyBtnNormal')}{' — $'}{IAP_PRICES.REMOVE_ADS.toFixed(2)}
+                    <Text style={effectiveSale ? st.na_buyBtnText : st.na_buyBtnNormalText}>
+                      {effectiveSale ? t('shop.noAds.buyBtn') : t('shop.noAds.buyBtnNormal')}
                     </Text>
                   )}
                 </LinearGradient>
@@ -591,9 +623,9 @@ const ShopScreen: React.FC = () => {
             </View>
           </View>
           <Text style={st.na_unlockNote}>
-            {purchaseCount > 0
-              ? `${t('shop.noAds.youMade')} ${purchaseCount} ${purchaseCount > 1 ? t('shop.noAds.purchasePlural') : t('shop.noAds.purchaseSingular')} — ${nextChanceText()}`
-              : `${t('shop.noAds.noPurchasesYet')} — ${nextChanceText()}`}
+            {noteParts.pre}{' '}
+            <Text style={{ color: colors.ny }}>{noteParts.pct}</Text>
+            {' '}{noteParts.post}
           </Text>
         </View>
       </View>
@@ -1324,6 +1356,21 @@ const st = StyleSheet.create({
     fontSize: 13, color: 'rgba(255,255,255,0.65)',
     flex: 1, lineHeight: 18, fontFamily: fonts.rajdhani,
   },
+  /* Normal state: neutral price box */
+  na_priceBox: {
+    width: '100%', marginTop: 14, marginBottom: 10,
+    padding: 12, paddingHorizontal: 14,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', borderRadius: 12,
+  },
+  na_priceBoxLabel: {
+    fontFamily: fonts.mono, fontSize: 8, letterSpacing: 2,
+    color: 'rgba(255,255,255,0.4)', marginBottom: 6,
+  },
+  na_priceBoxValue: {
+    fontFamily: fonts.orbitronBlack, fontSize: 32, color: '#fff', lineHeight: 38,
+  },
+  /* Sale state: yellow promo banner */
   na_promoBanner: {
     width: '100%', marginTop: 14, marginBottom: 10,
     padding: 12, paddingHorizontal: 14,
@@ -1348,22 +1395,15 @@ const st = StyleSheet.create({
   na_promoTimer: {
     fontFamily: fonts.orbitronBlack, fontSize: 14, color: colors.ny,
   },
-  na_priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 10 },
+  na_priceCentered: { alignItems: 'center', marginTop: 4, width: '100%' },
   na_priceNormal: {
     fontFamily: fonts.orbitron, fontSize: 15,
     color: 'rgba(255,255,255,0.3)', textDecorationLine: 'line-through',
+    lineHeight: 20, marginBottom: 4, textAlign: 'center',
   },
   na_priceNow: {
     fontFamily: fonts.orbitronBlack, fontSize: 32,
-    color: colors.ny, lineHeight: 38,
-  },
-  na_savingsBadge: {
-    backgroundColor: 'rgba(0,255,136,0.1)',
-    borderWidth: 1, borderColor: 'rgba(0,255,136,0.22)',
-    borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2, alignSelf: 'center',
-  },
-  na_savingsText: {
-    fontFamily: fonts.mono, fontSize: 9, color: colors.ng, letterSpacing: 1,
+    color: colors.ny, lineHeight: 38, textAlign: 'center',
   },
   na_buyBtnOuter: {
     width: '100%', borderRadius: 12, overflow: 'hidden',
@@ -1455,6 +1495,16 @@ const st = StyleSheet.create({
     fontFamily: fonts.mono, fontSize: 9,
     color: 'rgba(255,255,255,0.18)', letterSpacing: 1, lineHeight: 14,
   },
+  /* TEMP: demo toggle styles (remove before ship) */
+  na_demoToggle: { flexDirection: 'row', gap: 6, marginBottom: 12 },
+  na_demoToggleBtn: {
+    flex: 1, paddingVertical: 7, borderRadius: 8,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
+    alignItems: 'center',
+  },
+  na_demoToggleBtnActive: { borderColor: colors.ng, backgroundColor: 'rgba(0,255,136,0.1)' },
+  na_demoToggleBtnText: { fontFamily: fonts.mono, fontSize: 9, letterSpacing: 1, color: 'rgba(255,255,255,0.4)' },
+  na_demoToggleBtnTextActive: { color: colors.ng },
 
   // ════════════════════════
   // BOOSTERS

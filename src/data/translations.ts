@@ -1369,14 +1369,14 @@ export const translations: Translation = {
     pt: 'ECONOMIZE',
   },
   'shop.noAds.buyBtn': {
-    en: '🏷 CLAIM OFFER',
-    es: '🏷 APROVECHAR OFERTA',
-    pt: '🏷 APROVEITAR OFERTA',
+    en: '🏷 REMOVE ADS',
+    es: '🏷 ELIMINAR ADS',
+    pt: '🏷 REMOVER ADS',
   },
   'shop.noAds.buyBtnNormal': {
-    en: 'REMOVE ADS',
-    es: 'ELIMINAR ADS',
-    pt: 'REMOVER ADS',
+    en: '🚫 REMOVE ADS',
+    es: '🚫 ELIMINAR ADS',
+    pt: '🚫 REMOVER ADS',
   },
   'shop.noAds.unlockHeader': {
     en: 'Or unlock it by purchasing',
@@ -1447,6 +1447,36 @@ export const translations: Translation = {
     en: 'next purchase: 100% guaranteed',
     es: 'próxima compra: 100% garantizado',
     pt: 'próxima compra: 100% garantido',
+  },
+  'shop.noAds.unlockNote.pre0': {
+    en: 'With your first purchase you have a',
+    es: 'Con tu primera compra tenés un',
+    pt: 'Com sua primeira compra você tem',
+  },
+  'shop.noAds.unlockNote.preNext': {
+    en: 'With your next purchase you have a',
+    es: 'Con tu próxima compra tenés un',
+    pt: 'Com sua próxima compra você tem',
+  },
+  'shop.noAds.unlockNote.post': {
+    en: 'to unlock No Ads for free.',
+    es: 'de desbloquear No Ads gratis.',
+    pt: 'de desbloquear No Ads de graça.',
+  },
+  'shop.noAds.unlockNote.pct50': {
+    en: '50% chance',
+    es: '50% de chance',
+    pt: '50% de chance',
+  },
+  'shop.noAds.unlockNote.pct75': {
+    en: '75% chance',
+    es: '75% de chance',
+    pt: '75% de chance',
+  },
+  'shop.noAds.unlockNote.pct100': {
+    en: '100% guaranteed',
+    es: '100% garantizado',
+    pt: '100% garantido',
   },
 
   // Shop — Boosters tab
