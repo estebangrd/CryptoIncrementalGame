@@ -452,24 +452,28 @@ const ShopScreen: React.FC = () => {
       <View>
         {/* === TEMP DEBUG TOGGLE (remove before ship) === */}
         <View style={st.na_demoToggle}>
-          <TouchableOpacity
-            style={[st.na_demoToggleBtn, !demoForcePromo && st.na_demoToggleBtnActive]}
-            onPress={() => setDemoForcePromo(false)}
-            activeOpacity={0.8}
-          >
-            <Text style={[st.na_demoToggleBtnText, !demoForcePromo && st.na_demoToggleBtnTextActive]}>
-              Sin promo activa
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[st.na_demoToggleBtn, demoForcePromo && st.na_demoToggleBtnActive]}
-            onPress={() => setDemoForcePromo(true)}
-            activeOpacity={0.8}
-          >
-            <Text style={[st.na_demoToggleBtnText, demoForcePromo && st.na_demoToggleBtnTextActive]}>
-              Con oferta flash
-            </Text>
-          </TouchableOpacity>
+          <View style={[st.na_demoToggleBtnOuter, !demoForcePromo && st.na_demoToggleBtnOuterActive]}>
+            <TouchableOpacity
+              style={[st.na_demoToggleBtnInner, !demoForcePromo && st.na_demoToggleBtnInnerActive]}
+              onPress={() => setDemoForcePromo(false)}
+              activeOpacity={0.8}
+            >
+              <Text style={[st.na_demoToggleBtnText, !demoForcePromo && st.na_demoToggleBtnTextActive]}>
+                Sin promo activa
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <View style={[st.na_demoToggleBtnOuter, demoForcePromo && st.na_demoToggleBtnOuterActive]}>
+            <TouchableOpacity
+              style={[st.na_demoToggleBtnInner, demoForcePromo && st.na_demoToggleBtnInnerActive]}
+              onPress={() => setDemoForcePromo(true)}
+              activeOpacity={0.8}
+            >
+              <Text style={[st.na_demoToggleBtnText, demoForcePromo && st.na_demoToggleBtnTextActive]}>
+                Con oferta flash
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Hero card */}
@@ -1497,13 +1501,16 @@ const st = StyleSheet.create({
   },
   /* TEMP: demo toggle styles (remove before ship) */
   na_demoToggle: { flexDirection: 'row', gap: 6, marginBottom: 12 },
-  na_demoToggleBtn: {
-    flex: 1, padding: 7, borderRadius: 8,
+  na_demoToggleBtnOuter: {
+    flex: 1, borderRadius: 8, overflow: 'hidden',
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
-    backgroundColor: 'transparent',
+  },
+  na_demoToggleBtnOuterActive: { borderColor: colors.ng },
+  na_demoToggleBtnInner: {
+    padding: 7, backgroundColor: 'transparent',
     alignItems: 'center', justifyContent: 'center',
   },
-  na_demoToggleBtnActive: { borderColor: colors.ng, backgroundColor: 'rgba(0,255,136,0.1)' },
+  na_demoToggleBtnInnerActive: { backgroundColor: 'rgba(0,255,136,0.1)' },
   na_demoToggleBtnText: { fontFamily: fonts.mono, fontSize: 9, letterSpacing: 1, color: 'rgba(255,255,255,0.4)' },
   na_demoToggleBtnTextActive: { color: colors.ng },
 
