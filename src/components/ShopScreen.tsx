@@ -543,9 +543,10 @@ const ShopScreen: React.FC = () => {
                   <View style={st.na_priceCentered}>
                     <Text style={st.na_priceNormal}>$2.99</Text>
                     <View style={st.na_priceNowWrap}>
-                      <View style={st.na_glowOuter} pointerEvents="none" />
-                      <View style={st.na_glowMid}   pointerEvents="none" />
+                      <View style={st.na_glowOuter}  pointerEvents="none" />
+                      <View style={st.na_glowMid}    pointerEvents="none" />
                       <View style={st.na_glowInner}  pointerEvents="none" />
+                      <View style={st.na_glowCore}   pointerEvents="none" />
                       <Text style={st.na_priceNow}>{`$${IAP_PRICES.REMOVE_ADS.toFixed(2)}`}</Text>
                     </View>
                   </View>
@@ -605,7 +606,7 @@ const ShopScreen: React.FC = () => {
           <View style={st.na_stepsRow}>
             <View style={stepContainerStyle(step1)}>
               {step1 === 'active' && (
-                <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: 8, backgroundColor: 'rgba(255,214,0,0.15)', opacity: stepGlowAnim }]} />
+                <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: 8, borderWidth: 1, borderColor: 'rgba(255,214,0,0.6)', opacity: stepGlowAnim }]} />
               )}
               {step1 === 'done' && (
                 <View style={st.na_stepCheck}><Text style={st.na_stepCheckText}>✓</Text></View>
@@ -616,7 +617,7 @@ const ShopScreen: React.FC = () => {
             </View>
             <View style={stepContainerStyle(step2)}>
               {step2 === 'active' && (
-                <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: 8, backgroundColor: 'rgba(255,214,0,0.15)', opacity: stepGlowAnim }]} />
+                <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: 8, borderWidth: 1, borderColor: 'rgba(255,214,0,0.6)', opacity: stepGlowAnim }]} />
               )}
               {step2 === 'done' && (
                 <View style={st.na_stepCheck}><Text style={st.na_stepCheckText}>✓</Text></View>
@@ -627,7 +628,7 @@ const ShopScreen: React.FC = () => {
             </View>
             <View style={stepContainerStyle(step3)}>
               {step3 === 'active' && (
-                <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: 8, backgroundColor: 'rgba(255,214,0,0.15)', opacity: stepGlowAnim }]} />
+                <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: 8, borderWidth: 1, borderColor: 'rgba(255,214,0,0.6)', opacity: stepGlowAnim }]} />
               )}
               {step3 === 'done' && (
                 <View style={st.na_stepCheck}><Text style={st.na_stepCheckText}>✓</Text></View>
@@ -1419,18 +1420,22 @@ const st = StyleSheet.create({
   na_priceNowWrap: {
     alignItems: 'center', justifyContent: 'center',
   },
-  // Concentric ellipses that simulate a gaussian glow (text-shadow doesn't work on Android)
+  // Concentric ellipses simulating gaussian glow (text-shadow:{0,0} broken on Android)
   na_glowOuter: {
-    position: 'absolute', width: 220, height: 80, borderRadius: 40,
-    backgroundColor: 'rgba(255,214,0,0.06)',
+    position: 'absolute', width: 300, height: 100, borderRadius: 50,
+    backgroundColor: 'rgba(255,214,0,0.05)',
   },
   na_glowMid: {
-    position: 'absolute', width: 170, height: 62, borderRadius: 31,
+    position: 'absolute', width: 230, height: 78, borderRadius: 39,
     backgroundColor: 'rgba(255,214,0,0.11)',
   },
   na_glowInner: {
-    position: 'absolute', width: 120, height: 46, borderRadius: 23,
-    backgroundColor: 'rgba(255,214,0,0.18)',
+    position: 'absolute', width: 170, height: 58, borderRadius: 29,
+    backgroundColor: 'rgba(255,214,0,0.22)',
+  },
+  na_glowCore: {
+    position: 'absolute', width: 115, height: 42, borderRadius: 21,
+    backgroundColor: 'rgba(255,214,0,0.42)',
   },
   na_priceNow: {
     fontFamily: fonts.orbitronBlack, fontSize: 32,
