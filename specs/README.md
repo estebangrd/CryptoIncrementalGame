@@ -23,7 +23,11 @@ Este directorio contiene todas las especificaciones técnicas exhaustivas (Level
 |------|--------|------|-----------|-------------|
 | [Ad System](monetization/ad-system.md) | ✅ Implemented | Phase 3 | Critical | AdMob integration (Banner, Rewarded, Interstitial) |
 | [IAP System](monetization/iap-system.md) | ✅ Implemented | Phase 3 | Critical | In-App Purchases (Google Play + App Store) |
-| [Remove Ads Product](monetization/remove-ads-product.md) | ✅ Implemented | Phase 3 | High | Producto $0.99 para remover anuncios |
+| [Remove Ads — Core](monetization/remove-ads-core.md) | ✅ Implemented | Phase 3 | High | Product definition, pricing, business rules, state |
+| [Remove Ads — Purchase Flow](monetization/remove-ads-purchase-flow.md) | ✅ Implemented | Phase 3 | High | Confirmation, success, errors, restore purchases |
+| [Remove Ads — Flash Sale](monetization/remove-ads-flash-sale.md) | ✅ Implemented | Phase 3 | High | 35% roll on tab open, 8-14 min timer, 24h cooldown |
+| [Remove Ads — UI/UX](monetization/remove-ads-ui.md) | ✅ Implemented | Phase 3 | High | Card design, badges, settings screen |
+| [Remove Ads — Analytics](monetization/remove-ads-analytics.md) | ✅ Implemented | Phase 3 | High | Events, conversion tracking, promotion triggers |
 | [Boosters Catalog](monetization/boosters-catalog.md) | ✅ Implemented | Phase 3 | High | Aceleradores y starter packs |
 
 ### 💵 Economy (Economía)
@@ -60,16 +64,16 @@ Este directorio contiene todas las especificaciones técnicas exhaustivas (Level
 
 ## 📊 Estado General
 
-- **Total de Specs**: 24
-- **Implementadas**: 18 (75%)
+- **Total de Specs**: 28
+- **Implementadas**: 22 (79%)
 - **Parciales**: 0 (0%)
-- **Documentadas**: 3 (12.5%)
-- **Planeadas**: 3 (12.5%)
+- **Documentadas**: 3 (11%)
+- **Planeadas**: 3 (11%)
 
 ### Por Fase
 - **Phase 1 (Genesis)**: 2/2 implementadas ✅
 - **Phase 2 (Expansion)**: 2/2 implementadas ✅
-- **Phase 3 (Monetization)**: 5/5 specs implementadas ✅ (misiones diarias/XP/leaderboards pendientes, sin spec aún)
+- **Phase 3 (Monetization)**: 9/9 specs implementadas ✅ (misiones diarias/XP/leaderboards pendientes, sin spec aún)
 - **Phase 6 (Narrative)**: 2/3 implementadas ✅ (Narrative Events + Interactive Banners; Game Narrative Arc pendiente)
 
 ## 🎯 Roadmap de Implementación
