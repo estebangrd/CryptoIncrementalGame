@@ -77,12 +77,44 @@ export const getProducts = async (): Promise<Product[]> => {
   }
 };
 
+// ── Dev mock purchase support ─────────────────────────────────────────────
+// In __DEV__ mode, real IAP stores aren't available. Register a callback
+// from GameContext so purchaseProduct can simulate a successful purchase
+// by creating a mock PurchaseRecord and dispatching it directly.
+let _devPurchaseCallback: ((record: PurchaseRecord) => void) | null = null;
+
+/**
+ * Register a callback for dev-mode mock purchases.
+ * GameContext calls this on mount so purchaseProduct can dispatch
+ * purchase actions without a real store connection.
+ */
+export const registerDevPurchaseCallback = (cb: (record: PurchaseRecord) => void): void => {
+  _devPurchaseCallback = cb;
+};
+
 /**
  * Inicia el flujo de compra nativo para el producto dado.
- * Lanza el error para que el caller pueda manejarlo (mostrar alerta, etc.).
+ * En __DEV__ con callback registrado, simula la compra sin store nativo.
  * @param productId - SKU del producto a comprar.
  */
 export const purchaseProduct = async (productId: string): Promise<void> => {
+  // Dev mock: bypass native store and simulate successful purchase
+  if (__DEV__ && _devPurchaseCallback) {
+    const record: PurchaseRecord = {
+      productId,
+      transactionId: `dev_mock_${Date.now()}`,
+      purchaseDate: Date.now(),
+      price: 0,
+      currency: 'USD',
+      platform: Platform.OS as 'ios' | 'android',
+      receipt: '',
+      validated: true,
+      delivered: false,
+    };
+    _devPurchaseCallback(record);
+    return;
+  }
+
   try {
     await requestPurchase({
       type: 'in-app',

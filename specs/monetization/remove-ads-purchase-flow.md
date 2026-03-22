@@ -330,6 +330,13 @@ export const RemoveAdsCard: React.FC = () => {
 - Input: Compra en iPhone, instala en iPad
 - Expected: Restore automatico sincroniza en iPad
 
+**Edge Case 5: Dev mode — no real store available**
+- Input: Running in `__DEV__` mode without App Store / Google Play sandbox
+- Problem: `requestPurchase()` fails or resolves without triggering `purchaseUpdatedListener`, so buttons appear non-functional
+- Fix: `IAPService.registerDevPurchaseCallback()` is called by GameContext on mount. When `__DEV__` is true and a callback is registered, `purchaseProduct()` creates a mock `PurchaseRecord` and invokes the callback directly, bypassing the native store. This dispatches the same reducer actions as a real purchase.
+- Implementation: `src/services/IAPService.ts` (`registerDevPurchaseCallback`, dev branch in `purchaseProduct`), `src/contexts/GameContext.tsx` (`handlePurchaseRecord` extracted from listener)
+- Tests: `__tests__/iapService.test.ts`
+
 ## Testing
 
 ### Unit Tests

@@ -40,6 +40,7 @@ import {
   completePurchase,
   terminateIAP,
   isStarterPack,
+  registerDevPurchaseCallback,
 } from '../services/IAPService';
 import { purchaseUpdatedListener, purchaseErrorListener } from 'react-native-iap';
 import { BOOSTER_CONFIG, STARTER_PACK_REWARDS, ENERGY_CONFIG, PACK_CONFIG, REGULATORY_EVENT_CONFIG, MARKET_OPPORTUNITY_CONFIG, LOCAL_PROTEST_CONFIG } from '../config/balanceConfig';
@@ -1851,8 +1852,57 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     initAds();
   }, []);
 
+  // Shared handler: dispatches the correct action for a completed purchase record.
+  // Used by both the native purchaseUpdatedListener and the dev mock callback.
+  const handlePurchaseRecord = useCallback((record: PurchaseRecord) => {
+    const { productId } = record;
+
+    if (productId === IAP_PRODUCT_IDS.REMOVE_ADS) {
+      dispatch({ type: 'PURCHASE_REMOVE_ADS', payload: record });
+    } else if (productId === IAP_PRODUCT_IDS.PERMANENT_MULTIPLIER) {
+      dispatch({ type: 'PURCHASE_PERMANENT_MULTIPLIER', payload: record });
+    } else if (productId === IAP_PRODUCT_IDS.BOOSTER_2X) {
+      dispatch({ type: 'PURCHASE_BOOSTER_2X', payload: record });
+    } else if (productId === IAP_PRODUCT_IDS.BOOSTER_5X) {
+      dispatch({ type: 'PURCHASE_BOOSTER_5X', payload: record });
+    } else if (isStarterPack(productId)) {
+      const packTypeMap: { [key: string]: 'small' | 'medium' | 'large' | 'mega' } = {
+        [IAP_PRODUCT_IDS.STARTER_SMALL]: 'small',
+        [IAP_PRODUCT_IDS.STARTER_MEDIUM]: 'medium',
+        [IAP_PRODUCT_IDS.STARTER_LARGE]: 'large',
+        [IAP_PRODUCT_IDS.STARTER_MEGA]: 'mega',
+      };
+      const packType = packTypeMap[productId];
+      if (packType) {
+        dispatch({ type: 'PURCHASE_STARTER_PACK', payload: { packType, record } });
+      }
+    } else if (productId === IAP_PRODUCT_IDS.OFFLINE_MINER) {
+      const durationMs = pendingBoosterMetaRef.current?.offlineMinerDurationMs ?? BOOSTER_CONFIG.OFFLINE_MINER.baseDurationMs;
+      dispatch({ type: 'PURCHASE_OFFLINE_MINER', payload: { record, durationMs } });
+      pendingBoosterMetaRef.current = {};
+    } else if (productId === IAP_PRODUCT_IDS.LUCKY_BLOCK) {
+      const hashRate = gameStateRef.current.totalHashRate ?? 0;
+      let blocks = BOOSTER_CONFIG.LUCKY_BLOCK.earlyBlocks;
+      if (hashRate >= BOOSTER_CONFIG.LUCKY_BLOCK.lateHashThreshold) {
+        blocks = BOOSTER_CONFIG.LUCKY_BLOCK.lateBlocks;
+      } else if (hashRate >= BOOSTER_CONFIG.LUCKY_BLOCK.earlyHashThreshold) {
+        blocks = BOOSTER_CONFIG.LUCKY_BLOCK.midBlocks;
+      }
+      dispatch({ type: 'PURCHASE_LUCKY_BLOCK', payload: { record, blocks } });
+    } else if (productId === IAP_PRODUCT_IDS.MARKET_PUMP) {
+      const durationMs = pendingBoosterMetaRef.current?.marketPumpDurationMs ?? BOOSTER_CONFIG.MARKET_PUMP.baseDurationMs;
+      dispatch({ type: 'PURCHASE_MARKET_PUMP', payload: { record, durationMs } });
+      pendingBoosterMetaRef.current = {};
+    }
+
+    dispatch({ type: 'SET_IAP_PURCHASING', payload: false });
+  }, [dispatch]);
+
   // Initialize IAP and set up purchase listeners on mount
   useEffect(() => {
+    // Register dev mock callback so purchaseProduct can dispatch directly
+    registerDevPurchaseCallback(handlePurchaseRecord);
+
     let purchaseUpdateSub: ReturnType<typeof purchaseUpdatedListener> | null = null;
     let purchaseErrorSub: ReturnType<typeof purchaseErrorListener> | null = null;
 
@@ -1862,54 +1912,11 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       await getProducts();
 
-      // Listener for successful purchases
+      // Listener for successful purchases (production path via native store)
       purchaseUpdateSub = purchaseUpdatedListener(async (purchase) => {
         const record = await completePurchase(purchase);
         if (!record) return;
-
-        const { productId } = purchase;
-
-        if (productId === IAP_PRODUCT_IDS.REMOVE_ADS) {
-          dispatch({ type: 'PURCHASE_REMOVE_ADS', payload: record });
-        } else if (productId === IAP_PRODUCT_IDS.PERMANENT_MULTIPLIER) {
-          dispatch({ type: 'PURCHASE_PERMANENT_MULTIPLIER', payload: record });
-        } else if (productId === IAP_PRODUCT_IDS.BOOSTER_2X) {
-          dispatch({ type: 'PURCHASE_BOOSTER_2X', payload: record });
-        } else if (productId === IAP_PRODUCT_IDS.BOOSTER_5X) {
-          dispatch({ type: 'PURCHASE_BOOSTER_5X', payload: record });
-        } else if (isStarterPack(productId)) {
-          // Derive packType from productId to match existing reducer shape
-          const packTypeMap: { [key: string]: 'small' | 'medium' | 'large' | 'mega' } = {
-            [IAP_PRODUCT_IDS.STARTER_SMALL]: 'small',
-            [IAP_PRODUCT_IDS.STARTER_MEDIUM]: 'medium',
-            [IAP_PRODUCT_IDS.STARTER_LARGE]: 'large',
-            [IAP_PRODUCT_IDS.STARTER_MEGA]: 'mega',
-          };
-          const packType = packTypeMap[productId];
-          if (packType) {
-            dispatch({ type: 'PURCHASE_STARTER_PACK', payload: { packType, record } });
-          }
-        } else if (productId === IAP_PRODUCT_IDS.OFFLINE_MINER) {
-          // Use the pending booster meta stored by ShopScreen via the ref, fall back to base duration
-          const durationMs = pendingBoosterMetaRef.current?.offlineMinerDurationMs ?? BOOSTER_CONFIG.OFFLINE_MINER.baseDurationMs;
-          dispatch({ type: 'PURCHASE_OFFLINE_MINER', payload: { record, durationMs } });
-          pendingBoosterMetaRef.current = {};
-        } else if (productId === IAP_PRODUCT_IDS.LUCKY_BLOCK) {
-          const hashRate = gameStateRef.current.totalHashRate ?? 0;
-          let blocks = BOOSTER_CONFIG.LUCKY_BLOCK.earlyBlocks;
-          if (hashRate >= BOOSTER_CONFIG.LUCKY_BLOCK.lateHashThreshold) {
-            blocks = BOOSTER_CONFIG.LUCKY_BLOCK.lateBlocks;
-          } else if (hashRate >= BOOSTER_CONFIG.LUCKY_BLOCK.earlyHashThreshold) {
-            blocks = BOOSTER_CONFIG.LUCKY_BLOCK.midBlocks;
-          }
-          dispatch({ type: 'PURCHASE_LUCKY_BLOCK', payload: { record, blocks } });
-        } else if (productId === IAP_PRODUCT_IDS.MARKET_PUMP) {
-          const durationMs = pendingBoosterMetaRef.current?.marketPumpDurationMs ?? BOOSTER_CONFIG.MARKET_PUMP.baseDurationMs;
-          dispatch({ type: 'PURCHASE_MARKET_PUMP', payload: { record, durationMs } });
-          pendingBoosterMetaRef.current = {};
-        }
-
-        dispatch({ type: 'SET_IAP_PURCHASING', payload: false });
+        handlePurchaseRecord(record);
       });
 
       // Listener for purchase errors
@@ -1926,7 +1933,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       purchaseErrorSub?.remove();
       terminateIAP();
     };
-  }, []);
+  }, [handlePurchaseRecord]);
 
   // Handle interstitial and ad/booster check on app foreground
   useEffect(() => {
