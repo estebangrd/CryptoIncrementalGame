@@ -1205,35 +1205,25 @@ const ShopScreen: React.FC = () => {
           </LinearGradient>
         )}
 
-        <View style={st.pk_divider} />
-
-        <View style={st.pk_sectionHdrRow}>
-          <Text style={st.pk_sectionHdr}>{t('shop.packs.nextOffer')}</Text>
-          <View style={st.pk_sectionHdrLine} />
-        </View>
-
-        {nextPack ? (
+        {nextPack && nextOfferDisplay ? (
           <>
+            <View style={st.pk_divider} />
+
+            <View style={st.pk_sectionHdrRow}>
+              <Text style={st.pk_sectionHdr}>{t('shop.packs.nextOffer')}</Text>
+              <View style={st.pk_sectionHdrLine} />
+            </View>
+
             <View style={st.pk_unlockNoteBar}>
               <Text style={st.pk_unlockNoteText}>{t(nextPack.unlockNoteKey)}</Text>
             </View>
             <View style={st.pk_nextOffer}>
               <Text style={st.pk_noLabel}>{t('shop.packs.nextOfferIn')}</Text>
-              {nextOfferDisplay ? (
-                <Text style={st.pk_noTimer}>{nextOfferDisplay}</Text>
-              ) : (
-                <Text style={st.pk_noTimer}>—</Text>
-              )}
+              <Text style={st.pk_noTimer}>{nextOfferDisplay}</Text>
               <Text style={st.pk_noSub}>{t('shop.packs.sessionOffer')}</Text>
             </View>
           </>
-        ) : (
-          <View style={st.pk_nextOffer}>
-            <Text style={st.pk_noLabel}>{t('shop.packs.noMoreOffers')}</Text>
-            <Text style={st.pk_noTimer}>—</Text>
-            <Text style={st.pk_noSub}>{t('shop.packs.allClaimed')}</Text>
-          </View>
-        )}
+        ) : null}
       </View>
     );
   };
