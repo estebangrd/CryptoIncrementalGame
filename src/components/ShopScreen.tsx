@@ -543,6 +543,7 @@ const ShopScreen: React.FC = () => {
                   <View style={st.na_priceCentered}>
                     <Text style={st.na_priceNormal}>$2.99</Text>
                     <View style={st.na_priceNowWrap}>
+                      <View style={st.na_glowXOuter} pointerEvents="none" />
                       <View style={st.na_glowOuter}  pointerEvents="none" />
                       <View style={st.na_glowMid}    pointerEvents="none" />
                       <View style={st.na_glowInner}  pointerEvents="none" />
@@ -1421,21 +1422,25 @@ const st = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   // Concentric ellipses simulating gaussian glow (text-shadow:{0,0} broken on Android)
+  na_glowXOuter: {
+    position: 'absolute', width: 310, height: 105, borderRadius: 52,
+    backgroundColor: 'rgba(255,214,0,0.04)',
+  },
   na_glowOuter: {
-    position: 'absolute', width: 300, height: 100, borderRadius: 50,
-    backgroundColor: 'rgba(255,214,0,0.05)',
+    position: 'absolute', width: 255, height: 86, borderRadius: 43,
+    backgroundColor: 'rgba(255,214,0,0.09)',
   },
   na_glowMid: {
-    position: 'absolute', width: 230, height: 78, borderRadius: 39,
-    backgroundColor: 'rgba(255,214,0,0.11)',
+    position: 'absolute', width: 200, height: 68, borderRadius: 34,
+    backgroundColor: 'rgba(255,214,0,0.17)',
   },
   na_glowInner: {
-    position: 'absolute', width: 170, height: 58, borderRadius: 29,
-    backgroundColor: 'rgba(255,214,0,0.22)',
+    position: 'absolute', width: 155, height: 52, borderRadius: 26,
+    backgroundColor: 'rgba(255,214,0,0.28)',
   },
   na_glowCore: {
-    position: 'absolute', width: 115, height: 42, borderRadius: 21,
-    backgroundColor: 'rgba(255,214,0,0.42)',
+    position: 'absolute', width: 115, height: 40, borderRadius: 20,
+    backgroundColor: 'rgba(255,214,0,0.48)',
   },
   na_priceNow: {
     fontFamily: fonts.orbitronBlack, fontSize: 32,
