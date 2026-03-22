@@ -519,6 +519,124 @@ Three blobs. Each: `position:fixed`, `border-radius:50%`, `filter:blur(80px)`.
 | active | scale(0.97) |
 | shimmer ::before | translateX(-100%→100%), 2.5s infinite |
 
+---
+
+## ⚠️ Button Rules (Android/React Native)
+
+### The Android dark-box artifact
+
+On Android, **two patterns create a visible dark inner rectangle** inside a button — both must be avoided.
+
+#### Pattern 1: `LinearGradient` as inner wrapper ❌
+```tsx
+// ❌ WRONG — LinearGradient renders a solid colored layer on Android,
+// creating a dark box even with low-opacity colors
+<TouchableOpacity style={outerStyle}>
+  <LinearGradient colors={['rgba(255,61,90,0.18)', 'rgba(255,61,90,0.10)']} style={innerStyle}>
+    <Text>BUY</Text>
+  </LinearGradient>
+</TouchableOpacity>
+```
+
+#### Pattern 2: `overflow: 'hidden'` + `elevation` on the same View ❌
+```tsx
+// ❌ WRONG — elevation creates a shadow layer; overflow:hidden clips it
+// into a visible dark rectangle inside the border radius on Android
+style={{ borderRadius: 12, overflow: 'hidden', elevation: 3 }}
+```
+
+---
+
+### Standard button template ✅
+
+Every action button must follow this exact structure:
+
+```tsx
+// 1. Animated.View for press-scale (optional but recommended)
+<Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+
+  {/* 2. TouchableOpacity: flat backgroundColor, overflow:hidden for shimmer,
+         NO elevation, iOS-only shadow props are safe */}
+  <TouchableOpacity
+    style={styles.btn}
+    onPress={() => {
+      Animated.sequence([
+        Animated.timing(scaleAnim, { toValue: 0.96, duration: 80, useNativeDriver: true }),
+        Animated.timing(scaleAnim, { toValue: 1,    duration: 150, useNativeDriver: true }),
+      ]).start();
+      doAction();
+    }}
+    activeOpacity={0.85}
+  >
+
+    {/* 3. SVG shimmer — must be position:absolute, pointerEvents="none" */}
+    <Animated.View
+      pointerEvents="none"
+      style={[styles.shimmer, { transform: [{ translateX: shimmerAnim }] }]}
+    >
+      <Svg width={300} height="100%" style={StyleSheet.absoluteFill} preserveAspectRatio="none">
+        <Defs>
+          <SvgLinearGradient id="shimmer" x1="0" y1="0" x2="1" y2="1">
+            <Stop offset="0%"   stopColor={accentColor} stopOpacity="0" />
+            <Stop offset="40%"  stopColor={accentColor} stopOpacity="0.12" />
+            <Stop offset="60%"  stopColor={accentColor} stopOpacity="0.12" />
+            <Stop offset="100%" stopColor={accentColor} stopOpacity="0" />
+          </SvgLinearGradient>
+        </Defs>
+        <Rect x="0" y="0" width="300" height="100%" fill="url(#shimmer)" />
+      </Svg>
+    </Animated.View>
+
+    {/* 4. Content directly in TouchableOpacity — NO inner View wrapper */}
+    <Text style={styles.btnText}>LABEL</Text>
+
+  </TouchableOpacity>
+</Animated.View>
+```
+
+```ts
+// StyleSheet entries
+btn: {
+  borderRadius: 12,
+  overflow: 'hidden',        // needed to clip shimmer — safe without elevation
+  borderWidth: 1,
+  borderColor: accentColor,
+  backgroundColor: 'rgba(R,G,B,0.14)',  // flat color, NO LinearGradient
+  paddingVertical: 16,
+  alignItems: 'center',
+  justifyContent: 'center',
+  // iOS shadow only (no elevation — keeps overflow:hidden artifact-free on Android)
+  shadowColor: accentColor,
+  shadowOpacity: 0.13,
+  shadowRadius: 10,
+  shadowOffset: { width: 0, height: 0 },
+},
+shimmer: {
+  position: 'absolute', top: 0, bottom: 0, width: 300,
+},
+```
+
+### HTML spec → React Native translation
+
+| HTML CSS | React Native equivalent |
+|----------|------------------------|
+| `background: linear-gradient(135deg, rgba(R,G,B,0.15), rgba(R,G,B,0.08))` | `backgroundColor: 'rgba(R,G,B,0.14)'` (flat, single value) |
+| `box-shadow: 0 0 18px rgba(...)` | iOS-only `shadowColor/Opacity/Radius` — **no `elevation`** |
+| `::before` shimmer animation | SVG `LinearGradient` + `Animated.Value` translateX loop |
+| `:active { transform: scale(0.97) }` | `Animated.View` wrapping TouchableOpacity, scale 0.96→1 on press |
+| `overflow: hidden` | `overflow: 'hidden'` on TouchableOpacity — **only safe without `elevation`** |
+
+### Background opacity by accent color
+
+| Color | `backgroundColor` |
+|-------|--------------------|
+| Neon green `#00ff88` | `rgba(0,255,136,0.14)` |
+| Neon cyan `#00e5ff` | `rgba(0,229,255,0.14)` |
+| Neon yellow `#ffd600` | `rgba(255,214,0,0.14)` |
+| Neon red `#ff3d5a` | `rgba(255,61,90,0.14)` |
+| Purple | `rgba(160,64,255,0.14)` |
+| Orange | `rgba(255,107,26,0.14)` |
+
 ### Share button
 | Property | Value |
 |----------|-------|
