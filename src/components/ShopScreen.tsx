@@ -843,7 +843,7 @@ const ShopScreen: React.FC = () => {
         </View>
 
         {/* Offline Miner (teal/cyan) */}
-        <View style={[st.bo_card, { borderColor: 'rgba(0,229,255,0.25)' }]}>
+        <View style={[st.bo_card, st.bo_cardCyan]}>
           <LinearGradient
             colors={['transparent', colors.nc, 'transparent']}
             start={{ x: 0, y: 0 }}
@@ -851,14 +851,14 @@ const ShopScreen: React.FC = () => {
             style={st.bo_topAccent}
           />
           <View style={st.bo_top}>
-            <View style={[st.bo_icon, { backgroundColor: 'rgba(0,229,255,0.15)' }]}>
+            <View style={[st.bo_icon, st.bo_iconCyan]}>
               <Text style={st.bo_iconEmoji}>🌙</Text>
             </View>
             <View style={st.bo_meta}>
               <Text style={st.bo_name}>Offline Miner</Text>
               {iapState.offlineMiner.isActive && iapState.offlineMiner.expiresAt && (
-                <View style={[st.bo_activeBadge, { backgroundColor: 'rgba(0,229,255,0.15)' }]}>
-                  <Text style={[st.bo_activeBadgeText, { color: colors.nc }]}>
+                <View style={[st.bo_activeBadge, st.bo_activeBadgeCyan]}>
+                  <Text style={[st.bo_activeBadgeText, st.bo_activeBadgeTextCyan]}>
                     {'🌙 Active — '}{formatTime(Math.max(0, iapState.offlineMiner.expiresAt - now))}
                   </Text>
                 </View>
@@ -887,10 +887,10 @@ const ShopScreen: React.FC = () => {
           <View style={st.bo_footer}>
             <View style={st.bo_priceWrap}>
               <Text style={st.bo_priceLabel}>{t('shop.boosters.price')}</Text>
-              <Text style={[st.bo_price, { color: colors.nc }]}>${IAP_PRICES.OFFLINE_MINER.toFixed(2)}</Text>
+              <Text style={[st.bo_price, st.bo_btnTextCyan]}>${IAP_PRICES.OFFLINE_MINER.toFixed(2)}</Text>
             </View>
             <TouchableOpacity
-              style={[st.bo_btn, { borderColor: colors.nc }, !!purchasing && st.bo_btnDisabled]}
+              style={[st.bo_btn, st.bo_btnCyan, !!purchasing && st.bo_btnDisabled]}
               onPress={purchaseOfflineMiner}
               disabled={!!purchasing}
               activeOpacity={0.8}
@@ -898,7 +898,7 @@ const ShopScreen: React.FC = () => {
               {purchasing === IAP_PRODUCT_IDS.OFFLINE_MINER ? (
                 <ActivityIndicator color={colors.nc} size="small" />
               ) : (
-                <Text style={[st.bo_btnText, { color: colors.nc }]}>
+                <Text style={[st.bo_btnText, st.bo_btnTextCyan]}>
                   {t('shop.boosters.buy')}{' $'}{IAP_PRICES.OFFLINE_MINER.toFixed(2)}
                 </Text>
               )}
@@ -907,7 +907,7 @@ const ShopScreen: React.FC = () => {
         </View>
 
         {/* Lucky Block (green) */}
-        <View style={[st.bo_card, { borderColor: 'rgba(0,255,136,0.25)' }]}>
+        <View style={[st.bo_card, st.bo_cardGreen]}>
           <LinearGradient
             colors={['transparent', colors.ng, 'transparent']}
             start={{ x: 0, y: 0 }}
@@ -915,14 +915,14 @@ const ShopScreen: React.FC = () => {
             style={st.bo_topAccent}
           />
           <View style={st.bo_top}>
-            <View style={[st.bo_icon, { backgroundColor: 'rgba(0,255,136,0.15)' }]}>
+            <View style={[st.bo_icon, st.bo_iconGreen]}>
               <Text style={st.bo_iconEmoji}>🎲</Text>
             </View>
             <View style={st.bo_meta}>
               <Text style={st.bo_name}>Lucky Block</Text>
               {iapState.luckyBlock.isActive && (
-                <View style={[st.bo_activeBadge, { backgroundColor: 'rgba(0,255,136,0.15)' }]}>
-                  <Text style={[st.bo_activeBadgeText, { color: colors.ng }]}>
+                <View style={[st.bo_activeBadge, st.bo_activeBadgeGreen]}>
+                  <Text style={[st.bo_activeBadgeText, st.bo_activeBadgeTextGreen]}>
                     {`🎲 Active — ${iapState.luckyBlock.blocksRemaining.toLocaleString()} blocks left`}
                   </Text>
                 </View>
@@ -948,10 +948,10 @@ const ShopScreen: React.FC = () => {
           <View style={st.bo_footer}>
             <View style={st.bo_priceWrap}>
               <Text style={st.bo_priceLabel}>{t('shop.boosters.price')}</Text>
-              <Text style={[st.bo_price, { color: colors.ng }]}>${IAP_PRICES.LUCKY_BLOCK.toFixed(2)}</Text>
+              <Text style={[st.bo_price, st.bo_btnTextGreen]}>${IAP_PRICES.LUCKY_BLOCK.toFixed(2)}</Text>
             </View>
             <TouchableOpacity
-              style={[st.bo_btn, { borderColor: colors.ng }, !!purchasing && st.bo_btnDisabled]}
+              style={[st.bo_btn, st.bo_btnGreen, !!purchasing && st.bo_btnDisabled]}
               onPress={purchaseLuckyBlock}
               disabled={!!purchasing}
               activeOpacity={0.8}
@@ -959,7 +959,7 @@ const ShopScreen: React.FC = () => {
               {purchasing === IAP_PRODUCT_IDS.LUCKY_BLOCK ? (
                 <ActivityIndicator color={colors.ng} size="small" />
               ) : (
-                <Text style={[st.bo_btnText, { color: colors.ng }]}>
+                <Text style={[st.bo_btnText, st.bo_btnTextGreen]}>
                   {t('shop.boosters.buy')}{' $'}{IAP_PRICES.LUCKY_BLOCK.toFixed(2)}
                 </Text>
               )}
@@ -968,7 +968,7 @@ const ShopScreen: React.FC = () => {
         </View>
 
         {/* Market Pump (pink/magenta) */}
-        <View style={[st.bo_card, { borderColor: 'rgba(255,64,129,0.25)' }]}>
+        <View style={[st.bo_card, st.bo_cardPink]}>
           <LinearGradient
             colors={['transparent', '#ff4081', 'transparent']}
             start={{ x: 0, y: 0 }}
@@ -976,14 +976,14 @@ const ShopScreen: React.FC = () => {
             style={st.bo_topAccent}
           />
           <View style={st.bo_top}>
-            <View style={[st.bo_icon, { backgroundColor: 'rgba(255,64,129,0.15)' }]}>
+            <View style={[st.bo_icon, st.bo_iconPink]}>
               <Text style={st.bo_iconEmoji}>📈</Text>
             </View>
             <View style={st.bo_meta}>
               <Text style={st.bo_name}>Market Pump</Text>
               {iapState.marketPump.isActive && iapState.marketPump.expiresAt && (
-                <View style={[st.bo_activeBadge, { backgroundColor: 'rgba(255,64,129,0.15)' }]}>
-                  <Text style={[st.bo_activeBadgeText, { color: '#ff4081' }]}>
+                <View style={[st.bo_activeBadge, st.bo_activeBadgePink]}>
+                  <Text style={[st.bo_activeBadgeText, st.bo_activeBadgeTextPink]}>
                     {'📈 Active — '}{formatTime(Math.max(0, iapState.marketPump.expiresAt - now))}
                   </Text>
                 </View>
@@ -1010,10 +1010,10 @@ const ShopScreen: React.FC = () => {
           <View style={st.bo_footer}>
             <View style={st.bo_priceWrap}>
               <Text style={st.bo_priceLabel}>{t('shop.boosters.price')}</Text>
-              <Text style={[st.bo_price, { color: '#ff4081' }]}>${IAP_PRICES.MARKET_PUMP.toFixed(2)}</Text>
+              <Text style={[st.bo_price, st.bo_btnTextPink]}>${IAP_PRICES.MARKET_PUMP.toFixed(2)}</Text>
             </View>
             <TouchableOpacity
-              style={[st.bo_btn, { borderColor: '#ff4081' }, !!purchasing && st.bo_btnDisabled]}
+              style={[st.bo_btn, st.bo_btnPink, !!purchasing && st.bo_btnDisabled]}
               onPress={purchaseMarketPump}
               disabled={!!purchasing}
               activeOpacity={0.8}
@@ -1021,7 +1021,7 @@ const ShopScreen: React.FC = () => {
               {purchasing === IAP_PRODUCT_IDS.MARKET_PUMP ? (
                 <ActivityIndicator color="#ff4081" size="small" />
               ) : (
-                <Text style={[st.bo_btnText, { color: '#ff4081' }]}>
+                <Text style={[st.bo_btnText, st.bo_btnTextPink]}>
                   {t('shop.boosters.buy')}{' $'}{IAP_PRICES.MARKET_PUMP.toFixed(2)}
                 </Text>
               )}
@@ -1535,6 +1535,9 @@ const st = StyleSheet.create({
   bo_cardYellow: { borderColor: 'rgba(255,214,0,0.2)' },
   bo_cardOrange: { borderColor: 'rgba(255,107,26,0.2)' },
   bo_cardPurple: { borderColor: 'rgba(160,64,255,0.2)' },
+  bo_cardCyan: { borderColor: 'rgba(0,229,255,0.2)' },
+  bo_cardGreen: { borderColor: 'rgba(0,255,136,0.2)' },
+  bo_cardPink: { borderColor: 'rgba(255,64,129,0.2)' },
   bo_topAccent: { position: 'absolute', top: 0, left: 0, right: 0, height: 2 },
   bo_top: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 12 },
   bo_icon: {
@@ -1544,6 +1547,9 @@ const st = StyleSheet.create({
   bo_iconYellow: { backgroundColor: 'rgba(255,214,0,0.08)', borderColor: 'rgba(255,214,0,0.2)' },
   bo_iconOrange: { backgroundColor: 'rgba(255,107,26,0.08)', borderColor: 'rgba(255,107,26,0.2)' },
   bo_iconPurple: { backgroundColor: 'rgba(160,64,255,0.08)', borderColor: 'rgba(160,64,255,0.2)' },
+  bo_iconCyan: { backgroundColor: 'rgba(0,229,255,0.08)', borderColor: 'rgba(0,229,255,0.2)' },
+  bo_iconGreen: { backgroundColor: 'rgba(0,255,136,0.08)', borderColor: 'rgba(0,255,136,0.2)' },
+  bo_iconPink: { backgroundColor: 'rgba(255,64,129,0.08)', borderColor: 'rgba(255,64,129,0.2)' },
   bo_iconEmoji: { fontSize: 26 },
   bo_meta: { flex: 1 },
   bo_name: { fontFamily: fonts.orbitron, fontSize: 13, color: '#ffffff', marginBottom: 3 },
@@ -1566,6 +1572,18 @@ const st = StyleSheet.create({
   bo_activeBadgeText: { fontFamily: fonts.mono, fontSize: 9, letterSpacing: 0.8, color: colors.ny },
   bo_activeBadgeTextOrange: { color: '#ff6b1a' },
   bo_activeBadgeTextPurple: { color: '#a040ff' },
+  bo_activeBadgeCyan: {
+    backgroundColor: 'rgba(0,229,255,0.12)', borderColor: 'rgba(0,229,255,0.35)',
+  },
+  bo_activeBadgeGreen: {
+    backgroundColor: 'rgba(0,255,136,0.12)', borderColor: 'rgba(0,255,136,0.35)',
+  },
+  bo_activeBadgePink: {
+    backgroundColor: 'rgba(255,64,129,0.12)', borderColor: 'rgba(255,64,129,0.35)',
+  },
+  bo_activeBadgeTextCyan: { color: colors.nc },
+  bo_activeBadgeTextGreen: { color: colors.ng },
+  bo_activeBadgeTextPink: { color: '#ff4081' },
   bo_durationBadge: {
     alignSelf: 'flex-start',
     backgroundColor: 'rgba(255,255,255,0.06)',
@@ -1606,6 +1624,9 @@ const st = StyleSheet.create({
   bo_btnYellow: { backgroundColor: 'rgba(255,214,0,0.14)', borderColor: colors.ny },
   bo_btnOrange: { backgroundColor: 'rgba(255,107,26,0.14)', borderColor: '#ff6b1a' },
   bo_btnPurple: { backgroundColor: 'rgba(160,64,255,0.14)', borderColor: '#a040ff' },
+  bo_btnCyan: { backgroundColor: 'rgba(0,229,255,0.14)', borderColor: colors.nc },
+  bo_btnGreen: { backgroundColor: 'rgba(0,255,136,0.14)', borderColor: colors.ng },
+  bo_btnPink: { backgroundColor: 'rgba(255,64,129,0.14)', borderColor: '#ff4081' },
   bo_btnOwned: {
     backgroundColor: 'rgba(0,255,136,0.06)', borderColor: 'rgba(0,255,136,0.2)',
   },
@@ -1614,6 +1635,9 @@ const st = StyleSheet.create({
   bo_btnTextYellow: { color: colors.ny },
   bo_btnTextOrange: { color: '#ff6b1a' },
   bo_btnTextPurple: { color: '#a040ff' },
+  bo_btnTextCyan: { color: colors.nc },
+  bo_btnTextGreen: { color: colors.ng },
+  bo_btnTextPink: { color: '#ff4081' },
   bo_btnTextOwned: { color: 'rgba(0,255,136,0.5)' },
 
   // ════════════════════════
