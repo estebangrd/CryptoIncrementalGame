@@ -291,6 +291,8 @@ const GameScreen: React.FC = () => {
   const [adBannerHeight, setAdBannerHeight] = useState(0);
   const [miningClickBoost, setMiningClickBoost] = useState(0);
   const [debugGoodEnding, setDebugGoodEnding] = useState(false);
+  const [debugAICollapse, setDebugAICollapse] = useState(false);
+  const [debugHumanCollapse, setDebugHumanCollapse] = useState(false);
   const prevAchievementsRef = useRef(gameState.achievements);
   const firstHydratedRef = useRef(true);
 
@@ -528,6 +530,8 @@ const GameScreen: React.FC = () => {
         onReset={handleReset}
         onOpenShop={() => setShowShop(true)}
         onTestGoodEnding={() => { setShowSettings(false); setDebugGoodEnding(true); }}
+        onTestAICollapse={() => { setShowSettings(false); setDebugAICollapse(true); }}
+        onTestHumanCollapse={() => { setShowSettings(false); setDebugHumanCollapse(true); }}
       />
 
       <AdBanner onHeightChange={setAdBannerHeight} />
@@ -571,9 +575,11 @@ const GameScreen: React.FC = () => {
       />
 
       <EndingScreen
-        visible={gameState.collapseTriggered || gameState.goodEndingTriggered || debugGoodEnding}
+        visible={gameState.collapseTriggered || gameState.goodEndingTriggered || debugGoodEnding || debugAICollapse || debugHumanCollapse}
         endingType={
-          gameState.collapseTriggered ? 'collapse'
+          debugAICollapse ? 'collapse'
+          : debugHumanCollapse ? 'human_collapse'
+          : gameState.collapseTriggered ? 'collapse'
           : (gameState.goodEndingTriggered || debugGoodEnding) ? 'good_ending'
           : null
         }
@@ -582,10 +588,12 @@ const GameScreen: React.FC = () => {
         goodEndingCount={gameState.goodEndingCount ?? 0}
         onPrestige={() => {
           if (debugGoodEnding) { setDebugGoodEnding(false); return; }
+          if (debugAICollapse) { setDebugAICollapse(false); return; }
+          if (debugHumanCollapse) { setDebugHumanCollapse(false); return; }
           const endingType = gameState.collapseTriggered ? 'collapse' : 'good_ending';
           dispatch({ type: 'COMPLETE_ENDING_PRESTIGE', payload: { endingType } });
         }}
-        onClose={debugGoodEnding ? () => setDebugGoodEnding(false) : undefined}
+        onClose={(debugGoodEnding || debugAICollapse || debugHumanCollapse) ? () => { setDebugGoodEnding(false); setDebugAICollapse(false); setDebugHumanCollapse(false); } : undefined}
       />
     </View>
   );

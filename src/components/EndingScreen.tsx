@@ -888,6 +888,383 @@ const clStyles = StyleSheet.create({
 });
 
 // ══════════════════════════════════════════════════════════════════
+// HUMAN COLLAPSE-SPECIFIC COMPONENTS
+// ══════════════════════════════════════════════════════════════════
+
+// ── Ember particles (rising, burnt) ──────────────────────────────
+const EMBER_COLORS = ['#ff6b1a', '#c94400', '#ff8c42', '#e55a00', '#ff4500'];
+const EMBER_PARTICLES = Array.from({ length: 28 }, (_, i) => {
+  const s = Math.random() * 4 + 1.5;
+  return {
+    id: i,
+    left: `${Math.random() * 100}%` as any,
+    size: s,
+    color: EMBER_COLORS[Math.floor(Math.random() * EMBER_COLORS.length)],
+    duration: Math.round(Math.random() * 8000 + 6000),
+    delay: Math.round(Math.random() * 8000),
+    dx: (Math.random() - 0.5) * 80,
+    isRound: Math.random() > 0.5,
+  };
+});
+
+const EmberParticle: React.FC<{ left: any; size: number; color: string; duration: number; delay: number; dx: number; isRound: boolean }> = ({ left, size, color, duration, delay, dx, isRound }) => {
+  const anim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const run = () => {
+      anim.setValue(0);
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.timing(anim, { toValue: 1, duration, easing: Easing.linear, useNativeDriver: true }),
+      ]).start(({ finished }) => { if (finished) run(); });
+    };
+    run();
+    return () => anim.stopAnimation();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const translateY = anim.interpolate({ inputRange: [0, 0.08, 0.85, 1], outputRange: [SH, SH, -60, -60] });
+  const translateX = anim.interpolate({ inputRange: [0, 1], outputRange: [0, dx] });
+  const opacity = anim.interpolate({ inputRange: [0, 0.08, 0.85, 1], outputRange: [0, 1, 0.6, 0] });
+  const rotate = anim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] });
+  return (
+    <Animated.View pointerEvents="none" style={{ position: 'absolute', left, width: size, height: size, borderRadius: isRound ? size / 2 : 2, backgroundColor: color, opacity, transform: [{ translateY }, { translateX }, { rotate }], shadowColor: color, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 1, shadowRadius: size * 2 }} />
+  );
+};
+
+// ── Dying orbit globe (human collapse — burnt look) ──────────────
+const BurningOrbitGlobe: React.FC = () => {
+  const spin1 = useRef(new Animated.Value(0)).current;
+  const spin2 = useRef(new Animated.Value(0)).current;
+  const burnPulse = useRef(new Animated.Value(0)).current;
+  const skullOpacity = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.loop(Animated.timing(spin1, { toValue: 1, duration: 18000, easing: Easing.linear, useNativeDriver: true })).start();
+    Animated.loop(Animated.timing(spin2, { toValue: 1, duration: 24000, easing: Easing.linear, useNativeDriver: true })).start();
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(burnPulse, { toValue: 1, duration: 1500, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        Animated.timing(burnPulse, { toValue: 0, duration: 1500, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      ])
+    ).start();
+    Animated.loop(
+      Animated.sequence([
+        Animated.delay(1600),
+        Animated.timing(skullOpacity, { toValue: 0.25, duration: 600, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        Animated.delay(1200),
+        Animated.timing(skullOpacity, { toValue: 0, duration: 600, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      ])
+    ).start();
+  }, [spin1, spin2, burnPulse, skullOpacity]);
+  const rot1 = spin1.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
+  const rot2 = spin2.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '-360deg'] });
+  const globeY = burnPulse.interpolate({ inputRange: [0, 1], outputRange: [0, -4] });
+  const globeRotate = burnPulse.interpolate({ inputRange: [0, 1], outputRange: ['-1deg', '1deg'] });
+  return (
+    <View style={burnOrbitStyles.wrap}>
+      <Animated.View style={[burnOrbitStyles.ring, burnOrbitStyles.ring1, { transform: [{ rotate: rot1 }] }]} />
+      <Animated.View style={[burnOrbitStyles.ring, burnOrbitStyles.ring2, { transform: [{ rotate: rot2 }] }]} />
+      <Animated.Text style={[burnOrbitStyles.globe, { transform: [{ translateY: globeY }, { rotate: globeRotate }] }]}>🌍</Animated.Text>
+      <Animated.Text style={[burnOrbitStyles.skull, { opacity: skullOpacity }]}>💀</Animated.Text>
+    </View>
+  );
+};
+
+const burnOrbitStyles = StyleSheet.create({
+  wrap: { width: 140, height: 140, alignItems: 'center', justifyContent: 'center' },
+  ring: { position: 'absolute', borderRadius: 999, borderWidth: 1, borderStyle: 'dashed', top: '50%', left: '50%' },
+  ring1: { width: 150, height: 150, marginTop: -75, marginLeft: -75, borderColor: 'rgba(200,70,0,0.2)' },
+  ring2: { width: 180, height: 180, marginTop: -90, marginLeft: -90, borderColor: 'rgba(120,40,0,0.15)' },
+  globe: { fontSize: 76, position: 'absolute', opacity: 0.85, textShadowColor: 'rgba(200,70,0,0.6)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 20 },
+  skull: { fontSize: 28, position: 'absolute', textShadowColor: 'rgba(200,70,0,0.6)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 8 },
+});
+
+// ── Human collapse resources bar (ember, depleted) ───────────────
+const HumanCollapseResourcesBar: React.FC<{ pct: number; delay?: number }> = ({ pct, delay = 0 }) => {
+  const widthAnim = useRef(new Animated.Value(pct <= 0 ? 0.03 : pct / 100)).current;
+  const zeroPulse = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    Animated.timing(widthAnim, {
+      toValue: pct / 100,
+      duration: pct <= 0 ? 800 : 1800,
+      delay: delay + 700,
+      easing: pct <= 0 ? Easing.in(Easing.quad) : Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+    if (pct <= 0) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(zeroPulse, { toValue: 1.1, duration: 1000, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+          Animated.timing(zeroPulse, { toValue: 1, duration: 1000, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        ])
+      ).start();
+    }
+  }, [widthAnim, zeroPulse, pct, delay]);
+  return (
+    <View style={hcStyles.resCard}>
+      <Svg width="100%" height={2} style={{ position: 'absolute', top: 0, left: 0, right: 0 }}>
+        <Defs>
+          <LinearGradient id="hcResTop" x1="0" y1="0" x2="1" y2="0">
+            <Stop offset="0%" stopColor="#c94400" stopOpacity="1" />
+            <Stop offset="100%" stopColor="#ff6b1a" stopOpacity="1" />
+          </LinearGradient>
+        </Defs>
+        <Rect x="0" y="0" width="100%" height="2" fill="url(#hcResTop)" />
+      </Svg>
+      <View style={hcStyles.resTop}>
+        <View>
+          <Text style={hcStyles.resLabel}>🌍  RESOURCES AT END</Text>
+          <Text style={hcStyles.resSublabel}>Planet resources fully depleted</Text>
+        </View>
+        <Animated.Text style={[hcStyles.resZero, { transform: [{ scale: zeroPulse }] }]}>
+          {pct <= 0 ? '0%' : `${Math.round(pct)}%`}
+        </Animated.Text>
+      </View>
+      <View style={hcStyles.resTrack}>
+        <Animated.View style={[hcStyles.resFill, { width: widthAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }) }]} />
+      </View>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 2 }}>
+        <Text style={hcStyles.resFooter}>▲ YOU ARE HERE</Text>
+        <Text style={hcStyles.resFooter}>OPTIMAL</Text>
+      </View>
+    </View>
+  );
+};
+
+// ── Human collapse AI status card ────────────────────────────────
+const HumanCollapseAICard: React.FC<{ delay?: number }> = ({ delay = 0 }) => {
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.sequence([
+      Animated.delay(delay),
+      Animated.timing(slideAnim, { toValue: 1, duration: 400, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+    ]).start();
+  }, [slideAnim, delay]);
+  const ty = slideAnim.interpolate({ inputRange: [0, 1], outputRange: [16, 0] });
+  return (
+    <Animated.View style={[hcStyles.aiCard, { opacity: slideAnim, transform: [{ translateY: ty }] }]}>
+      <Svg width="100%" height={2} style={{ position: 'absolute', top: 0, left: 0, right: 0 }}>
+        <Defs>
+          <LinearGradient id="hcAiTop" x1="0" y1="0" x2="1" y2="0">
+            <Stop offset="0%" stopColor="transparent" stopOpacity="0" />
+            <Stop offset="50%" stopColor="#8b4513" stopOpacity="0.6" />
+            <Stop offset="100%" stopColor="transparent" stopOpacity="0" />
+          </LinearGradient>
+        </Defs>
+        <Rect x="0" y="0" width="100%" height="2" fill="url(#hcAiTop)" />
+      </Svg>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+        <View>
+          <Text style={hcStyles.aiLabel}>AI INVOLVEMENT</Text>
+          <Text style={hcStyles.aiValue}>None — Human decisions only</Text>
+        </View>
+        <Text style={{ fontSize: 28, opacity: 0.6 }}>🧑</Text>
+      </View>
+      <Text style={hcStyles.aiNote}>{'// No algorithm to blame. This was you.'}</Text>
+    </Animated.View>
+  );
+};
+
+// ── Human collapse title with flicker ────────────────────────────
+const HumanCollapseTitle: React.FC<{ text: string }> = ({ text }) => {
+  const flickerAnim = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    const runFlicker = () => {
+      Animated.sequence([
+        Animated.delay(5500),
+        Animated.timing(flickerAnim, { toValue: 0.7, duration: 60, useNativeDriver: true }),
+        Animated.timing(flickerAnim, { toValue: 1, duration: 60, useNativeDriver: true }),
+        Animated.delay(180),
+        Animated.timing(flickerAnim, { toValue: 0.8, duration: 60, useNativeDriver: true }),
+        Animated.timing(flickerAnim, { toValue: 1, duration: 60, useNativeDriver: true }),
+      ]).start(() => runFlicker());
+    };
+    runFlicker();
+    return () => flickerAnim.stopAnimation();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const lines = text.toUpperCase().split('\n');
+  return (
+    <Animated.View style={{ opacity: flickerAnim, marginBottom: 8 }}>
+      {lines.map((line, i) => (
+        <Text key={i} style={hcStyles.collapseTitle}>{line}</Text>
+      ))}
+    </Animated.View>
+  );
+};
+
+// ── Human collapse blame card ────────────────────────────────────
+const BlameCard: React.FC<{ text: string; strongText: string }> = ({ text, strongText }) => (
+  <View style={hcStyles.blameCard}>
+    <View style={StyleSheet.absoluteFill}>
+      <RNLinearGradient colors={['rgba(200,70,0,0.04)', 'transparent']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+    </View>
+    <Text style={hcStyles.blameText}>
+      {text.split(strongText).map((part, i, arr) => (
+        <React.Fragment key={i}>
+          {part}
+          {i < arr.length - 1 && <Text style={hcStyles.blameStrong}>{strongText}</Text>}
+        </React.Fragment>
+      ))}
+    </Text>
+  </View>
+);
+
+// ── Human collapse NodeStat variant (burn/ash colors) ────────────
+type HCVariant = 'burn' | 'ash';
+
+const HC_VARIANT_COLOR: Record<HCVariant, string> = {
+  burn: '#ff6b1a',
+  ash: '#c8956c',
+};
+
+const HCNodeStat: React.FC<{
+  icon: string; label: string; value: string; sub?: string;
+  variant?: HCVariant; delay?: number; smallValue?: boolean;
+}> = ({ icon, label, value, sub, variant = 'burn', delay = 0, smallValue }) => {
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.sequence([
+      Animated.delay(delay),
+      Animated.timing(slideAnim, { toValue: 1, duration: 400, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+    ]).start();
+  }, [slideAnim, delay]);
+  const ty = slideAnim.interpolate({ inputRange: [0, 1], outputRange: [14, 0] });
+  const topColor = HC_VARIANT_COLOR[variant];
+  const isAsh = variant === 'ash';
+  return (
+    <Animated.View style={[hcStyles.statCard, isAsh && hcStyles.statCardAsh, { opacity: slideAnim, transform: [{ translateY: ty }] }]}>
+      <Svg width="100%" height={2} style={{ position: 'absolute', top: 0, left: 0, right: 0 }}>
+        <Defs>
+          <LinearGradient id={`hc_${variant}_${label}`} x1="0" y1="0" x2="1" y2="0">
+            <Stop offset="0%" stopColor={topColor} stopOpacity="0" />
+            <Stop offset="50%" stopColor={topColor} stopOpacity="0.5" />
+            <Stop offset="100%" stopColor={topColor} stopOpacity="0" />
+          </LinearGradient>
+        </Defs>
+        <Rect x="0" y="0" width="100%" height="2" fill={`url(#hc_${variant}_${label})`} />
+      </Svg>
+      <Text style={hcStyles.statIcon}>{icon}</Text>
+      <Text style={hcStyles.statLabel}>{label}</Text>
+      <Text style={[hcStyles.statValue, isAsh ? hcStyles.statValueAsh : hcStyles.statValueBurn, smallValue && { fontSize: 15 }]}>{value}</Text>
+      {sub && <Text style={hcStyles.statSub}>{sub}</Text>}
+    </Animated.View>
+  );
+};
+
+// ── Human collapse styles ────────────────────────────────────────
+const hcStyles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#080401', overflow: 'hidden' },
+  topbar: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 18, paddingTop: 14, paddingBottom: 10,
+    borderBottomWidth: 1, borderBottomColor: 'rgba(200,70,0,0.15)',
+    backgroundColor: 'rgba(8,4,1,0.95)',
+  },
+  logo: {
+    fontFamily: fonts.orbitronBlack, fontSize: 11, letterSpacing: 2,
+    color: '#ff6b1a',
+    textShadowColor: 'rgba(255,107,26,0.4)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 14,
+  },
+  // Eyebrow
+  eyebrow: {
+    fontFamily: fonts.mono, fontSize: 9, letterSpacing: 5,
+    color: 'rgba(200,70,0,0.6)', textTransform: 'uppercase',
+    marginBottom: 6, textAlign: 'center',
+  },
+  // Title
+  collapseTitle: {
+    fontFamily: fonts.orbitronBlack,
+    fontSize: 26, letterSpacing: 2, lineHeight: 32,
+    color: '#ff6b1a', textAlign: 'center',
+    textShadowColor: 'rgba(255,107,26,0.5)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 30,
+  },
+  // Blame card
+  blameCard: {
+    marginHorizontal: 24, marginTop: 16,
+    paddingVertical: 14, paddingHorizontal: 16,
+    backgroundColor: 'rgba(200,70,0,0.05)',
+    borderLeftWidth: 3, borderLeftColor: 'rgba(200,70,0,0.4)',
+    borderTopRightRadius: 8, borderBottomRightRadius: 8,
+    overflow: 'hidden',
+  },
+  blameText: {
+    fontFamily: fonts.rajdhani, fontSize: 14,
+    color: 'rgba(255,255,255,0.55)', lineHeight: 23, fontStyle: 'italic',
+  },
+  blameStrong: {
+    color: 'rgba(255,140,60,0.8)', fontStyle: 'normal',
+  },
+  // Stat cards
+  statCard: {
+    width: '48%', backgroundColor: 'rgba(200,70,0,0.05)',
+    borderWidth: 1, borderColor: 'rgba(200,70,0,0.18)',
+    borderRadius: 12, padding: 13, alignItems: 'center',
+    overflow: 'hidden', marginBottom: 8,
+  },
+  statCardAsh: {
+    borderColor: 'rgba(139,69,19,0.25)', backgroundColor: 'rgba(139,69,19,0.05)',
+  },
+  statIcon: { fontSize: 14, marginBottom: 5, color: 'rgba(255,255,255,0.7)' },
+  statLabel: { fontFamily: fonts.mono, fontSize: 8, letterSpacing: 2, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: 3 },
+  statValue: { fontFamily: fonts.orbitron, fontSize: 17, lineHeight: 22 },
+  statValueBurn: { color: '#ff6b1a', textShadowColor: 'rgba(255,107,26,0.35)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 10 },
+  statValueAsh: { color: '#c8956c', textShadowColor: 'rgba(200,149,108,0.3)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 10 },
+  statSub: { fontFamily: fonts.rajdhani, fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 2 },
+  // Resources card
+  resCard: {
+    backgroundColor: 'rgba(201,68,0,0.08)',
+    borderWidth: 1, borderColor: 'rgba(201,68,0,0.3)',
+    borderRadius: 12, padding: 14, marginBottom: 8, overflow: 'hidden',
+  },
+  resTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  resLabel: { fontFamily: fonts.mono, fontSize: 8, letterSpacing: 2, color: 'rgba(201,68,0,0.7)', textTransform: 'uppercase', marginBottom: 3 },
+  resSublabel: { fontFamily: fonts.mono, fontSize: 9, color: 'rgba(201,68,0,0.55)', letterSpacing: 1 },
+  resZero: {
+    fontFamily: fonts.orbitronBlack, fontSize: 28, color: '#c94400',
+    textShadowColor: 'rgba(201,68,0,0.6)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 20,
+  },
+  resTrack: { height: 6, backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 3, overflow: 'hidden', marginBottom: 6 },
+  resFill: { height: '100%', borderRadius: 3, backgroundColor: '#ff6b1a' },
+  resFooter: { fontFamily: fonts.mono, fontSize: 8, color: 'rgba(201,68,0,0.45)' },
+  // AI card
+  aiCard: {
+    backgroundColor: 'rgba(80,30,10,0.25)',
+    borderWidth: 1, borderColor: 'rgba(139,69,19,0.3)',
+    borderRadius: 12, padding: 14, marginBottom: 8, overflow: 'hidden',
+  },
+  aiLabel: { fontFamily: fonts.mono, fontSize: 8, letterSpacing: 2, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: 3 },
+  aiValue: { fontFamily: fonts.orbitron, fontSize: 14, color: '#a07050' },
+  aiNote: { fontFamily: fonts.mono, fontSize: 9, color: 'rgba(255,255,255,0.25)', letterSpacing: 1, marginTop: 6 },
+  // Bonus card
+  bonusCard: {
+    backgroundColor: 'rgba(80,30,10,0.2)',
+    borderWidth: 1, borderColor: 'rgba(139,69,19,0.25)',
+    borderRadius: 14, padding: 16, overflow: 'hidden',
+  },
+  bonusTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+  bonusTitleText: { fontFamily: fonts.orbitron, fontSize: 10, letterSpacing: 3, color: 'rgba(200,150,80,0.7)' },
+  bonusTitleLine: { flex: 1, height: 1, backgroundColor: 'rgba(139,69,19,0.2)' },
+  bonusRun: { fontFamily: fonts.mono, fontSize: 9, color: 'rgba(255,255,255,0.22)', letterSpacing: 2, marginBottom: 10 },
+  bonusQuoteBox: {
+    backgroundColor: 'rgba(0,0,0,0.2)', borderWidth: 1, borderColor: 'rgba(139,69,19,0.15)',
+    borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10,
+  },
+  bonusQuote: { fontFamily: fonts.rajdhani, fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 21, fontStyle: 'italic' },
+  // Planet button
+  planetBtn: {
+    padding: 18, borderRadius: 14,
+    borderWidth: 1, borderColor: '#ff6b1a',
+    backgroundColor: 'rgba(200,70,0,0.08)',
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#ff6b1a', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.15, shadowRadius: 20, elevation: 6,
+  },
+  planetBtnText: { fontFamily: fonts.orbitron, fontSize: 13, letterSpacing: 3, color: '#ff6b1a', textTransform: 'uppercase' },
+  // Smoke layer
+  smokeLayer: {
+    position: 'absolute', left: 0, right: 0, bottom: 0, height: '60%',
+  },
+});
+
+// ══════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
 // ══════════════════════════════════════════════════════════════════
 const EndingScreen: React.FC<EndingScreenProps> = ({
@@ -895,7 +1272,8 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
 }) => {
   const { t } = useGame();
   const insets = useSafeAreaInsets();
-  const isCollapse = endingType === 'collapse';
+  const isCollapse = endingType === 'collapse' || endingType === 'human_collapse';
+  const isHumanCollapse = endingType === 'human_collapse';
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const [statsVisible, setStatsVisible] = useState(false);
@@ -923,6 +1301,129 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
   const collapseProductionPct = Math.round((bonus.productionMultiplier - 1) * 100);
   const renewableDiscountPct = Math.round(calculateRenewableDiscount(goodEndingCount) * 100);
   const prestigeRunNumber = collapseCount + goodEndingCount + 1;
+
+  // ── Human Collapse ending ──────────────────────────────────────────
+  if (isHumanCollapse) {
+    return (
+      <Modal transparent={false} animationType="none" visible={visible} onRequestClose={() => {}}>
+        <View style={hcStyles.container}>
+
+          {/* Background effects — burnt aurora, ember particles, smoke */}
+          <View style={StyleSheet.absoluteFill} pointerEvents="none">
+            <AnimatedGrid lineColor="rgba(200,70,0,0.04)" />
+            <AuroraBlob width={500} height={350} top={-80} left={-80} color="#b43c00" duration={9000} delay={0} />
+            <AuroraBlob width={400} height={450} top={-60} right={-60} color="#782800" duration={12000} delay={0} />
+            <AuroraBlob width={600} height={250} bottom={80} left={-120} color="#641e00" duration={15000} delay={0} />
+            <Scanline color="rgba(200,70,0,0.08)" />
+            {EMBER_PARTICLES.map(p => (
+              <EmberParticle key={p.id} left={p.left} size={p.size} color={p.color} duration={p.duration} delay={p.delay} dx={p.dx} isRound={p.isRound} />
+            ))}
+          </View>
+
+          {/* Smoke gradient at bottom */}
+          <View style={[StyleSheet.absoluteFill, { justifyContent: 'flex-end' }]} pointerEvents="none">
+            <RNLinearGradient
+              colors={['transparent', 'rgba(30,10,0,0.5)']}
+              style={hcStyles.smokeLayer}
+            />
+          </View>
+
+          <Animated.View style={{ flex: 1, opacity: fadeAnim }} pointerEvents="box-none">
+            <ScrollView
+              contentContainerStyle={{ flexGrow: 1, paddingBottom: 30 }}
+              showsVerticalScrollIndicator={false}
+              stickyHeaderIndices={[0]}
+            >
+              {/* Topbar — sticky */}
+              <View style={[hcStyles.topbar, { paddingTop: Math.max(14, insets.top) }]}>
+                <Text style={hcStyles.logo}>
+                  BLOCK<Text style={{ color: '#c94400' }}>CHAIN</Text> TYCOON
+                </Text>
+                <Text style={goodStyles.runInfo}>RUN #{prestigeRunNumber}{stats ? ` · ${formatDuration(stats.runDurationMs)}` : ''}</Text>
+              </View>
+
+              {/* Hero */}
+              <View style={{ alignItems: 'center', paddingTop: 40, paddingBottom: 28, paddingHorizontal: 24 }}>
+                <View style={{ marginBottom: 22 }}>
+                  <BurningOrbitGlobe />
+                </View>
+                <Text style={hcStyles.eyebrow}>Resources Depleted · Genesis Chain</Text>
+                <HumanCollapseTitle text={t('endgame.humanCollapse.title')} />
+                <BlameCard
+                  text={t('endgame.humanCollapse.blame')}
+                  strongText={t('endgame.humanCollapse.blameStrong')}
+                />
+              </View>
+
+              {/* Stats */}
+              {statsVisible && stats && (
+                <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
+                  <SectionLabel label="TU LEGADO" accent="#ff6b1a" />
+                  <View style={goodStyles.cardGrid}>
+                    <HCNodeStat icon="⛏" label="Blocks Mined" value={formatNumber(stats.blocksMined)} sub="Incomplete" variant="burn" delay={200} />
+                    <HCNodeStat icon="◈" label="CC Earned" value={formatNumber(stats.totalCryptoCoinsEarned)} sub="CryptoCoins" variant="ash" delay={350} />
+                    <HCNodeStat icon="💰" label="Money Accumulated" value={`$${formatNumber(stats.totalMoneyEarned)}`} sub="Total Cash" variant="ash" delay={500} />
+                    <HCNodeStat icon="⏱" label="Run Duration" value={formatDuration(stats.runDurationMs)} sub="Real time" variant="burn" delay={650} smallValue />
+                  </View>
+                  <HumanCollapseResourcesBar pct={stats.planetResourcesAtEnd} delay={650} />
+                  <HumanCollapseAICard delay={800} />
+                </View>
+              )}
+
+              {/* Legacy Bonus */}
+              {statsVisible && (
+                <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
+                  <View style={hcStyles.bonusCard}>
+                    <Svg width="100%" height={2} style={{ position: 'absolute', top: 0, left: 0, right: 0 }}>
+                      <Defs>
+                        <LinearGradient id="hcBonusTop" x1="0" y1="0" x2="1" y2="0">
+                          <Stop offset="0%" stopColor="#c94400" stopOpacity="1" />
+                          <Stop offset="100%" stopColor="#ff6b1a" stopOpacity="1" />
+                        </LinearGradient>
+                      </Defs>
+                      <Rect x="0" y="0" width="100%" height="2" fill="url(#hcBonusTop)" />
+                    </Svg>
+                    <View style={hcStyles.bonusTitleRow}>
+                      <Text style={hcStyles.bonusTitleText}>{t('endgame.humanCollapse.bonusTitle')}</Text>
+                      <View style={hcStyles.bonusTitleLine} />
+                    </View>
+                    <Text style={hcStyles.bonusRun}>Run #{prestigeRunNumber} · Accumulated rewards unlocked</Text>
+                    <View style={hcStyles.bonusQuoteBox}>
+                      <Text style={hcStyles.bonusQuote}>{t('endgame.humanCollapse.narrative')}</Text>
+                    </View>
+                  </View>
+                </View>
+              )}
+
+              {/* Actions */}
+              <View style={goodStyles.actions}>
+                <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+                  <TouchableOpacity style={hcStyles.planetBtn} onPress={onPrestige} activeOpacity={0.85}>
+                    <Text style={hcStyles.planetBtnText}>🚀  {t('endgame.humanCollapse.button')}</Text>
+                  </TouchableOpacity>
+                </Animated.View>
+                <TouchableOpacity style={goodStyles.shareBtn} activeOpacity={0.8}>
+                  <Text style={goodStyles.shareBtnText}>↗  SHARE YOUR LEGACY</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Debug back button */}
+              {onClose && (
+                <TouchableOpacity
+                  onPress={onClose}
+                  style={{ marginHorizontal: 16, marginBottom: 16, paddingVertical: 14, borderRadius: 10, borderWidth: 1, borderColor: 'rgba(200,70,0,0.4)', backgroundColor: 'rgba(200,70,0,0.08)', alignItems: 'center' }}
+                >
+                  <Text style={{ fontFamily: fonts.mono, fontSize: 12, color: '#ff6b1a', letterSpacing: 2 }}>← BACK TO GAME</Text>
+                </TouchableOpacity>
+              )}
+
+              <View style={{ height: 32 }} />
+            </ScrollView>
+          </Animated.View>
+        </View>
+      </Modal>
+    );
+  }
 
   // ── AI Collapse ending ─────────────────────────────────────────────
   if (isCollapse) {

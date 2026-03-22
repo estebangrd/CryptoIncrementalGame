@@ -1243,6 +1243,38 @@ export const translations: Translation = {
     pt: 'BÔNUS DE LEGADO',
   },
 
+  // Endgame — Human Collapse (Phase 7)
+  'endgame.humanCollapse.title': {
+    en: 'PLANETARY\nCOLLAPSE',
+    es: 'COLAPSO\nPLANETARIO',
+    pt: 'COLAPSO\nPLANETÁRIO',
+  },
+  'endgame.humanCollapse.blame': {
+    en: 'There was no AI. No algorithm to blame.\nYou chose every megawatt.\nEarth has no energy to sustain organized life. You knew. You kept going.',
+    es: 'No fue la IA. No hubo algoritmo que culpar.\nCada megawatt lo elegiste vos.\nLa Tierra no tiene energía para sostener vida organizada. Lo sabías. Igual seguiste.',
+    pt: 'Não foi a IA. Não houve algoritmo para culpar.\nVocê escolheu cada megawatt.\nA Terra não tem energia para sustentar vida organizada. Você sabia. Mesmo assim continuou.',
+  },
+  'endgame.humanCollapse.blameStrong': {
+    en: 'You chose every megawatt.',
+    es: 'Cada megawatt lo elegiste vos.',
+    pt: 'Você escolheu cada megawatt.',
+  },
+  'endgame.humanCollapse.narrative': {
+    en: 'A group of survivors found your records. They learned what not to do. They boarded a ship to a new planet carrying that lesson — the most expensive of all.',
+    es: 'Un grupo de supervivientes encontró tus registros. Aprendieron lo que no hay que hacer. Embarcaron hacia un nuevo planeta llevando esa lección — la más cara de todas.',
+    pt: 'Um grupo de sobreviventes encontrou seus registros. Aprenderam o que não fazer. Embarcaram para um novo planeta levando essa lição — a mais cara de todas.',
+  },
+  'endgame.humanCollapse.button': {
+    en: 'BEGIN ON THE NEW PLANET',
+    es: 'COMENZAR EN EL NUEVO PLANETA',
+    pt: 'COMEÇAR NO NOVO PLANETA',
+  },
+  'endgame.humanCollapse.bonusTitle': {
+    en: 'LEGACY BONUS',
+    es: 'BONUS DE LEGADO',
+    pt: 'BÔNUS DE LEGADO',
+  },
+
   // Endgame — Good Ending (Phase 7)
   'endgame.good.title': {
     en: 'BLOCKCHAIN COMPLETE',

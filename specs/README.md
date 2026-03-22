@@ -43,6 +43,7 @@ Este directorio contiene todas las especificaciones técnicas exhaustivas (Level
 | [Game Flow](ui-ux/game-flow.md) | ✅ Documented | Phase 1-2 | High | Flujo completo del jugador y FTUE |
 | [Interactive Banner Events](ui-ux/narrative-events.html) | ✅ Implemented | Phase 6 | High | 3 eventos narrativos interactivos: Reguladores UE, Oportunidad de Mercado, Protesta Local |
 | [AI Collapse Ending UI](ui-ux/blockchain-tycoon-ai-collapse.html) | ✅ Implemented | Phase 7 | High | Pantalla final colapso IA: tema rojo/violeta cyberpunk, globe muerto, log card, stats |
+| [Human Collapse Ending UI](ui-ux/blockchain-tycoon-human-collapse.html) | ✅ Implemented | Phase 7 | High | Pantalla final colapso humano: tema naranja/ember, globe moribundo con skull, blame card |
 | [Style Reference](style-reference.md) | ✅ Documented | All | High | Guía de estilos cyberpunk: colores, tipografía, componentes |
 
 ### 🏆 Features (Características)
@@ -59,11 +60,11 @@ Este directorio contiene todas las especificaciones técnicas exhaustivas (Level
 
 ## 📊 Estado General
 
-- **Total de Specs**: 23
-- **Implementadas**: 17 (74%)
+- **Total de Specs**: 24
+- **Implementadas**: 18 (75%)
 - **Parciales**: 0 (0%)
-- **Documentadas**: 3 (13%)
-- **Planeadas**: 3 (13%)
+- **Documentadas**: 3 (12.5%)
+- **Planeadas**: 3 (12.5%)
 
 ### Por Fase
 - **Phase 1 (Genesis)**: 2/2 implementadas ✅

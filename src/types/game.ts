@@ -238,7 +238,7 @@ export interface LocalProtestEvent {
 
 // ─── Endgame (Phase 7) ────────────────────────────────────────────────────────
 
-export type EndingType = 'collapse' | 'good_ending' | null;
+export type EndingType = 'collapse' | 'human_collapse' | 'good_ending' | null;
 
 export interface EndgameStats {
   blocksMined: number;

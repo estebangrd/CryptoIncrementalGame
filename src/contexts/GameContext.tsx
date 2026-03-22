@@ -1379,7 +1379,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     case 'COMPLETE_ENDING_PRESTIGE': {
       const { endingType } = action.payload;
       const now = Date.now();
-      const isCollapse = endingType === 'collapse';
+      const isCollapse = endingType === 'collapse' || endingType === 'human_collapse';
       const newCollapseCount = (state.collapseCount ?? 0) + (isCollapse ? 1 : 0);
       const newGoodEndingCount = (state.goodEndingCount ?? 0) + (isCollapse ? 0 : 1);
       const newPrestigeLevel = state.prestigeLevel + 1;

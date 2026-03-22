@@ -22,7 +22,7 @@ export const calculateEndingBonus = (
   collapseCount: number,
   goodEndingCount: number,
 ): EndingBonus => {
-  if (endingType === 'collapse') {
+  if (endingType === 'collapse' || endingType === 'human_collapse') {
     return {
       productionMultiplier: 1 + (ENDGAME_CONFIG.COLLAPSE_PRODUCTION_BONUS_PER_PRESTIGE * collapseCount),
       renewableDiscount: 0,
