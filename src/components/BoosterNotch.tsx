@@ -283,7 +283,7 @@ const notchStyles = StyleSheet.create({
     borderRightWidth: 0,
     borderColor: 'rgba(255,214,0,0.35)',
     paddingVertical: 10,
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
     alignItems: 'center',
     gap: 4,
   },
@@ -336,7 +336,7 @@ const drawerStyles = StyleSheet.create({
   },
   title: {
     fontFamily: fonts.orbitron,
-    fontSize: 11,
+    fontSize: 13,
     color: colors.ng,
     letterSpacing: 2,
   },
@@ -361,13 +361,13 @@ const drawerStyles = StyleSheet.create({
   },
   totalLabel: {
     fontFamily: fonts.mono,
-    fontSize: 9,
+    fontSize: 11,
     letterSpacing: 2,
     color: colors.dim,
   },
   totalValue: {
     fontFamily: fonts.orbitron,
-    fontSize: 12,
+    fontSize: 14,
     color: colors.ny,
   },
   // ── Item ──
@@ -387,12 +387,12 @@ const drawerStyles = StyleSheet.create({
   },
   itemName: {
     fontFamily: fonts.rajdhaniSemi,
-    fontSize: 13,
+    fontSize: 14,
     color: '#fff',
   },
   itemMult: {
     fontFamily: fonts.orbitron,
-    fontSize: 12,
+    fontSize: 13,
   },
   bar: {
     height: 3,
@@ -407,7 +407,7 @@ const drawerStyles = StyleSheet.create({
   },
   time: {
     fontFamily: fonts.mono,
-    fontSize: 8,
+    fontSize: 10,
     color: colors.dim,
     letterSpacing: 0.5,
   },
@@ -423,7 +423,7 @@ const drawerStyles = StyleSheet.create({
   },
   impactHeader: {
     fontFamily: fonts.mono,
-    fontSize: 8,
+    fontSize: 10,
     letterSpacing: 2,
     color: colors.dim,
     marginBottom: 8,
@@ -436,12 +436,12 @@ const drawerStyles = StyleSheet.create({
   },
   impactLabel: {
     fontFamily: fonts.rajdhani,
-    fontSize: 12,
+    fontSize: 13,
     color: colors.dim,
   },
   impactValue: {
     fontFamily: fonts.orbitron,
-    fontSize: 12,
+    fontSize: 13,
     color: colors.ng,
   },
   // ── Shop CTA ──
@@ -450,7 +450,7 @@ const drawerStyles = StyleSheet.create({
   },
   ctaHint: {
     fontFamily: fonts.mono,
-    fontSize: 8,
+    fontSize: 10,
     letterSpacing: 1,
     color: colors.dim,
     textAlign: 'center',

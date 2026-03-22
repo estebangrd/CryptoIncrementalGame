@@ -124,9 +124,13 @@ const PK_META: PackMeta[] = [
 
 type ShopTab = 'removeAds' | 'boosters' | 'packs';
 
-const ShopScreen: React.FC = () => {
+interface ShopScreenProps {
+  initialTab?: ShopTab;
+}
+
+const ShopScreen: React.FC<ShopScreenProps> = ({ initialTab }) => {
   const { gameState, dispatch, showToast, t } = useGame();
-  const [activeTab, setActiveTab] = useState<ShopTab>('removeAds');
+  const [activeTab, setActiveTab] = useState<ShopTab>(initialTab || 'removeAds');
   const [purchasing, setPurchasing] = useState<string | null>(null);
 
   const iapState = gameState.iapState;

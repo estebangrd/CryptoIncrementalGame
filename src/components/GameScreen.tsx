@@ -239,6 +239,7 @@ const GameScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const [showSettings, setShowSettings] = useState(false);
   const [showShop, setShowShop] = useState(false);
+  const [shopInitialTab, setShopInitialTab] = useState<'removeAds' | 'boosters' | 'packs' | undefined>(undefined);
   const [toastQueue, setToastQueue] = useState<Achievement[]>([]);
   const [adBannerHeight, setAdBannerHeight] = useState(0);
   const [miningClickBoost, setMiningClickBoost] = useState(0);
@@ -438,7 +439,7 @@ const GameScreen: React.FC = () => {
             </Text>
           </View>
         </View>
-        <BoosterNotch onOpenShop={() => setShowShop(true)} />
+        <BoosterNotch onOpenShop={() => { setShopInitialTab('boosters'); setShowShop(true); }} />
       </View>
 
       {/* ── Planet Resources Meter ── */}
@@ -506,16 +507,16 @@ const GameScreen: React.FC = () => {
         visible={showShop}
         animationType="slide"
         transparent={false}
-        onRequestClose={() => setShowShop(false)}
+        onRequestClose={() => { setShowShop(false); setShopInitialTab(undefined); }}
       >
         <View style={styles.shopModal}>
           <View style={styles.shopModalHeader}>
             <Text style={styles.shopModalTitle}>💎 Shop</Text>
-            <TouchableOpacity onPress={() => setShowShop(false)} style={styles.shopModalClose}>
+            <TouchableOpacity onPress={() => { setShowShop(false); setShopInitialTab(undefined); }} style={styles.shopModalClose}>
               <Text style={styles.shopModalCloseText}>✕</Text>
             </TouchableOpacity>
           </View>
-          <ShopScreen />
+          <ShopScreen initialTab={shopInitialTab} />
         </View>
       </Modal>
 
