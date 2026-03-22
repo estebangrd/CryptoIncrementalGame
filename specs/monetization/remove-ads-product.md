@@ -948,6 +948,17 @@ analytics().logEvent('remove_ads_already_owned', {});
   `shouldRollFlashSale`) with full unit-test coverage in
   `__tests__/flashSale.test.ts`.
 
+**Edge Case 6: Active step card pulse animates background instead of border (bug fixed)**
+- Input: The active unlock-step card's `stepGlow` animation used an
+  `Animated.View` overlay with `backgroundColor: rgba(255,214,0,0.15)` pulsing
+  opacity, causing the entire card fill to blink yellow.
+- Problem: The HTML spec defines `stepGlow` as a `box-shadow` animation (border
+  glow only), but the React Native implementation incorrectly applied it as a
+  background fill since RN has no `box-shadow` animation support.
+- Fix: Changed the overlay from `backgroundColor` to `borderWidth: 1,
+  borderColor: rgba(255,214,0,0.6)` so only the border pulses. The static
+  background from `na_stepActive` (`rgba(255,214,0,0.06)`) remains constant.
+
 ## Preguntas Abiertas
 
 - [ ] **Discount pricing**: ¿Ofrecer $0.49 promotional?

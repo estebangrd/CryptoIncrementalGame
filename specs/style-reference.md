@@ -650,3 +650,47 @@ shimmer: {
 | font-weight | 700 |
 | letter-spacing | 3px |
 | active | `background: rgba(255,255,255,0.05)` |
+
+---
+
+## Shop — Remove Ads Unlock Steps
+
+Three cards showing IAP purchase progress (0, 1, 2 purchases). Each card can be `locked`, `active`, or `done`.
+
+### Unlock step card (base)
+| Property | Value |
+|----------|-------|
+| flex | 1 |
+| border-radius | 8px |
+| padding | 8px 6px |
+| text-align | center |
+| border | `1px solid rgba(255,255,255,0.08)` |
+| background | `rgba(255,255,255,0.03)` |
+
+### Unlock step — done
+| Property | Value |
+|----------|-------|
+| border-color | `rgba(0,255,136,0.3)` |
+| background | `rgba(0,255,136,0.06)` |
+| check badge | green circle, top-right, `✓` |
+
+### Unlock step — active
+| Property | Value |
+|----------|-------|
+| border-color | `rgba(255,214,0,0.35)` |
+| background | `rgba(255,214,0,0.06)` (static, NOT animated) |
+| animation | stepGlow — **border glow only** (see below) |
+
+### stepGlow animation
+| Property | Value |
+|----------|-------|
+| type | border/box-shadow pulse — **never** background fill |
+| duration | 2s ease-in-out infinite |
+| HTML | `@keyframes stepGlow { 0%,100% { box-shadow: none } 50% { box-shadow: 0 0 10px rgba(255,214,0,0.2) } }` |
+| React Native | Animated overlay with `borderWidth: 1, borderColor: rgba(255,214,0,0.6)`, opacity 0→1→0. No `backgroundColor`. |
+
+> **IMPORTANT**: React Native does not support `box-shadow` animation. The RN
+> equivalent uses an `Animated.View` with `StyleSheet.absoluteFill` that pulses
+> opacity on a **border only** (no background color). Never use
+> `backgroundColor` on the glow overlay — the static background from
+> `na_stepActive` is sufficient.
