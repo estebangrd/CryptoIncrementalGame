@@ -595,6 +595,17 @@ export const STARTER_PACK_REWARDS = {
 } as const;
 
 // ============================================================================
+// FLASH SALE (REMOVE ADS)
+// ============================================================================
+export const FLASH_SALE_CONFIG = {
+  ROLL_CHANCE: 0.35,                          // 35% per eligible roll
+  MIN_DURATION_MS: 8 * 60 * 1000,             // 8 min
+  MAX_DURATION_MS: 14 * 60 * 1000,            // 14 min
+  COOLDOWN_AFTER_SALE_MS: 24 * 60 * 60 * 1000, // 24h after sale expires
+  COOLDOWN_AFTER_FAIL_MS: 4 * 60 * 60 * 1000,  // 4h after failed roll
+} as const;
+
+// ============================================================================
 // STARTER PACKS - OFERTAS DINÁMICAS
 // ============================================================================
 export const PACK_CONFIG = {

@@ -15,7 +15,7 @@ import Svg, { Defs, LinearGradient as SvgLinearGradient, Stop, Rect } from 'reac
 import { useGame, pendingBoosterMetaRef } from '../contexts/GameContext';
 import { purchaseProduct } from '../services/IAPService';
 import { IAP_PRODUCT_IDS, IAP_PRICES } from '../config/iapConfig';
-import { BOOSTER_CONFIG, PACK_CONFIG } from '../config/balanceConfig';
+import { BOOSTER_CONFIG, FLASH_SALE_CONFIG, PACK_CONFIG } from '../config/balanceConfig';
 import { colors, fonts } from '../config/theme';
 import { computeHasActiveSale, shouldRollFlashSale } from '../utils/flashSaleLogic';
 
@@ -168,14 +168,19 @@ const ShopScreen: React.FC = () => {
     if (activeTab !== 'removeAds') return;
     const now = Date.now();
     const snap = iapStateRef.current;
-    if (shouldRollFlashSale({
+    if (!shouldRollFlashSale({
       removeAdsPurchased: snap.removeAdsPurchased,
       flashSaleExpiresAt: snap.flashSaleExpiresAt,
       flashSaleCooldownUntil: snap.flashSaleCooldownUntil,
       now,
-    }) && Math.random() < 0.35) {
-      const durationMs = (8 + Math.floor(Math.random() * 7)) * 60 * 1000; // 8–14 minutes
+    })) return;
+    if (Math.random() < FLASH_SALE_CONFIG.ROLL_CHANCE) {
+      const range = FLASH_SALE_CONFIG.MAX_DURATION_MS - FLASH_SALE_CONFIG.MIN_DURATION_MS;
+      const durationMs = FLASH_SALE_CONFIG.MIN_DURATION_MS + Math.floor(Math.random() * (range + 1));
       dispatch({ type: 'SET_FLASH_SALE', payload: { expiresAt: now + durationMs, cooldownUntil: 0 } });
+    } else {
+      // Failed roll → 4h cooldown to prevent tab spamming
+      dispatch({ type: 'SET_FLASH_SALE', payload: { expiresAt: 0, cooldownUntil: now + FLASH_SALE_CONFIG.COOLDOWN_AFTER_FAIL_MS } });
     }
   }, [activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -188,7 +193,7 @@ const ShopScreen: React.FC = () => {
       if (remaining === 0) {
         dispatch({
           type: 'SET_FLASH_SALE',
-          payload: { expiresAt: 0, cooldownUntil: now + 24 * 60 * 60 * 1000 },
+          payload: { expiresAt: 0, cooldownUntil: now + FLASH_SALE_CONFIG.COOLDOWN_AFTER_SALE_MS },
         });
         return;
       }

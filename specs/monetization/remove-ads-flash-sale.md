@@ -21,6 +21,7 @@ The flash sale is a time-limited discount on the Remove Ads product that creates
 
 ## Implementation Files
 
+- **Config**: `src/config/balanceConfig.ts` — `FLASH_SALE_CONFIG` (all timing/probability constants)
 - **Logic**: `src/utils/flashSaleLogic.ts` — `computeHasActiveSale()`, `shouldRollFlashSale()`
 - **Tests**: `__tests__/flashSale.test.ts` — Full unit-test coverage
 - **UI**: `src/components/ShopScreen.tsx` — Flash sale banner and timer in the `removeAds` tab
@@ -38,11 +39,11 @@ The flash sale is a time-limited discount on the Remove Ads product that creates
 3. There is **no** active cooldown (`flashSaleCooldownUntil` is 0 or in the past)
 
 ### Probability
-- **35%** chance per eligible roll (`Math.random() < 0.35`)
-- If the roll fails, nothing happens — no cooldown is set on a failed roll
+- **35%** chance per eligible roll (`Math.random() < FLASH_SALE_CONFIG.ROLL_CHANCE`)
+- If the roll **fails**, a **4-hour cooldown** is set (`FLASH_SALE_CONFIG.COOLDOWN_AFTER_FAIL_MS`) to prevent tab spamming
 
 ### Duration
-- Random duration between **8 and 14 minutes** (inclusive)
+- Random duration between **8 and 14 minutes** (`FLASH_SALE_CONFIG.MIN_DURATION_MS` to `MAX_DURATION_MS`)
 - `flashSaleExpiresAt = Date.now() + randomDuration`
 
 ### Timer UI
@@ -52,10 +53,15 @@ The flash sale is a time-limited discount on the Remove Ads product that creates
 - Promo banner is hidden when no active sale
 
 ### On Expiry
-- After the sale timer expires, a **24-hour cooldown** is set
-- `flashSaleCooldownUntil = Date.now() + 24 * 60 * 60 * 1000`
+- After the sale timer expires, a **24-hour cooldown** is set (`FLASH_SALE_CONFIG.COOLDOWN_AFTER_SALE_MS`)
+- `flashSaleCooldownUntil = Date.now() + COOLDOWN_AFTER_SALE_MS`
 - No new roll can fire until the cooldown passes
 - The cooldown persists across app restarts (saved in state / AsyncStorage)
+
+### On Failed Roll
+- A **4-hour cooldown** is set (`FLASH_SALE_CONFIG.COOLDOWN_AFTER_FAIL_MS`)
+- Prevents the user from spamming the tab to force a sale activation
+- The cooldown persists across app restarts
 
 ## State Structure
 
@@ -106,19 +112,18 @@ iapStateRef.current = gameState.iapState;
 
 useEffect(() => {
   if (activeTab !== 'removeAds') return;
-
+  const now = Date.now();
   const snap = iapStateRef.current;
-  if (!shouldRollFlashSale(snap)) return;
-  if (Math.random() >= 0.35) return;
+  if (!shouldRollFlashSale({ ...snap, now })) return;
 
-  const duration = (8 + Math.random() * 6) * 60 * 1000; // 8-14 min
-  dispatch({
-    type: 'SET_FLASH_SALE',
-    payload: {
-      flashSaleExpiresAt: Date.now() + duration,
-      flashSaleCooldownUntil: 0, // set on expiry, not on roll
-    },
-  });
+  if (Math.random() < FLASH_SALE_CONFIG.ROLL_CHANCE) {
+    const range = FLASH_SALE_CONFIG.MAX_DURATION_MS - FLASH_SALE_CONFIG.MIN_DURATION_MS;
+    const duration = FLASH_SALE_CONFIG.MIN_DURATION_MS + Math.floor(Math.random() * (range + 1));
+    dispatch({ type: 'SET_FLASH_SALE', payload: { expiresAt: now + duration, cooldownUntil: 0 } });
+  } else {
+    // Failed roll → 4h cooldown to prevent tab spamming
+    dispatch({ type: 'SET_FLASH_SALE', payload: { expiresAt: 0, cooldownUntil: now + FLASH_SALE_CONFIG.COOLDOWN_AFTER_FAIL_MS } });
+  }
 }, [activeTab]);
 ```
 
