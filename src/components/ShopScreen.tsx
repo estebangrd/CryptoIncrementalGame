@@ -148,7 +148,6 @@ const ShopScreen: React.FC = () => {
   const [flashTimerDisplay, setFlashTimerDisplay] = useState<string>('');
   const [flashTimerColor, setFlashTimerColor] = useState<string>(colors.ny);
   const flashTimerPulse = useRef(new Animated.Value(1)).current;
-  const buyBtnShimmerAnim = useRef(new Animated.Value(-120)).current;
   const stepGlowAnim = useRef(new Animated.Value(0)).current;
 
   const hasActiveSale = computeHasActiveSale({
@@ -232,18 +231,6 @@ const ShopScreen: React.FC = () => {
     anim.start();
     return () => anim.stop();
   }, [stepGlowAnim]);
-
-  // Buy button shimmer (matches spec ::before shimmer animation)
-  useEffect(() => {
-    const shimmerLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(buyBtnShimmerAnim, { toValue: -120, duration: 0, useNativeDriver: true }),
-        Animated.timing(buyBtnShimmerAnim, { toValue: 320, duration: 3000, easing: Easing.linear, useNativeDriver: true }),
-      ])
-    );
-    shimmerLoop.start();
-    return () => shimmerLoop.stop();
-  }, [buyBtnShimmerAnim]);
 
   // ── Packs: offer roll when packs tab becomes active ──────────────────────
   useEffect(() => {
@@ -550,25 +537,7 @@ const ShopScreen: React.FC = () => {
                 disabled={!!purchasing}
                 activeOpacity={0.8}
               >
-                <LinearGradient
-                  colors={effectiveSale
-                    ? ['rgba(255,214,0,0.15)', 'rgba(255,140,0,0.08)']
-                    : ['rgba(255,61,90,0.18)', 'rgba(255,61,90,0.10)']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={st.na_buyBtnInner}
-                >
-                  <Animated.View
-                    pointerEvents="none"
-                    style={[st.na_buyBtnShimmer, { transform: [{ translateX: buyBtnShimmerAnim }] }]}
-                  >
-                    <LinearGradient
-                      colors={['transparent', 'rgba(255,255,255,0.07)', 'transparent']}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={StyleSheet.absoluteFill}
-                    />
-                  </Animated.View>
+                <View style={st.na_buyBtnInner}>
                   {purchasing === IAP_PRODUCT_IDS.REMOVE_ADS ? (
                     <ActivityIndicator color={effectiveSale ? colors.ny : colors.nr} />
                   ) : (
@@ -576,7 +545,7 @@ const ShopScreen: React.FC = () => {
                       {effectiveSale ? t('shop.noAds.buyBtn') : t('shop.noAds.buyBtnNormal')}
                     </Text>
                   )}
-                </LinearGradient>
+                </View>
               </TouchableOpacity>
             </>
           )}
@@ -1412,20 +1381,19 @@ const st = StyleSheet.create({
   na_buyBtnOuter: {
     width: '100%', borderRadius: 12, overflow: 'hidden',
     borderWidth: 1, borderColor: colors.ny,
+    backgroundColor: 'rgba(255,214,0,0.06)',
     shadowColor: colors.ny, shadowOpacity: 0.25, shadowRadius: 10,
     shadowOffset: { width: 0, height: 0 }, elevation: 3,
   },
   na_buyBtnNormalOuter: {
     width: '100%', borderRadius: 12, overflow: 'hidden',
     borderWidth: 1, borderColor: colors.nr,
+    backgroundColor: 'rgba(255,61,90,0.06)',
     shadowColor: colors.nr, shadowOpacity: 0.25, shadowRadius: 10,
     shadowOffset: { width: 0, height: 0 }, elevation: 3,
   },
   na_buyBtnInner: {
-    paddingVertical: 16, alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
-  },
-  na_buyBtnShimmer: {
-    position: 'absolute', top: 0, bottom: 0, width: 100,
+    paddingVertical: 16, alignItems: 'center', justifyContent: 'center',
   },
   na_buyBtnText: {
     fontFamily: fonts.orbitron, fontSize: 13,

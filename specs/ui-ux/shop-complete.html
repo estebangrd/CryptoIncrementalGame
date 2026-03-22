@@ -167,9 +167,13 @@
   .buy-btn-full::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 30%,rgba(255,255,255,.07) 50%,transparent 70%);transform:translateX(-100%);animation:shimmer 3s infinite;}
   @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
   .buy-btn-full:active{transform:scale(.97);}
-  .btn-red{background:linear-gradient(135deg,rgba(255,61,90,.18),rgba(255,61,90,.1));border:1px solid var(--nr);color:var(--nr);box-shadow:0 0 18px rgba(255,61,90,.18);}
-  .btn-green{background:linear-gradient(135deg,rgba(0,255,136,.16),rgba(0,229,255,.1));border:1px solid var(--ng);color:var(--ng);box-shadow:0 0 18px rgba(0,255,136,.16);}
-  .btn-yellow{background:linear-gradient(135deg,rgba(255,214,0,.15),rgba(255,140,0,.08));border:1px solid var(--ny);color:var(--ny);box-shadow:0 0 18px rgba(255,214,0,.15);}
+  /* NOTE (Android): btn-red/btn-yellow use flat backgroundColor, NOT LinearGradient.
+     CSS gradients work fine on web but RN LinearGradient creates a dark inner-box
+     artifact on Android. Use rgba(color, 0.06) flat bg directly on TouchableOpacity,
+     matching the Mine Block button pattern (backgroundColor + border, no inner gradient). */
+  .btn-red{background:rgba(255,61,90,.06);border:1px solid var(--nr);color:var(--nr);box-shadow:0 0 18px rgba(255,61,90,.18);}
+  .btn-green{background:rgba(0,255,136,.06);border:1px solid var(--ng);color:var(--ng);box-shadow:0 0 18px rgba(0,255,136,.16);}
+  .btn-yellow{background:rgba(255,214,0,.06);border:1px solid var(--ny);color:var(--ny);box-shadow:0 0 18px rgba(255,214,0,.15);}
   .btn-dim{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1);color:var(--dim);}
 
   /* ════════════════════════
@@ -331,7 +335,13 @@
     <!-- ══════════ NO ADS ══════════ -->
     <div class="tab-panel active" id="tab-noads">
 
-      <!-- Hero + promo unificados -->
+      <!-- State toggle (demo) -->
+      <div style="display:flex;gap:6px;margin-bottom:12px;">
+        <button onclick="setPromoState(false,this)" style="flex:1;padding:7px;border-radius:8px;border:1px solid var(--ng);background:rgba(0,255,136,.1);color:var(--ng);font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;cursor:pointer;" id="btnNormal">Sin promo activa</button>
+        <button onclick="setPromoState(true,this)"  style="flex:1;padding:7px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:transparent;color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;cursor:pointer;" id="btnPromo">Con oferta flash</button>
+      </div>
+
+      <!-- Hero -->
       <div class="noads-hero">
         <span class="noads-big-icon">🚫</span>
         <div class="noads-hero-title">Eliminá los ads permanentemente</div>
@@ -343,28 +353,36 @@
           <div class="noads-perk"><div class="perk-check">✓</div>Permanente — survives prestige resets</div>
         </div>
 
-        <!-- Precio tachado + promo destacada -->
-        <div style="margin:14px 0 10px;padding:12px 14px;background:rgba(255,214,0,0.07);border:1px solid rgba(255,214,0,0.25);border-radius:12px;position:relative;overflow:hidden;">
-          <!-- Flash label + timer -->
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-            <div style="display:flex;align-items:center;gap:6px;">
-              <span style="font-size:14px;">⚡</span>
-              <span style="font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--ny);text-transform:uppercase;">Oferta Flash</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:6px;">
-              <span style="font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--dim2);">EXPIRA EN</span>
-              <span style="font-family:'Orbitron',monospace;font-size:14px;font-weight:900;color:var(--ny);animation:tpulse 1s ease-in-out infinite;" id="promoTimer">18:34:22</span>
-            </div>
+        <!-- Estado sin promo -->
+        <div id="stateNormal">
+          <div style="margin:14px 0 10px;padding:12px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;">
+            <div style="font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--dim);margin-bottom:6px;">PRECIO</div>
+            <div style="font-family:'Orbitron',monospace;font-size:32px;font-weight:900;color:#fff;text-shadow:0 0 16px rgba(255,255,255,.15);line-height:1;">$2.99</div>
           </div>
-          <!-- Precios -->
-          <div style="display:flex;align-items:baseline;gap:10px;">
-            <span style="font-family:'Orbitron',monospace;font-size:15px;color:rgba(255,255,255,.3);text-decoration:line-through;">$2.99</span>
-            <span style="font-family:'Orbitron',monospace;font-size:32px;font-weight:900;color:var(--ny);text-shadow:0 0 18px rgba(255,214,0,.5);line-height:1;">$0.99</span>
-            <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--ng);background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.22);border-radius:20px;padding:2px 8px;letter-spacing:1px;">AHORRÁS $2.00</span>
-          </div>
+          <button class="buy-btn-full btn-red" style="margin-bottom:0;">🚫 ELIMINAR ADS</button>
         </div>
 
-        <button class="buy-btn-full btn-yellow" style="margin-bottom:0;">🏷 APROVECHAR OFERTA — $0.99</button>
+        <!-- Estado con promo activa -->
+        <div id="statePromo" style="display:none;">
+          <div style="margin:14px 0 10px;padding:12px 14px;background:rgba(255,214,0,0.07);border:1px solid rgba(255,214,0,0.25);border-radius:12px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="font-size:14px;">⚡</span>
+                <span style="font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--ny);text-transform:uppercase;">Oferta Flash</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--dim2);">EXPIRA EN</span>
+                <span style="font-family:'Orbitron',monospace;font-size:14px;font-weight:900;color:var(--ny);animation:tpulse 1s ease-in-out infinite;" id="promoTimer">18:34:22</span>
+              </div>
+            </div>
+          <div style="text-align:center;margin-top:4px;">
+              <div style="font-family:'Orbitron',monospace;font-size:15px;color:rgba(255,255,255,.3);text-decoration:line-through;line-height:1;margin-bottom:4px;">$2.99</div>
+              <div style="font-family:'Orbitron',monospace;font-size:32px;font-weight:900;color:var(--ny);text-shadow:0 0 18px rgba(255,214,0,.5);line-height:1;">$0.99</div>
+            </div>
+          </div>
+          <button class="buy-btn-full btn-yellow" style="margin-bottom:0;">🏷 ELIMINAR ADS</button>
+        </div>
+
       </div>
 
       <div class="divider"></div>
@@ -375,16 +393,15 @@
         <div class="unlock-title">Chance de desbloqueo con cada compra IAP</div>
         <div class="unlock-steps">
 
-          <div class="unlock-step done">
-            <div class="step-check">✓</div>
+          <div class="unlock-step active">
             <div class="step-buy">1ra compra</div>
-            <div class="step-pct done-c">50%</div>
+            <div class="step-pct active-c">50%</div>
             <div class="step-label">chance</div>
           </div>
 
-          <div class="unlock-step active">
+          <div class="unlock-step">
             <div class="step-buy">2da compra</div>
-            <div class="step-pct active-c">75%</div>
+            <div class="step-pct locked-c">75%</div>
             <div class="step-label">chance</div>
           </div>
 
@@ -396,7 +413,7 @@
 
         </div>
         <div class="unlock-note">
-          Hiciste 1 compra — próxima compra: <span style="color:var(--ny)">75% de chance</span> de desbloquear No Ads gratis.
+          Con tu primera compra tenés un <span style="color:var(--ny)">50% de chance</span> de desbloquear No Ads gratis.
         </div>
       </div>
 
@@ -555,22 +572,31 @@ function switchTab(id, el) {
   document.getElementById('tab-'+id).classList.add('active');
 }
 
-// ── Promo timer (flash sale)
+// ── No Ads state toggle
+function setPromoState(isPromo, el) {
+  document.getElementById('stateNormal').style.display = isPromo ? 'none' : 'block';
+  document.getElementById('statePromo').style.display  = isPromo ? 'block' : 'none';
+  document.getElementById('btnNormal').style.cssText = `flex:1;padding:7px;border-radius:8px;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;border:1px solid ${isPromo?'rgba(255,255,255,.1)':'var(--ng)'};background:${isPromo?'transparent':'rgba(0,255,136,.1)'};color:${isPromo?'var(--dim)':'var(--ng)'};`;
+  document.getElementById('btnPromo').style.cssText  = `flex:1;padding:7px;border-radius:8px;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;border:1px solid ${isPromo?'var(--ny)':'rgba(255,255,255,.1)'};background:${isPromo?'rgba(255,214,0,.1)':'transparent'};color:${isPromo?'var(--ny)':'var(--dim)'};`;
+}
+
+// ── Promo timer
 let promoSecs = 18*3600+34*60+22;
-const promoEl = document.getElementById('promoTimer');
 setInterval(()=>{
+  const el = document.getElementById('promoTimer');
+  if(!el) return;
   if(promoSecs<=0) return; promoSecs--;
   const h=Math.floor(promoSecs/3600);
   const m=Math.floor((promoSecs%3600)/60);
   const s=promoSecs%60;
-  promoEl.textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-  if(promoSecs<3600) promoEl.style.color='var(--nr)';
+  el.textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  if(promoSecs<3600) el.style.color='var(--nr)';
 },1000);
 
 // ── Pack offer timer
 let packSecs = 11*60+42;
 const packEl = document.getElementById('packTimer');
-setInterval(()=>{
+if(packEl) setInterval(()=>{
   if(packSecs<=0){ packEl.textContent='EXPIRÓ'; packEl.style.color='var(--nr)'; return; }
   packSecs--;
   const m=Math.floor(packSecs/60), s=packSecs%60;
@@ -581,7 +607,7 @@ setInterval(()=>{
 // ── Next offer countdown
 let nextSecs = 47*3600+18*60+5;
 const nextEl = document.getElementById('nextTimer');
-setInterval(()=>{
+if(nextEl) setInterval(()=>{
   if(nextSecs<=0) return; nextSecs--;
   const h=Math.floor(nextSecs/3600);
   const m=Math.floor((nextSecs%3600)/60);
