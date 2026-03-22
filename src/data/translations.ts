@@ -1704,4 +1704,51 @@ export const translations: Translation = {
     es: '🔒 Último pack disponible',
     pt: '🔒 Último pack disponível',
   },
+
+  // ── Booster Notch / Drawer ──
+  'boosterNotch.title': {
+    en: 'BOOSTERS',
+    es: 'BOOSTERS',
+    pt: 'BOOSTERS',
+  },
+  'boosterNotch.totalMultiplier': {
+    en: 'Total multiplier',
+    es: 'Multiplicador total',
+    pt: 'Multiplicador total',
+  },
+  'boosterNotch.permanent': {
+    en: 'Permanent · survives prestige',
+    es: 'Permanente · sobrevive prestige',
+    pt: 'Permanente · sobrevive prestige',
+  },
+  'boosterNotch.remaining': {
+    en: 'remaining',
+    es: 'restantes',
+    pt: 'restantes',
+  },
+  'boosterNotch.blocksLeft': {
+    en: 'blocks left',
+    es: 'bloques restantes',
+    pt: 'blocos restantes',
+  },
+  'boosterNotch.activeImpact': {
+    en: 'ACTIVE IMPACT',
+    es: 'IMPACTO ACTIVO',
+    pt: 'IMPACTO ATIVO',
+  },
+  'boosterNotch.extraPerSec': {
+    en: 'Extra CC/s',
+    es: 'CC extra/s',
+    pt: 'CC extra/s',
+  },
+  'boosterNotch.stackHint': {
+    en: 'Stack with your active multipliers',
+    es: 'Stackean con tus multiplicadores activos',
+    pt: 'Acumule com seus multiplicadores ativos',
+  },
+  'boosterNotch.addBooster': {
+    en: 'ADD BOOSTER',
+    es: 'AGREGAR BOOSTER',
+    pt: 'ADICIONAR BOOSTER',
+  },
 };

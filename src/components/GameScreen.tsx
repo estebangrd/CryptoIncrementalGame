@@ -438,7 +438,7 @@ const GameScreen: React.FC = () => {
             </Text>
           </View>
         </View>
-        <BoosterNotch />
+        <BoosterNotch onOpenShop={() => setShowShop(true)} />
       </View>
 
       {/* ── Planet Resources Meter ── */}

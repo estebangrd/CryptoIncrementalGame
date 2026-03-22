@@ -17,6 +17,7 @@ import {
   getTotalProductionMultiplier,
   ActiveBooster,
 } from '../utils/boosterNotchLogic';
+import { formatNumber } from '../utils/gameLogic';
 import { colors, fonts } from '../config/theme';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -31,7 +32,11 @@ const formatTimer = (ms: number): string => {
 
 // ─── BoosterDrawerItem ──────────────────────────────────────────────────────
 
-const BoosterDrawerItem: React.FC<{ booster: ActiveBooster; now: number }> = ({ booster, now }) => {
+const BoosterDrawerItem: React.FC<{
+  booster: ActiveBooster;
+  now: number;
+  t: (key: string) => string;
+}> = ({ booster, now, t }) => {
   const remaining = booster.expiresAt ? Math.max(0, booster.expiresAt - now) : 0;
   const progress =
     booster.expiresAt && booster.totalDurationMs
@@ -66,19 +71,25 @@ const BoosterDrawerItem: React.FC<{ booster: ActiveBooster; now: number }> = ({ 
       {/* Timer / status text */}
       <Text style={drawerStyles.time}>
         {booster.isPermanent
-          ? 'Permanente · survives prestige'
+          ? t('boosterNotch.permanent')
           : booster.blocksRemaining != null
-            ? `${booster.blocksRemaining.toLocaleString()} blocks left`
-            : `${formatTimer(remaining)} restantes`}
+            ? `${booster.blocksRemaining.toLocaleString()} ${t('boosterNotch.blocksLeft')}`
+            : `${formatTimer(remaining)} ${t('boosterNotch.remaining')}`}
       </Text>
     </View>
   );
 };
 
+// ─── Props ──────────────────────────────────────────────────────────────────
+
+interface BoosterNotchProps {
+  onOpenShop: () => void;
+}
+
 // ─── BoosterNotch ───────────────────────────────────────────────────────────
 
-const BoosterNotch: React.FC = () => {
-  const { gameState, dispatch } = useGame();
+const BoosterNotch: React.FC<BoosterNotchProps> = ({ onOpenShop }) => {
+  const { gameState, dispatch, t } = useGame();
   const [now, setNow] = useState(Date.now());
   const [drawerOpen, setDrawerOpen] = useState(false);
   const slideAnim = useRef(new Animated.Value(0)).current;
@@ -115,7 +126,10 @@ const BoosterNotch: React.FC = () => {
 
   const activeBoosters = getActiveBoostersList(gameState.iapState, gameState.adBoost, now);
   const totalMult = getTotalProductionMultiplier(activeBoosters);
-  const count = activeBoosters.length;
+
+  // Compute impact stats
+  const baseProduction = totalMult > 0 ? gameState.cryptoCoinsPerSecond / totalMult : 0;
+  const extraPerSec = gameState.cryptoCoinsPerSecond - baseProduction;
 
   const openDrawer = useCallback(() => {
     setDrawerOpen(true);
@@ -136,7 +150,13 @@ const BoosterNotch: React.FC = () => {
     }).start(() => setDrawerOpen(false));
   }, [slideAnim]);
 
-  if (count === 0) {
+  const handleOpenShop = useCallback(() => {
+    closeDrawer();
+    // Small delay so the drawer closes before shop opens
+    setTimeout(() => onOpenShop(), 300);
+  }, [closeDrawer, onOpenShop]);
+
+  if (activeBoosters.length === 0) {
     return null;
   }
 
@@ -165,10 +185,7 @@ const BoosterNotch: React.FC = () => {
             style={notchStyles.tab}
           >
             <Text style={notchStyles.icon}>⚡</Text>
-            <Text style={notchStyles.mult}>×{totalMult}x</Text>
-            <View style={notchStyles.countBadge}>
-              <Text style={notchStyles.countText}>{count}</Text>
-            </View>
+            <Text style={notchStyles.mult}>{totalMult}x</Text>
           </LinearGradient>
         </TouchableOpacity>
       </Animated.View>
@@ -199,7 +216,7 @@ const BoosterNotch: React.FC = () => {
           >
             {/* Header */}
             <View style={drawerStyles.header}>
-              <Text style={drawerStyles.title}>BOOSTERS</Text>
+              <Text style={drawerStyles.title}>{t('boosterNotch.title')}</Text>
               <TouchableOpacity onPress={closeDrawer} style={drawerStyles.closeBtn}>
                 <Text style={drawerStyles.closeText}>✕</Text>
               </TouchableOpacity>
@@ -207,14 +224,36 @@ const BoosterNotch: React.FC = () => {
 
             {/* Total multiplier */}
             <View style={drawerStyles.totalBox}>
-              <Text style={drawerStyles.totalLabel}>Multiplicador total: </Text>
+              <Text style={drawerStyles.totalLabel}>{t('boosterNotch.totalMultiplier')}: </Text>
               <Text style={drawerStyles.totalValue}>×{totalMult}x</Text>
             </View>
 
             {/* Items */}
             {activeBoosters.map(b => (
-              <BoosterDrawerItem key={b.id} booster={b} now={now} />
+              <BoosterDrawerItem key={b.id} booster={b} now={now} t={t} />
             ))}
+
+            {/* Impact stats */}
+            <View style={drawerStyles.impactCard}>
+              <Text style={drawerStyles.impactHeader}>{t('boosterNotch.activeImpact')}</Text>
+              <View style={drawerStyles.impactRow}>
+                <Text style={drawerStyles.impactLabel}>{t('boosterNotch.extraPerSec')}</Text>
+                <Text style={drawerStyles.impactValue}>+{formatNumber(extraPerSec)}</Text>
+              </View>
+            </View>
+
+            {/* Shop CTA */}
+            <View style={drawerStyles.ctaSection}>
+              <Text style={drawerStyles.ctaHint}>{t('boosterNotch.stackHint')}</Text>
+              <TouchableOpacity onPress={handleOpenShop} activeOpacity={0.7}>
+                <LinearGradient
+                  colors={['rgba(255,214,0,0.12)', 'rgba(255,140,0,0.07)']}
+                  style={drawerStyles.ctaButton}
+                >
+                  <Text style={drawerStyles.ctaButtonText}>⚡ {t('boosterNotch.addBooster')}</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
           </ScrollView>
         </Animated.View>
       </Modal>
@@ -228,8 +267,9 @@ const notchStyles = StyleSheet.create({
   wrap: {
     position: 'absolute',
     right: 0,
-    top: '50%',
-    transform: [{ translateY: -30 }],
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
     zIndex: 5,
     shadowColor: colors.ny,
     shadowOffset: { width: -3, height: 0 },
@@ -243,7 +283,7 @@ const notchStyles = StyleSheet.create({
     borderRightWidth: 0,
     borderColor: 'rgba(255,214,0,0.35)',
     paddingVertical: 10,
-    paddingHorizontal: 7,
+    paddingHorizontal: 8,
     alignItems: 'center',
     gap: 4,
   },
@@ -255,24 +295,6 @@ const notchStyles = StyleSheet.create({
     fontSize: 9,
     color: colors.ny,
     letterSpacing: 1,
-  },
-  countBadge: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: colors.nr,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: colors.nr,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  countText: {
-    fontFamily: fonts.orbitronBlack,
-    fontSize: 7,
-    color: '#fff',
   },
 });
 
@@ -388,6 +410,67 @@ const drawerStyles = StyleSheet.create({
     fontSize: 8,
     color: colors.dim,
     letterSpacing: 0.5,
+  },
+  // ── Impact stats ──
+  impactCard: {
+    backgroundColor: 'rgba(0,255,136,0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(0,255,136,0.12)',
+    borderRadius: 10,
+    padding: 10,
+    paddingHorizontal: 12,
+    marginTop: 2,
+  },
+  impactHeader: {
+    fontFamily: fonts.mono,
+    fontSize: 8,
+    letterSpacing: 2,
+    color: colors.dim,
+    marginBottom: 8,
+  },
+  impactRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
+  impactLabel: {
+    fontFamily: fonts.rajdhani,
+    fontSize: 12,
+    color: colors.dim,
+  },
+  impactValue: {
+    fontFamily: fonts.orbitron,
+    fontSize: 12,
+    color: colors.ng,
+  },
+  // ── Shop CTA ──
+  ctaSection: {
+    marginTop: 4,
+  },
+  ctaHint: {
+    fontFamily: fonts.mono,
+    fontSize: 8,
+    letterSpacing: 1,
+    color: colors.dim,
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  ctaButton: {
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,214,0,0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 6,
+  },
+  ctaButtonText: {
+    fontFamily: fonts.orbitron,
+    fontSize: 11,
+    color: colors.ny,
+    letterSpacing: 2,
   },
 });
 
