@@ -542,7 +542,11 @@ const ShopScreen: React.FC = () => {
                   </View>
                   <View style={st.na_priceCentered}>
                     <Text style={st.na_priceNormal}>$2.99</Text>
-                    <Text style={st.na_priceNow}>${IAP_PRICES.REMOVE_ADS.toFixed(2)}</Text>
+                    <View style={st.na_priceNowWrap}>
+                      <Text style={[st.na_priceNow, st.na_priceNowGlowL]}>{`$${IAP_PRICES.REMOVE_ADS.toFixed(2)}`}</Text>
+                      <Text style={[st.na_priceNow, st.na_priceNowGlowR]}>{`$${IAP_PRICES.REMOVE_ADS.toFixed(2)}`}</Text>
+                      <Text style={st.na_priceNow}>{`$${IAP_PRICES.REMOVE_ADS.toFixed(2)}`}</Text>
+                    </View>
                   </View>
                 </View>
               )}
@@ -1411,12 +1415,26 @@ const st = StyleSheet.create({
     color: 'rgba(255,255,255,0.3)', textDecorationLine: 'line-through',
     lineHeight: 20, marginBottom: 4, textAlign: 'center',
   },
+  na_priceNowWrap: {
+    alignItems: 'center',
+  },
   na_priceNow: {
     fontFamily: fonts.orbitronBlack, fontSize: 32,
     color: colors.ny, lineHeight: 38, textAlign: 'center',
     textShadowColor: 'rgba(255,214,0,0.5)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 18,
+  },
+  // Glow layers: color transparent so only the textShadow is visible (horizontal axis)
+  na_priceNowGlowL: {
+    position: 'absolute',
+    color: 'transparent',
+    textShadowOffset: { width: -12, height: 0 },
+  },
+  na_priceNowGlowR: {
+    position: 'absolute',
+    color: 'transparent',
+    textShadowOffset: { width: 12, height: 0 },
   },
   na_buyBtnOuter: {
     width: '100%', borderRadius: 12, overflow: 'hidden',
