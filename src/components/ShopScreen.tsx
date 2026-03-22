@@ -1414,6 +1414,9 @@ const st = StyleSheet.create({
   na_priceNow: {
     fontFamily: fonts.orbitronBlack, fontSize: 32,
     color: colors.ny, lineHeight: 38, textAlign: 'center',
+    textShadowColor: 'rgba(255,214,0,0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 18,
   },
   na_buyBtnOuter: {
     width: '100%', borderRadius: 12, overflow: 'hidden',
