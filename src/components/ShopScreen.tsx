@@ -11,6 +11,7 @@ import {
   Easing,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import Svg, { Defs, LinearGradient as SvgLinearGradient, Stop, Rect } from 'react-native-svg';
 import { useGame, pendingBoosterMetaRef } from '../contexts/GameContext';
 import { purchaseProduct } from '../services/IAPService';
 import { IAP_PRODUCT_IDS, IAP_PRICES } from '../config/iapConfig';
@@ -149,6 +150,8 @@ const ShopScreen: React.FC = () => {
   const [flashTimerColor, setFlashTimerColor] = useState<string>(colors.ny);
   const flashTimerPulse = useRef(new Animated.Value(1)).current;
   const stepGlowAnim = useRef(new Animated.Value(0)).current;
+  const noAdsBtnShimmerAnim = useRef(new Animated.Value(-300)).current;
+  const noAdsBtnScaleAnim = useRef(new Animated.Value(1)).current;
 
   const hasActiveSale = computeHasActiveSale({
     flashSaleExpiresAt: iapState.flashSaleExpiresAt,
@@ -231,6 +234,18 @@ const ShopScreen: React.FC = () => {
     anim.start();
     return () => anim.stop();
   }, [stepGlowAnim]);
+
+  // No Ads buy button shimmer loop
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(noAdsBtnShimmerAnim, { toValue: -300, duration: 0, useNativeDriver: true }),
+        Animated.timing(noAdsBtnShimmerAnim, { toValue: 500, duration: 3000, useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [noAdsBtnShimmerAnim]);
 
   // ── Packs: offer roll when packs tab becomes active ──────────────────────
   useEffect(() => {
@@ -531,13 +546,35 @@ const ShopScreen: React.FC = () => {
                   </View>
                 </View>
               )}
-              <TouchableOpacity
-                style={effectiveSale ? st.na_buyBtnOuter : st.na_buyBtnNormalOuter}
-                onPress={() => confirmPurchase(IAP_PRODUCT_IDS.REMOVE_ADS)}
-                disabled={!!purchasing}
-                activeOpacity={0.8}
-              >
-                <View style={st.na_buyBtnInner}>
+              <Animated.View style={[{ width: '100%' }, { transform: [{ scale: noAdsBtnScaleAnim }] }]}>
+                <TouchableOpacity
+                  style={effectiveSale ? st.na_buyBtnOuter : st.na_buyBtnNormalOuter}
+                  onPress={() => {
+                    Animated.sequence([
+                      Animated.timing(noAdsBtnScaleAnim, { toValue: 0.96, duration: 80, useNativeDriver: true }),
+                      Animated.timing(noAdsBtnScaleAnim, { toValue: 1, duration: 150, useNativeDriver: true }),
+                    ]).start();
+                    confirmPurchase(IAP_PRODUCT_IDS.REMOVE_ADS);
+                  }}
+                  disabled={!!purchasing}
+                  activeOpacity={0.85}
+                >
+                  <Animated.View
+                    pointerEvents="none"
+                    style={[st.na_shimmer, { transform: [{ translateX: noAdsBtnShimmerAnim }] }]}
+                  >
+                    <Svg width={300} height="100%" style={StyleSheet.absoluteFill} preserveAspectRatio="none">
+                      <Defs>
+                        <SvgLinearGradient id="naShimmer" x1="0" y1="0" x2="1" y2="1">
+                          <Stop offset="0%" stopColor={effectiveSale ? colors.ny : colors.nr} stopOpacity="0" />
+                          <Stop offset="40%" stopColor={effectiveSale ? colors.ny : colors.nr} stopOpacity="0.12" />
+                          <Stop offset="60%" stopColor={effectiveSale ? colors.ny : colors.nr} stopOpacity="0.12" />
+                          <Stop offset="100%" stopColor={effectiveSale ? colors.ny : colors.nr} stopOpacity="0" />
+                        </SvgLinearGradient>
+                      </Defs>
+                      <Rect x="0" y="0" width="300" height="100%" fill="url(#naShimmer)" />
+                    </Svg>
+                  </Animated.View>
                   {purchasing === IAP_PRODUCT_IDS.REMOVE_ADS ? (
                     <ActivityIndicator color={effectiveSale ? colors.ny : colors.nr} />
                   ) : (
@@ -545,8 +582,8 @@ const ShopScreen: React.FC = () => {
                       {effectiveSale ? t('shop.noAds.buyBtn') : t('shop.noAds.buyBtnNormal')}
                     </Text>
                   )}
-                </View>
-              </TouchableOpacity>
+                </TouchableOpacity>
+              </Animated.View>
             </>
           )}
         </LinearGradient>
@@ -1381,19 +1418,21 @@ const st = StyleSheet.create({
   na_buyBtnOuter: {
     width: '100%', borderRadius: 12, overflow: 'hidden',
     borderWidth: 1, borderColor: colors.ny,
-    backgroundColor: 'rgba(255,214,0,0.06)',
-    shadowColor: colors.ny, shadowOpacity: 0.25, shadowRadius: 10,
-    shadowOffset: { width: 0, height: 0 }, elevation: 3,
+    backgroundColor: 'rgba(255,214,0,0.14)',
+    paddingVertical: 16, alignItems: 'center', justifyContent: 'center',
+    shadowColor: colors.ny, shadowOpacity: 0.13, shadowRadius: 10,
+    shadowOffset: { width: 0, height: 0 },
   },
   na_buyBtnNormalOuter: {
     width: '100%', borderRadius: 12, overflow: 'hidden',
     borderWidth: 1, borderColor: colors.nr,
-    backgroundColor: 'rgba(255,61,90,0.06)',
-    shadowColor: colors.nr, shadowOpacity: 0.25, shadowRadius: 10,
-    shadowOffset: { width: 0, height: 0 }, elevation: 3,
-  },
-  na_buyBtnInner: {
+    backgroundColor: 'rgba(255,61,90,0.14)',
     paddingVertical: 16, alignItems: 'center', justifyContent: 'center',
+    shadowColor: colors.nr, shadowOpacity: 0.13, shadowRadius: 10,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  na_shimmer: {
+    position: 'absolute', top: 0, bottom: 0, width: 300,
   },
   na_buyBtnText: {
     fontFamily: fonts.orbitron, fontSize: 13,
