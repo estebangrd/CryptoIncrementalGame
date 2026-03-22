@@ -17,7 +17,6 @@ import {
   getTotalProductionMultiplier,
   ActiveBooster,
 } from '../utils/boosterNotchLogic';
-import { formatNumber } from '../utils/gameLogic';
 import { colors, fonts } from '../config/theme';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -127,10 +126,6 @@ const BoosterNotch: React.FC<BoosterNotchProps> = ({ onOpenShop }) => {
   const activeBoosters = getActiveBoostersList(gameState.iapState, gameState.adBoost, now);
   const totalMult = getTotalProductionMultiplier(activeBoosters);
 
-  // Compute impact stats
-  const baseProduction = totalMult > 0 ? gameState.cryptoCoinsPerSecond / totalMult : 0;
-  const extraPerSec = gameState.cryptoCoinsPerSecond - baseProduction;
-
   const openDrawer = useCallback(() => {
     setDrawerOpen(true);
     Animated.timing(slideAnim, {
@@ -225,22 +220,13 @@ const BoosterNotch: React.FC<BoosterNotchProps> = ({ onOpenShop }) => {
             {/* Total multiplier */}
             <View style={drawerStyles.totalBox}>
               <Text style={drawerStyles.totalLabel}>{t('boosterNotch.totalMultiplier')}: </Text>
-              <Text style={drawerStyles.totalValue}>×{totalMult}x</Text>
+              <Text style={drawerStyles.totalValue}>×{totalMult}</Text>
             </View>
 
             {/* Items */}
             {activeBoosters.map(b => (
               <BoosterDrawerItem key={b.id} booster={b} now={now} t={t} />
             ))}
-
-            {/* Impact stats */}
-            <View style={drawerStyles.impactCard}>
-              <Text style={drawerStyles.impactHeader}>{t('boosterNotch.activeImpact')}</Text>
-              <View style={drawerStyles.impactRow}>
-                <Text style={drawerStyles.impactLabel}>{t('boosterNotch.extraPerSec')}</Text>
-                <Text style={drawerStyles.impactValue}>+{formatNumber(extraPerSec)}</Text>
-              </View>
-            </View>
 
             {/* Shop CTA */}
             <View style={drawerStyles.ctaSection}>
@@ -282,11 +268,11 @@ const notchStyles = StyleSheet.create({
     borderWidth: 1,
     borderRightWidth: 0,
     borderColor: 'rgba(255,214,0,0.35)',
-    paddingVertical: 13,
-    paddingHorizontal: 7,
+    paddingVertical: 14,
+    paddingHorizontal: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
+    gap: 11,
   },
   icon: {
     fontSize: 14,
@@ -411,39 +397,6 @@ const drawerStyles = StyleSheet.create({
     fontSize: 10,
     color: colors.dim,
     letterSpacing: 0.5,
-  },
-  // ── Impact stats ──
-  impactCard: {
-    backgroundColor: 'rgba(0,255,136,0.04)',
-    borderWidth: 1,
-    borderColor: 'rgba(0,255,136,0.12)',
-    borderRadius: 10,
-    padding: 10,
-    paddingHorizontal: 12,
-    marginTop: 2,
-  },
-  impactHeader: {
-    fontFamily: fonts.mono,
-    fontSize: 10,
-    letterSpacing: 2,
-    color: colors.dim,
-    marginBottom: 8,
-  },
-  impactRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 5,
-  },
-  impactLabel: {
-    fontFamily: fonts.rajdhani,
-    fontSize: 13,
-    color: colors.dim,
-  },
-  impactValue: {
-    fontFamily: fonts.orbitron,
-    fontSize: 13,
-    color: colors.ng,
   },
   // ── Shop CTA ──
   ctaSection: {
