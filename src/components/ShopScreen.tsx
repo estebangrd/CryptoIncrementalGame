@@ -135,9 +135,6 @@ const ShopScreen: React.FC = () => {
   const [offlineMinerExtended, setOfflineMinerExtended] = useState(() => Math.random() < BOOSTER_CONFIG.OFFLINE_MINER.extendedOfferChance);
   const [marketPumpExtended, setMarketPumpExtended] = useState(() => Math.random() < BOOSTER_CONFIG.MARKET_PUMP.extendedOfferChance);
 
-  // TEMP: demo toggle for No Ads tab (remove before ship)
-  const [demoForcePromo, setDemoForcePromo] = useState<boolean>(false);
-
   // Re-roll when boosters tab becomes active (fresh offer each visit)
   useEffect(() => {
     if (activeTab !== 'boosters') return;
@@ -441,7 +438,7 @@ const ShopScreen: React.FC = () => {
       return 'rgba(255,255,255,0.18)';
     };
 
-    const effectiveSale = demoForcePromo;
+    const effectiveSale = hasActiveSale;
 
     const getUnlockNoteParts = () => {
       if (purchaseCount === 0) return { pre: t('shop.noAds.unlockNote.pre0'), pct: t('shop.noAds.unlockNote.pct50'), post: t('shop.noAds.unlockNote.post') };
@@ -452,32 +449,6 @@ const ShopScreen: React.FC = () => {
 
     return (
       <View>
-        {/* === TEMP DEBUG TOGGLE (remove before ship) === */}
-        <View style={st.na_demoToggle}>
-          <View style={[st.na_demoToggleBtnOuter, !demoForcePromo && st.na_demoToggleBtnOuterActive]}>
-            <TouchableOpacity
-              style={[st.na_demoToggleBtnInner, !demoForcePromo && st.na_demoToggleBtnInnerActive]}
-              onPress={() => setDemoForcePromo(false)}
-              activeOpacity={0.8}
-            >
-              <Text style={[st.na_demoToggleBtnText, !demoForcePromo && st.na_demoToggleBtnTextActive]}>
-                Sin promo activa
-              </Text>
-            </TouchableOpacity>
-          </View>
-          <View style={[st.na_demoToggleBtnOuter, demoForcePromo && st.na_demoToggleBtnOuterActive]}>
-            <TouchableOpacity
-              style={[st.na_demoToggleBtnInner, demoForcePromo && st.na_demoToggleBtnInnerActive]}
-              onPress={() => setDemoForcePromo(true)}
-              activeOpacity={0.8}
-            >
-              <Text style={[st.na_demoToggleBtnText, demoForcePromo && st.na_demoToggleBtnTextActive]}>
-                Con oferta flash
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
         {/* Hero card */}
         <LinearGradient
           colors={['rgba(255,61,90,0.07)', 'rgba(255,61,90,0.03)']}
@@ -1499,21 +1470,6 @@ const st = StyleSheet.create({
     fontFamily: fonts.mono, fontSize: 9,
     color: 'rgba(255,255,255,0.18)', letterSpacing: 1, lineHeight: 14,
   },
-  /* TEMP: demo toggle styles (remove before ship) */
-  na_demoToggle: { flexDirection: 'row', gap: 6, marginBottom: 12 },
-  na_demoToggleBtnOuter: {
-    flex: 1, borderRadius: 8, overflow: 'hidden',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
-  },
-  na_demoToggleBtnOuterActive: { borderColor: colors.ng },
-  na_demoToggleBtnInner: {
-    padding: 7, backgroundColor: 'transparent',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  na_demoToggleBtnInnerActive: { backgroundColor: 'rgba(0,255,136,0.1)' },
-  na_demoToggleBtnText: { fontFamily: fonts.mono, fontSize: 9, letterSpacing: 1, color: 'rgba(255,255,255,0.4)' },
-  na_demoToggleBtnTextActive: { color: colors.ng },
-
   // ════════════════════════
   // BOOSTERS
   // ════════════════════════
