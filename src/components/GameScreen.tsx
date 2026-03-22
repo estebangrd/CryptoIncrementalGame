@@ -9,7 +9,6 @@ import {
   Alert,
   Dimensions,
   Easing,
-  StatusBar,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGame } from '../contexts/GameContext';
@@ -19,7 +18,7 @@ import HorizontalTabs from './HorizontalTabs';
 import SettingsModal from './SettingsModal';
 import AdBanner from './AdBanner';
 import RewardedAdButton from './RewardedAdButton';
-import IAPBoosterBadges from './IAPBoosterBadges';
+import BoosterNotch from './BoosterNotch';
 import { REMOVE_ADS_CONFIG } from '../config/iapConfig';
 import AchievementToast from './AchievementToast';
 import NarrativeEventModal from './NarrativeEventModal';
@@ -33,7 +32,6 @@ import { getNewlyUnlockedAchievements } from '../utils/achievementLogic';
 import { getPendingNarrativeEvent } from '../utils/narrativeLogic';
 import { Achievement } from '../types/game';
 import { colors, fonts } from '../config/theme';
-import LinearGradient from 'react-native-linear-gradient';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -226,52 +224,6 @@ const HashStream: React.FC<{ blocksMined: number }> = ({ blocksMined }) => {
   );
 };
 
-// ── Boost time formatter ───────────────────────────────────────────
-const fmtBoostTime = (ms: number): string => {
-  const s = Math.max(0, Math.floor(ms / 1000));
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  if (h > 0) return `${h}:${m.toString().padStart(2, '0')}h`;
-  return `${m}m`;
-};
-
-// ── Boost Pill ─────────────────────────────────────────────────────
-const BoostPill: React.FC<{ expiresAt: number }> = ({ expiresAt }) => {
-  const [remaining, setRemaining] = useState(() => Math.max(0, expiresAt - Date.now()));
-  const glowAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const iv = setInterval(() => setRemaining(Math.max(0, expiresAt - Date.now())), 1000);
-    return () => clearInterval(iv);
-  }, [expiresAt]);
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(glowAnim, { toValue: 1, duration: 1000, easing: Easing.inOut(Easing.ease), useNativeDriver: false }),
-        Animated.timing(glowAnim, { toValue: 0, duration: 1000, easing: Easing.inOut(Easing.ease), useNativeDriver: false }),
-      ])
-    ).start();
-  }, [glowAnim]);
-
-  const shadowRadius = glowAnim.interpolate({ inputRange: [0, 1], outputRange: [14, 26] });
-  const shadowOpacity = glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0.4, 0.7] });
-  const elevation = glowAnim.interpolate({ inputRange: [0, 1], outputRange: [14, 26] });
-  const borderColor = glowAnim.interpolate({ inputRange: [0, 1], outputRange: ['rgba(255,240,80,0)', 'rgba(255,240,80,1)'] });
-
-  return (
-    <Animated.View style={[styles.boostPillShadow, { shadowRadius, shadowOpacity, elevation, borderColor }]}>
-      <LinearGradient
-        colors={['#ffd600', '#ff8c00']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.boostPill}
-      >
-        <Text style={styles.boostPillText}>{'⚡\uFE0E'} 2x {fmtBoostTime(remaining)}</Text>
-      </LinearGradient>
-    </Animated.View>
-  );
-};
 
 // ── Planet resource color helper ───────────────────────────────────
 const getPlanetResourceColor = (pct: number): string => {
@@ -453,12 +405,7 @@ const GameScreen: React.FC = () => {
         <Text style={styles.logo}>
           BLOCK<Text style={styles.logoChain}>CHAIN</Text> TYCOON
         </Text>
-        <View style={styles.topBarCenter}>
-          <IAPBoosterBadges />
-          {gameState.adBoost?.isActive && gameState.adBoost?.expiresAt && (
-            <BoostPill expiresAt={gameState.adBoost.expiresAt} />
-          )}
-        </View>
+        <View style={styles.topBarCenter} />
         <View style={styles.rightGroup}>
           {gameState.iapState.removeAdsPurchased && (
             <Animated.View style={[styles.adFreeBadge, { opacity: adFreeBadgeOpacity }]}>
@@ -476,19 +423,22 @@ const GameScreen: React.FC = () => {
         </View>
       </View>
 
-      {/* ── Hero ── */}
-      <View style={styles.heroArea}>
-        <Text style={styles.heroLabel}>{t('game.cryptoCoins')}</Text>
-        <Animated.Text style={[styles.heroValue, { opacity: flickerAnim }]}>
-          {formatNumber(gameState.cryptoCoins)}
-        </Animated.Text>
-        {/* Production ticker pill */}
-        <View style={styles.tickerPill}>
-          <Animated.View style={[styles.tickerDot, { opacity: dotAnim }]} />
-          <Text style={styles.tickerText}>
-            +{formatNumber(gameState.cryptoCoinsPerSecond + miningClickBoost)} CC/s
-          </Text>
+      {/* ── Hero + Booster Notch ── */}
+      <View style={{ position: 'relative' }}>
+        <View style={styles.heroArea}>
+          <Text style={styles.heroLabel}>{t('game.cryptoCoins')}</Text>
+          <Animated.Text style={[styles.heroValue, { opacity: flickerAnim }]}>
+            {formatNumber(gameState.cryptoCoins)}
+          </Animated.Text>
+          {/* Production ticker pill */}
+          <View style={styles.tickerPill}>
+            <Animated.View style={[styles.tickerDot, { opacity: dotAnim }]} />
+            <Text style={styles.tickerText}>
+              +{formatNumber(gameState.cryptoCoinsPerSecond + miningClickBoost)} CC/s
+            </Text>
+          </View>
         </View>
+        <BoosterNotch />
       </View>
 
       {/* ── Planet Resources Meter ── */}
@@ -654,27 +604,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: 'bold',
     color: colors.ng,
-  },
-  boostPillShadow: {
-    borderRadius: 12,
-    borderWidth: 1,
-    backgroundColor: '#ffd600',
-    shadowColor: '#ffd600',
-    shadowOffset: { width: 0, height: 0 },
-  },
-  boostPill: {
-    borderRadius: 11,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  boostPillText: {
-    fontFamily: fonts.rajdhani,
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#000',
-    letterSpacing: 0.5,
   },
   iconBtn: {
     width: 32,

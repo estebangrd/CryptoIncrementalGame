@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Blockchain Tycoon</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ng: #00ff88;
+    --nc: #00e5ff;
+    --ny: #ffd600;
+    --nr: #ff3d5a;
+    --bg: #020810;
+    --card: rgba(0,255,136,0.04);
+    --card2: rgba(0,229,255,0.04);
+    --bg2: rgba(255,255,255,0.03);
+    --bng: rgba(0,255,136,0.22);
+    --bnc: rgba(0,229,255,0.18);
+    --dim: rgba(255,255,255,0.4);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;overflow:hidden;}
+  body{
+    background:var(--bg);
+    font-family:'Rajdhani',sans-serif;
+    color:#fff;position:relative;
+  }
+  body::before{
+    content:'';position:fixed;inset:0;
+    background-image:
+      linear-gradient(rgba(0,255,136,0.025) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(0,255,136,0.025) 1px,transparent 1px);
+    background-size:40px 40px;
+    animation:gridShift 20s linear infinite;
+    pointer-events:none;z-index:0;
+  }
+  body::after{
+    content:'';position:fixed;inset:0;
+    background:
+      radial-gradient(ellipse at 20% 0%,rgba(0,255,136,0.07) 0%,transparent 55%),
+      radial-gradient(ellipse at 80% 100%,rgba(0,229,255,0.05) 0%,transparent 55%);
+    pointer-events:none;z-index:0;
+  }
+  @keyframes gridShift{0%{transform:translateY(0)}100%{transform:translateY(40px)}}
+
+  .phone{
+    position:relative;z-index:1;
+    max-width:420px;margin:0 auto;
+    height:100vh;display:flex;flex-direction:column;overflow:hidden;
+  }
+
+  /* TOPBAR */
+  .topbar{
+    flex-shrink:0;display:flex;align-items:center;justify-content:space-between;
+    padding:14px 18px 10px;
+    border-bottom:1px solid rgba(0,255,136,0.1);
+    background:rgba(2,8,16,0.95);backdrop-filter:blur(12px);
+  }
+  .logo{font-family:'Orbitron',monospace;font-size:12px;font-weight:900;letter-spacing:2.5px;color:var(--ng);text-shadow:0 0 18px rgba(0,255,136,.55);text-transform:uppercase;}
+  .logo span{color:var(--nc);text-shadow:0 0 18px rgba(0,229,255,.55);}
+  .topbar-r{display:flex;gap:8px;align-items:center;}
+  .boost-pill{
+    background:linear-gradient(135deg,#ffd600,#ff8c00);border-radius:20px;padding:5px 11px;
+    font-family:'Orbitron',monospace;font-size:9px;font-weight:700;color:#000;
+    display:flex;align-items:center;gap:3px;box-shadow:0 0 14px rgba(255,214,0,.4);
+    animation:bpulse 2s ease-in-out infinite;
+  }
+  @keyframes bpulse{0%,100%{box-shadow:0 0 14px rgba(255,214,0,.4)}50%{box-shadow:0 0 26px rgba(255,214,0,.7)}}
+  .icon-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--bng);background:var(--card);display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;}
+
+  /* NOTCH */
+  .notch-wrap{position:absolute;right:0;top:50%;transform:translateY(-50%);z-index:5;}
+  .notch-tab{
+    background:linear-gradient(180deg,rgba(255,214,0,.18),rgba(160,64,255,.12));
+    border:1px solid rgba(255,214,0,.35);border-right:none;
+    border-radius:10px 0 0 10px;
+    padding:10px 7px;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:4px;
+    box-shadow:-3px 0 14px rgba(255,214,0,.15);
+    transition:all .2s;
+  }
+  .notch-tab:active{background:linear-gradient(180deg,rgba(255,214,0,.28),rgba(160,64,255,.2));}
+  .notch-icon{font-size:14px;}
+  .notch-mult{
+    font-family:'Orbitron',monospace;font-size:9px;font-weight:900;color:var(--ny);
+    writing-mode:vertical-rl;text-orientation:mixed;letter-spacing:1px;
+  }
+  .notch-count{
+    width:15px;height:15px;border-radius:50%;
+    background:var(--nr);color:#fff;
+    font-family:'Orbitron',monospace;font-size:7px;font-weight:900;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 0 6px rgba(255,61,90,.5);
+  }
+
+  /* SIDE DRAWER */
+  .side-drawer{
+    position:fixed;top:0;right:0;bottom:0;z-index:100;
+    width:0;overflow:hidden;
+    background:linear-gradient(180deg,#0a1220,#060d18);
+    border-left:1px solid rgba(0,255,136,.15);
+    transition:width .3s cubic-bezier(0.22,1,0.36,1);
+    box-shadow:-8px 0 30px rgba(0,0,0,.5);
+  }
+  .side-drawer.open{width:230px;}
+  .sd-inner{width:230px;padding:56px 16px 24px;display:flex;flex-direction:column;gap:10px;height:100%;overflow-y:auto;}
+  .sd-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+  .sd-title{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--ng);letter-spacing:2px;}
+  .sd-close{font-size:18px;color:var(--dim);cursor:pointer;line-height:1;padding:4px;}
+  .sd-total{
+    font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--dim);
+    padding:8px 10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);
+    border-radius:8px;margin-bottom:2px;
+  }
+  .sd-total span{color:var(--ny);font-family:'Orbitron',monospace;font-size:12px;font-weight:700;}
+  .sd-item{
+    background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+    border-radius:10px;padding:10px 12px;
+  }
+  .sd-item-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;}
+  .sd-item-name{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;color:#fff;}
+  .sd-item-mult{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;}
+  .sd-bar{height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin:5px 0 3px;}
+  .sd-fill{height:100%;border-radius:2px;}
+  .sd-time{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--dim);letter-spacing:.5px;}
+
+  /* DRAWER OVERLAY */
+  .drawer-overlay{
+    position:fixed;inset:0;z-index:99;
+    background:rgba(0,0,0,.4);backdrop-filter:blur(2px);
+    display:none;
+  }
+  .drawer-overlay.open{display:block;}
+
+  /* HERO */
+  .hero{
+    flex-shrink:0;padding:16px 18px 12px;text-align:center;
+    background:rgba(2,8,16,0.6);border-bottom:1px solid rgba(0,255,136,0.07);
+  }
+  .hero-label{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:4px;color:var(--dim);text-transform:uppercase;margin-bottom:4px;}
+  .hero-amount{font-family:'Orbitron',monospace;font-size:36px;font-weight:900;color:var(--ng);text-shadow:0 0 28px rgba(0,255,136,.45),0 0 55px rgba(0,255,136,.15);line-height:1;animation:flicker 5s ease-in-out infinite;}
+  @keyframes flicker{0%,96%,100%{opacity:1}97%{opacity:.85}98%{opacity:1}}
+  .hero-unit{font-family:'Share Tech Mono',monospace;font-size:10px;color:rgba(0,255,136,.55);letter-spacing:3px;margin-top:2px;}
+  .hero-ticker{display:inline-flex;align-items:center;gap:5px;margin-top:8px;background:rgba(0,255,136,.07);border:1px solid rgba(0,255,136,.18);border-radius:20px;padding:3px 12px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--ng);}
+  .ticker-dot{width:5px;height:5px;border-radius:50%;background:var(--ng);animation:blink 1s step-end infinite;box-shadow:0 0 5px var(--ng);}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+  /* HASH STREAM */
+  .hash-stream{flex-shrink:0;margin:8px 16px;background:rgba(0,0,0,.3);border:1px solid rgba(0,255,136,.1);border-radius:8px;padding:7px 14px;overflow:hidden;height:28px;position:relative;}
+  .hs-label{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-family:'Share Tech Mono',monospace;font-size:8px;color:rgba(0,255,136,.55);letter-spacing:2px;background:rgba(2,8,16,.85);padding-right:6px;z-index:1;}
+  .hs-text{font-family:'Share Tech Mono',monospace;font-size:9px;color:rgba(0,255,136,.35);white-space:nowrap;animation:scrollH 10s linear infinite;letter-spacing:1px;}
+  @keyframes scrollH{0%{transform:translateX(100%)}100%{transform:translateX(-200%)}}
+
+  /* NAV TABS */
+  .nav-tabs{flex-shrink:0;display:flex;gap:4px;padding:6px 14px 8px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid rgba(0,255,136,.07);background:rgba(2,8,16,0.7);}
+  .nav-tabs::-webkit-scrollbar{display:none;}
+  .nav-tab{flex-shrink:0;padding:7px 13px;border-radius:8px;border:1px solid rgba(255,255,255,.07);background:transparent;color:var(--dim);font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:4px;}
+  .nav-tab.active{background:rgba(0,255,136,.1);border-color:var(--ng);color:var(--ng);box-shadow:0 0 10px rgba(0,255,136,.15);}
+
+  /* CONTENT */
+  .content{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(0,255,136,.2) transparent;}
+  .content::-webkit-scrollbar{width:3px;}
+  .content::-webkit-scrollbar-thumb{background:rgba(0,255,136,.2);border-radius:2px;}
+  .tab-panel{display:none;padding:12px 14px 28px;}
+  .tab-panel.active{display:block;}
+
+  /* SECTION HEADER */
+  .sec-hdr{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:4px;color:var(--dim);text-transform:uppercase;padding:0 2px 10px;display:flex;align-items:center;gap:8px;}
+  .sec-hdr::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(0,255,136,.2),transparent);}
+
+  /* STAT CARDS */
+  .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+  .stat-card{background:var(--card);border:1px solid var(--bng);border-radius:12px;padding:13px 13px 11px;position:relative;overflow:hidden;}
+  .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--ng),transparent);opacity:.55;}
+  .stat-card.cyan{border-color:var(--bnc);background:var(--card2);}
+  .stat-card.cyan::before{background:linear-gradient(90deg,transparent,var(--nc),transparent);}
+  .stat-card.danger{border-color:rgba(255,61,90,.22);background:rgba(255,61,90,.04);}
+  .stat-card.danger::before{background:linear-gradient(90deg,transparent,var(--nr),transparent);}
+  .stat-icon{font-size:13px;margin-bottom:5px;display:block;}
+  .stat-label{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;margin-bottom:3px;}
+  .stat-value{font-family:'Orbitron',monospace;font-size:17px;font-weight:700;color:var(--ng);text-shadow:0 0 10px rgba(0,255,136,.35);line-height:1.1;}
+  .stat-value.cyan{color:var(--nc);text-shadow:0 0 10px rgba(0,229,255,.35);}
+  .stat-value.red{color:var(--nr);text-shadow:0 0 10px rgba(255,61,90,.35);}
+  .stat-value.yellow{color:var(--ny);text-shadow:0 0 10px rgba(255,214,0,.35);}
+  .stat-sub{font-size:10px;color:var(--dim);margin-top:2px;}
+  .sparkline{position:absolute;bottom:8px;right:8px;opacity:.28;}
+  .cash-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+
+  /* PHASE */
+  .phase-card{background:var(--card);border:1px solid var(--bng);border-radius:12px;padding:14px;position:relative;overflow:hidden;margin-bottom:10px;}
+  .phase-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--ng),var(--nc));}
+  .phase-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+  .phase-sublabel{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:3px;color:var(--dim);margin-bottom:3px;}
+  .phase-name{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--ng);letter-spacing:2px;}
+  .phase-count{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--dim);text-align:right;}
+  .phase-count strong{color:var(--nc);font-size:12px;}
+  .prog-track{height:5px;background:rgba(255,255,255,.05);border-radius:3px;overflow:hidden;margin-bottom:12px;position:relative;}
+  .prog-fill{height:100%;width:.34%;background:linear-gradient(90deg,var(--ng),var(--nc));border-radius:3px;box-shadow:0 0 7px var(--ng);position:relative;}
+  .prog-fill::after{content:'';position:absolute;right:0;top:-2px;bottom:-2px;width:3px;background:#fff;border-radius:2px;box-shadow:0 0 6px #fff;}
+  .phase-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;}
+  .pstat{text-align:center;}
+  .pstat-label{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--dim);text-transform:uppercase;margin-bottom:2px;}
+  .pstat-value{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:#fff;}
+
+  /* MINE BTN */
+  .mine-btn{width:100%;padding:16px;background:linear-gradient(135deg,rgba(0,255,136,.13),rgba(0,229,255,.08));border:1px solid var(--ng);border-radius:13px;color:var(--ng);font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:4px;text-transform:uppercase;cursor:pointer;position:relative;overflow:hidden;box-shadow:0 0 18px rgba(0,255,136,.13),inset 0 0 18px rgba(0,255,136,.04);display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;}
+  .mine-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 30%,rgba(0,255,136,.07) 50%,transparent 70%);transform:translateX(-100%);animation:shimmer 3s infinite;}
+  @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+  .mine-btn:active{transform:scale(.97);box-shadow:0 0 36px rgba(0,255,136,.28);}
+  .hammer{font-size:18px;animation:hswing 2s ease-in-out infinite;transform-origin:bottom right;}
+  @keyframes hswing{0%,100%{transform:rotate(-10deg)}50%{transform:rotate(10deg)}}
+
+  /* ── MARKET ── */
+  .coin-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .coin-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#ffd600,#ff8c00);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 0 14px rgba(255,214,0,.3);flex-shrink:0;}
+  .coin-info{flex:1;}
+  .coin-name{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;color:#fff;}
+  .coin-ticker{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--dim);letter-spacing:2px;}
+  .coin-right{text-align:right;}
+  .coin-price-sm{font-family:'Share Tech Mono',monospace;font-size:12px;color:#fff;}
+  .badge-up{display:inline-flex;align-items:center;gap:3px;background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.22);border-radius:6px;padding:2px 8px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--ng);}
+  .badge-dn{display:inline-flex;align-items:center;gap:3px;background:rgba(255,61,90,.1);border:1px solid rgba(255,61,90,.22);border-radius:6px;padding:2px 8px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--nr);}
+
+  .chart-card{background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:14px 14px 10px;margin-bottom:10px;}
+  .chart-price{font-family:'Orbitron',monospace;font-size:26px;font-weight:900;color:#fff;text-shadow:0 0 20px rgba(255,255,255,.2);margin-bottom:10px;display:flex;align-items:center;gap:10px;}
+  .chart-wrap{width:100%;height:90px;position:relative;overflow:hidden;}
+  .chart-svg{width:100%;height:100%;}
+  .chart-labels{display:flex;justify-content:space-between;margin-top:4px;font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--dim);letter-spacing:1px;}
+
+  .sell-section{background:var(--card);border:1px solid var(--bng);border-radius:12px;padding:14px;margin-bottom:10px;}
+  .sell-title{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--ng);letter-spacing:2px;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+  .slider-pct{text-align:center;font-family:'Orbitron',monospace;font-size:20px;font-weight:900;color:var(--ny);text-shadow:0 0 14px rgba(255,214,0,.4);margin-bottom:6px;}
+  .range-input{width:100%;-webkit-appearance:none;appearance:none;height:5px;border-radius:3px;outline:none;cursor:pointer;background:linear-gradient(90deg,var(--ng) 50%,rgba(255,255,255,.1) 50%);}
+  .range-input::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--ng);box-shadow:0 0 8px rgba(0,255,136,.5);cursor:pointer;}
+  .slider-ends{display:flex;justify-content:space-between;margin-top:4px;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dim);}
+  .earn-box{background:rgba(255,214,0,.06);border:1px solid rgba(255,214,0,.2);border-radius:10px;padding:10px 14px;text-align:center;margin:10px 0;}
+  .earn-amount{font-family:'Orbitron',monospace;font-size:20px;font-weight:900;color:var(--ny);text-shadow:0 0 14px rgba(255,214,0,.4);}
+  .earn-sub{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dim);margin-top:3px;letter-spacing:1px;}
+  .sell-btn{width:100%;padding:15px;border:none;border-radius:12px;background:linear-gradient(135deg,#ff6b2b,#ff3d5a);color:#fff;font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:3px;cursor:pointer;box-shadow:0 0 20px rgba(255,61,90,.25);position:relative;overflow:hidden;}
+  .sell-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 30%,rgba(255,255,255,.08) 50%,transparent 70%);transform:translateX(-100%);animation:shimmer 2.5s infinite;}
+  .sell-btn:active{transform:scale(.97);}
+
+  /* ── HARDWARE ── */
+  .hw-card{background:var(--bg2);border:1px solid rgba(255,255,255,.08);border-radius:13px;padding:14px;margin-bottom:10px;position:relative;overflow:hidden;}
+  .hw-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--nc),transparent);opacity:.5;}
+  .hw-card.has-units::before{background:linear-gradient(90deg,transparent,var(--ng),transparent);}
+  .hw-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;}
+  .hw-icon{width:44px;height:44px;border-radius:10px;background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+  .hw-info{flex:1;}
+  .hw-name{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:#fff;margin-bottom:2px;}
+  .hw-desc{font-family:'Rajdhani',sans-serif;font-size:11px;color:var(--dim);}
+  .hw-badge{background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.25);border-radius:6px;padding:3px 9px;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--ng);white-space:nowrap;}
+  .hw-stats{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:12px;}
+  .hw-row{display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:rgba(0,0,0,.2);border-radius:7px;}
+  .hw-rl{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:1px;}
+  .hw-rv{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--nc);}
+  .hw-rv.g{color:var(--ng);}
+  .hw-rv.r{color:var(--nr);}
+  .hw-rv.y{color:var(--ny);}
+  .hw-preview{background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.15);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-family:'Share Tech Mono',monospace;font-size:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .hw-pl{color:var(--dim);font-size:9px;letter-spacing:1px;}
+  .cost-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .cost-label{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:2px;}
+  .cost-val{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;color:var(--ny);}
+  .buy-btn{width:100%;padding:13px;border-radius:11px;background:linear-gradient(135deg,rgba(0,255,136,.13),rgba(0,229,255,.08));border:1px solid var(--ng);color:var(--ng);font-family:'Orbitron',monospace;font-size:12px;font-weight:700;letter-spacing:3px;cursor:pointer;box-shadow:0 0 14px rgba(0,255,136,.1);position:relative;overflow:hidden;}
+  .buy-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 30%,rgba(0,255,136,.07) 50%,transparent 70%);transform:translateX(-100%);animation:shimmer 3s infinite;}
+  .buy-btn:active{transform:scale(.97);}
+
+  /* ── UPGRADES ── */
+  .upg-card{background:var(--bg2);border:1px solid rgba(255,255,255,.08);border-radius:13px;padding:14px;margin-bottom:10px;position:relative;overflow:hidden;}
+  .upg-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--ny),transparent);opacity:.5;}
+  .upg-card.owned-c{border-color:rgba(0,255,136,.18);background:rgba(0,255,136,.025);opacity:.75;}
+  .upg-card.owned-c::before{background:linear-gradient(90deg,transparent,var(--ng),transparent);}
+  .upg-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;}
+  .upg-icon{width:44px;height:44px;border-radius:10px;background:rgba(255,214,0,.08);border:1px solid rgba(255,214,0,.2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+  .upg-icon.oi{background:rgba(0,255,136,.08);border-color:rgba(0,255,136,.2);}
+  .upg-name{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:#fff;margin-bottom:3px;}
+  .upg-desc{font-family:'Rajdhani',sans-serif;font-size:12px;color:var(--dim);line-height:1.4;}
+  .owned-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.25);border-radius:20px;padding:4px 12px;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--ng);letter-spacing:1px;}
+  .upg-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;}
+  .upg-cost-lbl{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--dim);letter-spacing:2px;margin-bottom:2px;}
+  .upg-cost{font-family:'Orbitron',monospace;font-size:16px;font-weight:700;color:var(--ny);}
+  .upg-btn{flex:1;max-width:140px;padding:12px;border-radius:10px;background:linear-gradient(135deg,rgba(255,214,0,.12),rgba(255,140,0,.08));border:1px solid rgba(255,214,0,.38);color:var(--ny);font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;position:relative;overflow:hidden;}
+  .upg-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 30%,rgba(255,214,0,.07) 50%,transparent 70%);transform:translateX(-100%);animation:shimmer 3s infinite;}
+  .upg-btn:active{transform:scale(.97);}
+  .divider{height:1px;background:rgba(255,255,255,.05);margin:0 0 10px;}
+
+  /* SCANLINE + PARTICLES */
+  .scanline{position:fixed;top:0;left:0;right:0;height:2px;background:rgba(0,255,136,.05);animation:scan 7s linear infinite;pointer-events:none;z-index:200;}
+  @keyframes scan{0%{top:0}100%{top:100vh}}
+  .particle{position:fixed;width:2px;height:2px;border-radius:50%;background:var(--ng);opacity:0;pointer-events:none;z-index:0;animation:floatUp linear infinite;}
+  @keyframes floatUp{0%{transform:translateY(100vh);opacity:0}10%{opacity:.5}90%{opacity:.25}100%{transform:translateY(-10vh) translateX(15px);opacity:0}}
+  @keyframes flashOut{0%{opacity:1}100%{opacity:0}}
+</style>
+</head>
+<body>
+
+<div class="scanline"></div>
+<div class="particle" style="left:8%;animation-duration:9s;animation-delay:0s;"></div>
+<div class="particle" style="left:22%;animation-duration:13s;animation-delay:2s;background:var(--nc);"></div>
+<div class="particle" style="left:48%;animation-duration:10s;animation-delay:5s;"></div>
+<div class="particle" style="left:72%;animation-duration:15s;animation-delay:1s;background:var(--nc);"></div>
+<div class="particle" style="left:88%;animation-duration:11s;animation-delay:7s;"></div>
+
+<div class="phone">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="logo">BLOCK<span>CHAIN</span> TYCOON</div>
+    <div class="topbar-r">
+      <div class="icon-btn">💎</div>
+      <div class="icon-btn">⚙️</div>
+    </div>
+  </div>
+
+  <!-- DRAWER OVERLAY -->
+  <div class="drawer-overlay" id="drawerOverlay" onclick="toggleDrawer()"></div>
+
+  <!-- SIDE DRAWER -->
+  <div class="side-drawer" id="sideDrawer">
+    <div class="sd-inner">
+      <div class="sd-header">
+        <div class="sd-title">Boosters</div>
+        <div class="sd-close" onclick="toggleDrawer()">✕</div>
+      </div>
+      <div class="sd-total">Multiplicador total: <span>×10x</span></div>
+
+      <div class="sd-item">
+        <div class="sd-item-top">
+          <div class="sd-item-name">♾ Permanent 2x</div>
+          <div class="sd-item-mult" style="color:#a040ff;">×2</div>
+        </div>
+        <div class="sd-time">Permanente · survives prestige</div>
+      </div>
+
+      <div class="sd-item">
+        <div class="sd-item-top">
+          <div class="sd-item-name">⚡ 2x Booster</div>
+          <div class="sd-item-mult" style="color:var(--ny);">×2</div>
+        </div>
+        <div class="sd-bar"><div class="sd-fill" id="sdFill1" style="background:var(--ny);width:66%;"></div></div>
+        <div class="sd-time" id="sdTime1">3:59:12 restantes</div>
+      </div>
+
+      <div class="sd-item">
+        <div class="sd-item-top">
+          <div class="sd-item-name">🚀 5x Booster</div>
+          <div class="sd-item-mult" style="color:#ff6b1a;">×5</div>
+        </div>
+        <div class="sd-bar"><div class="sd-fill" id="sdFill2" style="background:#ff6b1a;width:99%;"></div></div>
+        <div class="sd-time" id="sdTime2">23:56:53 restantes</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HERO with notch -->
+  <div style="position:relative;">
+    <div class="hero">
+      <div class="hero-label">Total CryptoCoins</div>
+      <div class="hero-amount" id="balance">19.6M</div>
+      <div class="hero-unit">CC</div>
+      <div class="hero-ticker"><div class="ticker-dot"></div><span>+6.0K/sec</span></div>
+    </div>
+    <!-- NOTCH anchored right of hero -->
+    <div class="notch-wrap">
+      <div class="notch-tab" onclick="toggleDrawer()">
+        <span class="notch-icon">⚡</span>
+        <span class="notch-mult">×10x</span>
+        <div class="notch-count">3</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HASH STREAM -->
+  <div class="hash-stream">
+    <span class="hs-label">LIVE</span>
+    <div class="hs-text" id="hashStream">0x3f9a2b1c… · 0x1e5d9c2b… · BLOCK #71,422 MINED ✓ · 0xa2b9f3e1… · 0x8f4a2d1b… · 0x2c7b9e4a…</div>
+  </div>
+
+  <!-- NAV TABS -->
+  <div class="nav-tabs">
+    <div class="nav-tab active" data-tab="mining">⛏ Mining</div>
+    <div class="nav-tab" data-tab="market">📈 Market</div>
+    <div class="nav-tab" data-tab="hardware">💻 Hardware</div>
+    <div class="nav-tab" data-tab="upgrades">🔧 Upgrades</div>
+    <div class="nav-tab" data-tab="power">⚡ Power</div>
+    <div class="nav-tab" data-tab="ledger">📖 Ledger</div>
+  </div>
+
+  <!-- CONTENT AREA -->
+  <div class="content">
+
+    <!-- ══════════ MINING ══════════ -->
+    <div class="tab-panel active" id="tab-mining">
+      <div class="sec-hdr">Node Status</div>
+      <div class="stats-grid">
+        <div class="stat-card cyan">
+          <span class="stat-icon">🖥</span>
+          <div class="stat-label">Hash Rate</div>
+          <div class="stat-value cyan">197.6K</div>
+          <div class="stat-sub">H/s — Active</div>
+          <svg class="sparkline" width="40" height="20" viewBox="0 0 40 20"><polyline points="0,18 7,14 14,16 20,8 27,10 33,4 40,6" fill="none" stroke="rgba(0,229,255,.5)" stroke-width="1.5"/></svg>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon">◈</span>
+          <div class="stat-label">Net Income</div>
+          <div class="stat-value">+5.9K</div>
+          <div class="stat-sub">CC/sec</div>
+          <svg class="sparkline" width="40" height="20" viewBox="0 0 40 20"><polyline points="0,16 7,12 14,14 20,6 27,9 33,3 40,5" fill="none" stroke="rgba(0,255,136,.5)" stroke-width="1.5"/></svg>
+        </div>
+        <div class="stat-card danger">
+          <span class="stat-icon">🔌</span>
+          <div class="stat-label">Power Drain</div>
+          <div class="stat-value red">-125.7</div>
+          <div class="stat-sub">units/sec</div>
+          <svg class="sparkline" width="40" height="20" viewBox="0 0 40 20"><polyline points="0,5 7,8 14,6 20,12 27,10 33,15 40,18" fill="none" stroke="rgba(255,61,90,.5)" stroke-width="1.5"/></svg>
+        </div>
+        <div class="stat-card cyan">
+          <span class="stat-icon">🏦</span>
+          <div class="stat-label">Total Mined</div>
+          <div class="stat-value cyan">20.8M</div>
+          <div class="stat-sub">CC all time</div>
+        </div>
+      </div>
+      <div class="cash-row" style="margin-bottom:10px;">
+        <div class="stat-card">
+          <span class="stat-icon">💰</span>
+          <div class="stat-label">Cash Balance</div>
+          <div class="stat-value yellow">$117.4K</div>
+          <div class="stat-sub">Available</div>
+        </div>
+        <div class="stat-card cyan">
+          <span class="stat-icon">💵</span>
+          <div class="stat-label">Total Earned</div>
+          <div class="stat-value cyan">$1.3M</div>
+          <div class="stat-sub">All time</div>
+        </div>
+      </div>
+      <div class="sec-hdr">Current Phase</div>
+      <div class="phase-card">
+        <div class="phase-top">
+          <div><div class="phase-sublabel">ACTIVE CHAIN</div><div class="phase-name">⬡ GENESIS</div></div>
+          <div class="phase-count"><strong>71.4K</strong><br><span>/ 21.0M blocks</span></div>
+        </div>
+        <div class="prog-track"><div class="prog-fill"></div></div>
+        <div class="phase-stats">
+          <div class="pstat"><div class="pstat-label">Reward</div><div class="pstat-value" style="color:var(--ny)">50.0</div></div>
+          <div class="pstat"><div class="pstat-label">Hash Rate</div><div class="pstat-value" style="color:var(--nc)">197.6K</div></div>
+          <div class="pstat"><div class="pstat-label">Halving At</div><div class="pstat-value" style="color:var(--nr)">138.6K</div></div>
+        </div>
+      </div>
+      <button class="mine-btn" id="mineBtn"><span class="hammer">⛏</span>MINE BLOCK</button>
+    </div>
+
+    <!-- ══════════ MARKET ══════════ -->
+    <div class="tab-panel" id="tab-market">
+      <div class="sec-hdr">Live Market</div>
+
+      <div class="coin-row">
+        <div class="coin-avatar">🏛</div>
+        <div class="coin-info">
+          <div class="coin-name">CryptoCoin</div>
+          <div class="coin-ticker">CC · GENESIS CHAIN</div>
+        </div>
+        <div class="coin-right">
+          <div class="coin-price-sm">1.11 CC</div>
+          <div style="margin-top:3px;" class="badge-up">▲ +110,536%</div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-price">$1.11 <div class="badge-dn">▼ 0.06%</div></div>
+        <div class="chart-wrap">
+          <svg class="chart-svg" viewBox="0 0 320 90" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#ff3d5a" stop-opacity="0.28"/>
+                <stop offset="100%" stop-color="#ff3d5a" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d="M0,20 L20,18 L35,10 L55,25 L70,35 L85,28 L105,45 L120,50 L135,42 L150,55 L165,58 L180,52 L195,60 L210,57 L225,62 L240,58 L255,63 L270,60 L285,65 L300,62 L320,64 L320,90 L0,90Z" fill="url(#cg)"/>
+            <path d="M0,20 L20,18 L35,10 L55,25 L70,35 L85,28 L105,45 L120,50 L135,42 L150,55 L165,58 L180,52 L195,60 L210,57 L225,62 L240,58 L255,63 L270,60 L285,65 L300,62 L320,64" fill="none" stroke="#ff3d5a" stroke-width="2" stroke-linejoin="round"/>
+            <line x1="0" y1="30" x2="320" y2="30" stroke="rgba(255,255,255,.04)" stroke-width="1"/>
+            <line x1="0" y1="60" x2="320" y2="60" stroke="rgba(255,255,255,.04)" stroke-width="1"/>
+            <circle cx="320" cy="64" r="4" fill="#ff3d5a">
+              <animate attributeName="r" values="3;6;3" dur="1.5s" repeatCount="indefinite"/>
+              <animate attributeName="opacity" values=".8;.3;.8" dur="1.5s" repeatCount="indefinite"/>
+            </circle>
+          </svg>
+        </div>
+        <div class="chart-labels"><span>30m ago</span><span>15m ago</span><span>Now</span></div>
+      </div>
+
+      <div class="sell-section">
+        <div class="sell-title">💰 SELL COINS</div>
+        <div class="slider-pct" id="sellPct">50%</div>
+        <input type="range" class="range-input" id="sellSlider" min="1" max="100" value="50">
+        <div class="slider-ends"><span>1%</span><span>100%</span></div>
+        <div class="earn-box">
+          <div class="earn-amount" id="earnAmount">$14.0M</div>
+          <div class="earn-sub">YOU'LL EARN · PRICE $1.11 PER CC</div>
+        </div>
+        <button class="sell-btn" id="sellBtn">⚡ EXECUTE SELL ORDER</button>
+      </div>
+    </div>
+
+    <!-- ══════════ HARDWARE ══════════ -->
+    <div class="tab-panel" id="tab-hardware">
+      <div class="sec-hdr">Mining Rigs</div>
+
+      <!-- Advanced GPU -->
+      <div class="hw-card has-units">
+        <div class="hw-top">
+          <div class="hw-icon">🚀</div>
+          <div class="hw-info"><div class="hw-name">Advanced GPU</div><div class="hw-desc">High-end GPU mining setup</div></div>
+          <div class="hw-badge">5 OWNED</div>
+        </div>
+        <div class="hw-stats">
+          <div class="hw-row"><span class="hw-rl">LEVEL</span><span class="hw-rv y">5</span></div>
+          <div class="hw-row"><span class="hw-rl">HASH RATE</span><span class="hw-rv">3.0K H/s</span></div>
+          <div class="hw-row"><span class="hw-rl">MINE SPEED</span><span class="hw-rv g">30.0 b/s</span></div>
+          <div class="hw-row"><span class="hw-rl">REWARD</span><span class="hw-rv g">35.0 CC</span></div>
+          <div class="hw-row"><span class="hw-rl">COINS/SEC</span><span class="hw-rv g">1.1K</span></div>
+          <div class="hw-row"><span class="hw-rl">ELECTRICITY</span><span class="hw-rv r">-35.0/s</span></div>
+        </div>
+        <div class="hw-preview">
+          <span class="hw-pl">+1 ADDS:</span>
+          <span style="color:var(--ng)">+210 coins/s</span>
+          <span style="color:var(--nc)">+600 H/s</span>
+          <span style="color:var(--nr)">-7.0 elec</span>
+        </div>
+        <div class="cost-row"><span class="cost-label">PURCHASE COST</span><span class="cost-val">$112.0K</span></div>
+        <button class="buy-btn">⬡ BUY UNIT</button>
+      </div>
+
+      <!-- ASIC Gen 1 -->
+      <div class="hw-card has-units">
+        <div class="hw-top">
+          <div class="hw-icon" style="background:rgba(255,214,0,.08);border-color:rgba(255,214,0,.2);">⚡</div>
+          <div class="hw-info"><div class="hw-name">ASIC Gen 1</div><div class="hw-desc">First generation ASIC miner</div></div>
+          <div class="hw-badge" style="background:rgba(255,214,0,.08);border-color:rgba(255,214,0,.22);color:var(--ny);">3 OWNED</div>
+        </div>
+        <div class="hw-stats">
+          <div class="hw-row"><span class="hw-rl">LEVEL</span><span class="hw-rv y">6</span></div>
+          <div class="hw-row"><span class="hw-rl">HASH RATE</span><span class="hw-rv">4.5K H/s</span></div>
+          <div class="hw-row"><span class="hw-rl">MINE SPEED</span><span class="hw-rv g">36.0 b/s</span></div>
+          <div class="hw-row"><span class="hw-rl">REWARD</span><span class="hw-rv g">30.0 CC</span></div>
+          <div class="hw-row"><span class="hw-rl">COINS/SEC</span><span class="hw-rv g">1.1K</span></div>
+          <div class="hw-row"><span class="hw-rl">ELECTRICITY</span><span class="hw-rv r">-60.0/s</span></div>
+        </div>
+        <div class="hw-preview">
+          <span class="hw-pl">+1 ADDS:</span>
+          <span style="color:var(--ng)">+180 coins/s</span>
+          <span style="color:var(--nc)">+1.2K H/s</span>
+          <span style="color:var(--nr)">-20.0 elec</span>
+        </div>
+        <div class="cost-row"><span class="cost-label">PURCHASE COST</span><span class="cost-val">$340.0K</span></div>
+        <button class="buy-btn" style="border-color:var(--ny);color:var(--ny);background:linear-gradient(135deg,rgba(255,214,0,.1),rgba(255,140,0,.06));">⬡ BUY UNIT</button>
+      </div>
+
+      <!-- Quantum Rig — locked -->
+      <div class="hw-card" style="opacity:.5;">
+        <div class="hw-top">
+          <div class="hw-icon" style="background:rgba(255,61,90,.07);border-color:rgba(255,61,90,.2);">🔮</div>
+          <div class="hw-info"><div class="hw-name">Quantum Rig</div><div class="hw-desc">Next-gen quantum processor</div></div>
+          <div class="hw-badge" style="background:rgba(255,61,90,.08);border-color:rgba(255,61,90,.22);color:var(--nr);">🔒 LOCKED</div>
+        </div>
+        <div style="text-align:center;padding:6px 0 2px;"><span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--dim);">UNLOCK AT PHASE 2 · COMPLETE GENESIS</span></div>
+      </div>
+    </div>
+
+    <!-- ══════════ UPGRADES ══════════ -->
+    <div class="tab-panel" id="tab-upgrades">
+      <div class="sec-hdr">Research Lab</div>
+
+      <!-- Click Power -->
+      <div class="upg-card">
+        <div class="upg-top">
+          <div class="upg-icon">👆</div>
+          <div class="upg-info"><div class="upg-name">Click Power</div><div class="upg-desc">Mine 5× CryptoCoins per manual block tap</div></div>
+        </div>
+        <div class="divider"></div>
+        <div class="upg-footer">
+          <div><div class="upg-cost-lbl">RESEARCH COST</div><div class="upg-cost">$1.0K</div></div>
+          <button class="upg-btn">ACQUIRE</button>
+        </div>
+      </div>
+
+      <!-- GPU Optimization — owned -->
+      <div class="upg-card owned-c">
+        <div class="upg-top">
+          <div class="upg-icon oi">🎮</div>
+          <div class="upg-info"><div class="upg-name">GPU Optimization</div><div class="upg-desc">Doubles GPU mining speed for Basic &amp; Advanced GPUs</div></div>
+        </div>
+        <div class="divider"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div><div class="upg-cost-lbl">RESEARCH COST</div><div class="upg-cost" style="color:var(--dim);text-decoration:line-through;font-size:13px;">$25.0K</div></div>
+          <div class="owned-badge">✓ DEPLOYED</div>
+        </div>
+      </div>
+
+      <!-- Thermal Cooling -->
+      <div class="upg-card">
+        <div class="upg-top">
+          <div class="upg-icon" style="background:rgba(0,229,255,.07);border-color:rgba(0,229,255,.2);">❄️</div>
+          <div class="upg-info"><div class="upg-name">Thermal Cooling</div><div class="upg-desc">Reduce electricity drain by 20% across all rigs</div></div>
+        </div>
+        <div class="divider"></div>
+        <div class="upg-footer">
+          <div><div class="upg-cost-lbl">RESEARCH COST</div><div class="upg-cost" style="color:var(--nc);">$85.0K</div></div>
+          <button class="upg-btn" style="border-color:rgba(0,229,255,.35);color:var(--nc);background:linear-gradient(135deg,rgba(0,229,255,.1),rgba(0,229,255,.05));">ACQUIRE</button>
+        </div>
+      </div>
+
+      <!-- ASIC Firmware — locked -->
+      <div class="upg-card" style="opacity:.5;">
+        <div class="upg-top">
+          <div class="upg-icon" style="background:rgba(255,61,90,.07);border-color:rgba(255,61,90,.18);">🔒</div>
+          <div class="upg-info"><div class="upg-name">ASIC Firmware v2</div><div class="upg-desc">+50% hash rate on all ASIC miners</div></div>
+        </div>
+        <div style="text-align:center;padding:4px 0;"><span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dim);">🔒 REQUIRES: ASIC GEN 1 × 5</span></div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-power">
+      <div style="text-align:center;padding:60px 20px;"><span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--dim);letter-spacing:3px;">⚡ POWER GRID · COMING SOON</span></div>
+    </div>
+    <div class="tab-panel" id="tab-ledger">
+      <div style="text-align:center;padding:60px 20px;"><span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--dim);letter-spacing:3px;">📖 LEDGER · COMING SOON</span></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// Drawer
+function toggleDrawer() {
+  const open = document.getElementById('sideDrawer').classList.toggle('open');
+  document.getElementById('drawerOverlay').classList.toggle('open', open);
+}
+
+// Booster timers
+let bt1 = 3*3600+59*60+12;
+let bt2 = 23*3600+56*60+53;
+const totalBt1 = 4*3600, totalBt2 = 24*3600;
+function fmtT(s){const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;return`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;}
+setInterval(()=>{
+  if(bt1>0){bt1--;document.getElementById('sdTime1').textContent=fmtT(bt1)+' restantes';document.getElementById('sdFill1').style.width=(bt1/totalBt1*100)+'%';}
+  if(bt2>0){bt2--;document.getElementById('sdTime2').textContent=fmtT(bt2)+' restantes';document.getElementById('sdFill2').style.width=(bt2/totalBt2*100)+'%';}
+},1000);
+
+// Balance
+let bal=19600000;
+setInterval(()=>{
+  bal+=600;
+  document.getElementById('balance').textContent=(bal/1000000).toFixed(1)+'M';
+},100);
+
+// Tabs
+document.querySelectorAll('.nav-tab').forEach(t=>{
+  t.addEventListener('click',function(){
+    document.querySelectorAll('.nav-tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(x=>x.classList.remove('active'));
+    this.classList.add('active');
+    document.getElementById('tab-'+this.dataset.tab).classList.add('active');
+    document.querySelector('.content').scrollTop=0;
+  });
+});
+
+// Mine
+document.getElementById('mineBtn').addEventListener('click',function(){
+  this.style.transform='scale(.95)';this.style.boxShadow='0 0 50px rgba(0,255,136,.4)';
+  setTimeout(()=>{this.style.transform='';this.style.boxShadow='';},180);
+  const f=document.createElement('div');
+  f.style.cssText='position:fixed;inset:0;background:rgba(0,255,136,.07);z-index:999;pointer-events:none;animation:flashOut .3s forwards';
+  document.body.appendChild(f);setTimeout(()=>f.remove(),300);
+});
+
+// Sell slider
+const sl=document.getElementById('sellSlider');
+sl.addEventListener('input',function(){
+  document.getElementById('sellPct').textContent=this.value+'%';
+  document.getElementById('earnAmount').textContent='$'+((this.value/100)*25400000*1.11/1000000).toFixed(1)+'M';
+  this.style.background=`linear-gradient(90deg,var(--ng) ${this.value}%,rgba(255,255,255,.1) ${this.value}%)`;
+});
+
+// Hash stream
+const hx='0123456789abcdef';
+const rh=()=>{let s='0x';for(let i=0;i<8;i++)s+=hx[Math.floor(Math.random()*16)];return s+'…';};
+setInterval(()=>{
+  document.getElementById('hashStream').textContent=
+    Array.from({length:5},rh).join(' · ')+
+    ` · BLOCK #${(71400+Math.floor(Math.random()*200)).toLocaleString()} MINED ✓ · `;
+},3500);
+</script>
+</body>
+</html>
