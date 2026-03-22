@@ -542,7 +542,12 @@ const ShopScreen: React.FC = () => {
                   </View>
                   <View style={st.na_priceCentered}>
                     <Text style={st.na_priceNormal}>$2.99</Text>
-                    <Text style={st.na_priceNow}>${IAP_PRICES.REMOVE_ADS.toFixed(2)}</Text>
+                    <View style={st.na_priceNowWrap}>
+                      <View style={st.na_glowOuter} pointerEvents="none" />
+                      <View style={st.na_glowMid}   pointerEvents="none" />
+                      <View style={st.na_glowInner}  pointerEvents="none" />
+                      <Text style={st.na_priceNow}>{`$${IAP_PRICES.REMOVE_ADS.toFixed(2)}`}</Text>
+                    </View>
                   </View>
                 </View>
               )}
@@ -1411,12 +1416,25 @@ const st = StyleSheet.create({
     color: 'rgba(255,255,255,0.3)', textDecorationLine: 'line-through',
     lineHeight: 20, marginBottom: 4, textAlign: 'center',
   },
+  na_priceNowWrap: {
+    alignItems: 'center', justifyContent: 'center',
+  },
+  // Concentric ellipses that simulate a gaussian glow (text-shadow doesn't work on Android)
+  na_glowOuter: {
+    position: 'absolute', width: 220, height: 80, borderRadius: 40,
+    backgroundColor: 'rgba(255,214,0,0.06)',
+  },
+  na_glowMid: {
+    position: 'absolute', width: 170, height: 62, borderRadius: 31,
+    backgroundColor: 'rgba(255,214,0,0.11)',
+  },
+  na_glowInner: {
+    position: 'absolute', width: 120, height: 46, borderRadius: 23,
+    backgroundColor: 'rgba(255,214,0,0.18)',
+  },
   na_priceNow: {
     fontFamily: fonts.orbitronBlack, fontSize: 32,
     color: colors.ny, lineHeight: 38, textAlign: 'center',
-    textShadowColor: 'rgba(255,214,0,0.5)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 18,
   },
   na_buyBtnOuter: {
     width: '100%', borderRadius: 12, overflow: 'hidden',
