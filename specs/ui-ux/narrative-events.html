@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Narrative Events</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ng: #00ff88; --nc: #00e5ff; --ny: #ffd600; --nr: #ff3d5a;
+    --np: #a040ff; --bg: #020810;
+    --dim: rgba(255,255,255,0.4); --dim2: rgba(255,255,255,0.18);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;overflow:hidden;}
+  body{
+    background:var(--bg); font-family:'Rajdhani',sans-serif; color:#fff;
+    position:relative;
+  }
+  body::before{
+    content:'';position:fixed;inset:0;
+    background-image:
+      linear-gradient(rgba(0,255,136,0.025) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(0,255,136,0.025) 1px,transparent 1px);
+    background-size:40px 40px;pointer-events:none;z-index:0;
+  }
+
+  /* ── SIMULATED GAME BG ── */
+  .game-shell{
+    position:relative;z-index:1;
+    max-width:420px;margin:0 auto;height:100vh;
+    display:flex;flex-direction:column;overflow:hidden;
+  }
+  .game-topbar{
+    padding:14px 18px 10px;
+    border-bottom:1px solid rgba(0,255,136,0.1);
+    background:rgba(2,8,16,0.95);
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .game-logo{font-family:'Orbitron',monospace;font-size:12px;font-weight:900;color:var(--ng);letter-spacing:2px;}
+  .game-logo span{color:var(--nc);}
+  .game-balance{font-family:'Orbitron',monospace;font-size:11px;color:var(--ng);}
+  .game-content{
+    flex:1;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:10px;padding:20px;
+    background:rgba(2,8,16,0.4);
+    transition:filter .3s;
+  }
+  .game-content.blurred{filter:blur(2px) brightness(0.6);}
+
+  /* Demo buttons */
+  .demo-label{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--dim2);text-transform:uppercase;margin-bottom:8px;}
+  .demo-btn{
+    width:100%;padding:12px 16px;border-radius:10px;cursor:pointer;
+    font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:2px;
+    text-transform:uppercase;position:relative;overflow:hidden;
+    display:flex;align-items:center;gap:8px;
+    transition:all .2s;
+  }
+  .demo-btn:active{transform:scale(.97);}
+  .demo-btn.pressure{background:rgba(255,61,90,.08);border:1px solid rgba(255,61,90,.25);color:var(--nr);}
+  .demo-btn.opportunity{background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.2);color:var(--ng);}
+  .demo-btn.consequence{background:rgba(255,214,0,.06);border:1px solid rgba(255,214,0,.2);color:var(--ny);}
+  .demo-btn-icon{font-size:16px;}
+
+  /* ── OVERLAY ── */
+  .overlay{
+    position:fixed;inset:0;z-index:50;
+    background:rgba(0,0,0,0);
+    backdrop-filter:blur(0px);
+    pointer-events:none;
+    transition:background .3s, backdrop-filter .3s;
+  }
+  .overlay.active{
+    background:rgba(0,0,0,0.75);
+    backdrop-filter:blur(4px);
+    pointer-events:all;
+  }
+
+  /* ── EVENT MODAL ── */
+  .event-modal{
+    position:fixed;top:50%;left:50%;
+    transform:translate(-50%,-50%) scale(0.9);
+    z-index:60;
+    width:calc(100% - 40px);max-width:380px;
+    opacity:0;pointer-events:none;
+    transition:transform .35s cubic-bezier(0.22,1,0.36,1), opacity .25s ease;
+  }
+  .event-modal.active{
+    transform:translate(-50%,-50%) scale(1);
+    opacity:1;pointer-events:all;
+  }
+
+  .event-card{
+    border-radius:18px;padding:0;
+    position:relative;overflow:hidden;
+    box-shadow:0 24px 60px rgba(0,0,0,.6);
+  }
+
+  /* Top accent */
+  .event-accent{height:3px;width:100%;}
+
+  /* Event header */
+  .event-header{
+    padding:16px 18px 12px;
+    display:flex;align-items:flex-start;gap:12px;
+  }
+  .event-type-icon{
+    width:44px;height:44px;border-radius:10px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;font-size:22px;
+  }
+  .event-meta{flex:1;}
+  .event-category{
+    font-family:'Share Tech Mono',monospace;font-size:8px;
+    letter-spacing:3px;text-transform:uppercase;margin-bottom:3px;
+  }
+  .event-title{
+    font-family:'Orbitron',monospace;font-size:14px;font-weight:700;
+    color:#fff;line-height:1.3;
+  }
+
+  /* Timer bar */
+  .timer-bar-wrap{padding:0 18px 10px;}
+  .timer-bar-track{
+    height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;
+  }
+  .timer-bar-fill{
+    height:100%;border-radius:2px;
+    animation:drainBar linear forwards;
+  }
+  @keyframes drainBar{0%{width:100%}100%{width:0%}}
+  .timer-bar-label{
+    display:flex;justify-content:space-between;margin-top:4px;
+    font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--dim2);
+  }
+
+  /* Body */
+  .event-body{padding:0 18px 14px;}
+  .event-desc{
+    font-family:'Rajdhani',sans-serif;font-size:13px;
+    color:rgba(255,255,255,.65);line-height:1.6;margin-bottom:10px;
+  }
+
+  /* Consequence tags */
+  .consequence-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;}
+  .ctag{
+    display:inline-flex;align-items:center;gap:4px;
+    border-radius:6px;padding:3px 9px;
+    font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;
+  }
+  .ctag.negative{background:rgba(255,61,90,.1);border:1px solid rgba(255,61,90,.22);color:var(--nr);}
+  .ctag.positive{background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.22);color:var(--ng);}
+  .ctag.neutral{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:var(--dim);}
+  .ctag.warning{background:rgba(255,214,0,.08);border:1px solid rgba(255,214,0,.2);color:var(--ny);}
+
+  /* Actions */
+  .event-actions{padding:0 18px 18px;display:flex;flex-direction:column;gap:7px;}
+  .ev-btn{
+    width:100%;padding:13px 16px;border-radius:11px;
+    font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:2px;
+    cursor:pointer;position:relative;overflow:hidden;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    transition:transform .15s;
+  }
+  .ev-btn:active{transform:scale(.97);}
+  .ev-btn::before{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(135deg,transparent 30%,rgba(255,255,255,.07) 50%,transparent 70%);
+    transform:translateX(-100%);animation:shimmer 3s infinite;
+  }
+  @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+  .ev-btn.primary-red{background:linear-gradient(135deg,rgba(255,61,90,.18),rgba(255,61,90,.1));border:1px solid var(--nr);color:var(--nr);box-shadow:0 0 16px rgba(255,61,90,.18);}
+  .ev-btn.primary-green{background:linear-gradient(135deg,rgba(0,255,136,.16),rgba(0,229,255,.08));border:1px solid var(--ng);color:var(--ng);box-shadow:0 0 16px rgba(0,255,136,.16);}
+  .ev-btn.primary-yellow{background:linear-gradient(135deg,rgba(255,214,0,.15),rgba(255,140,0,.08));border:1px solid var(--ny);color:var(--ny);box-shadow:0 0 16px rgba(255,214,0,.14);}
+  .ev-btn.secondary{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1);color:var(--dim);}
+  .ev-btn.secondary::before{display:none;}
+  .ev-btn.dismiss{background:transparent;border:none;color:rgba(255,255,255,.25);font-size:10px;letter-spacing:1px;}
+  .ev-btn.dismiss::before{display:none;}
+
+  .btn-consequence{
+    font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1px;
+    color:rgba(255,255,255,.3);margin-top:1px;font-weight:400;
+    text-transform:none;letter-spacing:0;
+  }
+
+  /* ── SCREEN SHAKE ── */
+  @keyframes shake{
+    0%,100%{transform:translateX(0);}
+    15%{transform:translateX(-6px);}
+    30%{transform:translateX(6px);}
+    45%{transform:translateX(-4px);}
+    60%{transform:translateX(4px);}
+    75%{transform:translateX(-2px);}
+    90%{transform:translateX(2px);}
+  }
+  .shaking{animation:shake .5s ease-out;}
+
+  /* ── COLOR FLASH ── */
+  .screen-flash{
+    position:fixed;inset:0;z-index:45;pointer-events:none;opacity:0;
+    transition:opacity .1s;
+  }
+  .screen-flash.active{opacity:1;}
+  @keyframes flashFade{0%{opacity:.3}100%{opacity:0}}
+
+  /* ── CHRONICLE ENTRY TOAST ── */
+  .chronicle-toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+    z-index:70;
+    background:rgba(2,8,16,.95);border:1px solid rgba(0,229,255,.2);
+    border-radius:10px;padding:8px 14px;
+    display:flex;align-items:center;gap:8px;
+    font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--nc);
+    letter-spacing:1px;white-space:nowrap;
+    opacity:0;pointer-events:none;
+    transition:all .3s ease;
+    box-shadow:0 4px 20px rgba(0,0,0,.4);
+  }
+  .chronicle-toast.active{
+    opacity:1;transform:translateX(-50%) translateY(0);
+  }
+
+  /* Card themes */
+  .theme-pressure .event-card{background:linear-gradient(180deg,#0d0408 0%,#080208 100%);}
+  .theme-pressure .event-accent{background:linear-gradient(90deg,var(--nr),#ff6b42);}
+  .theme-pressure .event-type-icon{background:rgba(255,61,90,.08);border:1px solid rgba(255,61,90,.2);}
+  .theme-pressure .event-category{color:rgba(255,61,90,.6);}
+
+  .theme-opportunity .event-card{background:linear-gradient(180deg,#020d0a 0%,#020a08 100%);}
+  .theme-opportunity .event-accent{background:linear-gradient(90deg,var(--ng),var(--nc));}
+  .theme-opportunity .event-type-icon{background:rgba(0,255,136,.07);border:1px solid rgba(0,255,136,.2);}
+  .theme-opportunity .event-category{color:rgba(0,255,136,.6);}
+
+  .theme-consequence .event-card{background:linear-gradient(180deg,#0a0802 0%,#080601 100%);}
+  .theme-consequence .event-accent{background:linear-gradient(90deg,var(--ny),#ff8c00);}
+  .theme-consequence .event-type-icon{background:rgba(255,214,0,.07);border:1px solid rgba(255,214,0,.2);}
+  .theme-consequence .event-category{color:rgba(255,214,0,.6);}
+</style>
+</head>
+<body>
+
+<!-- Screen flash overlay -->
+<div class="screen-flash" id="screenFlash"></div>
+
+<!-- Game overlay -->
+<div class="overlay" id="overlay"></div>
+
+<!-- Event modal -->
+<div class="event-modal" id="eventModal">
+  <div id="eventThemeWrap">
+    <div class="event-card" id="eventCard">
+      <div class="event-accent" id="eventAccent"></div>
+      <div class="event-header">
+        <div class="event-type-icon" id="eventIcon"></div>
+        <div class="event-meta">
+          <div class="event-category" id="eventCategory"></div>
+          <div class="event-title" id="eventTitle"></div>
+        </div>
+      </div>
+      <div class="timer-bar-wrap" id="timerBarWrap">
+        <div class="timer-bar-track">
+          <div class="timer-bar-fill" id="timerBarFill"></div>
+        </div>
+        <div class="timer-bar-label">
+          <span id="timerBarLeft"></span>
+          <span id="timerBarRight"></span>
+        </div>
+      </div>
+      <div class="event-body">
+        <div class="event-desc" id="eventDesc"></div>
+        <div class="consequence-tags" id="eventTags"></div>
+      </div>
+      <div class="event-actions" id="eventActions"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Chronicle toast -->
+<div class="chronicle-toast" id="chronicleToast">
+  📖 <span id="chronicleText">Guardado en Chronicle</span>
+</div>
+
+<!-- Simulated game -->
+<div class="game-shell" id="gameShell">
+  <div class="game-topbar">
+    <div class="game-logo">BLOCK<span>CHAIN</span> TYCOON</div>
+    <div class="game-balance" id="gameBalance">44.7M CC</div>
+  </div>
+  <div class="game-content" id="gameContent">
+    <div class="demo-label">Probá los 3 tipos de evento</div>
+
+    <button class="demo-btn pressure" onclick="triggerEvent('pressure')">
+      <span class="demo-btn-icon">⚠️</span>
+      Presión Externa — Reguladores UE
+    </button>
+
+    <button class="demo-btn opportunity" onclick="triggerEvent('opportunity')">
+      <span class="demo-btn-icon">📈</span>
+      Oportunidad — Volatilidad de Mercado
+    </button>
+
+    <button class="demo-btn consequence" onclick="triggerEvent('consequence')">
+      <span class="demo-btn-icon">🌍</span>
+      Consecuencia Narrativa — Protesta Local
+    </button>
+
+    <button class="demo-btn" style="background:rgba(160,64,255,.07);border:1px solid rgba(160,64,255,.25);color:#a040ff;" onclick="triggerAppealResult()">
+      <span class="demo-btn-icon">⚖️</span>
+      Resultado de Apelación (aleatorio)
+    </button>
+
+    <div style="width:100%;padding:10px 0 0;">
+      <div style="display:flex;justify-content:space-between;font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--dim2);margin-bottom:5px;">
+        <span>RECURSOS PLANETARIOS (demo)</span>
+        <span id="resVal" style="color:var(--ng);">72%</span>
+      </div>
+      <input type="range" min="0" max="100" value="72" id="resSlider"
+        style="width:100%;-webkit-appearance:none;height:4px;border-radius:2px;outline:none;cursor:pointer;background:linear-gradient(90deg,var(--ng) 72%,rgba(255,255,255,.1) 72%);"
+        oninput="updateRes(this.value)">
+      <div style="display:flex;justify-content:space-between;font-family:'Share Tech Mono',monospace;font-size:7px;color:rgba(255,255,255,.15);margin-top:3px;">
+        <span>DEPLETED → −15%</span><span>+15% ← OPTIMAL</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let planetaryResources = 72;
+
+function updateRes(val) {
+  planetaryResources = parseInt(val);
+  const color = val > 80 ? 'var(--ng)' : val < 50 ? 'var(--nr)' : 'var(--ny)';
+  document.getElementById('resVal').textContent = val + '%';
+  document.getElementById('resVal').style.color = color;
+  document.getElementById('resSlider').style.background =
+    `linear-gradient(90deg,${color} ${val}%,rgba(255,255,255,.1) ${val}%)`;
+}
+
+const events = {
+  pressure: {
+    theme: 'theme-pressure', icon: '⚠️',
+    category: 'Presión Externa · Regulatorio',
+    title: 'Reguladores de la UE proponen impuesto de emergencia',
+    desc: 'La Comisión Europea propone un impuesto del 40% a operaciones de minado que superen 50K H/s. Debés decidir ahora.',
+    tags: [
+      {type:'negative', text:'−30% Hash Rate si ignorás'},
+      {type:'neutral',  text:'Costo: $48.2M'},
+    ],
+    timer: {duration:20, label:'Decidí ahora', right:'se cierra solo'},
+    timerColor: 'linear-gradient(90deg,var(--nr),#ff6b42)',
+    actions: [
+      {label:'💰 PAGAR IMPUESTO',    sub:'Costo: $48.2M — operación continúa normalmente', style:'primary-red', effect:'pay'},
+      {label:'⚖️ APELAR LEGALMENTE', sub:'Demora la decisión — costo $5M en abogados',     style:'secondary',  effect:'appeal'},
+      {label:'IGNORAR',              sub:null,                                               style:'dismiss',    effect:'ignore'},
+    ],
+    flash:'rgba(255,61,90,0.15)', shake:true,
+    chronicle:'[LOG] Reguladores de la UE emitieron impuesto de emergencia.',
+  },
+  opportunity: {
+    theme: 'theme-opportunity', icon: '📈',
+    category: 'Oportunidad · Mercado',
+    title: 'Volatilidad extrema — precio CC +200%',
+    desc: 'Condiciones inusuales de mercado generaron un spike de demanda. El precio de CryptoCoin subió un 200%. La ventana dura aproximadamente 20 minutos — el mercado se mueve solo.',
+    tags: [
+      {type:'positive', text:'+200% precio actual'},
+      {type:'warning',  text:'⏱ ~20 minutos'},
+    ],
+    timer: {duration:20, label:'Ventana de oportunidad', right:'~20 min'},
+    timerColor: 'linear-gradient(90deg,var(--ng),var(--nc))',
+    actions: [
+      {label:'⚡ IR AL MERCADO AHORA',      sub:'Abrí el tab Market para vender al precio actual', style:'primary-green', effect:'market'},
+      {label:'VENDER 100% AUTOMÁTICAMENTE', sub:'Vendé todo tu stack ahora — sin abrir Market',    style:'secondary',     effect:'autosell'},
+    ],
+    flash:'rgba(0,255,136,0.1)', shake:false,
+    chronicle:'[LOG] Volatilidad extrema — precio CC +200% por ~20 minutos.',
+  },
+  consequence: {
+    theme: 'theme-consequence', icon: '🌍',
+    category: 'Alerta · Impacto Operacional',
+    title: 'Apagón regional — comunidades protestan',
+    desc: 'Tu operación consumió el 34% de la capacidad eléctrica regional. Tres comunidades cercanas reportaron apagones de 6 horas. Grupos ambientalistas iniciaron una campaña en tu contra.',
+    tags: [
+      {type:'neutral',  text:'Sin impacto mecánico inmediato'},
+      {type:'warning',  text:'Presión regulatoria aumenta'},
+      {type:'negative', text:'Reputación: ↓'},
+    ],
+    timer: null, timerColor: null,
+    actions: [
+      {label:'CONTINUAR OPERACIÓN', sub:null, style:'primary-yellow', effect:'continue'},
+    ],
+    flash:'rgba(255,214,0,0.08)', shake:true,
+    chronicle:'[LOG] Apagón regional. Comunidades afectadas. Presión regulatoria aumenta.',
+  },
+};
+
+const appealOutcomes = {
+  success: {
+    theme:'theme-opportunity', icon:'⚖️',
+    category:'Resultado Legal · Apelación',
+    title:'Apelación exitosa — impuesto anulado',
+    desc:'El tribunal europeo falló a tu favor. El impuesto fue declarado desproporcionado y queda sin efecto. Tus $5M en honorarios legales fueron suficientes.',
+    tags:[
+      {type:'positive', text:'Impuesto anulado'},
+      {type:'positive', text:'Hash rate sin cambios'},
+      {type:'neutral',  text:'Costo total: $5M (abogados)'},
+    ],
+    timer:null, timerColor:null,
+    actions:[{label:'✓ RECIBIDO', sub:null, style:'primary-green', effect:'ack'}],
+    flash:'rgba(0,255,136,0.1)', shake:false,
+    chronicle:'[LOG] Apelación exitosa. Impuesto regulatorio anulado.',
+  },
+  partial: {
+    theme:'theme-consequence', icon:'⚖️',
+    category:'Resultado Legal · Apelación',
+    title:'Acuerdo parcial — impuesto reducido',
+    desc:'El tribunal aceptó un acuerdo. Pagarás el 20% del impuesto original en lugar del 40%. La operación continúa sin penalización adicional.',
+    tags:[
+      {type:'warning',  text:'Pago reducido: $9.6M'},
+      {type:'positive', text:'Hash rate sin cambios'},
+      {type:'neutral',  text:'Costo total: $14.6M'},
+    ],
+    timer:null, timerColor:null,
+    actions:[
+      {label:'💰 PAGAR $9.6M',    sub:'Acuerdo aceptado — operación continúa',    style:'primary-yellow', effect:'pay_partial'},
+      {label:'RECHAZAR ACUERDO', sub:'Aceptar penalización de hash rate −30%',    style:'secondary',      effect:'reject_partial'},
+    ],
+    flash:'rgba(255,214,0,0.08)', shake:false,
+    chronicle:'[LOG] Acuerdo parcial. Pago: $9.6M.',
+  },
+  rejected: {
+    theme:'theme-pressure', icon:'⚖️',
+    category:'Resultado Legal · Apelación',
+    title:'Apelación rechazada — fallo definitivo',
+    desc:'El tribunal rechazó la apelación. Debés pagar el impuesto original más una multa por demora. No hay más instancias posibles.',
+    tags:[
+      {type:'negative', text:'Impuesto completo: $48.2M'},
+      {type:'negative', text:'Multa por demora: $8M'},
+      {type:'warning',  text:'Total: $56.2M o −30% hash rate'},
+    ],
+    timer:null, timerColor:null,
+    actions:[
+      {label:'💰 PAGAR $56.2M',     sub:'Operación continúa sin penalización',         style:'primary-red', effect:'pay_full'},
+      {label:'ACEPTAR PENALIZACIÓN', sub:'−30% hash rate por 24h — sin costo adicional', style:'secondary',   effect:'accept_penalty'},
+    ],
+    flash:'rgba(255,61,90,0.15)', shake:true,
+    chronicle:'[LOG] Apelación rechazada. Fallo definitivo.',
+  },
+};
+
+function getAppealOutcome() {
+  let pSuccess = 40, pPartial = 35;
+  if(planetaryResources > 80)      { pSuccess += 15; pPartial -= 5; }
+  else if(planetaryResources < 50) { pSuccess -= 15; pPartial -= 5; }
+  const roll = Math.random() * 100;
+  if(roll < pSuccess) return 'success';
+  if(roll < pSuccess + pPartial) return 'partial';
+  return 'rejected';
+}
+
+function triggerAppealResult() {
+  const key = getAppealOutcome();
+  const ev = appealOutcomes[key];
+  // Show modifier note in description
+  const modifier = planetaryResources > 80
+    ? `+15% éxito (recursos: ${planetaryResources}%)`
+    : planetaryResources < 50
+    ? `−15% éxito (recursos: ${planetaryResources}%)`
+    : `sin modificador (recursos: ${planetaryResources}%)`;
+  const modColor = planetaryResources > 80 ? 'rgba(0,255,136,.5)' : planetaryResources < 50 ? 'rgba(255,61,90,.5)' : 'rgba(255,255,255,.2)';
+  renderEvent(ev, `// Modificador aplicado: ${modifier}`, modColor);
+}
+
+function triggerEvent(type) {
+  renderEvent(events[type], null, null);
+}
+
+function renderEvent(ev, modNote, modColor) {
+  document.getElementById('gameContent').classList.add('blurred');
+
+  const flash = document.getElementById('screenFlash');
+  flash.style.background = ev.flash;
+  flash.style.animation = 'none'; flash.offsetHeight;
+  flash.style.animation = 'flashFade .6s ease-out forwards';
+
+  if(ev.shake) {
+    const shell = document.getElementById('gameShell');
+    shell.classList.remove('shaking'); shell.offsetHeight;
+    shell.classList.add('shaking');
+    setTimeout(()=>shell.classList.remove('shaking'), 600);
+  }
+
+  document.getElementById('eventThemeWrap').className = ev.theme;
+  document.getElementById('eventIcon').textContent      = ev.icon;
+  document.getElementById('eventCategory').textContent  = ev.category;
+  document.getElementById('eventTitle').textContent     = ev.title;
+  document.getElementById('eventDesc').textContent      = ev.desc;
+
+  document.getElementById('eventTags').innerHTML =
+    ev.tags.map(t=>`<div class="ctag ${t.type}">${t.text}</div>`).join('');
+
+  // modifier note (appeal only)
+  let noteEl = document.getElementById('appealNote');
+  if(!noteEl) {
+    noteEl = document.createElement('div');
+    noteEl.id = 'appealNote';
+    const body = document.querySelector('.event-body');
+    body.insertBefore(noteEl, document.getElementById('eventTags'));
+  }
+  noteEl.innerHTML = modNote
+    ? `<div style="font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1px;color:${modColor};margin-bottom:8px;">${modNote}</div>`
+    : '';
+
+  // timer bar
+  const tbw = document.getElementById('timerBarWrap');
+  if(ev.timer) {
+    tbw.style.display = 'block';
+    const fill = document.getElementById('timerBarFill');
+    fill.style.background = ev.timerColor;
+    fill.style.animationName = 'none'; fill.offsetHeight;
+    fill.style.animationDuration = ev.timer.duration + 's';
+    fill.style.animationName = 'drainBar';
+    document.getElementById('timerBarLeft').textContent  = ev.timer.label;
+    document.getElementById('timerBarRight').textContent = ev.timer.right;
+
+    // Auto-resolve pressure event when timer expires
+    if(ev.timer.label === 'Decidí ahora') {
+      clearTimeout(window._pressureTimeout);
+      window._pressureTimeout = setTimeout(()=>{
+        const modal = document.getElementById('eventModal');
+        if(modal.classList.contains('active')) {
+          resolveEvent('ignore', ev.chronicle);
+          showFeedback('⏱ Tiempo agotado — Hash rate −30% por 24h', 'var(--nr)');
+        }
+      }, ev.timer.duration * 1000);
+    }
+  } else {
+    tbw.style.display = 'none';
+  }
+
+  document.getElementById('eventActions').innerHTML = ev.actions.map(a=>`
+    <button class="ev-btn ${a.style}" onclick="resolveEvent('${a.effect}','${ev.chronicle.replace(/'/g,"\\'")}')">
+      <div>
+        ${a.label}
+        ${a.sub ? `<div class="btn-consequence">${a.sub}</div>` : ''}
+      </div>
+    </button>
+  `).join('');
+
+  document.getElementById('overlay').classList.add('active');
+  document.getElementById('eventModal').classList.add('active');
+}
+
+function resolveEvent(effect, chronicle) {
+  document.getElementById('eventModal').classList.remove('active');
+  document.getElementById('overlay').classList.remove('active');
+  document.getElementById('gameContent').classList.remove('blurred');
+
+  const toast = document.getElementById('chronicleToast');
+  document.getElementById('chronicleText').textContent = chronicle;
+  toast.classList.add('active');
+  setTimeout(()=>toast.classList.remove('active'), 3000);
+
+  const feedbacks = {
+    'pay':            ['💰 $48.2M pagados — hash rate estable',        'var(--ng)',   false],
+    'appeal':         ['⚖️ Apelación iniciada — $5M pagados',          'var(--ny)',   true],
+    'ignore':         ['⚠️ Hash rate −30% por 24h',                    'var(--nr)',   false],
+    'market':         ['📈 Market abierto — precio ×3 activo',          'var(--ng)',   false],
+    'autosell':       ['⚡ Vendido automáticamente al ×3',              'var(--ng)',   false],
+    'continue':       ['🌍 Operación continúa',                         'var(--ny)',   false],
+    'ack':            ['✓ Impuesto anulado — operación continúa',       'var(--ng)',   false],
+    'pay_partial':    ['💰 $9.6M pagados — acuerdo cerrado',            'var(--ny)',   false],
+    'reject_partial': ['⚠️ Hash rate −30% por 24h',                    'var(--nr)',   false],
+    'pay_full':       ['💰 $56.2M pagados — fallo saldado',             'var(--nr)',   false],
+    'accept_penalty': ['⚠️ Hash rate −30% por 24h',                    'var(--nr)',   false],
+    'dismiss':        ['— Oportunidad ignorada',                        'var(--dim2)', false],
+  };
+  const [msg, color, isAppeal] = feedbacks[effect] || ['Resuelto','var(--dim)',false];
+  showFeedback(msg, color);
+
+  if(isAppeal) {
+    // Simulate async result (3s demo = hours in real game)
+    setTimeout(()=>showFeedback('⚖️ Fallo disponible — tocá para ver el resultado', 'var(--np)'), 3000);
+  }
+}
+
+function showFeedback(msg, color) {
+  const fb = document.createElement('div');
+  fb.style.cssText=`
+    position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-8px);
+    z-index:80;background:rgba(2,8,16,.96);border:1px solid ${color};border-radius:10px;
+    padding:8px 16px;font-family:'Share Tech Mono',monospace;font-size:10px;
+    color:${color};letter-spacing:1px;white-space:nowrap;opacity:0;
+    transition:all .25s ease;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.4);
+  `;
+  fb.textContent = msg;
+  document.body.appendChild(fb);
+  requestAnimationFrame(()=>{ fb.style.opacity='1'; fb.style.transform='translateX(-50%) translateY(0)'; });
+  setTimeout(()=>{
+    fb.style.opacity='0'; fb.style.transform='translateX(-50%) translateY(-8px)';
+    setTimeout(()=>fb.remove(),300);
+  },2500);
+}
+</script>
+</body>
+</html>
