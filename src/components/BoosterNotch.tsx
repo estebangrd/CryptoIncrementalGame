@@ -275,7 +275,7 @@ const notchStyles = StyleSheet.create({
     gap: 11,
   },
   icon: {
-    fontSize: 14,
+    fontSize: 15,
   },
   mult: {
     fontFamily: fonts.orbitronBlack,
