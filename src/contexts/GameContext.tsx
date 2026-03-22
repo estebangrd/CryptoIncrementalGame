@@ -15,6 +15,8 @@ import { performExchange } from '../utils/exchangeLogic';
 import {
   calculateCurrentReward,
   calculateNextHalving,
+  calculateDifficulty,
+  getBasePrice,
   mineBlock,
   canMineBlock
 } from '../utils/blockLogic';
@@ -70,6 +72,7 @@ import {
   getAIUnlockedCrypto,
   getAIPreferredEnergySource,
   generateAISuggestion,
+  getAIProductionMultiplier,
 } from '../utils/aiLogic';
 import { checkNarrativeThresholds } from '../utils/narrativeLogic';
 
@@ -168,30 +171,31 @@ const recalculateGameStats = (state: GameState): GameState => {
 
   const stateWithEnergy = { ...state, energy: energyWithRequired };
 
-  // Calculate total production using the correct function
+  // Calculate total CC production (pure CC, no electricity subtraction)
   const totalProduction = calculateTotalProduction(stateWithEnergy);
 
   // Calculate total hash rate from hardware
   let totalHashRate = calculateTotalHashRate(stateWithEnergy);
 
-  // Calculate total electricity cost
+  // Calculate total electricity cost (drains $ not CC, stored for display)
   const totalElectricityCost = calculateTotalElectricityCost(stateWithEnergy.hardware);
 
-  // Calculate net production (production - electricity cost)
-  let netProduction = Math.max(0, totalProduction - totalElectricityCost);
+  // CC production is pure — electricity drains from $ in ADD_PRODUCTION
+  let ccProduction = totalProduction;
 
   // Apply regulatory hash rate penalty if active
   const penaltyUntil = stateWithEnergy.regulatoryPressureEvent?.hashRatePenaltyUntil ?? null;
   if (penaltyUntil && Date.now() < penaltyUntil) {
     totalHashRate = totalHashRate * (1 - REGULATORY_EVENT_CONFIG.HASH_RATE_PENALTY);
-    netProduction = netProduction * (1 - REGULATORY_EVENT_CONFIG.HASH_RATE_PENALTY);
+    ccProduction = ccProduction * (1 - REGULATORY_EVENT_CONFIG.HASH_RATE_PENALTY);
   }
 
   const updatedState = {
     ...stateWithEnergy,
-    cryptoCoinsPerSecond: netProduction,
+    cryptoCoinsPerSecond: ccProduction,
     totalElectricityCost: totalElectricityCost,
     totalHashRate: totalHashRate,
+    difficulty: calculateDifficulty(stateWithEnergy.blocksMined),
     currentReward: calculateCurrentReward(stateWithEnergy.blocksMined),
     nextHalving: calculateNextHalving(stateWithEnergy.blocksMined),
   };
@@ -472,24 +476,50 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           : hw
       );
       const totalMiningSpeed = calculateTotalMiningSpeed(constrainedHardware, state.upgrades);
-      const blocksToMine = Math.floor(totalMiningSpeed); // Mine complete blocks only
+      // Bitcoin-faithful: blocks/sec = totalMiningSpeed / difficulty
+      const difficulty = calculateDifficulty(state.blocksMined);
+      const effectiveBlocksPerSec = totalMiningSpeed / difficulty;
+      const blocksToMine = Math.floor(effectiveBlocksPerSec); // Mine complete blocks only
 
       if (blocksToMine > 0 && canMineBlock(state)) {
-        // Mine blocks for progression counter; coins come from cryptoCoinsPerSecond
         let newState = { ...state };
 
+        // Mine blocks and track reward per block for accurate CC calculation
+        let coinsThisTick = 0;
         for (let i = 0; i < blocksToMine && canMineBlock(newState); i++) {
           newState.blocksMined += 1;
-          newState.currentReward = calculateCurrentReward(newState.blocksMined);
+          const rewardThisBlock = calculateCurrentReward(newState.blocksMined);
+          coinsThisTick += rewardThisBlock;
+          newState.currentReward = rewardThisBlock;
           newState.nextHalving = calculateNextHalving(newState.blocksMined);
         }
+        // Update difficulty after mining
+        newState.difficulty = calculateDifficulty(newState.blocksMined);
+
+        // Apply global multipliers to coins earned
+        const prestigeMultiplier = (state.prestigeProductionMultiplier ?? state.prestigeMultiplier ?? 1);
+        let adBoostMult = 1.0;
+        if (state.adBoost?.isActive && state.adBoost.expiresAt !== null && Date.now() < state.adBoost.expiresAt) {
+          adBoostMult = BOOSTER_CONFIG.REWARDED_AD_BOOST.multiplier;
+        }
+        const permanentMult = state.iapState?.permanentMultiplierPurchased
+          ? BOOSTER_CONFIG.PERMANENT_MULTIPLIER.multiplier : 1.0;
+        let iapBoostMult = 1.0;
+        const nowProd = Date.now();
+        if (state.iapState?.booster5x?.isActive && state.iapState.booster5x.expiresAt !== null && nowProd < state.iapState.booster5x.expiresAt) {
+          iapBoostMult = BOOSTER_CONFIG.BOOSTER_5X.multiplier;
+        } else if (state.iapState?.booster2x?.isActive && state.iapState.booster2x.expiresAt !== null && nowProd < state.iapState.booster2x.expiresAt) {
+          iapBoostMult = BOOSTER_CONFIG.BOOSTER_2X.multiplier;
+        }
+        const aiMult = getAIProductionMultiplier(state.ai?.level ?? 0);
+        const globalMultiplier = prestigeMultiplier * adBoostMult * permanentMult * iapBoostMult * aiMult;
+        coinsThisTick *= globalMultiplier;
 
         // Lucky Block bonus: 10x reward per block while active
         if (state.iapState.luckyBlock.isActive && state.iapState.luckyBlock.blocksRemaining > 0 && blocksToMine > 0) {
           const blocksConsumed = Math.min(blocksToMine, state.iapState.luckyBlock.blocksRemaining);
-          const luckyBonus = newState.currentReward * 9 * blocksConsumed; // 9x extra = 10x total
-          newState.cryptoCoins = (newState.cryptoCoins ?? 0) + luckyBonus;
-          newState.totalCryptoCoins = (newState.totalCryptoCoins ?? 0) + luckyBonus;
+          const luckyBonus = newState.currentReward * 9 * blocksConsumed * globalMultiplier;
+          coinsThisTick += luckyBonus;
           const newBlocksRemaining = state.iapState.luckyBlock.blocksRemaining - blocksConsumed;
           newState = {
             ...newState,
@@ -502,10 +532,15 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           };
         }
 
-        // Coins are based on steady-state production rate, independent of halving rewards
-        const coinsThisTick = state.cryptoCoinsPerSecond;
+        // Coins are directly tied to blocks mined × reward
         newState.cryptoCoins += coinsThisTick;
         newState.totalCryptoCoins += coinsThisTick;
+
+        // Electricity drains from $ (real money), not CC
+        const electricityCost = state.totalElectricityCost;
+        if (electricityCost > 0) {
+          newState.realMoney = Math.max(0, newState.realMoney - electricityCost);
+        }
 
         // Planet resource depletion from non-renewable energy sources
         if (newState.energy?.nonRenewableActiveMW > 0) {
@@ -730,7 +765,9 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       };
     case 'ADVANCE_PRICE_INDEX': {
       const nextIndex = (state.priceHistoryIndex + 1) % BTC_PRICE_HISTORY.length;
-      const newPrice = BTC_PRICE_HISTORY[nextIndex] / state.priceSeed;
+      // Era-based price: basePrice × BTC volatility factor
+      const eraBasePrice = getBasePrice(state.blocksMined);
+      const newPrice = eraBasePrice * (BTC_PRICE_HISTORY[nextIndex] / state.priceSeed);
       const prevWindow = state.priceHistory?.['cryptocoin']?.prices ?? [];
       const newWindow = [...prevWindow, newPrice].slice(-30);
       return {

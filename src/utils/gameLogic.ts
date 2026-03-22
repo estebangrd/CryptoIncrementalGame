@@ -1,6 +1,6 @@
 import { GameState, Hardware, Upgrade } from '../types/game';
 import { BTC_PRICE_HISTORY } from '../data/btcPriceHistory';
-import { GENESIS_CONSTANTS } from './blockLogic';
+import { GENESIS_CONSTANTS, calculateDifficulty, calculateCurrentReward } from './blockLogic';
 import { getInitialMarketState } from './marketLogic';
 import { getInitialEnergyState, getActiveHardwareWithEnergyConstraint } from './energyLogic';
 import { getAIProductionMultiplier, getInitialAIState } from './aiLogic';
@@ -78,9 +78,8 @@ export const calculateTotalMiningSpeed = (hardware: Hardware[], upgrades: Upgrad
 };
 
 export const calculateTotalProduction = (gameState: GameState): number => {
-  let totalProduction = 0;
-
-  // For energy-constrained hardware (tiers 9-11), compute active units based on energy
+  // Bitcoin-faithful formula: CC/sec = (totalMiningSpeed / difficulty) × globalBlockReward
+  // Exclude manual_mining from auto-production by using energy-constrained calculation
   const energyState = gameState.energy;
   const totalGeneratedMW = energyState?.totalGeneratedMW ?? 0;
   const activeEnergyHardware = getActiveHardwareWithEnergyConstraint(
@@ -92,32 +91,28 @@ export const calculateTotalProduction = (gameState: GameState): number => {
     activeUnitsMap[hw.id] = hw.activeUnits;
   }
 
+  // Calculate energy-constrained mining speed (excludes manual_mining)
+  let constrainedMiningSpeed = 0;
   gameState.hardware.forEach(hardware => {
-    // manual_mining represents click-based mining; exclude from auto-production stats
     if (hardware.id === 'manual_mining') return;
 
     let effectiveOwned = hardware.owned;
-
-    // For hardware requiring energy, use the constrained active units
     if (hardware.energyRequired > 0) {
       effectiveOwned = activeUnitsMap[hardware.id] ?? 0;
     }
-
     if (effectiveOwned === 0) return;
 
-    // Calculate mining speed using effective owned count
     const hardwareWithEffectiveOwned = { ...hardware, owned: effectiveOwned };
-    const miningSpeed = calculateHardwareMiningSpeed(hardwareWithEffectiveOwned, gameState.upgrades);
-
-    // Calculate coins per second from mining
-    const coinsPerSecond = miningSpeed * hardware.blockReward;
-    totalProduction += coinsPerSecond;
-
-    // Debug log for hardware with owned > 0
-    if (hardware.owned > 0) {
-      console.log(`DEBUG: Hardware ${hardware.id} has ${hardware.owned} owned (${effectiveOwned} active), miningSpeed: ${miningSpeed}, blockReward: ${hardware.blockReward}, coinsPerSecond: ${coinsPerSecond}`);
-    }
+    constrainedMiningSpeed += calculateHardwareMiningSpeed(hardwareWithEffectiveOwned, gameState.upgrades);
   });
+
+  // Global block reward and difficulty based on blocks mined
+  const difficulty = calculateDifficulty(gameState.blocksMined ?? 0);
+  const globalBlockReward = calculateCurrentReward(gameState.blocksMined ?? 0);
+
+  // Base CC production: blocks/sec × reward/block
+  const blocksPerSecond = constrainedMiningSpeed / difficulty;
+  const totalProduction = blocksPerSecond * globalBlockReward;
 
   let adBoostMultiplier = 1.0;
   if (gameState.adBoost?.isActive && gameState.adBoost.expiresAt !== null) {
@@ -126,12 +121,10 @@ export const calculateTotalProduction = (gameState: GameState): number => {
     }
   }
 
-  // Permanent IAP multiplier (2x if purchased, else 1x)
   const permanentMultiplier = gameState.iapState?.permanentMultiplierPurchased
     ? BOOSTER_CONFIG.PERMANENT_MULTIPLIER.multiplier
     : 1.0;
 
-  // Active IAP booster multiplier — booster5x takes priority over booster2x
   let iapBoosterMultiplier = 1.0;
   const now = Date.now();
   if (
@@ -148,16 +141,10 @@ export const calculateTotalProduction = (gameState: GameState): number => {
     iapBoosterMultiplier = BOOSTER_CONFIG.BOOSTER_2X.multiplier;
   }
 
-  // Use prestigeProductionMultiplier when available, fall back to prestigeMultiplier for old saves
   const prestigeMultiplier = (gameState.prestigeProductionMultiplier ?? gameState.prestigeMultiplier ?? 1);
-
-  // AI production multiplier (Phase 5)
   const aiMultiplier = getAIProductionMultiplier(gameState.ai?.level ?? 0);
 
   const finalProduction = totalProduction * prestigeMultiplier * adBoostMultiplier * permanentMultiplier * iapBoosterMultiplier * aiMultiplier;
-  if (finalProduction > 0) {
-    console.log(`DEBUG: Total production calculated: ${finalProduction}, prestigeMultiplier: ${prestigeMultiplier}, adBoostMultiplier: ${adBoostMultiplier}, permanentMultiplier: ${permanentMultiplier}, iapBoosterMultiplier: ${iapBoosterMultiplier}`);
-  }
 
   return finalProduction;
 };
@@ -219,7 +206,7 @@ export const canAffordHardware = (gameState: GameState, hardwareId: string): boo
   if (!hardware) return false;
 
   const cost = calculateHardwareCost(hardware);
-  return gameState.cryptoCoins >= cost;
+  return gameState.realMoney >= cost;
 };
 
 export const isUpgradeUnlocked = (gameState: GameState, upgrade: Upgrade): boolean => {
@@ -331,9 +318,9 @@ export const formatNumber = (num: number): string => {
   return (num / 1000000000000).toFixed(1) + 'T';
 };
 
-import { UNLOCK_CONFIG, HARDWARE_CONFIG, BOOSTER_CONFIG, BALANCE_CONFIG } from '../config/balanceConfig';
+import { UNLOCK_CONFIG, HARDWARE_CONFIG, BOOSTER_CONFIG, BALANCE_CONFIG, BLOCK_CONFIG } from '../config/balanceConfig';
 
-// Rango del seed: 90000–96000 → CC price ≈ BTC/seed ≈ $1.03–$1.38
+// Rango del seed: 90000–96000 → BTC/seed ≈ volatility factor around 1.0
 const PRICE_SEED_MIN = 90000;
 const PRICE_SEED_RANGE = 6000; // 90000–96000
 // Punto de inicio acotado al primer mes para garantizar ≥2 meses antes del loop
@@ -345,10 +332,12 @@ export const generatePriceSeed = (): number =>
 export const generatePriceStartIndex = (): number =>
   Math.floor(Math.random() * FIRST_MONTH_POINTS);
 
+// Era 0 base price ($0.10) × BTC volatility factor
 export const getInitialChartWindow = (startIndex: number, seed: number): number[] =>
   Array.from({ length: 30 }, (_, i) => {
     const idx = (startIndex - 29 + i + BTC_PRICE_HISTORY.length) % BTC_PRICE_HISTORY.length;
-    return BTC_PRICE_HISTORY[idx] / seed;
+    const eraBasePrice = BLOCK_CONFIG.ERA_BASE_PRICES[0]; // Era 0
+    return eraBasePrice * (BTC_PRICE_HISTORY[idx] / seed);
   });
 
 // Progressive unlock system
@@ -439,7 +428,8 @@ export const isHardwareUnlocked = (gameState: GameState, hardware: Hardware): bo
 export const getInitialGameState = (): GameState => {
   const priceSeed = generatePriceSeed();
   const priceHistoryIndex = generatePriceStartIndex();
-  const initialCCPrice = BTC_PRICE_HISTORY[priceHistoryIndex] / priceSeed;
+  const eraBasePrice = BLOCK_CONFIG.ERA_BASE_PRICES[0]; // Era 0
+  const initialCCPrice = eraBasePrice * (BTC_PRICE_HISTORY[priceHistoryIndex] / priceSeed);
 
   return {
     isHydrated: false,

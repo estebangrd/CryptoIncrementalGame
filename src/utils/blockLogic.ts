@@ -7,8 +7,6 @@ export const GENESIS_CONSTANTS = {
   INITIAL_REWARD: BLOCK_CONFIG.INITIAL_REWARD,
   HALVING_INTERVAL: BLOCK_CONFIG.HALVING_INTERVAL,
   INITIAL_DIFFICULTY: BLOCK_CONFIG.INITIAL_DIFFICULTY,
-  DIFFICULTY_ADJUSTMENT_INTERVAL: 2016, // Blocks between difficulty adjustments
-  TARGET_BLOCK_TIME: 600, // Target time per block in seconds (10 minutes like Bitcoin)
   MAX_COINS: 21000000, // Maximum coins that can ever exist (21M like Bitcoin)
 };
 
@@ -45,17 +43,27 @@ export const calculateTotalCoinsMined = (blocksMined: number): number => {
   return totalCoins;
 };
 
-// Calculate difficulty based on total hash rate
-export const calculateDifficulty = (totalHashRate: number, baseDifficulty: number = GENESIS_CONSTANTS.INITIAL_DIFFICULTY): number => {
-  // Difficulty increases with hash rate to maintain target block time
-  // Higher hash rate = higher difficulty = same block time
-  return baseDifficulty * (totalHashRate / 1000); // 1000 is base hash rate
+// Bitcoin-faithful difficulty: scales with blocks mined, not hash rate
+export const calculateDifficulty = (blocksMined: number): number => {
+  const { AMPLITUDE, SCALE_BLOCKS } = BLOCK_CONFIG.DIFFICULTY;
+  return 1.0 + AMPLITUDE * Math.log10(1 + blocksMined / SCALE_BLOCKS);
+};
+
+// Get current era (0-indexed) based on blocks mined
+export const getEra = (blocksMined: number): number => {
+  return Math.floor(blocksMined / GENESIS_CONSTANTS.HALVING_INTERVAL);
+};
+
+// Get base CC price for the current era
+export const getBasePrice = (blocksMined: number): number => {
+  const era = getEra(blocksMined);
+  const prices = BLOCK_CONFIG.ERA_BASE_PRICES;
+  return prices[Math.min(era, prices.length - 1)];
 };
 
 // Calculate block mining time based on difficulty and hash rate
 export const calculateBlockTime = (difficulty: number, hashRate: number): number => {
-  // Block time = difficulty / hash rate
-  // Higher difficulty or lower hash rate = longer block time
+  if (hashRate <= 0) return Infinity;
   return Math.max(1, difficulty / hashRate);
 };
 
@@ -96,8 +104,8 @@ export const mineBlock = (gameState: GameState): GameState => {
   // Update next halving
   newGameState.nextHalving = calculateNextHalving(newGameState.blocksMined);
   
-  // Update difficulty based on total hash rate
-  newGameState.difficulty = calculateDifficulty(newGameState.totalHashRate);
+  // Update difficulty based on blocks mined
+  newGameState.difficulty = calculateDifficulty(newGameState.blocksMined);
   
   return newGameState;
 };

@@ -253,18 +253,18 @@ const MANUAL_MINING = {
   id: 'manual_mining',
   baseProduction: 10,
   miningSpeed: 0.1,
-  blockReward: 50,
+  blockReward: 0,
   owned: 1,
   energyRequired: 0,
 };
 
 /**
  * Hardware card display value consistency.
- * All 5 stats (HASH RATE, MINE SPEED, REWARD, COINS/SEC, POWER) must show 0
- * when owned=0. REWARD was showing the constant blockReward value regardless.
+ * Stats (HASH RATE, MINE SPEED, COINS/SEC, POWER) must show 0 when owned=0.
+ * blockReward is now global (not per-hardware), so reward column was removed.
  */
 describe('hardware card stat display values for 0-owned hardware', () => {
-  const ADV_CPU = { id: 'advanced_cpu', baseProduction: 30, miningSpeed: 0.8, blockReward: 42, electricityCost: 1.2, owned: 0 };
+  const ADV_CPU = { id: 'advanced_cpu', baseProduction: 30, miningSpeed: 0.8, blockReward: 0, electricityCost: 1.2, owned: 0 };
 
   it('hashRate is 0 when owned=0', () => {
     expect(calculateHardwareProduction(ADV_CPU, [])).toBe(0);
@@ -278,22 +278,11 @@ describe('hardware card stat display values for 0-owned hardware', () => {
     expect(calculateHardwareElectricityCost(ADV_CPU)).toBe(0);
   });
 
-  it('coinsPerSecond is 0 when owned=0', () => {
+  it('coinsPerSecond is 0 when owned=0 (global formula)', () => {
     const speed = calculateHardwareMiningSpeed(ADV_CPU, []);
-    expect(speed * ADV_CPU.blockReward).toBe(0);
-  });
-
-  it('reward display value should be 0 when owned=0 (not the constant blockReward)', () => {
-    // BUG: HardwareList used hardware.blockReward directly (shows 42 for 0-owned)
-    // FIX: display should use owned > 0 ? blockReward : 0 for consistency
-    const displayReward = ADV_CPU.owned > 0 ? ADV_CPU.blockReward : 0;
-    expect(displayReward).toBe(0);
-  });
-
-  it('reward display value is the blockReward constant when owned>0', () => {
-    const ownedCpu = { ...ADV_CPU, owned: 3 };
-    const displayReward = ownedCpu.owned > 0 ? ownedCpu.blockReward : 0;
-    expect(displayReward).toBe(42);
+    // Global formula: CC/s = (miningSpeed / difficulty) × globalReward
+    // With speed=0, result is always 0 regardless of global reward
+    expect(speed).toBe(0);
   });
 });
 
@@ -328,10 +317,12 @@ describe('manual_mining exclusion from auto-production stats', () => {
     });
 
     it('still counts real hardware alongside manual_mining', () => {
-      // basic_cpu: miningSpeed=1, blockReward=10 → 1*10=10 CC/s (no prestige)
-      const cpu = { id: 'basic_cpu', baseProduction: 10, miningSpeed: 1, blockReward: 10, owned: 1, energyRequired: 0 };
-      const state = makeProductionState({ hardware: [MANUAL_MINING, cpu] });
-      expect(calculateTotalProduction(state)).toBe(10);
+      // Bitcoin-faithful: CC/s = (miningSpeed / difficulty) × globalBlockReward
+      // At blocksMined=0: difficulty=1.0, reward=50
+      // basic_cpu: miningSpeed=1 → CC/s = (1 / 1.0) × 50 = 50
+      const cpu = { id: 'basic_cpu', baseProduction: 10, miningSpeed: 1, blockReward: 0, owned: 1, energyRequired: 0 };
+      const state = makeProductionState({ hardware: [MANUAL_MINING, cpu], blocksMined: 0 });
+      expect(calculateTotalProduction(state)).toBe(50);
     });
 
     it('prestige multiplier does not inflate production from manual_mining alone', () => {

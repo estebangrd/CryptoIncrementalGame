@@ -347,7 +347,7 @@ export interface Hardware {
   descriptionKey: string;
   baseCost: number;
   baseProduction: number; // Hash rate in H/s
-  blockReward: number; // Coins per block mined
+  blockReward: number; // @deprecated — reward is now global per era. Kept for save compat.
   miningSpeed: number; // Blocks per second
   electricityCost: number; // Coins per second for electricity
   energyRequired: number; // MW required per unit (0 for tiers 1-8)

@@ -13,6 +13,7 @@ import {
   calculateHardwareMiningSpeed,
   isHardwareUnlocked,
 } from '../utils/gameLogic';
+import { calculateDifficulty, calculateCurrentReward } from '../utils/blockLogic';
 import { colors, fonts } from '../config/theme';
 
 // ── Section Header ──────────────────────────────────────────────────────────
@@ -133,13 +134,16 @@ const HardwareList: React.FC = () => {
           const hashRate = calculateHardwareProduction(hardware, gameState.upgrades);
           const electricityCost = calculateHardwareElectricityCost(hardware);
           const miningSpeed = calculateHardwareMiningSpeed(hardware, gameState.upgrades);
-          const coinsPerSecond = miningSpeed * hardware.blockReward;
+          // Global formula: CC/sec = (miningSpeed / difficulty) × globalBlockReward
+          const difficulty = calculateDifficulty(gameState.blocksMined);
+          const globalReward = calculateCurrentReward(gameState.blocksMined);
+          const coinsPerSecond = (miningSpeed / difficulty) * globalReward;
 
           // +1 unit deltas
           const unitHardware = { ...hardware, owned: 1 };
           const deltaHashRate = calculateHardwareProduction(unitHardware, gameState.upgrades);
           const deltaMiningSpeed = calculateHardwareMiningSpeed(unitHardware, gameState.upgrades);
-          const deltaCoinsPerSec = deltaMiningSpeed * hardware.blockReward;
+          const deltaCoinsPerSec = (deltaMiningSpeed / difficulty) * globalReward;
           const deltaElectricity = hardware.electricityCost;
 
           return (
@@ -166,14 +170,6 @@ const HardwareList: React.FC = () => {
               <View style={styles.metricsGrid}>
                 <MetricCell
                   noBorder
-                  label="Reward"
-                  value={formatNumber(hasUnits ? hardware.blockReward : 0)}
-                  unit="CC/blk"
-                  delta="—"
-                  valueColor={colors.ny}
-                  deltaType="zero"
-                />
-                <MetricCell
                   label="Hash Rate"
                   value={formatNumber(hashRate)}
                   unit="H/s"

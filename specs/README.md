@@ -39,6 +39,7 @@ Este directorio contiene todas las especificaciones técnicas exhaustivas (Level
 | [Opción B — Nuevos Tiers de Hardware](economy/option-b-hardware-tiers.md) | ✅ Implemented | Game Length | High | Mining Farm, Quantum Miner, Supercomputer (niveles 9-11) |
 | [Opción C — Electricidad como Constraint](economy/option-c-electricity-constraint.md) | 📋 Planned | Game Length | High | Hardware se apaga si electricityCost > ingresos en $ |
 | [Opción D — Dificultad Progresiva de Red](economy/option-d-progressive-difficulty.md) | 📋 Planned | Game Length | High | difficulty = 1 + (progress)^2, reduce effectiveMiningSpeed |
+| [Bitcoin-Faithful Economy](economy/bitcoin-faithful-economy.md) | ✅ Implemented | Phase 2 | Critical | Global block reward, era pricing, difficulty by blocks mined |
 
 ### 🎨 UI/UX (Interfaz y Experiencia)
 
