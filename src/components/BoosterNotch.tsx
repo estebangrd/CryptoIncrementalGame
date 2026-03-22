@@ -282,11 +282,11 @@ const notchStyles = StyleSheet.create({
     borderWidth: 1,
     borderRightWidth: 0,
     borderColor: 'rgba(255,214,0,0.35)',
-    paddingVertical: 11,
+    paddingVertical: 13,
     paddingHorizontal: 7,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: 10,
   },
   icon: {
     fontSize: 14,
