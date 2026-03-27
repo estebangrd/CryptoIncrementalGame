@@ -225,9 +225,9 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       const recalcedHw = recalculateGameStats(newState);
       const lastOppBuyHw = recalcedHw.marketOpportunityEvent?.triggeredAt ?? 0;
       const cooldownOkBuyHw = Date.now() - lastOppBuyHw > MARKET_OPPORTUNITY_CONFIG.COOLDOWN_MS;
-      const totalOwnedBuyHw = recalcedHw.hardware.reduce((s, h) => s + h.owned, 0);
+      const hasBasicGpu = (recalcedHw.hardware.find(h => h.id === 'basic_gpu')?.owned ?? 0) >= 1;
       if (
-        totalOwnedBuyHw >= 1 &&
+        hasBasicGpu &&
         !recalcedHw.activeBannerEvent &&
         cooldownOkBuyHw &&
         Math.random() < MARKET_OPPORTUNITY_CONFIG.TRIGGER_PROBABILITY
@@ -840,9 +840,9 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       const recalcedMoneyHw = recalculateGameStats(moneyNewState);
       const lastOppMoneyHw = recalcedMoneyHw.marketOpportunityEvent?.triggeredAt ?? 0;
       const cooldownOkMoneyHw = Date.now() - lastOppMoneyHw > MARKET_OPPORTUNITY_CONFIG.COOLDOWN_MS;
-      const totalOwnedMoneyHw = recalcedMoneyHw.hardware.reduce((s, h) => s + h.owned, 0);
+      const hasBasicGpuMoney = (recalcedMoneyHw.hardware.find(h => h.id === 'basic_gpu')?.owned ?? 0) >= 1;
       if (
-        totalOwnedMoneyHw >= 1 &&
+        hasBasicGpuMoney &&
         !recalcedMoneyHw.activeBannerEvent &&
         cooldownOkMoneyHw &&
         Math.random() < MARKET_OPPORTUNITY_CONFIG.TRIGGER_PROBABILITY

@@ -76,7 +76,7 @@ const MarketOpportunityModal: React.FC<Props> = ({ event }) => {
               </View>
               <View style={styles.headerTextCol}>
                 <Text style={styles.category}>OPORTUNIDAD · MERCADO</Text>
-                <Text style={styles.title}>Volatilidad extrema — precio CC +200%</Text>
+                <Text style={styles.title}>Volatilidad extrema — precio CC +25%</Text>
               </View>
             </View>
 
@@ -98,16 +98,16 @@ const MarketOpportunityModal: React.FC<Props> = ({ event }) => {
 
             {/* Description */}
             <Text style={styles.description}>
-              Condiciones inusuales de mercado generaron un spike de demanda. El precio de CryptoCoin subió un 200%. La ventana dura aproximadamente 20 minutos — el mercado se mueve solo.
+              Condiciones inusuales de mercado generaron un spike de demanda. El precio de CryptoCoin subió un 25%. La ventana dura aproximadamente 10 minutos — el mercado se mueve solo.
             </Text>
 
             {/* Tags */}
             <View style={styles.tagsRow}>
               <View style={[styles.tag, styles.tagPositive]}>
-                <Text style={[styles.tagText, styles.tagTextPositive]}>+200% precio actual</Text>
+                <Text style={[styles.tagText, styles.tagTextPositive]}>+25% precio actual</Text>
               </View>
               <View style={[styles.tag, styles.tagWarning]}>
-                <Text style={[styles.tagText, styles.tagTextWarning]}>⏱ ~20 minutos</Text>
+                <Text style={[styles.tagText, styles.tagTextWarning]}>⏱ ~10 minutos</Text>
               </View>
             </View>
 
