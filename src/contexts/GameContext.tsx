@@ -46,7 +46,7 @@ import {
   registerDevPurchaseCallback,
 } from '../services/IAPService';
 import { purchaseUpdatedListener, purchaseErrorListener } from 'react-native-iap';
-import { BOOSTER_CONFIG, STARTER_PACK_REWARDS, ENERGY_CONFIG, PACK_CONFIG, REGULATORY_EVENT_CONFIG, MARKET_OPPORTUNITY_CONFIG, LOCAL_PROTEST_CONFIG } from '../config/balanceConfig';
+import { BOOSTER_CONFIG, STARTER_PACK_REWARDS, ENERGY_CONFIG, PACK_CONFIG, REGULATORY_EVENT_CONFIG, MARKET_OPPORTUNITY_CONFIG, LOCAL_PROTEST_CONFIG, ELECTRICITY_FEE_CONFIG } from '../config/balanceConfig';
 import { buildEndgameStats, calculateTotalEndgameProductionMultiplier } from '../utils/endgameLogic';
 import Toast, { ToastInfo } from '../components/Toast';
 import { IAP_PRODUCT_IDS } from '../config/iapConfig';
@@ -176,11 +176,12 @@ const recalculateGameStats = (state: GameState): GameState => {
   // Calculate total hash rate from hardware
   let totalHashRate = calculateTotalHashRate(stateWithEnergy);
 
-  // Calculate total electricity cost (drains $ not CC, stored for display)
+  // Calculate total electricity weight (used for CC mining fee)
   const totalElectricityCost = calculateTotalElectricityCost(stateWithEnergy.hardware);
 
-  // CC production is pure — electricity drains from $ in ADD_PRODUCTION
-  let ccProduction = totalProduction;
+  // Net CC = gross production - CC mining fee
+  const feePerSec = totalElectricityCost * ELECTRICITY_FEE_CONFIG.RATE_PERCENT / 100;
+  let ccProduction = totalProduction - feePerSec;
 
   // Apply regulatory hash rate penalty if active
   const penaltyUntil = stateWithEnergy.regulatoryPressureEvent?.hashRatePenaltyUntil ?? null;
@@ -505,10 +506,11 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         newState.cryptoCoins += coinsThisTick;
         newState.totalCryptoCoins += coinsThisTick;
 
-        // Electricity drains from $ (real money), not CC
-        const electricityCost = state.totalElectricityCost;
-        if (electricityCost > 0) {
-          newState.realMoney = Math.max(0, newState.realMoney - electricityCost);
+        // Electricity fee: deduct CC based on hardware weight × rate
+        const electricityWeight = state.totalElectricityCost;
+        if (electricityWeight > 0) {
+          const ccFee = electricityWeight * ELECTRICITY_FEE_CONFIG.RATE_PERCENT / 100;
+          newState.cryptoCoins = Math.max(0, newState.cryptoCoins - ccFee);
         }
 
         // Planet resource depletion from non-renewable energy sources

@@ -37,9 +37,10 @@ Este directorio contiene todas las especificaciones técnicas exhaustivas (Level
 | [Balance and Formulas](economy/balance-and-formulas.md) | ✅ Documented | Phase 1-2 | Critical | Todas las fórmulas y progresión económica |
 | [Opción A — Rebalanceo de Costos](economy/option-a-cost-rebalancing.md) | ✅ Implemented | Game Length | High | COST_MULTIPLIER 1.20, costos ASIC ×5-13x, miningSpeed reducida |
 | [Opción B — Nuevos Tiers de Hardware](economy/option-b-hardware-tiers.md) | ✅ Implemented | Game Length | High | Mining Farm, Quantum Miner, Supercomputer (niveles 9-11) |
-| [Opción C — Electricidad como Constraint](economy/option-c-electricity-constraint.md) | 📋 Planned | Game Length | High | Hardware se apaga si electricityCost > ingresos en $ |
+| [Opción C — Electricidad como Constraint](economy/option-c-electricity-constraint.md) | ⚠️ Superseded | Game Length | High | Superseded by CC Mining Fee |
 | [Opción D — Dificultad Progresiva de Red](economy/option-d-progressive-difficulty.md) | 📋 Planned | Game Length | High | difficulty = 1 + (progress)^2, reduce effectiveMiningSpeed |
 | [Bitcoin-Faithful Economy](economy/bitcoin-faithful-economy.md) | ✅ Implemented | Phase 2 | Critical | Global block reward, era pricing, difficulty by blocks mined |
+| [Electricity → CC Mining Fee](economy/electricity-cc-fee.md) | ✅ Implemented | Economy Rebalance | Critical | Electricity drains CC (not $), 0.75% of weight per tick |
 
 ### 🎨 UI/UX (Interfaz y Experiencia)
 

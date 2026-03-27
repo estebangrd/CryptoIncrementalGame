@@ -32,6 +32,14 @@ export const BLOCK_CONFIG = {
 };
 
 // ============================================================================
+// ELECTRICITY FEE (CC MINING FEE)
+// ============================================================================
+export const ELECTRICITY_FEE_CONFIG = {
+  // Percentage of totalElectricityWeight deducted as CC per tick
+  RATE_PERCENT: 0.75,
+};
+
+// ============================================================================
 // HARDWARE - COSTOS Y PRODUCCIÓN
 // ============================================================================
 export const HARDWARE_CONFIG = {
@@ -58,7 +66,7 @@ export const HARDWARE_CONFIG = {
       baseProduction: 30,        // Hash/s (display only)
       blockReward: 0,            // Deprecated: reward is global per era
       miningSpeed: 0.3,          // Bloques/segundo
-      electricityCost: 0.5,      // $/segundo
+      electricityCost: 5,        // CC fee weight (×RATE_PERCENT = CC/sec)
     },
 
     // Nivel 3: Advanced CPU
@@ -67,7 +75,7 @@ export const HARDWARE_CONFIG = {
       baseProduction: 80,
       blockReward: 0,
       miningSpeed: 0.8,
-      electricityCost: 1.2,
+      electricityCost: 12,
     },
 
     // Nivel 4: Basic GPU
@@ -76,7 +84,7 @@ export const HARDWARE_CONFIG = {
       baseProduction: 250,
       blockReward: 0,
       miningSpeed: 2.5,
-      electricityCost: 3,
+      electricityCost: 30,
     },
 
     // Nivel 5: Advanced GPU
@@ -85,7 +93,7 @@ export const HARDWARE_CONFIG = {
       baseProduction: 600,
       blockReward: 0,
       miningSpeed: 6,
-      electricityCost: 7,
+      electricityCost: 70,
     },
 
     // Nivel 6: ASIC Gen 1
@@ -94,7 +102,7 @@ export const HARDWARE_CONFIG = {
       baseProduction: 1500,
       blockReward: 0,
       miningSpeed: 12,
-      electricityCost: 20,
+      electricityCost: 200,
     },
 
     // Nivel 7: ASIC Gen 2
@@ -103,7 +111,7 @@ export const HARDWARE_CONFIG = {
       baseProduction: 4000,
       blockReward: 0,
       miningSpeed: 30,
-      electricityCost: 45,
+      electricityCost: 450,
     },
 
     // Nivel 8: ASIC Gen 3
@@ -112,7 +120,7 @@ export const HARDWARE_CONFIG = {
       baseProduction: 10000,
       blockReward: 0,
       miningSpeed: 60,
-      electricityCost: 100,
+      electricityCost: 1000,
     },
 
     // Nivel 9: Mining Farm
@@ -121,7 +129,7 @@ export const HARDWARE_CONFIG = {
       baseProduction: 50000,
       blockReward: 0,
       miningSpeed: 75,
-      electricityCost: 300,
+      electricityCost: 3000,
     },
 
     // Nivel 10: Quantum Miner
@@ -130,7 +138,7 @@ export const HARDWARE_CONFIG = {
       baseProduction: 200000,
       blockReward: 0,
       miningSpeed: 200,
-      electricityCost: 900,
+      electricityCost: 9000,
     },
 
     // Nivel 11: Supercomputer
@@ -139,7 +147,7 @@ export const HARDWARE_CONFIG = {
       baseProduction: 1000000,
       blockReward: 0,
       miningSpeed: 500,
-      electricityCost: 3000,
+      electricityCost: 30000,
     },
   },
 };

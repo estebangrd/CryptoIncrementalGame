@@ -315,18 +315,19 @@ export const updateOfflineProgress = (gameState: GameState): GameState => {
     blocksRemaining -= blocksThisBatch;
   }
 
-  // Drain electricity cost
-  const electricityCost = gameState.totalElectricityCost ?? 0;
-  const electricityDrained = electricityCost * offlineSec;
+  // Drain CC mining fee (electricity weight × rate)
+  const electricityWeight = gameState.totalElectricityCost ?? 0;
+  const ccFeeDrained = electricityWeight * ELECTRICITY_FEE_CONFIG.RATE_PERCENT / 100 * offlineSec;
 
   const offlineMinerExpired = now >= offlineMiner.expiresAt;
 
+  const netCoins = Math.max(0, coinsEarned - ccFeeDrained);
+
   return {
     ...gameState,
-    cryptoCoins: gameState.cryptoCoins + coinsEarned,
+    cryptoCoins: Math.max(0, gameState.cryptoCoins + netCoins),
     totalCryptoCoins: gameState.totalCryptoCoins + coinsEarned,
     blocksMined: currentBlocksMined,
-    realMoney: Math.max(0, gameState.realMoney - electricityDrained),
     difficulty: calculateDifficulty(currentBlocksMined),
     currentReward: calculateCurrentReward(currentBlocksMined),
     nextHalving: calculateNextHalving(currentBlocksMined),
@@ -348,7 +349,7 @@ export const formatNumber = (num: number): string => {
   return (num / 1000000000000).toFixed(1) + 'T';
 };
 
-import { UNLOCK_CONFIG, HARDWARE_CONFIG, BOOSTER_CONFIG, BALANCE_CONFIG, BLOCK_CONFIG } from '../config/balanceConfig';
+import { UNLOCK_CONFIG, HARDWARE_CONFIG, BOOSTER_CONFIG, BALANCE_CONFIG, BLOCK_CONFIG, ELECTRICITY_FEE_CONFIG } from '../config/balanceConfig';
 
 // Rango del seed: 90000–96000 → BTC/seed ≈ volatility factor around 1.0
 const PRICE_SEED_MIN = 90000;

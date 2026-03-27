@@ -5,6 +5,7 @@ import { GameState } from '../types/game';
 import { formatBlockInfo } from '../utils/blockLogic';
 import { formatNumber } from '../utils/gameLogic';
 import { colors, fonts } from '../config/theme';
+import { ELECTRICITY_FEE_CONFIG } from '../config/balanceConfig';
 
 const CLICK_WINDOW_MS = 1000;
 
@@ -264,7 +265,8 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
   const isComplete = blockInfo.blocksMined >= blockInfo.totalBlocks;
   const progressPct = blockInfo.phaseProgress;
 
-  const hasElectricity = gameState.totalElectricityCost > 0;
+  const ccFeePerSec = (gameState.totalElectricityCost ?? 0) * ELECTRICITY_FEE_CONFIG.RATE_PERCENT / 100;
+  const hasElectricity = ccFeePerSec > 0;
 
   return (
     <View style={styles.wrapper}>
@@ -320,9 +322,9 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
         />
         <NodeStat
           icon="🔌"
-          label="Electricity"
-          value={hasElectricity ? `-$${formatNumber(gameState.totalElectricityCost)}` : '$0'}
-          sub="$/sec"
+          label="Mining Fee"
+          value={hasElectricity ? `-${formatNumber(ccFeePerSec)}` : '0'}
+          sub="CC/sec"
           variant={hasElectricity ? 'red' : 'cyan'}
         />
       </View>
