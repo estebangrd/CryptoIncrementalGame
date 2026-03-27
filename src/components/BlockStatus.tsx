@@ -320,9 +320,9 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
         />
         <NodeStat
           icon="🔌"
-          label="Net Power"
+          label="Electricity"
           value={hasElectricity ? formatNumber(gameState.totalElectricityCost) : '0'}
-          sub="kW — Active"
+          sub="kW/h"
           variant={hasElectricity ? 'red' : 'cyan'}
         />
       </View>
