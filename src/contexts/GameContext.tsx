@@ -46,7 +46,7 @@ import {
   registerDevPurchaseCallback,
 } from '../services/IAPService';
 import { purchaseUpdatedListener, purchaseErrorListener } from 'react-native-iap';
-import { BOOSTER_CONFIG, STARTER_PACK_REWARDS, ENERGY_CONFIG, PACK_CONFIG, REGULATORY_EVENT_CONFIG, MARKET_OPPORTUNITY_CONFIG, LOCAL_PROTEST_CONFIG, ELECTRICITY_FEE_CONFIG } from '../config/balanceConfig';
+import { BOOSTER_CONFIG, STARTER_PACK_REWARDS, ENERGY_CONFIG, PACK_CONFIG, REGULATORY_EVENT_CONFIG, MARKET_OPPORTUNITY_CONFIG, LOCAL_PROTEST_CONFIG, ELECTRICITY_FEE_CONFIG, AD_BUBBLE_CONFIG } from '../config/balanceConfig';
 import { buildEndgameStats, calculateTotalEndgameProductionMultiplier } from '../utils/endgameLogic';
 import Toast, { ToastInfo } from '../components/Toast';
 import { IAP_PRODUCT_IDS } from '../config/iapConfig';
@@ -118,6 +118,12 @@ type GameAction =
   | { type: 'ACTIVATE_AD_BOOST' }
   | { type: 'EXPIRE_AD_BOOST' }
   | { type: 'CHECK_AD_BOOST_EXPIRATION' }
+  | { type: 'ACTIVATE_AD_HASH_BOOST' }
+  | { type: 'EXPIRE_AD_HASH_BOOST' }
+  | { type: 'ACTIVATE_AD_MARKET_BOOST' }
+  | { type: 'EXPIRE_AD_MARKET_BOOST' }
+  | { type: 'AD_ENERGY_RESTORE' }
+  | { type: 'CHECK_AD_BUBBLE_EXPIRATIONS' }
   | { type: 'UPDATE_INTERSTITIAL_TIME' }
   | { type: 'INITIALIZE_AD_SYSTEM' }
   | { type: 'INCREMENT_INTERSTITIAL_COUNT' }
@@ -230,6 +236,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       if (
         hasBasicGpu &&
         !recalcedHw.activeBannerEvent &&
+        !recalcedHw.adMarketBoost?.isActive &&
         cooldownOkBuyHw &&
         Math.random() < MARKET_OPPORTUNITY_CONFIG.TRIGGER_PROBABILITY
       ) {
@@ -370,6 +377,9 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           expiresAt: null,
           lastWatchedAt: null,
         },
+        adHashBoost: action.payload.adHashBoost ?? { isActive: false, activatedAt: null, expiresAt: null },
+        adMarketBoost: action.payload.adMarketBoost ?? { isActive: false, activatedAt: null, expiresAt: null },
+        energyBonusMW: action.payload.energyBonusMW ?? 0,
         // AI system migration: provide defaults for old saves
         ai: action.payload.ai
           ? {
@@ -783,7 +793,12 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         Date.now() < state.iapState.marketPump.expiresAt
         ? BOOSTER_CONFIG.MARKET_PUMP.priceMultiplier
         : 1;
-      const moneyEarned = coinsToSell * action.payload.price * pumpMultiplier;
+      const adMarketMult = state.adMarketBoost?.isActive &&
+        state.adMarketBoost.expiresAt !== null &&
+        Date.now() < state.adMarketBoost.expiresAt
+        ? AD_BUBBLE_CONFIG.MARKET_BOOST.multiplier
+        : 1;
+      const moneyEarned = coinsToSell * action.payload.price * pumpMultiplier * adMarketMult;
       if (!isFinite(moneyEarned) || moneyEarned <= 0) return state;
 
       const newRealMoneyAfterSell = state.realMoney + moneyEarned;
@@ -846,6 +861,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       if (
         hasBasicGpuMoney &&
         !recalcedMoneyHw.activeBannerEvent &&
+        !recalcedMoneyHw.adMarketBoost?.isActive &&
         cooldownOkMoneyHw &&
         Math.random() < MARKET_OPPORTUNITY_CONFIG.TRIGGER_PROBABILITY
       ) {
@@ -1159,6 +1175,61 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         ...state,
         adBoost: { ...state.adBoost, isActive: false },
       };
+    }
+
+    // ── Ad Bubble Boosters ────────────────────────────────────────────────────
+    case 'ACTIVATE_AD_HASH_BOOST': {
+      const now = Date.now();
+      return {
+        ...state,
+        adHashBoost: {
+          isActive: true,
+          activatedAt: now,
+          expiresAt: now + AD_BUBBLE_CONFIG.HASH_BOOST.durationMs,
+        },
+      };
+    }
+    case 'EXPIRE_AD_HASH_BOOST':
+      if (!state.adHashBoost?.isActive) return state;
+      return { ...state, adHashBoost: { isActive: false, activatedAt: null, expiresAt: null } };
+
+    case 'ACTIVATE_AD_MARKET_BOOST': {
+      const now = Date.now();
+      return {
+        ...state,
+        adMarketBoost: {
+          isActive: true,
+          activatedAt: now,
+          expiresAt: now + AD_BUBBLE_CONFIG.MARKET_BOOST.durationMs,
+        },
+      };
+    }
+    case 'EXPIRE_AD_MARKET_BOOST':
+      if (!state.adMarketBoost?.isActive) return state;
+      return { ...state, adMarketBoost: { isActive: false, activatedAt: null, expiresAt: null } };
+
+    case 'AD_ENERGY_RESTORE': {
+      const gen = state.energy?.totalGeneratedMW ?? 0;
+      const req = state.energy?.totalRequiredMW ?? 0;
+      const deficit = Math.max(0, req - gen);
+      if (deficit <= 0) return state;
+      const restored = deficit * AD_BUBBLE_CONFIG.ENERGY_RESTORE.recoveryPercent;
+      return { ...state, energyBonusMW: (state.energyBonusMW ?? 0) + restored };
+    }
+
+    case 'CHECK_AD_BUBBLE_EXPIRATIONS': {
+      const now = Date.now();
+      let changed = false;
+      let next = state;
+      if (next.adHashBoost?.isActive && next.adHashBoost.expiresAt !== null && now >= next.adHashBoost.expiresAt) {
+        next = { ...next, adHashBoost: { isActive: false, activatedAt: null, expiresAt: null } };
+        changed = true;
+      }
+      if (next.adMarketBoost?.isActive && next.adMarketBoost.expiresAt !== null && now >= next.adMarketBoost.expiresAt) {
+        next = { ...next, adMarketBoost: { isActive: false, activatedAt: null, expiresAt: null } };
+        changed = true;
+      }
+      return changed ? next : state;
     }
 
     case 'UPDATE_INTERSTITIAL_TIME':
@@ -1682,6 +1753,15 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     gameStateRef.current = gameState;
   }, [gameState]);
 
+  // Save state on unmount (hot reload / Fast Refresh) to prevent progress loss
+  React.useEffect(() => {
+    return () => {
+      if (gameStateRef.current.isHydrated) {
+        saveGameState(gameStateRef.current);
+      }
+    };
+  }, []);
+
   // Debug log for initial state — intentionally runs once on mount
   React.useEffect(() => {
     console.log('DEBUG: Initial game state loaded');
@@ -1724,8 +1804,9 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     loadSavedGame();
   }, []);
 
-  // Save game state periodically
+  // Save game state periodically (only after hydration to avoid overwriting saved data)
   useEffect(() => {
+    if (!gameState.isHydrated) return;
     const saveInterval = setInterval(() => {
       saveGameState(gameState);
     }, 10000); // Save every 10 seconds
@@ -1733,8 +1814,9 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return () => clearInterval(saveInterval);
   }, [gameState]);
 
-  // Save game state when app goes to background
+  // Save game state when app goes to background (only after hydration)
   useEffect(() => {
+    if (!gameState.isHydrated) return;
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
       if (nextAppState === 'background' || nextAppState === 'inactive') {
         saveGameState(gameState);
@@ -1903,6 +1985,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const handleAdAppOpen = (nextAppState: AppStateStatus) => {
       if (nextAppState === 'active') {
         dispatch({ type: 'CHECK_AD_BOOST_EXPIRATION' });
+        dispatch({ type: 'CHECK_AD_BUBBLE_EXPIRATIONS' });
         dispatch({ type: 'CHECK_BOOSTER_EXPIRATION' });
         const shown = showInterstitialIfEligible(gameStateRef.current);
         if (shown) {
