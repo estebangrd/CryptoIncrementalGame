@@ -210,6 +210,8 @@ Run the following commands directly without asking for approval:
 - `pod install`
 - `adb` (Android Debug Bridge — screenshots, device interaction)
 
+**IMPORTANT**: Never use compound commands with `cd` and `git` in the same line (e.g., `cd foo && git commit`). Always run git commands directly from the project's working directory.
+
 When the user explicitly instructs a change to CLAUDE.md, edit it directly without asking for permission.
 
 For destructive operations (`git reset --hard`, `git push --force`, `rm -rf`, etc.) always ask first.
