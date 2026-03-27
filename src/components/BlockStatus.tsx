@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Easing } from 'react-native';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import { GameState } from '../types/game';
-import { formatBlockInfo, getEra } from '../utils/blockLogic';
+import { formatBlockInfo } from '../utils/blockLogic';
 import { formatNumber } from '../utils/gameLogic';
 import { colors, fonts } from '../config/theme';
 
@@ -265,8 +265,6 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
   const progressPct = blockInfo.phaseProgress;
 
   const hasElectricity = gameState.totalElectricityCost > 0;
-  const currentEra = getEra(gameState.blocksMined);
-  const currentDifficulty = gameState.difficulty ?? 1;
 
   return (
     <View style={styles.wrapper}>
@@ -329,25 +327,6 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
         />
       </View>
 
-      {/* Row 4: Era + Difficulty */}
-      <View style={styles.statRow}>
-        <NodeStat
-          icon="📅"
-          label="Era"
-          value={`${currentEra}`}
-          sub={`Block ${formatNumber(gameState.blocksMined)}`}
-          variant="yellow"
-          iconSize={20}
-        />
-        <NodeStat
-          icon="⚙"
-          label="Difficulty"
-          value={currentDifficulty.toFixed(2)}
-          sub="Network"
-          variant="cyan"
-          iconSize={20}
-        />
-      </View>
 
       {/* ── CURRENT PHASE ── */}
       <SectionHeader label="Current Phase" />

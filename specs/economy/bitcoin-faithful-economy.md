@@ -239,7 +239,7 @@ La volatilidad del histórico de BTC se aplica como multiplicador sobre este pre
    - Actualizar valores de miningSpeed y baseCost
 
 8. **`src/components/BlockStatus.tsx`**
-   - Mostrar era actual, dificultad, reward global
+   - Mostrar reward global (era y dificultad son internas, no se muestran en UI)
 
 ---
 
