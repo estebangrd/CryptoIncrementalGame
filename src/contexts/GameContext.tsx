@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect, useState, useCallback, ReactNode } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
-import { GameState, Cryptocurrency, IAPState, AdState, AdBoostState, PrestigeRun, RunStats, AILevel, EndingType, OfflineMinerState, LuckyBlockState, MarketPumpState, RegulatoryPressureEvent, MarketOpportunityEvent } from '../types/game';
+import { GameState, Cryptocurrency, PrestigeRun, RunStats, AILevel, EndingType, OfflineMinerState, LuckyBlockState, MarketPumpState, RegulatoryPressureEvent, MarketOpportunityEvent } from '../types/game';
 import { hardwareProgression } from '../data/hardwareData';
 import { initialUpgrades } from '../data/gameData';
 import { cryptocurrencies } from '../data/cryptocurrencies';
@@ -1672,52 +1672,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
 export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [gameState, dispatch] = useReducer(gameReducer, recalculateGameStats({
     ...getInitialGameState(),
-    cryptocurrencies: cryptocurrencies,
     selectedCurrency: 'cryptocoin',
-    hardware: hardwareProgression,
-    upgrades: initialUpgrades,
-    iapState: {
-      removeAdsPurchased: false,
-      removeAdsPurchaseDate: null,
-      adsSeenBeforePurchase: 0,
-      booster2x: { isActive: false, activatedAt: null, expiresAt: null },
-      booster5x: { isActive: false, activatedAt: null, expiresAt: null },
-      permanentMultiplierPurchased: false,
-      starterPacksPurchased: { small: false, medium: false, large: false, mega: false },
-      purchaseHistory: [],
-      isPurchasing: false,
-      lastPurchaseTime: null,
-      flashSaleExpiresAt: 0,
-      flashSaleCooldownUntil: 0,
-      packOfferExpiresAt: 0,
-      packNextOfferAt: 0,
-      packCurrentCC: 0,
-      packCurrentCash: 0,
-      packCurrentElectricityHours: 0,
-      offlineMiner: { isActive: false, activatedAt: null, expiresAt: null },
-      luckyBlock: { isActive: false, blocksRemaining: 0 },
-      marketPump: { isActive: false, activatedAt: null, expiresAt: null },
-    } as IAPState,
-    adState: {
-      adInitialized: false,
-      gdprConsentGiven: null,
-      bannerLoaded: false,
-      bannerVisible: false,
-      lastInterstitialShownAt: null,
-      interstitialLoaded: false,
-      isFirstSession: true,
-      rewardedAdLoaded: false,
-      totalInterstitialsShown: 0,
-      totalBannerImpressions: 0,
-      lastPromotionShownAt: null,
-    } as AdState,
-    adBoost: {
-      isActive: false,
-      activatedAt: null,
-      expiresAt: null,
-      lastWatchedAt: null,
-    } as AdBoostState,
-    achievements: ALL_ACHIEVEMENTS,
   }));
 
   const gameStateRef = React.useRef(gameState);

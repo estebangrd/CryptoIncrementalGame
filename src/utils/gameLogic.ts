@@ -1,4 +1,4 @@
-import { GameState, Hardware, Upgrade } from '../types/game';
+import { GameState, Hardware, Upgrade, IAPState, AdState, AdBoostState } from '../types/game';
 import { BTC_PRICE_HISTORY } from '../data/btcPriceHistory';
 import { GENESIS_CONSTANTS, calculateDifficulty, calculateCurrentReward, calculateNextHalving } from './blockLogic';
 import { getInitialMarketState } from './marketLogic';
@@ -543,5 +543,47 @@ export const getInitialGameState = (): GameState => {
     goodEndingCount: 0,
     lastEndgameStats: null,
     disconnectAttempted: false,
+    // IAP & Ad state
+    iapState: {
+      removeAdsPurchased: false,
+      removeAdsPurchaseDate: null,
+      adsSeenBeforePurchase: 0,
+      booster2x: { isActive: false, activatedAt: null, expiresAt: null },
+      booster5x: { isActive: false, activatedAt: null, expiresAt: null },
+      permanentMultiplierPurchased: false,
+      starterPacksPurchased: { small: false, medium: false, large: false, mega: false },
+      purchaseHistory: [],
+      isPurchasing: false,
+      lastPurchaseTime: null,
+      flashSaleExpiresAt: 0,
+      flashSaleCooldownUntil: 0,
+      packOfferExpiresAt: 0,
+      packNextOfferAt: 0,
+      packCurrentCC: 0,
+      packCurrentCash: 0,
+      packCurrentElectricityHours: 0,
+      offlineMiner: { isActive: false, activatedAt: null, expiresAt: null },
+      luckyBlock: { isActive: false, blocksRemaining: 0 },
+      marketPump: { isActive: false, activatedAt: null, expiresAt: null },
+    } as IAPState,
+    adState: {
+      adInitialized: false,
+      gdprConsentGiven: null,
+      bannerLoaded: false,
+      bannerVisible: false,
+      lastInterstitialShownAt: null,
+      interstitialLoaded: false,
+      isFirstSession: true,
+      rewardedAdLoaded: false,
+      totalInterstitialsShown: 0,
+      totalBannerImpressions: 0,
+      lastPromotionShownAt: null,
+    } as AdState,
+    adBoost: {
+      isActive: false,
+      activatedAt: null,
+      expiresAt: null,
+      lastWatchedAt: null,
+    } as AdBoostState,
   } as GameState;
 };
