@@ -22,9 +22,10 @@ import {
 } from '../utils/blockLogic';
 import {
   calculateTotalElectricityCost,
-  calculateTotalMiningSpeed,
   calculateTotalProduction,
-  calculateTotalHashRate
+  calculateTotalHashRate,
+  getAllMultipliers,
+  getConstrainedMiningSpeed,
 } from '../utils/gameLogic';
 import {
   updateMarketState,
@@ -62,7 +63,6 @@ import {
   calculateTotalRequiredMW,
   getEffectiveRenewableCap,
   getEnergySourceCurrentCost,
-  getActiveHardwareWithEnergyConstraint,
   calculateRenewableGeneratedMW,
 } from '../utils/energyLogic';
 import {
@@ -72,7 +72,6 @@ import {
   getAIUnlockedCrypto,
   getAIPreferredEnergySource,
   generateAISuggestion,
-  getAIProductionMultiplier,
 } from '../utils/aiLogic';
 import { checkNarrativeThresholds } from '../utils/narrativeLogic';
 
@@ -463,28 +462,18 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       // If collapse or good ending already triggered, stop all production
       if (state.collapseTriggered || state.goodEndingTriggered) return state;
 
-      // Calculate how many blocks should be mined based on energy-constrained mining speed
-      const energyGeneratedMW = state.energy?.totalGeneratedMW ?? 0;
-      const activeEnergyHardware = getActiveHardwareWithEnergyConstraint(state.hardware, energyGeneratedMW);
-      const activeUnitsForSpeed: Record<string, number> = {};
-      for (const hw of activeEnergyHardware) {
-        activeUnitsForSpeed[hw.id] = hw.activeUnits;
-      }
-      const constrainedHardware = state.hardware.map(hw =>
-        hw.energyRequired > 0
-          ? { ...hw, owned: activeUnitsForSpeed[hw.id] ?? 0 }
-          : hw
-      );
-      const totalMiningSpeed = calculateTotalMiningSpeed(constrainedHardware, state.upgrades);
-      // Bitcoin-faithful: blocks/sec = totalMiningSpeed / difficulty
+      // Multipliers boost mining speed (more blocks/sec), NOT CC output
+      const allMult = getAllMultipliers(state);
+      const constrainedMiningSpeed = getConstrainedMiningSpeed(state);
+      const boostedSpeed = constrainedMiningSpeed * allMult;
       const difficulty = calculateDifficulty(state.blocksMined);
-      const effectiveBlocksPerSec = totalMiningSpeed / difficulty;
-      const blocksToMine = Math.floor(effectiveBlocksPerSec); // Mine complete blocks only
+      const effectiveBlocksPerSec = boostedSpeed / difficulty;
+      const blocksToMine = Math.floor(effectiveBlocksPerSec);
 
       if (blocksToMine > 0 && canMineBlock(state)) {
         let newState = { ...state };
 
-        // Mine blocks and track reward per block for accurate CC calculation
+        // Mine blocks — CC earned is purely blocks × reward (no multiplier on CC)
         let coinsThisTick = 0;
         for (let i = 0; i < blocksToMine && canMineBlock(newState); i++) {
           newState.blocksMined += 1;
@@ -493,32 +482,12 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           newState.currentReward = rewardThisBlock;
           newState.nextHalving = calculateNextHalving(newState.blocksMined);
         }
-        // Update difficulty after mining
         newState.difficulty = calculateDifficulty(newState.blocksMined);
 
-        // Apply global multipliers to coins earned
-        const prestigeMultiplier = (state.prestigeProductionMultiplier ?? state.prestigeMultiplier ?? 1);
-        let adBoostMult = 1.0;
-        if (state.adBoost?.isActive && state.adBoost.expiresAt !== null && Date.now() < state.adBoost.expiresAt) {
-          adBoostMult = BOOSTER_CONFIG.REWARDED_AD_BOOST.multiplier;
-        }
-        const permanentMult = state.iapState?.permanentMultiplierPurchased
-          ? BOOSTER_CONFIG.PERMANENT_MULTIPLIER.multiplier : 1.0;
-        let iapBoostMult = 1.0;
-        const nowProd = Date.now();
-        if (state.iapState?.booster5x?.isActive && state.iapState.booster5x.expiresAt !== null && nowProd < state.iapState.booster5x.expiresAt) {
-          iapBoostMult = BOOSTER_CONFIG.BOOSTER_5X.multiplier;
-        } else if (state.iapState?.booster2x?.isActive && state.iapState.booster2x.expiresAt !== null && nowProd < state.iapState.booster2x.expiresAt) {
-          iapBoostMult = BOOSTER_CONFIG.BOOSTER_2X.multiplier;
-        }
-        const aiMult = getAIProductionMultiplier(state.ai?.level ?? 0);
-        const globalMultiplier = prestigeMultiplier * adBoostMult * permanentMult * iapBoostMult * aiMult;
-        coinsThisTick *= globalMultiplier;
-
-        // Lucky Block bonus: 10x reward per block while active
+        // Lucky Block bonus: extra CC per block (rewardMultiplier - 1)
         if (state.iapState.luckyBlock.isActive && state.iapState.luckyBlock.blocksRemaining > 0 && blocksToMine > 0) {
           const blocksConsumed = Math.min(blocksToMine, state.iapState.luckyBlock.blocksRemaining);
-          const luckyBonus = newState.currentReward * 9 * blocksConsumed * globalMultiplier;
+          const luckyBonus = newState.currentReward * (BOOSTER_CONFIG.LUCKY_BLOCK.rewardMultiplier - 1) * blocksConsumed;
           coinsThisTick += luckyBonus;
           const newBlocksRemaining = state.iapState.luckyBlock.blocksRemaining - blocksConsumed;
           newState = {

@@ -575,17 +575,17 @@ export const BOOSTER_CONFIG = {
     earningsMultiplier: 0.5,                   // uses BALANCE_CONFIG.OFFLINE_EARNINGS_MULTIPLIER
   },
   LUCKY_BLOCK: {
-    rewardMultiplier: 10,
-    earlyBlocks: 500,
-    midBlocks: 2500,
-    lateBlocks: 10000,
+    rewardMultiplier: 5,
+    earlyBlocks: 200,
+    midBlocks: 1000,
+    lateBlocks: 3000,
     earlyHashThreshold: 5000,
     lateHashThreshold: 100000,
   },
   MARKET_PUMP: {
     priceMultiplier: 2.0,
-    baseDurationMs: 30 * 60 * 1000,          // 30 min
-    extendedDurationMs: 37 * 60 * 1000,       // 37 min (≈ +25%)
+    baseDurationMs: 15 * 60 * 1000,          // 15 min
+    extendedDurationMs: 20 * 60 * 1000,       // 20 min
     extendedOfferChance: 0.30,
   },
 } as const;
@@ -594,10 +594,10 @@ export const BOOSTER_CONFIG = {
 // STARTER PACKS - RECOMPENSAS
 // ============================================================================
 export const STARTER_PACK_REWARDS = {
-  small:  { cryptoCoins: 10000,  realMoney: 500 },
-  medium: { cryptoCoins: 50000,  realMoney: 2500 },
-  large:  { cryptoCoins: 150000, realMoney: 10000 },
-  mega:   { cryptoCoins: 500000, realMoney: 50000 },
+  small:  { cryptoCoins: 6000,    realMoney: 75 },
+  medium: { cryptoCoins: 65000,   realMoney: 4000 },
+  large:  { cryptoCoins: 125000,  realMoney: 25000 },
+  mega:   { cryptoCoins: 400000,  realMoney: 100000 },
 } as const;
 
 // ============================================================================
@@ -619,21 +619,21 @@ export const PACK_CONFIG = {
   COOLDOWN_MS: 8 * 60 * 60 * 1000,    // 8h between offers
 
   small: {
-    ccRange: [10_000, 12_000] as [number, number],
-    cashRange: [500, 700] as [number, number],
+    ccRange: [5_000, 8_000] as [number, number],
+    cashRange: [50, 100] as [number, number],
     boosterDurationMs: 1 * 60 * 60 * 1000,  // 1h 2x production booster (always included)
     showUntilHardwareId: 'asic_gen3',
   },
   medium: {
-    ccRange: [200_000, 300_000] as [number, number],
-    cashRange: [8_000, 12_000] as [number, number],
+    ccRange: [50_000, 80_000] as [number, number],
+    cashRange: [3_000, 5_000] as [number, number],
     boosterDurationMs: 2 * 60 * 60 * 1000,  // 2h 2x production booster (always included)
     showAfterHardwareId: 'asic_gen3',
     showUntilHardwareId: 'quantum_miner',
   },
   large: {
-    ccRange: [1_000_000, 1_500_000] as [number, number],
-    cashRange: [50_000, 75_000] as [number, number],
+    ccRange: [100_000, 150_000] as [number, number],
+    cashRange: [20_000, 30_000] as [number, number],
     boosterDurationMs: 4 * 60 * 60 * 1000,  // 4h booster (when no electricity credits)
     showAfterHardwareId: 'quantum_miner',
     showUntilHardwareId: 'supercomputer',
@@ -641,8 +641,8 @@ export const PACK_CONFIG = {
     electricityHoursRange: [24, 48] as [number, number],
   },
   mega: {
-    ccRange: [10_000_000, 15_000_000] as [number, number],
-    cashRange: [500_000, 750_000] as [number, number],
+    ccRange: [300_000, 500_000] as [number, number],
+    cashRange: [75_000, 125_000] as [number, number],
     boosterDurationMs: 24 * 60 * 60 * 1000, // 24h booster (when no electricity credits)
     showAfterHardwareId: 'supercomputer',
     includeElectricity: true,

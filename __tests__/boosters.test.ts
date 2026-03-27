@@ -125,23 +125,23 @@ describe('BOOSTER_CONFIG constants', () => {
 
 describe('Starter Packs - Rewards', () => {
   it('Small pack grants correct resources', () => {
-    expect(STARTER_PACK_REWARDS.small.cryptoCoins).toBe(10000);
-    expect(STARTER_PACK_REWARDS.small.realMoney).toBe(500);
+    expect(STARTER_PACK_REWARDS.small.cryptoCoins).toBe(6000);
+    expect(STARTER_PACK_REWARDS.small.realMoney).toBe(75);
   });
 
   it('Medium pack grants correct resources', () => {
-    expect(STARTER_PACK_REWARDS.medium.cryptoCoins).toBe(50000);
-    expect(STARTER_PACK_REWARDS.medium.realMoney).toBe(2500);
+    expect(STARTER_PACK_REWARDS.medium.cryptoCoins).toBe(65000);
+    expect(STARTER_PACK_REWARDS.medium.realMoney).toBe(4000);
   });
 
   it('Large pack grants correct resources', () => {
-    expect(STARTER_PACK_REWARDS.large.cryptoCoins).toBe(150000);
-    expect(STARTER_PACK_REWARDS.large.realMoney).toBe(10000);
+    expect(STARTER_PACK_REWARDS.large.cryptoCoins).toBe(125000);
+    expect(STARTER_PACK_REWARDS.large.realMoney).toBe(25000);
   });
 
   it('Mega pack grants correct resources', () => {
-    expect(STARTER_PACK_REWARDS.mega.cryptoCoins).toBe(500000);
-    expect(STARTER_PACK_REWARDS.mega.realMoney).toBe(50000);
+    expect(STARTER_PACK_REWARDS.mega.cryptoCoins).toBe(400000);
+    expect(STARTER_PACK_REWARDS.mega.realMoney).toBe(100000);
   });
 
   it('Mega pack has more resources than all others combined', () => {

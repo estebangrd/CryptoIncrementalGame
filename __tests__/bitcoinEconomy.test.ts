@@ -3,9 +3,9 @@
  * Validates difficulty scaling, era system, base pricing, and global block reward.
  */
 
-import { calculateDifficulty, getEra, getBasePrice, calculateCurrentReward } from '../src/utils/blockLogic';
-import { calculateTotalProduction, calculateTotalMiningSpeed } from '../src/utils/gameLogic';
-import { BLOCK_CONFIG } from '../src/config/balanceConfig';
+import { calculateDifficulty, getEra, getBasePrice, calculateCurrentReward, calculateNextHalving, GENESIS_CONSTANTS } from '../src/utils/blockLogic';
+import { calculateTotalProduction, calculateTotalMiningSpeed, getAllMultipliers, updateOfflineProgress } from '../src/utils/gameLogic';
+import { BLOCK_CONFIG, BOOSTER_CONFIG } from '../src/config/balanceConfig';
 
 // ── Difficulty ───────────────────────────────────────────────────────────────
 
@@ -210,5 +210,187 @@ describe('hardware costs are in $ (real money)', () => {
     for (const [_id, config] of Object.entries(HARDWARE_CONFIG.levels) as [string, any][]) {
       expect(config.blockReward).toBe(0);
     }
+  });
+});
+
+// ── Booster-on-hashrate (unified model) ─────────────────────────────────────
+
+describe('boosters multiply mining speed (not CC output)', () => {
+  const makeState = (overrides: any = {}): any => ({
+    hardware: [],
+    upgrades: [],
+    energy: { totalGeneratedMW: 0, totalRequiredMW: 0, sources: {} },
+    prestigeProductionMultiplier: 1,
+    prestigeMultiplier: 1,
+    adBoost: { isActive: false, expiresAt: null },
+    iapState: {
+      permanentMultiplierPurchased: false,
+      booster2x: { isActive: false, expiresAt: null },
+      booster5x: { isActive: false, expiresAt: null },
+    },
+    ai: { level: 0 },
+    blocksMined: 0,
+    ...overrides,
+  });
+
+  const cpu = { id: 'basic_cpu', miningSpeed: 1, baseProduction: 10, blockReward: 0, owned: 1, energyRequired: 0 };
+
+  it('2x booster doubles CC/sec (via doubled mining speed)', () => {
+    const futureExpiry = Date.now() + 60 * 60 * 1000;
+    const base = makeState({ hardware: [cpu] });
+    const boosted = makeState({
+      hardware: [cpu],
+      iapState: {
+        permanentMultiplierPurchased: false,
+        booster2x: { isActive: true, expiresAt: futureExpiry },
+        booster5x: { isActive: false, expiresAt: null },
+      },
+    });
+    const baseProd = calculateTotalProduction(base);
+    const boostedProd = calculateTotalProduction(boosted);
+    expect(boostedProd / baseProd).toBeCloseTo(2.0, 5);
+  });
+
+  it('prestige × permanent stack multiplicatively on mining speed', () => {
+    const base = makeState({ hardware: [cpu] });
+    const stacked = makeState({
+      hardware: [cpu],
+      prestigeProductionMultiplier: 3,
+      iapState: {
+        permanentMultiplierPurchased: true,
+        booster2x: { isActive: false, expiresAt: null },
+        booster5x: { isActive: false, expiresAt: null },
+      },
+    });
+    const baseProd = calculateTotalProduction(base);
+    const stackedProd = calculateTotalProduction(stacked);
+    // 3 (prestige) × 2 (permanent) = 6x
+    expect(stackedProd / baseProd).toBeCloseTo(6.0, 5);
+  });
+
+  it('getAllMultipliers returns combined multiplier value', () => {
+    const futureExpiry = Date.now() + 60 * 60 * 1000;
+    const state = makeState({
+      prestigeProductionMultiplier: 2,
+      iapState: {
+        permanentMultiplierPurchased: true,
+        booster2x: { isActive: true, expiresAt: futureExpiry },
+        booster5x: { isActive: false, expiresAt: null },
+      },
+    });
+    // 2 (prestige) × 2 (permanent) × 2 (booster2x) = 8
+    expect(getAllMultipliers(state)).toBeCloseTo(8.0, 5);
+  });
+});
+
+// ── Offline Miner (block-based) ────────────────────────────────────────────
+
+describe('updateOfflineProgress (block-based)', () => {
+  const makeState = (overrides: any = {}): any => ({
+    hardware: [],
+    upgrades: [],
+    energy: { totalGeneratedMW: 0, totalRequiredMW: 0, sources: {} },
+    prestigeProductionMultiplier: 1,
+    prestigeMultiplier: 1,
+    adBoost: { isActive: false, expiresAt: null },
+    iapState: {
+      permanentMultiplierPurchased: false,
+      booster2x: { isActive: false, expiresAt: null },
+      booster5x: { isActive: false, expiresAt: null },
+      offlineMiner: { isActive: false, activatedAt: null, expiresAt: null },
+    },
+    ai: { level: 0 },
+    blocksMined: 0,
+    cryptoCoins: 0,
+    totalCryptoCoins: 0,
+    realMoney: 10000,
+    totalElectricityCost: 0,
+    cryptoCoinsPerSecond: 0,
+    lastSaveTime: Date.now(),
+    ...overrides,
+  });
+
+  it('does nothing when offline miner is inactive', () => {
+    const state = makeState();
+    const result = updateOfflineProgress(state);
+    expect(result.cryptoCoins).toBe(0);
+    expect(result.blocksMined).toBe(0);
+  });
+
+  it('mines blocks and earns CC when offline miner is active', () => {
+    const now = Date.now();
+    const cpu = { id: 'basic_cpu', miningSpeed: 10, baseProduction: 10, blockReward: 0, owned: 1, energyRequired: 0 };
+    const state = makeState({
+      hardware: [cpu],
+      lastSaveTime: now - 3600 * 1000, // 1 hour ago
+      iapState: {
+        permanentMultiplierPurchased: false,
+        booster2x: { isActive: false, expiresAt: null },
+        booster5x: { isActive: false, expiresAt: null },
+        offlineMiner: { isActive: true, activatedAt: now - 7200 * 1000, expiresAt: now + 3600 * 1000 },
+      },
+    });
+    const result = updateOfflineProgress(state);
+    expect(result.blocksMined).toBeGreaterThan(0);
+    expect(result.cryptoCoins).toBeGreaterThan(0);
+    expect(result.totalCryptoCoins).toBeGreaterThan(0);
+  });
+
+  it('advances blocksMined counter (processes halvings)', () => {
+    const now = Date.now();
+    const cpu = { id: 'basic_cpu', miningSpeed: 100, baseProduction: 10, blockReward: 0, owned: 1, energyRequired: 0 };
+    const state = makeState({
+      hardware: [cpu],
+      blocksMined: 209_990,
+      lastSaveTime: now - 3600 * 1000,
+      iapState: {
+        permanentMultiplierPurchased: false,
+        booster2x: { isActive: false, expiresAt: null },
+        booster5x: { isActive: false, expiresAt: null },
+        offlineMiner: { isActive: true, activatedAt: now - 7200 * 1000, expiresAt: now + 3600 * 1000 },
+      },
+    });
+    const result = updateOfflineProgress(state);
+    // Should have crossed the halving boundary
+    expect(result.blocksMined).toBeGreaterThan(210_000);
+    // Reward should be halved after crossing
+    expect(result.currentReward).toBe(25);
+  });
+
+  it('drains electricity from realMoney', () => {
+    const now = Date.now();
+    const cpu = { id: 'basic_cpu', miningSpeed: 10, baseProduction: 10, blockReward: 0, owned: 1, energyRequired: 0 };
+    const state = makeState({
+      hardware: [cpu],
+      realMoney: 10000,
+      totalElectricityCost: 1, // $1/sec
+      lastSaveTime: now - 3600 * 1000,
+      iapState: {
+        permanentMultiplierPurchased: false,
+        booster2x: { isActive: false, expiresAt: null },
+        booster5x: { isActive: false, expiresAt: null },
+        offlineMiner: { isActive: true, activatedAt: now - 7200 * 1000, expiresAt: now + 3600 * 1000 },
+      },
+    });
+    const result = updateOfflineProgress(state);
+    expect(result.realMoney).toBeLessThan(10000);
+  });
+
+  it('does not exceed TOTAL_BLOCKS cap', () => {
+    const now = Date.now();
+    const cpu = { id: 'basic_cpu', miningSpeed: 1000, baseProduction: 10, blockReward: 0, owned: 1, energyRequired: 0 };
+    const state = makeState({
+      hardware: [cpu],
+      blocksMined: GENESIS_CONSTANTS.TOTAL_BLOCKS - 10,
+      lastSaveTime: now - 3600 * 1000,
+      iapState: {
+        permanentMultiplierPurchased: false,
+        booster2x: { isActive: false, expiresAt: null },
+        booster5x: { isActive: false, expiresAt: null },
+        offlineMiner: { isActive: true, activatedAt: now - 7200 * 1000, expiresAt: now + 3600 * 1000 },
+      },
+    });
+    const result = updateOfflineProgress(state);
+    expect(result.blocksMined).toBeLessThanOrEqual(GENESIS_CONSTANTS.TOTAL_BLOCKS);
   });
 });

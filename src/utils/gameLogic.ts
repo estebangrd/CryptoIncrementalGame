@@ -1,6 +1,6 @@
 import { GameState, Hardware, Upgrade } from '../types/game';
 import { BTC_PRICE_HISTORY } from '../data/btcPriceHistory';
-import { GENESIS_CONSTANTS, calculateDifficulty, calculateCurrentReward } from './blockLogic';
+import { GENESIS_CONSTANTS, calculateDifficulty, calculateCurrentReward, calculateNextHalving } from './blockLogic';
 import { getInitialMarketState } from './marketLogic';
 import { getInitialEnergyState, getActiveHardwareWithEnergyConstraint } from './energyLogic';
 import { getAIProductionMultiplier, getInitialAIState } from './aiLogic';
@@ -77,42 +77,12 @@ export const calculateTotalMiningSpeed = (hardware: Hardware[], upgrades: Upgrad
   return hardware.reduce((total, h) => total + calculateHardwareMiningSpeed(h, upgrades), 0);
 };
 
-export const calculateTotalProduction = (gameState: GameState): number => {
-  // Bitcoin-faithful formula: CC/sec = (totalMiningSpeed / difficulty) × globalBlockReward
-  // Exclude manual_mining from auto-production by using energy-constrained calculation
-  const energyState = gameState.energy;
-  const totalGeneratedMW = energyState?.totalGeneratedMW ?? 0;
-  const activeEnergyHardware = getActiveHardwareWithEnergyConstraint(
-    gameState.hardware,
-    totalGeneratedMW
-  );
-  const activeUnitsMap: Record<string, number> = {};
-  for (const hw of activeEnergyHardware) {
-    activeUnitsMap[hw.id] = hw.activeUnits;
-  }
-
-  // Calculate energy-constrained mining speed (excludes manual_mining)
-  let constrainedMiningSpeed = 0;
-  gameState.hardware.forEach(hardware => {
-    if (hardware.id === 'manual_mining') return;
-
-    let effectiveOwned = hardware.owned;
-    if (hardware.energyRequired > 0) {
-      effectiveOwned = activeUnitsMap[hardware.id] ?? 0;
-    }
-    if (effectiveOwned === 0) return;
-
-    const hardwareWithEffectiveOwned = { ...hardware, owned: effectiveOwned };
-    constrainedMiningSpeed += calculateHardwareMiningSpeed(hardwareWithEffectiveOwned, gameState.upgrades);
-  });
-
-  // Global block reward and difficulty based on blocks mined
-  const difficulty = calculateDifficulty(gameState.blocksMined ?? 0);
-  const globalBlockReward = calculateCurrentReward(gameState.blocksMined ?? 0);
-
-  // Base CC production: blocks/sec × reward/block
-  const blocksPerSecond = constrainedMiningSpeed / difficulty;
-  const totalProduction = blocksPerSecond * globalBlockReward;
+/**
+ * Combines ALL global multipliers (prestige, ad boost, permanent, IAP booster, AI)
+ * into one value. Used everywhere multipliers apply to mining speed.
+ */
+export const getAllMultipliers = (gameState: GameState): number => {
+  const prestigeMultiplier = (gameState.prestigeProductionMultiplier ?? gameState.prestigeMultiplier ?? 1);
 
   let adBoostMultiplier = 1.0;
   if (gameState.adBoost?.isActive && gameState.adBoost.expiresAt !== null) {
@@ -141,10 +111,57 @@ export const calculateTotalProduction = (gameState: GameState): number => {
     iapBoosterMultiplier = BOOSTER_CONFIG.BOOSTER_2X.multiplier;
   }
 
-  const prestigeMultiplier = (gameState.prestigeProductionMultiplier ?? gameState.prestigeMultiplier ?? 1);
   const aiMultiplier = getAIProductionMultiplier(gameState.ai?.level ?? 0);
 
-  const finalProduction = totalProduction * prestigeMultiplier * adBoostMultiplier * permanentMultiplier * iapBoosterMultiplier * aiMultiplier;
+  return prestigeMultiplier * adBoostMultiplier * permanentMultiplier * iapBoosterMultiplier * aiMultiplier;
+};
+
+/**
+ * Returns energy-constrained mining speed (excludes manual_mining).
+ */
+export const getConstrainedMiningSpeed = (gameState: GameState): number => {
+  const energyState = gameState.energy;
+  const totalGeneratedMW = energyState?.totalGeneratedMW ?? 0;
+  const activeEnergyHardware = getActiveHardwareWithEnergyConstraint(
+    gameState.hardware,
+    totalGeneratedMW
+  );
+  const activeUnitsMap: Record<string, number> = {};
+  for (const hw of activeEnergyHardware) {
+    activeUnitsMap[hw.id] = hw.activeUnits;
+  }
+
+  let constrainedMiningSpeed = 0;
+  gameState.hardware.forEach(hardware => {
+    if (hardware.id === 'manual_mining') return;
+
+    let effectiveOwned = hardware.owned;
+    if (hardware.energyRequired > 0) {
+      effectiveOwned = activeUnitsMap[hardware.id] ?? 0;
+    }
+    if (effectiveOwned === 0) return;
+
+    const hardwareWithEffectiveOwned = { ...hardware, owned: effectiveOwned };
+    constrainedMiningSpeed += calculateHardwareMiningSpeed(hardwareWithEffectiveOwned, gameState.upgrades);
+  });
+
+  return constrainedMiningSpeed;
+};
+
+export const calculateTotalProduction = (gameState: GameState): number => {
+  // Bitcoin-faithful: multipliers boost mining speed, not CC output
+  // boostedSpeed = constrainedMiningSpeed × allMult
+  // blocksPerSec = boostedSpeed / difficulty
+  // CC/sec = blocksPerSec × globalReward
+  const constrainedMiningSpeed = getConstrainedMiningSpeed(gameState);
+  const allMult = getAllMultipliers(gameState);
+  const boostedSpeed = constrainedMiningSpeed * allMult;
+
+  const difficulty = calculateDifficulty(gameState.blocksMined ?? 0);
+  const globalBlockReward = calculateCurrentReward(gameState.blocksMined ?? 0);
+
+  const blocksPerSecond = boostedSpeed / difficulty;
+  const finalProduction = blocksPerSecond * globalBlockReward;
 
   return finalProduction;
 };
@@ -176,29 +193,8 @@ export const calculateTotalHashRate = (gameState: GameState): number => {
     totalHashRate += baseHashRate * hardware.owned * upgradeMultiplier;
   });
 
-  // Apply global multipliers (same as calculateTotalProduction)
-  const prestigeMultiplier = gameState.prestigeProductionMultiplier ?? gameState.prestigeMultiplier ?? 1;
-
-  let adBoostMultiplier = 1.0;
-  if (gameState.adBoost?.isActive && gameState.adBoost.expiresAt !== null && Date.now() < gameState.adBoost.expiresAt) {
-    adBoostMultiplier = BOOSTER_CONFIG.REWARDED_AD_BOOST.multiplier;
-  }
-
-  const permanentMultiplier = gameState.iapState?.permanentMultiplierPurchased
-    ? BOOSTER_CONFIG.PERMANENT_MULTIPLIER.multiplier
-    : 1.0;
-
-  let iapBoosterMultiplier = 1.0;
-  const now = Date.now();
-  if (gameState.iapState?.booster5x?.isActive && gameState.iapState.booster5x.expiresAt !== null && now < gameState.iapState.booster5x.expiresAt) {
-    iapBoosterMultiplier = BOOSTER_CONFIG.BOOSTER_5X.multiplier;
-  } else if (gameState.iapState?.booster2x?.isActive && gameState.iapState.booster2x.expiresAt !== null && now < gameState.iapState.booster2x.expiresAt) {
-    iapBoosterMultiplier = BOOSTER_CONFIG.BOOSTER_2X.multiplier;
-  }
-
-  const aiMultiplier = getAIProductionMultiplier(gameState.ai?.level ?? 0);
-
-  return totalHashRate * prestigeMultiplier * adBoostMultiplier * permanentMultiplier * iapBoosterMultiplier * aiMultiplier;
+  // Apply global multipliers via unified helper
+  return totalHashRate * getAllMultipliers(gameState);
 };
 
 export const canAffordHardware = (gameState: GameState, hardwareId: string): boolean => {
@@ -293,13 +289,47 @@ export const updateOfflineProgress = (gameState: GameState): GameState => {
     return { ...gameState, lastSaveTime: now };
   }
 
-  const earnings = (gameState.cryptoCoinsPerSecond ?? 0) * offlineSec * BALANCE_CONFIG.OFFLINE_EARNINGS_MULTIPLIER;
+  // Simulate real block mining at 50% mining speed
+  const constrainedMiningSpeed = getConstrainedMiningSpeed(gameState);
+  const allMult = getAllMultipliers(gameState);
+  const offlineSpeed = constrainedMiningSpeed * allMult * BALANCE_CONFIG.OFFLINE_EARNINGS_MULTIPLIER;
+
+  let blocksMined = gameState.blocksMined;
+  const difficulty = calculateDifficulty(blocksMined);
+  const blocksPerSec = offlineSpeed / difficulty;
+  const totalBlocks = Math.floor(blocksPerSec * offlineSec);
+
+  // Process blocks through halvings for accurate CC calculation
+  let coinsEarned = 0;
+  let blocksRemaining = totalBlocks;
+  let currentBlocksMined = blocksMined;
+
+  while (blocksRemaining > 0 && currentBlocksMined < GENESIS_CONSTANTS.TOTAL_BLOCKS) {
+    const reward = calculateCurrentReward(currentBlocksMined);
+    const nextHalving = calculateNextHalving(currentBlocksMined);
+    const blocksUntilHalving = nextHalving - currentBlocksMined;
+    const blocksThisBatch = Math.min(blocksRemaining, blocksUntilHalving, GENESIS_CONSTANTS.TOTAL_BLOCKS - currentBlocksMined);
+
+    coinsEarned += blocksThisBatch * reward;
+    currentBlocksMined += blocksThisBatch;
+    blocksRemaining -= blocksThisBatch;
+  }
+
+  // Drain electricity cost
+  const electricityCost = gameState.totalElectricityCost ?? 0;
+  const electricityDrained = electricityCost * offlineSec;
+
   const offlineMinerExpired = now >= offlineMiner.expiresAt;
 
   return {
     ...gameState,
-    cryptoCoins: gameState.cryptoCoins + earnings,
-    totalCryptoCoins: gameState.totalCryptoCoins + earnings,
+    cryptoCoins: gameState.cryptoCoins + coinsEarned,
+    totalCryptoCoins: gameState.totalCryptoCoins + coinsEarned,
+    blocksMined: currentBlocksMined,
+    realMoney: Math.max(0, gameState.realMoney - electricityDrained),
+    difficulty: calculateDifficulty(currentBlocksMined),
+    currentReward: calculateCurrentReward(currentBlocksMined),
+    nextHalving: calculateNextHalving(currentBlocksMined),
     lastSaveTime: now,
     iapState: gameState.iapState ? {
       ...gameState.iapState,
