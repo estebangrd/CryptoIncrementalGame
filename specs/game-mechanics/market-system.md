@@ -46,10 +46,11 @@ El CryptoCoin nativo deriva su precio del historial de Litecoin escalado por un 
 
 ### Caso de Uso 3: Ver Detalles de Criptomoneda
 **Dado que** el jugador abre la lista de criptomonedas en el Market
-**Cuando** selecciona una criptomoneda
+**Cuando** ve la lista
 **Entonces**
+- CryptoCoin está siempre expandido (chart + sell controls visibles, no colapsable)
+- Las demás criptomonedas se expanden/colapsan al tocar la fila
 - Se muestra el nombre y símbolo en la fila (ej: CryptoCoin · CC · GENESIS CHAIN)
-- Al tocar la fila, se expande mostrando el chart de precios históricos
 - El precio actual en USD se muestra en el header del chart (no en la fila)
 - Se muestra el cambio % dentro de la ventana de 30 minutos en el header del chart
 - Se muestra un botón "Sell" para vender (solo para CryptoCoin nativo)
@@ -366,7 +367,8 @@ function shouldUnlockHardware(gameState: GameState): boolean {
   - Avatar (gradiente dorado con ícono emoji)
   - Nombre y símbolo/ticker (ej: "CryptoCoin / CC · GENESIS CHAIN")
   - **No muestra precio ni badge % en la fila** — solo en el chart header al expandir
-- [x] Al tocar una fila se expande mostrando el chart + sección de venta/exchange
+- [x] CryptoCoin section is always expanded (chart + sell controls always visible, not collapsible)
+- [x] Other currencies expand/collapse on tap, showing chart + exchange section
 - [x] Slider de porcentaje (1%–100%) para seleccionar cantidad a vender
 - [x] Preview de earnings en USD antes de confirmar
 - [x] Botón "Sell" con confirmación de 2 pasos (anti-accidental)

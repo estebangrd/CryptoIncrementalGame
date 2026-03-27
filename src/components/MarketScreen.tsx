@@ -58,6 +58,8 @@ const MarketScreen: React.FC = () => {
   }, []);
 
   const handleSelectCurrency = (currencyId: string) => {
+    // CryptoCoin is always expanded — ignore toggle
+    if (currencyId === 'cryptocoin') return;
     if (gameState.selectedCurrency === currencyId) {
       dispatch({ type: 'SELECT_CURRENCY', payload: null });
     } else {
@@ -192,7 +194,8 @@ const MarketScreen: React.FC = () => {
 
       <ScrollView style={styles.list} contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false} scrollEnabled={scrollEnabled}>
         {(gameState.cryptocurrencies || []).filter(c => isCryptoUnlocked(c.id)).map((crypto) => {
-          const isSelected = crypto.id === gameState.selectedCurrency;
+          const isCryptoCoin = crypto.id === 'cryptocoin';
+          const isSelected = isCryptoCoin || crypto.id === gameState.selectedCurrency;
 
           return (
             <View key={crypto.id} style={styles.cryptoBlock}>

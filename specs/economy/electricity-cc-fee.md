@@ -129,10 +129,12 @@ feePerSec = 27000 × 0.75 / 100 = 202.5 CC/sec
 
 ## UI Changes
 
-BlockStatus "Electricity" card → "Mining Fee" card:
-- Label: "Mining Fee"
-- Value: `-{feePerSec}` (red variant when > 0)
-- Sub: "CC/sec"
+BlockStatus "Electricity" stat card shows total power consumption (narratively tied to planet collapse):
+- Label: "Electricity"
+- Value: `{totalElectricityCost}` (red variant when > 0)
+- Sub: "kW/h"
+
+The CC fee is applied internally but **not displayed** — the electricity stat represents energy footprint for narrative purposes (non-renewable collapse).
 
 ## Pack Electricity Hours
 
