@@ -243,3 +243,5 @@ Spec → Plan → Implement → Test → Commit
 - Types: `feat`, `fix`, `refactor`, `docs`, `chore`
 - Never add "Co-Authored-By" lines or any Claude attribution
 - No bullet points, no multi-line bodies unless strictly necessary
+- **Always use simple single-line format**: `git commit -m 'message here'`
+- **Never use** `$()`, heredocs (`<<EOF`), or any shell substitution in commit commands

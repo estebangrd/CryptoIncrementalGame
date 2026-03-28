@@ -34,6 +34,16 @@ const formatDuration = (totalSec: number): string => {
   return `${m}m`;
 };
 
+const pad2 = (n: number) => n.toString().padStart(2, '0');
+
+const formatLogTimestamp = (totalSec: number, fraction: number): string => {
+  const sec = Math.floor(totalSec * fraction);
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  return `[${pad2(h)}:${pad2(m)}:${pad2(s)}]`;
+};
+
 const OfflineEarningsModal: React.FC<OfflineEarningsModalProps> = ({
   visible,
   pendingEarnings,
@@ -143,9 +153,9 @@ const OfflineEarningsModal: React.FC<OfflineEarningsModalProps> = ({
   }, [visible, pendingEarnings]);
 
   const logLines = [
-    { ts: '[--:--:01]', text: t('offline.logLine1') },
-    { ts: '[--:--:02]', text: t('offline.logLine2').replace('{blocks}', blocksProcessed.toLocaleString()) },
-    { ts: '[--:--:03]', text: t('offline.logLine3') },
+    { ts: formatLogTimestamp(secondsAway, 0.02), text: t('offline.logLine1') },
+    { ts: formatLogTimestamp(secondsAway, 0.55), text: t('offline.logLine2').replace('{blocks}', blocksProcessed.toLocaleString()) },
+    { ts: formatLogTimestamp(secondsAway, 0.98), text: t('offline.logLine3') },
   ];
 
   return (
@@ -294,15 +304,15 @@ const styles = StyleSheet.create({
   },
   logSource: {
     fontFamily: fonts.mono,
-    fontSize: 8,
+    fontSize: 9,
     letterSpacing: 2,
     color: 'rgba(0,229,255,0.6)',
     textTransform: 'uppercase',
   },
   logLine: {
     fontFamily: fonts.mono,
-    fontSize: 10,
-    lineHeight: 16,
+    fontSize: 11,
+    lineHeight: 17,
     color: 'rgba(255,255,255,0.5)',
     marginBottom: 5,
   },
@@ -327,13 +337,13 @@ const styles = StyleSheet.create({
   },
   taText: {
     fontFamily: fonts.mono,
-    fontSize: 10,
+    fontSize: 11,
     color: colors.dim,
     letterSpacing: 2,
   },
   taTime: {
     fontFamily: fonts.orbitron,
-    fontSize: 14,
+    fontSize: 15,
     color: '#fff',
   },
   // Earnings card
@@ -357,7 +367,7 @@ const styles = StyleSheet.create({
   },
   ecLabel: {
     fontFamily: fonts.mono,
-    fontSize: 8,
+    fontSize: 9,
     letterSpacing: 4,
     color: colors.dim,
     textTransform: 'uppercase',
@@ -379,7 +389,7 @@ const styles = StyleSheet.create({
   },
   ecUnit: {
     fontFamily: fonts.mono,
-    fontSize: 14,
+    fontSize: 15,
     color: 'rgba(0,255,136,0.65)',
     letterSpacing: 3,
   },
@@ -397,7 +407,7 @@ const styles = StyleSheet.create({
   },
   capNoteText: {
     fontFamily: fonts.mono,
-    fontSize: 9,
+    fontSize: 10,
     color: 'rgba(255,214,0,0.6)',
     letterSpacing: 1,
   },
@@ -411,16 +421,16 @@ const styles = StyleSheet.create({
   },
   aoTitle: {
     fontFamily: fonts.orbitron,
-    fontSize: 12,
+    fontSize: 13,
     color: '#fff',
     letterSpacing: 1,
     marginBottom: 4,
   },
   aoSub: {
     fontFamily: fonts.rajdhani,
-    fontSize: 13,
+    fontSize: 14,
     color: colors.dim,
-    lineHeight: 20,
+    lineHeight: 21,
     marginBottom: 14,
   },
   watchBtn: {
@@ -439,13 +449,13 @@ const styles = StyleSheet.create({
   },
   watchBtnText: {
     fontFamily: fonts.orbitron,
-    fontSize: 13,
+    fontSize: 14,
     color: colors.ng,
     letterSpacing: 3,
   },
   skipBtn: {
     fontFamily: fonts.mono,
-    fontSize: 10,
+    fontSize: 11,
     letterSpacing: 2,
     color: 'rgba(255,255,255,0.18)',
     textAlign: 'center',
