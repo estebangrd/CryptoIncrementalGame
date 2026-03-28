@@ -192,6 +192,26 @@ export const UPGRADE_CONFIG = {
     multiplier: 5,             // Multiplicador (5 = 5x coins por click)
   },
 
+  // Hash Injection - 3x click (apilable con clickPower → total 15x)
+  clickMastery: {
+    cost: 8000,
+    multiplier: 3,
+    unlockRequirement: {
+      hardwareId: 'basic_gpu',
+      minOwned: 5,
+    },
+  },
+
+  // Click Legend - 2x click (apilable → total 30x)
+  clickLegend: {
+    cost: 100000,
+    multiplier: 2,
+    unlockRequirement: {
+      hardwareId: 'asic_gen3',
+      minOwned: 10,
+    },
+  },
+
   // CPU Efficiency - Duplica velocidad de CPUs
   cpuEfficiency: {
     cost: 5000,

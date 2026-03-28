@@ -239,6 +239,26 @@ export const translations: Translation = {
     es: 'Mina 5x CryptoCoins por clic',
     pt: 'Minera 5x CryptoCoins por clique',
   },
+  'upgrade.clickMastery': {
+    en: 'Hash Injection',
+    es: 'Inyección de Hash',
+    pt: 'Injeção de Hash',
+  },
+  'upgrade.clickMastery.description': {
+    en: 'Mine 15x CryptoCoins per click',
+    es: 'Mina 15x CryptoCoins por clic',
+    pt: 'Minera 15x CryptoCoins por clique',
+  },
+  'upgrade.clickLegend': {
+    en: 'Click Legend',
+    es: 'Leyenda del Clic',
+    pt: 'Lenda do Clique',
+  },
+  'upgrade.clickLegend.description': {
+    en: 'Mine 30x CryptoCoins per click',
+    es: 'Mina 30x CryptoCoins por clic',
+    pt: 'Minera 30x CryptoCoins por clique',
+  },
   'upgrade.cpuEfficiency': {
     en: 'CPU Efficiency',
     es: 'Eficiencia de CPU',
