@@ -59,11 +59,11 @@ const OfflineEarningsModal: React.FC<OfflineEarningsModalProps> = ({
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const shimmerAnim = useRef(new Animated.Value(0)).current;
   const dotAnim = useRef(new Animated.Value(1)).current;
-  const claimingRef = useRef(false);
+  const [claiming, setClaiming] = React.useState(false);
 
   useEffect(() => {
     if (!visible) return;
-    claimingRef.current = false;
+    setClaiming(false);
     fadeAnim.setValue(0);
 
     Animated.timing(fadeAnim, {
@@ -89,56 +89,36 @@ const OfflineEarningsModal: React.FC<OfflineEarningsModalProps> = ({
     ).start();
   }, [visible, fadeAnim, shimmerAnim, dotAnim]);
 
-  const fadeOut = useCallback((callback: () => void) => {
-    Animated.timing(fadeAnim, {
-      toValue: 0,
-      duration: 300,
-      useNativeDriver: true,
-    }).start(() => callback());
-  }, [fadeAnim]);
-
   const handleWatchAd = useCallback(async () => {
-    if (claimingRef.current) return;
-    claimingRef.current = true;
+    if (claiming) return;
+    setClaiming(true);
 
     const pct = OFFLINE_SCREEN_CONFIG.REWARD_MIN_PCT +
       Math.floor(Math.random() * (OFFLINE_SCREEN_CONFIG.REWARD_MAX_PCT - OFFLINE_SCREEN_CONFIG.REWARD_MIN_PCT + 1));
     const claimAmount = Math.round(pendingEarnings * pct / 100);
 
-    const grantedRef = { done: false };
     const grantReward = () => {
-      if (grantedRef.done) return;
-      grantedRef.done = true;
-      fadeOut(() => {
-        onClaim(claimAmount);
-        const toastMsg = t('offline.toast').replace('{amount}', formatNumber(claimAmount));
-        showToast(toastMsg, 'success');
-      });
+      onClaim(claimAmount);
+      const toastMsg = t('offline.toast').replace('{amount}', formatNumber(claimAmount));
+      showToast(toastMsg, 'success');
     };
 
-    if (removeAdsPurchased) {
-      grantReward();
-      return;
-    }
-
-    if (!isRewardedAdReady()) {
+    if (removeAdsPurchased || !isRewardedAdReady()) {
       grantReward();
       return;
     }
 
     await showRewardedAd(
       () => grantReward(),
-      () => {
-        claimingRef.current = false;
-      },
+      () => setClaiming(false),
     );
-  }, [pendingEarnings, removeAdsPurchased, t, onClaim, showToast, fadeOut]);
+  }, [claiming, pendingEarnings, removeAdsPurchased, t, onClaim, showToast]);
 
   const handleSkip = useCallback(() => {
-    if (claimingRef.current) return;
-    claimingRef.current = true;
-    fadeOut(() => onDismiss());
-  }, [fadeOut, onDismiss]);
+    if (claiming) return;
+    setClaiming(true);
+    onDismiss();
+  }, [claiming, onDismiss]);
 
   // JS-driven count-up (addListener on interpolated values is unreliable in RN 0.81)
   const [displayedAmount, setDisplayedAmount] = React.useState('0');
