@@ -22,6 +22,7 @@ import { useGame } from '../contexts/GameContext';
 import { showRewardedAd, isRewardedAdReady } from '../services/AdMobService';
 import { AD_BUBBLE_CONFIG } from '../config/balanceConfig';
 import { colors, fonts } from '../config/theme';
+import { logEvent } from '../services/analytics';
 
 
 // ── Debug: force-spawn a specific bubble (called from SettingsModal) ─────────
@@ -289,6 +290,7 @@ const AdBoosterBubbles: React.FC = () => {
   // ── Tap bubble → show ad (or instant reward if Remove Ads) → activate ───
   const handleBubbleTap = useCallback((type: BubbleType) => {
     const doActivate = () => {
+      logEvent('rewarded_ad_watched', { bubbleType: type });
       switch (type) {
         case 'hash':
           dispatch({ type: 'ACTIVATE_AD_HASH_BOOST' });

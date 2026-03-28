@@ -15,6 +15,7 @@ import EnergyScreen from './EnergyScreen';
 import ChronicleScreen from './ChronicleScreen';
 import { BlockStatus } from './BlockStatus';
 import { colors, fonts } from '../config/theme';
+import { logEvent } from '../services/analytics';
 
 type ActiveTab = 'mining' | 'market' | 'hardware' | 'upgrades' | 'prestige' | 'energy' | 'chronicle';
 
@@ -98,7 +99,7 @@ const HorizontalTabs: React.FC<HorizontalTabsProps> = ({ onMineBlock, onClickBoo
                 isActive && styles.tabActive,
                 isLocked && styles.tabLocked,
               ]}
-              onPress={() => !isLocked && setActiveTab(tab.id)}
+              onPress={() => { if (!isLocked) { setActiveTab(tab.id); logEvent('tab_viewed', { tabName: tab.id }); } }}
               disabled={isLocked}
               activeOpacity={0.7}
             >

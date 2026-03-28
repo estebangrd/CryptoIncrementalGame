@@ -33,6 +33,7 @@ import { getNewlyUnlockedAchievements } from '../utils/achievementLogic';
 import { getPendingNarrativeEvent } from '../utils/narrativeLogic';
 import { Achievement } from '../types/game';
 import { colors, fonts } from '../config/theme';
+import { logEvent } from '../services/analytics';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -415,7 +416,7 @@ const GameScreen: React.FC = () => {
             </Animated.View>
           )}
           {hasPermanentOffers && (
-            <TouchableOpacity style={styles.iconBtn} onPress={() => setShowShop(true)}>
+            <TouchableOpacity style={styles.iconBtn} onPress={() => { setShowShop(true); logEvent('shop_opened', {}); }}>
               <Text style={styles.iconBtnText}>💎</Text>
             </TouchableOpacity>
           )}
@@ -440,7 +441,7 @@ const GameScreen: React.FC = () => {
             </Text>
           </View>
         </View>
-        <BoosterNotch onOpenShop={() => { setShopInitialTab('boosters'); setShowShop(true); }} />
+        <BoosterNotch onOpenShop={() => { setShopInitialTab('boosters'); setShowShop(true); logEvent('shop_opened', {}); }} />
         <AdBoosterBubbles />
       </View>
 
@@ -481,7 +482,7 @@ const GameScreen: React.FC = () => {
         visible={showSettings}
         onClose={() => setShowSettings(false)}
         onReset={handleReset}
-        onOpenShop={() => setShowShop(true)}
+        onOpenShop={() => { setShowShop(true); logEvent('shop_opened', {}); }}
         onTestGoodEnding={() => { setShowSettings(false); setDebugGoodEnding(true); }}
         onTestAICollapse={() => { setShowSettings(false); setDebugAICollapse(true); }}
         onTestHumanCollapse={() => { setShowSettings(false); setDebugHumanCollapse(true); }}

@@ -74,6 +74,8 @@ import {
   generateAISuggestion,
 } from '../utils/aiLogic';
 import { checkNarrativeThresholds } from '../utils/narrativeLogic';
+import { logEvent, initializeAnalytics } from '../services/analytics';
+import { trackAction } from '../services/analytics/analyticsMiddleware';
 
 interface GameContextType {
   gameState: GameState;
@@ -84,7 +86,7 @@ interface GameContextType {
   showToast: (message: string, type?: ToastInfo['type']) => void;
 }
 
-type GameAction =
+export type GameAction =
   | { type: 'BUY_HARDWARE'; payload: string }
   | { type: 'BUY_UPGRADE'; payload: string }
   | { type: 'LOAD_GAME'; payload: GameState }
@@ -1781,7 +1783,14 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
 };
 
 export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [gameState, dispatch] = useReducer(gameReducer, recalculateGameStats({
+  // Wrap gameReducer with analytics middleware
+  const analyticsReducer = React.useCallback((state: GameState, action: GameAction): GameState => {
+    const nextState = gameReducer(state, action);
+    trackAction(state, action, nextState);
+    return nextState;
+  }, []);
+
+  const [gameState, dispatch] = useReducer(analyticsReducer, recalculateGameStats({
     ...getInitialGameState(),
     selectedCurrency: 'cryptocoin',
   }));
@@ -1790,6 +1799,26 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   React.useEffect(() => {
     gameStateRef.current = gameState;
   }, [gameState]);
+
+  // Analytics: session lifecycle
+  const sessionStartRef = React.useRef(Date.now());
+  React.useEffect(() => {
+    initializeAnalytics();
+    logEvent('session_started', {});
+    sessionStartRef.current = Date.now();
+
+    const handleAppState = (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'active') {
+        logEvent('session_started', {});
+        sessionStartRef.current = Date.now();
+      } else if (nextAppState === 'background' || nextAppState === 'inactive') {
+        const durationSec = Math.round((Date.now() - sessionStartRef.current) / 1000);
+        logEvent('session_ended', { durationSec });
+      }
+    };
+    const sub = AppState.addEventListener('change', handleAppState);
+    return () => sub.remove();
+  }, []);
 
   // Save state on unmount (hot reload / Fast Refresh) to prevent progress loss
   React.useEffect(() => {
@@ -2006,6 +2035,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Listener for purchase errors
       purchaseErrorSub = purchaseErrorListener((error) => {
         console.warn('[IAP] Purchase error:', error.message);
+        logEvent('error', { category: 'iap', message: error.message || 'Unknown IAP error', context: 'purchaseErrorListener' });
         dispatch({ type: 'SET_IAP_PURCHASING', payload: false });
       });
     };

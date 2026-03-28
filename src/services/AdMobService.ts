@@ -8,6 +8,7 @@ import {
 } from 'react-native-google-mobile-ads';
 import { getAdUnitId, AD_TIMING } from '../config/adConfig';
 import { GameState } from '../types/game';
+import { logEvent } from './analytics';
 
 // Módulo-level state para instancias pre-cargadas
 let rewardedAd: RewardedAd | null = null;
@@ -25,8 +26,9 @@ export const initializeAdMob = async (): Promise<boolean> => {
     await MobileAds().initialize();
     loadRewardedAd();
     return true;
-  } catch (error) {
+  } catch (error: any) {
     console.warn('[AdMobService] Failed to initialize AdMob:', error);
+    logEvent('error', { category: 'ad', message: error?.message || 'AdMob init failed', context: 'initializeAdMob' });
     return false;
   }
 };
@@ -43,8 +45,9 @@ export const loadRewardedAd = (): void => {
     rewardedAdLoaded = true;
   });
 
-  ad.addAdEventListener(AdEventType.ERROR, () => {
+  ad.addAdEventListener(AdEventType.ERROR, (err) => {
     rewardedAdLoaded = false;
+    logEvent('error', { category: 'ad', message: (err as any)?.message || 'Rewarded ad load error', context: 'loadRewardedAd' });
     // Reintentar después del delay configurado
     setTimeout(() => {
       loadRewardedAd();
@@ -83,8 +86,9 @@ export const showRewardedAd = async (
 
     ad.show();
     return true;
-  } catch (error) {
+  } catch (error: any) {
     console.warn('[AdMobService] Failed to show rewarded ad:', error);
+    logEvent('error', { category: 'ad', message: error?.message || 'Show rewarded ad failed', context: 'showRewardedAd' });
     return false;
   }
 };
@@ -101,8 +105,9 @@ export const loadInterstitial = (): void => {
     interstitialLoaded = true;
   });
 
-  ad.addAdEventListener(AdEventType.ERROR, () => {
+  ad.addAdEventListener(AdEventType.ERROR, (err) => {
     interstitialLoaded = false;
+    logEvent('error', { category: 'ad', message: (err as any)?.message || 'Interstitial load error', context: 'loadInterstitial' });
   });
 
   ad.addAdEventListener(AdEventType.CLOSED, () => {
@@ -144,8 +149,9 @@ export const showInterstitialIfEligible = (gameState: GameState): boolean => {
   try {
     interstitialAd.show();
     return true;
-  } catch (error) {
+  } catch (error: any) {
     console.warn('[AdMobService] Failed to show interstitial:', error);
+    logEvent('error', { category: 'ad', message: error?.message || 'Show interstitial failed', context: 'showInterstitialIfEligible' });
     return false;
   }
 };

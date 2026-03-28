@@ -18,6 +18,7 @@ import { IAP_PRODUCT_IDS, IAP_PRICES } from '../config/iapConfig';
 import { BOOSTER_CONFIG, FLASH_SALE_CONFIG, PACK_CONFIG } from '../config/balanceConfig';
 import { colors, fonts } from '../config/theme';
 import { computeHasActiveSale, shouldRollFlashSale } from '../utils/flashSaleLogic';
+import { logEvent } from '../services/analytics';
 
 // ── Animated background ───────────────────────────────────────────────────────
 
@@ -375,8 +376,11 @@ const ShopScreen: React.FC<ShopScreenProps> = ({ initialTab }) => {
       dispatch({ type: 'SET_IAP_PURCHASING', payload: true });
       await purchaseProduct(productId);
     } catch (error: any) {
-      if (error?.code !== 'E_USER_CANCELLED') {
+      if (error?.code === 'E_USER_CANCELLED') {
+        logEvent('iap_purchase_cancelled', { productId });
+      } else {
         showToast(error?.message || 'Purchase failed', 'error');
+        logEvent('iap_purchase_failed', { productId, errorMessage: error?.message || 'Unknown error' });
       }
       dispatch({ type: 'SET_IAP_PURCHASING', payload: false });
     } finally {
@@ -1234,7 +1238,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({ initialTab }) => {
           <TouchableOpacity
             key={tab.id}
             style={[st.tabBtn, activeTab === tab.id && st.tabBtnActive]}
-            onPress={() => setActiveTab(tab.id)}
+            onPress={() => { setActiveTab(tab.id); logEvent('shop_tab_viewed', { tabName: tab.id }); }}
             activeOpacity={0.8}
           >
             <Text style={st.tabIcon}>{tab.icon}</Text>
