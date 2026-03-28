@@ -599,6 +599,37 @@ export const BOOSTER_CONFIG = {
 } as const;
 
 // ============================================================================
+// AD BOOSTER BUBBLES (rewarded ad floating offers — rotation system)
+// ============================================================================
+export const AD_BUBBLE_CONFIG = {
+  // ── Boost effects ──
+  HASH_BOOST: {
+    multiplier: 1.20,                       // +20% hash rate (shop = 2x)
+    durationMs: 5 * 60 * 1000,             // 5 min effect
+  },
+  MARKET_BOOST: {
+    multiplier: 1.25,                       // +25% sell price (shop = 2x)
+    durationMs: 3 * 60 * 1000,             // 3 min effect
+  },
+  ENERGY_RESTORE: {
+    recoveryPercent: 0.50,                  // 50% of current MW deficit
+  },
+  // ── Bubble visibility (seconds on screen before auto-expire) ──
+  BUBBLE_VISIBLE_SEC: { hash: 45, market: 30, energy: 20 },
+  // ── Cooldowns (ms) — single rotation system ──
+  COOLDOWN_AFTER_WATCH_MIN_MS: 6 * 60 * 1000,   // 6 min
+  COOLDOWN_AFTER_WATCH_MAX_MS: 8 * 60 * 1000,   // 8 min
+  COOLDOWN_AFTER_MISS_MIN_MS:  8 * 60 * 1000,   // 8 min (base)
+  COOLDOWN_AFTER_MISS_MAX_MS:  10 * 60 * 1000,  // 10 min (base)
+  MISS_ESCALATION_MS:          1 * 60 * 1000,    // +1 min per consecutive miss
+  MISS_ESCALATION_CAP_MIN_MS:  13 * 60 * 1000,  // max escalated min
+  MISS_ESCALATION_CAP_MAX_MS:  15 * 60 * 1000,  // max escalated max
+  // ── Pool eligibility thresholds ──
+  HASH_MIN_HARDWARE_UNITS: 5,                     // total owned across all types
+  ENERGY_PLANET_THRESHOLD: 90,                     // planetResources < 90%
+} as const;
+
+// ============================================================================
 // STARTER PACKS - RECOMPENSAS
 // ============================================================================
 export const STARTER_PACK_REWARDS = {

@@ -1751,4 +1751,116 @@ export const translations: Translation = {
     es: 'AGREGAR BOOSTER',
     pt: 'ADICIONAR BOOSTER',
   },
+
+  // ── Ad Booster Bubbles ──────────────────────────────────────────────────
+  'adBubble.hash.name': {
+    en: 'Hash Rate Boost',
+    es: 'Hash Rate Boost',
+    pt: 'Boost de Hash Rate',
+  },
+  'adBubble.hash.detail': {
+    en: 'Your hash rate goes up 20% — more blocks mined per second',
+    es: 'Tu hash rate sube un 20% — más bloques minados por segundo',
+    pt: 'Seu hash rate sobe 20% — mais blocos minerados por segundo',
+  },
+  'adBubble.hash.stackNote': {
+    en: 'Stacks with your active boosters',
+    es: 'Stackea con tus boosters activos',
+    pt: 'Acumula com seus boosters ativos',
+  },
+  'adBubble.hash.toastText': {
+    en: '+20% Hash Rate activated · 5 min',
+    es: '+20% Hash Rate activado · 5 min',
+    pt: '+20% Hash Rate ativado · 5 min',
+  },
+  'adBubble.market.name': {
+    en: 'Market Price',
+    es: 'Precio de Mercado',
+    pt: 'Preço de Mercado',
+  },
+  'adBubble.market.detail': {
+    en: 'CC sell price goes up 25% — best time to sell',
+    es: 'El precio de CC sube un 25% — mejor momento para vender',
+    pt: 'O preço de CC sobe 25% — melhor momento para vender',
+  },
+  'adBubble.market.valueSuffix': {
+    en: 'CC Price',
+    es: 'Precio CC',
+    pt: 'Preço CC',
+  },
+  'adBubble.market.stackNote': {
+    en: 'Great time to sell in the Market',
+    es: 'Ideal para vender ahora en el Market',
+    pt: 'Ideal para vender agora no Market',
+  },
+  'adBubble.market.toastText': {
+    en: '+25% CC price activated · 3 min',
+    es: '+25% precio de CC activado · 3 min',
+    pt: '+25% preço de CC ativado · 3 min',
+  },
+  'adBubble.energy.name': {
+    en: 'Energy Recovery',
+    es: 'Recuperación de Energía',
+    pt: 'Recuperação de Energia',
+  },
+  'adBubble.energy.detail': {
+    en: 'Instantly recover 50% of your energy deficit',
+    es: 'Recuperá al instante el 50% del déficit de energía',
+    pt: 'Recupere instantaneamente 50% do déficit de energia',
+  },
+  'adBubble.energy.valueSuffix': {
+    en: 'Restored',
+    es: 'Restaurada',
+    pt: 'Restaurada',
+  },
+  'adBubble.energy.duration': {
+    en: 'INSTANT',
+    es: 'INSTANTÁNEO',
+    pt: 'INSTANTÂNEO',
+  },
+  'adBubble.energy.stackNote': {
+    en: 'Only available with negative energy balance',
+    es: 'Solo disponible con balance de energía negativo',
+    pt: 'Só disponível com balanço de energia negativo',
+  },
+  'adBubble.energy.toastText': {
+    en: '50% energy restored',
+    es: '50% de energía restaurada',
+    pt: '50% de energia restaurada',
+  },
+  'adBubble.modal.watchToActivate': {
+    en: 'WATCH AD TO ACTIVATE',
+    es: 'VER AD PARA ACTIVAR',
+    pt: 'VER AD PARA ATIVAR',
+  },
+  'adBubble.modal.freeActivation': {
+    en: 'FREE ACTIVATION',
+    es: 'ACTIVACIÓN GRATIS',
+    pt: 'ATIVAÇÃO GRÁTIS',
+  },
+  'adBubble.modal.free': {
+    en: 'Free',
+    es: 'Gratis',
+    pt: 'Grátis',
+  },
+  'adBubble.modal.justWatch': {
+    en: 'just watch the ad',
+    es: 'solo mirá el ad',
+    pt: 'só assista o ad',
+  },
+  'adBubble.modal.watchAndActivate': {
+    en: 'WATCH AD & ACTIVATE',
+    es: 'VER AD Y ACTIVAR',
+    pt: 'VER AD E ATIVAR',
+  },
+  'adBubble.modal.activate': {
+    en: 'ACTIVATE',
+    es: 'ACTIVAR',
+    pt: 'ATIVAR',
+  },
+  'adBubble.modal.notNow': {
+    en: 'Not now',
+    es: 'Ahora no',
+    pt: 'Agora não',
+  },
 };

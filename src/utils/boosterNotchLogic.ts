@@ -3,8 +3,8 @@
  * Computes the list of active boosters and the total production multiplier.
  */
 
-import { BOOSTER_CONFIG } from '../config/balanceConfig';
-import { IAPState, AdBoostState } from '../types/game';
+import { BOOSTER_CONFIG, AD_BUBBLE_CONFIG } from '../config/balanceConfig';
+import { IAPState, AdBoostState, AdHashBoostState, AdMarketBoostState } from '../types/game';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -35,6 +35,8 @@ export function getActiveBoostersList(
   >,
   adBoost: AdBoostState,
   now: number,
+  adHashBoost?: AdHashBoostState,
+  adMarketBoost?: AdMarketBoostState,
 ): ActiveBooster[] {
   const list: ActiveBooster[] = [];
 
@@ -101,6 +103,43 @@ export function getActiveBoostersList(
       icon: '📺',
       label: 'Ad 2x',
       color: '#ffd600',
+    });
+  }
+
+  // 4b. Ad Hash Rate Boost
+  if (
+    adHashBoost?.isActive &&
+    adHashBoost.expiresAt !== null &&
+    now < adHashBoost.expiresAt
+  ) {
+    list.push({
+      id: 'adHashBoost',
+      multiplier: AD_BUBBLE_CONFIG.HASH_BOOST.multiplier,
+      isPermanent: false,
+      expiresAt: adHashBoost.expiresAt,
+      totalDurationMs: AD_BUBBLE_CONFIG.HASH_BOOST.durationMs,
+      icon: '🖥',
+      label: 'Hash +20%',
+      color: '#00e5ff',
+    });
+  }
+
+  // 4c. Ad Market Boost
+  if (
+    adMarketBoost?.isActive &&
+    adMarketBoost.expiresAt !== null &&
+    now < adMarketBoost.expiresAt
+  ) {
+    list.push({
+      id: 'adMarketBoost',
+      multiplier: AD_BUBBLE_CONFIG.MARKET_BOOST.multiplier,
+      isPermanent: false,
+      expiresAt: adMarketBoost.expiresAt,
+      totalDurationMs: AD_BUBBLE_CONFIG.MARKET_BOOST.durationMs,
+      icon: '📈',
+      label: 'Market +25%',
+      color: '#00ff88',
+      isNonProduction: true,
     });
   }
 

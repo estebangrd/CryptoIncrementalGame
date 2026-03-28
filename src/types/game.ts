@@ -119,6 +119,18 @@ export interface AdBoostState {
   lastWatchedAt: number | null;
 }
 
+export interface AdHashBoostState {
+  isActive: boolean;
+  activatedAt: number | null;
+  expiresAt: number | null;
+}
+
+export interface AdMarketBoostState {
+  isActive: boolean;
+  activatedAt: number | null;
+  expiresAt: number | null;
+}
+
 export interface AchievementReward {
   type: 'coins' | 'money' | 'multiplier' | 'cosmetic';
   amount?: number;
@@ -314,6 +326,9 @@ export interface GameState {
   iapState: IAPState;
   adState: AdState;
   adBoost: AdBoostState;
+  adHashBoost: AdHashBoostState;
+  adMarketBoost: AdMarketBoostState;
+  energyBonusMW: number;              // MW injected by ad energy restore
   achievements: Achievement[];
   // Energy system (Phase 4)
   energy: EnergyState;

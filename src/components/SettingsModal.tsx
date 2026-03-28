@@ -13,6 +13,7 @@ import { clearAllGameData } from '../utils/storage';
 import { restorePurchases } from '../services/IAPService';
 import { IAP_PRODUCT_IDS } from '../config/iapConfig';
 import AchievementsScreen from './AchievementsScreen';
+import { debugForceSpawnRef } from './AdBoosterBubbles';
 
 interface SettingsModalProps {
   visible: boolean;
@@ -156,6 +157,18 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose, onReset
               <TouchableOpacity style={[styles.actionButton, { marginTop: 8, backgroundColor: '#5c3a1a' }]} onPress={onTestHumanCollapse}>
                 <Text style={styles.actionButtonText}>🔥 Test Human Collapse (Debug)</Text>
               </TouchableOpacity>
+
+              <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>
+                <TouchableOpacity style={[styles.actionButton, { flex: 1, backgroundColor: '#0a2a3a' }]} onPress={() => { debugForceSpawnRef.current?.('hash'); onClose(); }}>
+                  <Text style={styles.actionButtonText}>🖥 Hash</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.actionButton, { flex: 1, backgroundColor: '#0a2a1a' }]} onPress={() => { debugForceSpawnRef.current?.('market'); onClose(); }}>
+                  <Text style={styles.actionButtonText}>📈 Market</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.actionButton, { flex: 1, backgroundColor: '#2a1a1a' }]} onPress={() => { debugForceSpawnRef.current?.('energy'); onClose(); }}>
+                  <Text style={styles.actionButtonText}>⚡ Energy</Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
             {/* Ads & Purchases */}

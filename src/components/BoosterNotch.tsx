@@ -123,7 +123,7 @@ const BoosterNotch: React.FC<BoosterNotchProps> = ({ onOpenShop }) => {
     ).start();
   }, [pulseAnim]);
 
-  const activeBoosters = getActiveBoostersList(gameState.iapState, gameState.adBoost, now);
+  const activeBoosters = getActiveBoostersList(gameState.iapState, gameState.adBoost, now, gameState.adHashBoost, gameState.adMarketBoost);
   const totalMult = getTotalProductionMultiplier(activeBoosters);
 
   const openDrawer = useCallback(() => {

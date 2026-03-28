@@ -17,7 +17,7 @@ import { clearGameData } from '../utils/storage';
 import HorizontalTabs from './HorizontalTabs';
 import SettingsModal from './SettingsModal';
 import AdBanner from './AdBanner';
-import RewardedAdButton from './RewardedAdButton';
+import AdBoosterBubbles from './AdBoosterBubbles';
 import BoosterNotch from './BoosterNotch';
 import { REMOVE_ADS_CONFIG } from '../config/iapConfig';
 import AchievementToast from './AchievementToast';
@@ -440,6 +440,7 @@ const GameScreen: React.FC = () => {
           </View>
         </View>
         <BoosterNotch onOpenShop={() => { setShopInitialTab('boosters'); setShowShop(true); }} />
+        <AdBoosterBubbles />
       </View>
 
       {/* ── Planet Resources Meter ── */}
@@ -486,8 +487,6 @@ const GameScreen: React.FC = () => {
       />
 
       <AdBanner onHeightChange={setAdBannerHeight} />
-
-      {!gameState.iapState.removeAdsPurchased && <RewardedAdButton sheetTopAnim={null} />}
 
       <AchievementToast
         achievement={toastQueue[0] ?? null}

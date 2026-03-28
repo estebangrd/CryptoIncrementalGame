@@ -1,4 +1,4 @@
-import { GameState, Hardware, Upgrade, IAPState, AdState, AdBoostState } from '../types/game';
+import { GameState, Hardware, Upgrade, IAPState, AdState, AdBoostState, AdHashBoostState, AdMarketBoostState } from '../types/game';
 import { BTC_PRICE_HISTORY } from '../data/btcPriceHistory';
 import { GENESIS_CONSTANTS, calculateDifficulty, calculateCurrentReward, calculateNextHalving } from './blockLogic';
 import { getInitialMarketState } from './marketLogic';
@@ -113,7 +113,15 @@ export const getAllMultipliers = (gameState: GameState): number => {
 
   const aiMultiplier = getAIProductionMultiplier(gameState.ai?.level ?? 0);
 
-  return prestigeMultiplier * adBoostMultiplier * permanentMultiplier * iapBoosterMultiplier * aiMultiplier;
+  // Ad bubble hash rate boost (+20%)
+  let adHashMultiplier = 1.0;
+  if (gameState.adHashBoost?.isActive && gameState.adHashBoost.expiresAt !== null) {
+    if (Date.now() < gameState.adHashBoost.expiresAt) {
+      adHashMultiplier = AD_BUBBLE_CONFIG.HASH_BOOST.multiplier;
+    }
+  }
+
+  return prestigeMultiplier * adBoostMultiplier * permanentMultiplier * iapBoosterMultiplier * aiMultiplier * adHashMultiplier;
 };
 
 /**
@@ -121,7 +129,7 @@ export const getAllMultipliers = (gameState: GameState): number => {
  */
 export const getConstrainedMiningSpeed = (gameState: GameState): number => {
   const energyState = gameState.energy;
-  const totalGeneratedMW = energyState?.totalGeneratedMW ?? 0;
+  const totalGeneratedMW = (energyState?.totalGeneratedMW ?? 0) + (gameState.energyBonusMW ?? 0);
   const activeEnergyHardware = getActiveHardwareWithEnergyConstraint(
     gameState.hardware,
     totalGeneratedMW
@@ -349,7 +357,7 @@ export const formatNumber = (num: number): string => {
   return (num / 1000000000000).toFixed(1) + 'T';
 };
 
-import { UNLOCK_CONFIG, HARDWARE_CONFIG, BOOSTER_CONFIG, BALANCE_CONFIG, BLOCK_CONFIG, ELECTRICITY_FEE_CONFIG } from '../config/balanceConfig';
+import { UNLOCK_CONFIG, HARDWARE_CONFIG, BOOSTER_CONFIG, BALANCE_CONFIG, BLOCK_CONFIG, ELECTRICITY_FEE_CONFIG, AD_BUBBLE_CONFIG } from '../config/balanceConfig';
 
 // Rango del seed: 90000–96000 → BTC/seed ≈ volatility factor around 1.0
 const PRICE_SEED_MIN = 90000;
@@ -586,5 +594,8 @@ export const getInitialGameState = (): GameState => {
       expiresAt: null,
       lastWatchedAt: null,
     } as AdBoostState,
+    adHashBoost: { isActive: false, activatedAt: null, expiresAt: null } as AdHashBoostState,
+    adMarketBoost: { isActive: false, activatedAt: null, expiresAt: null } as AdMarketBoostState,
+    energyBonusMW: 0,
   } as GameState;
 };
