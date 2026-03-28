@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Ad Booster Bubbles</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ng: #00ff88; --nc: #00e5ff; --ny: #ffd600; --nr: #ff3d5a; --np: #a040ff;
+    --bg: #020810; --dim: rgba(255,255,255,0.4); --dim2: rgba(255,255,255,0.18);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;overflow:hidden;}
+  body{background:var(--bg);font-family:'Rajdhani',sans-serif;color:#fff;position:relative;}
+  body::before{
+    content:'';position:fixed;inset:0;
+    background-image:linear-gradient(rgba(0,255,136,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,136,0.025) 1px,transparent 1px);
+    background-size:40px 40px;pointer-events:none;z-index:0;
+  }
+
+  .phone{position:relative;z-index:1;max-width:420px;margin:0 auto;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+
+  /* ── TOPBAR ── */
+  .topbar{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;border-bottom:1px solid rgba(0,255,136,.1);background:rgba(2,8,16,.97);}
+  .logo{font-family:'Orbitron',monospace;font-size:12px;font-weight:900;letter-spacing:2.5px;color:var(--ng);text-shadow:0 0 14px rgba(0,255,136,.5);}
+  .logo span{color:var(--nc);}
+  .icon-btn{width:30px;height:30px;border-radius:7px;border:1px solid rgba(0,255,136,.2);background:rgba(0,255,136,.05);display:flex;align-items:center;justify-content:center;font-size:14px;}
+
+  /* ── BALANCE ── */
+  .hero{flex-shrink:0;padding:16px 18px 12px;text-align:center;background:rgba(2,8,16,.6);border-bottom:1px solid rgba(0,255,136,.07);}
+  .hero-label{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:4px;color:var(--dim);margin-bottom:4px;}
+  .hero-amount{font-family:'Orbitron',monospace;font-size:36px;font-weight:900;color:var(--ng);text-shadow:0 0 24px rgba(0,255,136,.4);line-height:1;}
+  .hero-rate{display:inline-flex;align-items:center;gap:5px;margin-top:8px;background:rgba(0,255,136,.07);border:1px solid rgba(0,255,136,.18);border-radius:20px;padding:3px 12px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--ng);}
+  .rate-dot{width:5px;height:5px;border-radius:50%;background:var(--ng);animation:blink 1s step-end infinite;}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+  /* ── GAME FILLER ── */
+  .game-area{flex:1;position:relative;padding:16px;display:flex;flex-direction:column;gap:8px;opacity:.25;}
+  .filler{height:12px;border-radius:6px;background:rgba(255,255,255,.08);}
+
+  /* ── DEMO CONTROLS ── */
+  .demo-bar{
+    position:absolute;bottom:100px;left:50%;transform:translateX(-50%);
+    display:flex;gap:6px;z-index:30;
+  }
+  .demo-btn{
+    padding:6px 12px;border-radius:8px;cursor:pointer;
+    font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;
+    border:1px solid rgba(255,255,255,.15);background:rgba(2,8,16,.9);
+    color:var(--dim);transition:all .2s;white-space:nowrap;
+  }
+  .demo-btn:hover{border-color:var(--ny);color:var(--ny);}
+
+  /* ════════════════════
+     BUBBLE
+  ════════════════════ */
+  .bubble{
+    position:absolute;
+    left:16px;
+    width:64px;height:64px;
+    border-radius:50%;
+    cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:2px;
+    border:2px solid;
+    transition:transform .15s;
+    z-index:20;
+    /* entrance animation */
+    animation:bubbleIn .4s cubic-bezier(0.22,1,0.36,1) forwards;
+  }
+  @keyframes bubbleIn{
+    0%{transform:scale(0) translateX(-20px);opacity:0;}
+    100%{transform:scale(1) translateX(0);opacity:1;}
+  }
+  .bubble:active{transform:scale(.92);}
+
+  /* Pulse ring */
+  .bubble::before{
+    content:'';position:absolute;inset:-6px;border-radius:50%;
+    border:2px solid;
+    animation:pulseRing 2s ease-out infinite;
+    opacity:0;
+  }
+  @keyframes pulseRing{
+    0%{transform:scale(1);opacity:.6;}
+    100%{transform:scale(1.35);opacity:0;}
+  }
+
+  /* Themes */
+  .bubble.hash{
+    background:radial-gradient(circle,rgba(0,229,255,.18),rgba(0,229,255,.06));
+    border-color:rgba(0,229,255,.5);
+    box-shadow:0 0 20px rgba(0,229,255,.25);
+  }
+  .bubble.hash::before{border-color:var(--nc);}
+
+  .bubble.market{
+    background:radial-gradient(circle,rgba(0,255,136,.18),rgba(0,255,136,.06));
+    border-color:rgba(0,255,136,.5);
+    box-shadow:0 0 20px rgba(0,255,136,.25);
+  }
+  .bubble.market::before{border-color:var(--ng);}
+
+  .bubble.energy{
+    background:radial-gradient(circle,rgba(255,61,90,.18),rgba(255,61,90,.06));
+    border-color:rgba(255,61,90,.5);
+    box-shadow:0 0 20px rgba(255,61,90,.25);
+    animation:bubbleIn .4s cubic-bezier(0.22,1,0.36,1) forwards, energyUrgent 1s ease-in-out infinite;
+  }
+  @keyframes energyUrgent{
+    0%,100%{box-shadow:0 0 20px rgba(255,61,90,.25);}
+    50%{box-shadow:0 0 34px rgba(255,61,90,.6);}
+  }
+  .bubble.energy::before{border-color:var(--nr);}
+
+  .bubble-icon{font-size:20px;line-height:1;}
+  .bubble-label{
+    font-family:'Orbitron',monospace;font-size:8px;font-weight:900;
+    letter-spacing:.5px;line-height:1;text-align:center;
+  }
+  .bubble-label.cyan{color:var(--nc);}
+  .bubble-label.green{color:var(--ng);}
+  .bubble-label.red{color:var(--nr);}
+
+  /* Close X */
+  .bubble-close{
+    position:absolute;top:-4px;right:-4px;
+    width:16px;height:16px;border-radius:50%;
+    background:rgba(2,8,16,.9);border:1px solid rgba(255,255,255,.2);
+    color:var(--dim);font-size:8px;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;z-index:1;
+    transition:all .15s;
+  }
+  .bubble-close:hover{background:var(--nr);border-color:var(--nr);color:#fff;}
+
+  /* TV icon overlay */
+  .bubble-tv{
+    position:absolute;bottom:-4px;right:-4px;
+    width:18px;height:18px;border-radius:50%;
+    background:rgba(2,8,16,.95);border:1px solid rgba(255,255,255,.15);
+    display:flex;align-items:center;justify-content:center;font-size:10px;
+  }
+
+  /* Expiry ring SVG */
+  .bubble-timer{
+    position:absolute;
+    top:50%;left:50%;
+    transform:translate(-50%,-50%) rotate(-90deg);
+    pointer-events:none;
+    width:68px;height:68px;z-index:2;
+  }
+  .bubble-timer circle{
+    fill:none;stroke-width:2.5;
+    stroke-dasharray:195;stroke-dashoffset:0;
+    stroke-linecap:round;
+  }
+
+  /* Expiry animation */
+  @keyframes bubbleExpire{
+    0%{transform:scale(1);opacity:1;}
+    35%{transform:scale(1.18);opacity:.7;}
+    100%{transform:scale(0);opacity:0;}
+  }
+  .bubble.expiring{animation:bubbleExpire .55s ease-in forwards !important;}
+
+  /* Ghost trace after expiry */
+  .bubble-ghost{
+    position:absolute;left:16px;
+    width:64px;height:64px;border-radius:50%;
+    border:1px dashed rgba(255,255,255,.15);
+    display:flex;align-items:center;justify-content:center;
+    font-size:18px;pointer-events:none;
+    animation:ghostIn .3s ease-out forwards, ghostOut 2.5s ease-out 0.5s forwards;
+  }
+  @keyframes ghostIn{0%{opacity:0;transform:scale(.8)}100%{opacity:.35;transform:scale(1)}}
+  @keyframes ghostOut{0%{opacity:.35}100%{opacity:0}}
+
+  /* ════════════════════
+     CONFIRMATION MODAL
+  ════════════════════ */
+  .overlay{
+    position:fixed;inset:0;z-index:50;
+    background:rgba(0,0,0,0);backdrop-filter:blur(0px);
+    pointer-events:none;transition:all .3s;
+  }
+  .overlay.active{background:rgba(0,0,0,.75);backdrop-filter:blur(5px);pointer-events:all;}
+
+  .confirm-modal{
+    position:fixed;bottom:0;left:50%;
+    transform:translate(-50%,100%);
+    z-index:60;width:calc(100% - 32px);max-width:388px;
+    background:linear-gradient(180deg,#0a1220,#060d18);
+    border:1px solid;border-radius:20px 20px 0 0;
+    padding:0 0 32px;
+    transition:transform .38s cubic-bezier(0.22,1,0.36,1);
+    overflow:hidden;
+  }
+  .confirm-modal.active{transform:translate(-50%,0);}
+
+  /* Top accent */
+  .cm-accent{height:3px;}
+  .cm-handle{width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,.12);margin:10px auto 0;}
+
+  .cm-body{padding:16px 20px 0;}
+
+  /* Ad badge */
+  .ad-badge{
+    display:inline-flex;align-items:center;gap:5px;
+    border-radius:6px;padding:3px 10px;margin-bottom:12px;
+    font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:2px;
+  }
+
+  /* Boost display */
+  .cm-boost-display{
+    display:flex;align-items:center;gap:14px;
+    padding:14px;border-radius:14px;border:1px solid;
+    margin-bottom:14px;position:relative;overflow:hidden;
+  }
+  .cm-boost-display::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+
+  .cm-boost-icon{
+    width:52px;height:52px;border-radius:12px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;font-size:26px;
+  }
+  .cm-boost-info{flex:1;}
+  .cm-boost-name{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;}
+  .cm-boost-detail{font-family:'Rajdhani',sans-serif;font-size:13px;color:var(--dim);line-height:1.4;}
+  .cm-boost-value{
+    font-family:'Orbitron',monospace;font-size:22px;font-weight:900;
+    text-align:right;flex-shrink:0;line-height:1;
+  }
+  .cm-boost-duration{
+    font-family:'Share Tech Mono',monospace;font-size:9px;
+    color:var(--dim);text-align:right;margin-top:3px;letter-spacing:1px;
+  }
+
+  /* Stacks note */
+  .cm-stack-note{
+    display:flex;align-items:center;gap:7px;
+    padding:8px 12px;border-radius:8px;
+    background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);
+    margin-bottom:14px;
+    font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:1px;
+  }
+  .cm-stack-note span{color:var(--ng);}
+
+  /* Buttons */
+  .cm-actions{display:flex;flex-direction:column;gap:7px;}
+  .cm-watch-btn{
+    width:100%;padding:15px;border-radius:12px;border:none;
+    font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:3px;
+    cursor:pointer;position:relative;overflow:hidden;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .cm-watch-btn::before{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(135deg,transparent 30%,rgba(255,255,255,.08) 50%,transparent 70%);
+    transform:translateX(-100%);animation:shimmer 2.5s infinite;
+  }
+  @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+  .cm-watch-btn:active{transform:scale(.97);}
+  .cm-dismiss{
+    background:transparent;border:none;
+    font-family:'Share Tech Mono',monospace;font-size:10px;
+    letter-spacing:2px;color:var(--dim2);cursor:pointer;
+    padding:4px;text-align:center;width:100%;
+  }
+
+  /* ════════════════════
+     ACTIVATED TOAST
+  ════════════════════ */
+  .toast{
+    position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-10px);
+    z-index:70;background:rgba(2,8,16,.97);border-radius:12px;
+    padding:10px 18px;display:flex;align-items:center;gap:8px;
+    font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;
+    opacity:0;pointer-events:none;
+    transition:all .25s ease;
+    box-shadow:0 4px 20px rgba(0,0,0,.5);
+    white-space:nowrap;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .toast-icon{font-size:16px;}
+</style>
+</head>
+<body>
+
+<!-- Overlay -->
+<div class="overlay" id="overlay" onclick="closeModal()"></div>
+
+<!-- Confirmation modal -->
+<div class="confirm-modal" id="confirmModal">
+  <div class="cm-accent" id="cmAccent"></div>
+  <div class="cm-handle"></div>
+  <div class="cm-body">
+    <div class="ad-badge" id="adBadge">📺 VER AD PARA ACTIVAR</div>
+    <div class="cm-boost-display" id="cmDisplay">
+      <div class="cm-boost-icon" id="cmIcon"></div>
+      <div class="cm-boost-info">
+        <div class="cm-boost-name" id="cmName"></div>
+        <div class="cm-boost-detail" id="cmDetail"></div>
+      </div>
+      <div>
+        <div class="cm-boost-value" id="cmValue"></div>
+        <div class="cm-boost-duration" id="cmDuration"></div>
+      </div>
+    </div>
+    <div class="cm-stack-note">
+      📺 <span>Gratis</span> — solo mirá el ad · <span id="cmStack"></span>
+    </div>
+    <div class="cm-actions">
+      <button class="cm-watch-btn" id="cmWatchBtn" onclick="watchAd()">
+        📺 VER AD Y ACTIVAR
+      </button>
+      <button class="cm-dismiss" onclick="closeModal()">Ahora no</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <span class="toast-icon" id="toastIcon"></span>
+  <span id="toastText"></span>
+</div>
+
+<div class="phone">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="logo">BLOCK<span>CHAIN</span> TYCOON</div>
+    <div style="display:flex;gap:6px;">
+      <div class="icon-btn">💎</div>
+      <div class="icon-btn">⚙️</div>
+    </div>
+  </div>
+
+  <!-- BALANCE -->
+  <div class="hero">
+    <div class="hero-label">CryptoCoins</div>
+    <div class="hero-amount">19.6M</div>
+    <div class="hero-rate"><div class="rate-dot"></div>+6.0K CC/s</div>
+  </div>
+
+  <!-- GAME FILLER -->
+  <div class="game-area">
+    <div class="filler" style="width:100%"></div>
+    <div class="filler" style="width:85%"></div>
+    <div class="filler" style="width:100%"></div>
+    <div class="filler" style="width:70%"></div>
+    <div class="filler" style="width:100%"></div>
+    <div class="filler" style="width:90%"></div>
+    <div class="filler" style="width:60%"></div>
+
+    <!-- BUBBLES live here, injected by JS -->
+  </div>
+
+  <!-- DEMO CONTROLS -->
+  <div class="demo-bar">
+    <div class="demo-btn" onclick="spawnBubble('hash')">⚡ Hash Rate</div>
+    <div class="demo-btn" onclick="spawnBubble('market')">📈 Mercado</div>
+    <div class="demo-btn" onclick="spawnBubble('energy')">🔋 Energía</div>
+  </div>
+
+</div>
+
+<script>
+const boosters = {
+  hash: {
+    icon: '🖥',
+    name: 'Hash Rate Boost',
+    detail: 'Tu hash rate sube un 20% — más bloques minados por segundo',
+    value: '+20%',
+    valueSuffix: 'Hash Rate',
+    duration: '30 MIN',
+    stack: 'Stackea con tus boosters activos',
+    color: 'var(--nc)',
+    borderColor: 'rgba(0,229,255,.25)',
+    bg: 'rgba(0,229,255,.05)',
+    accentGrad: 'linear-gradient(90deg,var(--nc),var(--ng))',
+    adBadgeBg: 'rgba(0,229,255,.08)',
+    adBadgeBorder: 'rgba(0,229,255,.2)',
+    adBadgeColor: 'var(--nc)',
+    btnBg: 'linear-gradient(135deg,rgba(0,229,255,.16),rgba(0,229,255,.08))',
+    btnBorder: 'var(--nc)',
+    btnColor: 'var(--nc)',
+    toastIcon: '🖥',
+    toastText: '+20% Hash Rate activado · 30 min',
+    toastColor: 'var(--nc)',
+    bubbleClass: 'hash',
+    bubbleLabel: '+20%',
+    bubbleLabelClass: 'cyan',
+  },
+  market: {
+    icon: '📈',
+    name: 'Precio de Mercado',
+    detail: 'El precio de CC sube un 25% — mejor momento para vender',
+    value: '+25%',
+    valueSuffix: 'Precio CC',
+    duration: '10 MIN',
+    stack: 'Ideal para vender ahora en el Market',
+    color: 'var(--ng)',
+    borderColor: 'rgba(0,255,136,.25)',
+    bg: 'rgba(0,255,136,.05)',
+    accentGrad: 'linear-gradient(90deg,var(--ng),var(--nc))',
+    adBadgeBg: 'rgba(0,255,136,.08)',
+    adBadgeBorder: 'rgba(0,255,136,.2)',
+    adBadgeColor: 'var(--ng)',
+    btnBg: 'linear-gradient(135deg,rgba(0,255,136,.16),rgba(0,229,255,.08))',
+    btnBorder: 'var(--ng)',
+    btnColor: 'var(--ng)',
+    toastIcon: '📈',
+    toastText: '+25% precio de CC activado · 10 min',
+    toastColor: 'var(--ng)',
+    bubbleClass: 'market',
+    bubbleLabel: '+25%',
+    bubbleLabelClass: 'green',
+  },
+  energy: {
+    icon: '⚡',
+    name: 'Recuperación de Energía',
+    detail: 'Recuperá al instante el balance de energía — salí del blackout',
+    value: '100%',
+    valueSuffix: 'Restaurada',
+    duration: 'INSTANTÁNEO',
+    stack: 'Solo disponible con balance de energía negativo',
+    color: 'var(--nr)',
+    borderColor: 'rgba(255,61,90,.25)',
+    bg: 'rgba(255,61,90,.05)',
+    accentGrad: 'linear-gradient(90deg,var(--nr),#ff8c42)',
+    adBadgeBg: 'rgba(255,61,90,.08)',
+    adBadgeBorder: 'rgba(255,61,90,.2)',
+    adBadgeColor: 'var(--nr)',
+    btnBg: 'linear-gradient(135deg,rgba(255,61,90,.16),rgba(255,61,90,.08))',
+    btnBorder: 'var(--nr)',
+    btnColor: 'var(--nr)',
+    toastIcon: '⚡',
+    toastText: 'Energía restaurada al 100%',
+    toastColor: 'var(--nr)',
+    bubbleClass: 'energy',
+    bubbleLabel: '100%',
+    bubbleLabelClass: 'red',
+  },
+};
+
+// Expiry durations in seconds (demo: short values)
+const DURATIONS = { hash: 15, market: 8, energy: 12 };
+
+let activeBubbles = {};
+let bubbleTimers = {};
+let currentType = null;
+
+function spawnBubble(type) {
+  if(activeBubbles[type]) return;
+
+  const b = boosters[type];
+  const gameArea = document.querySelector('.game-area');
+  const positions = {hash: '28%', market: '46%', energy: '64%'};
+  const dur = DURATIONS[type];
+
+  // Ring stroke color per type
+  const ringColor = {hash:'rgba(0,229,255,.7)', market:'rgba(0,255,136,.7)', energy:'rgba(255,61,90,.7)'};
+
+  const bubble = document.createElement('div');
+  bubble.className = `bubble ${b.bubbleClass}`;
+  bubble.id = `bubble-${type}`;
+  bubble.style.top = positions[type];
+  bubble.innerHTML = `
+    <div class="bubble-close" onclick="event.stopPropagation();dismissBubble('${type}')">✕</div>
+    <span class="bubble-icon">${b.icon}</span>
+    <span class="bubble-label ${b.bubbleLabelClass}">${b.bubbleLabel}</span>
+    <div class="bubble-tv">📺</div>
+    ${dur ? `<svg class="bubble-timer" viewBox="0 0 68 68">
+      <circle cx="34" cy="34" r="31" stroke="${ringColor[type]}" id="ring-${type}"/>
+    </svg>` : ''}
+  `;
+  bubble.addEventListener('click', ()=>openModal(type));
+  gameArea.appendChild(bubble);
+  activeBubbles[type] = bubble;
+
+  // Smooth rAF countdown
+  if(dur) {
+    const CIRC = 195; // 2*PI*31 ≈ 194.8
+    const ring = document.getElementById(`ring-${type}`);
+    const startTime = performance.now();
+    const durationMs = dur * 1000;
+
+    function tick(now) {
+      if(!activeBubbles[type]) return; // bubble removed
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / durationMs, 1);
+      if(ring) ring.style.strokeDashoffset = progress * CIRC;
+      if(progress < 1) {
+        bubbleTimers[type] = requestAnimationFrame(tick);
+      } else {
+        expireBubble(type);
+      }
+    }
+    bubbleTimers[type] = requestAnimationFrame(tick);
+  }
+}
+
+function expireBubble(type) {
+  const b = boosters[type];
+  const bubble = activeBubbles[type];
+  if(!bubble) return;
+
+  // Get position before removing
+  const top = bubble.style.top;
+
+  // Expiry animation
+  bubble.classList.add('expiring');
+  setTimeout(()=>{
+    bubble.remove();
+    delete activeBubbles[type];
+
+    // Leave ghost
+    const gameArea = document.querySelector('.game-area');
+    const ghost = document.createElement('div');
+    ghost.className = 'bubble-ghost';
+    ghost.style.top = top;
+    ghost.textContent = b.icon;
+    gameArea.appendChild(ghost);
+    setTimeout(()=>ghost.remove(), 3500);
+  }, 560);
+}
+
+function dismissBubble(type) {
+  cancelAnimationFrame(bubbleTimers[type]);
+  const b = activeBubbles[type];
+  if(b){
+    b.style.transform='scale(0)';b.style.opacity='0';b.style.transition='all .25s';
+    setTimeout(()=>{b.remove();delete activeBubbles[type];},260);
+  }
+}
+
+function openModal(type) {
+  currentType = type;
+  const b = boosters[type];
+
+  document.getElementById('cmAccent').style.background = b.accentGrad;
+  document.getElementById('adBadge').style.cssText = `background:${b.adBadgeBg};border:1px solid ${b.adBadgeBorder};color:${b.adBadgeColor};display:inline-flex;align-items:center;gap:5px;border-radius:6px;padding:3px 10px;margin-bottom:12px;font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:2px;`;
+  document.getElementById('cmDisplay').style.cssText = `display:flex;align-items:center;gap:14px;padding:14px;border-radius:14px;border:1px solid ${b.borderColor};background:${b.bg};margin-bottom:14px;position:relative;overflow:hidden;`;
+  document.getElementById('cmIcon').style.cssText = `width:52px;height:52px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:26px;background:${b.bg};border:1px solid ${b.borderColor};`;
+  document.getElementById('cmIcon').textContent = b.icon;
+  document.getElementById('cmName').textContent = b.name;
+  document.getElementById('cmDetail').textContent = b.detail;
+  document.getElementById('cmValue').style.color = b.color;
+  document.getElementById('cmValue').textContent = b.value;
+  document.getElementById('cmDuration').textContent = b.duration;
+  document.getElementById('cmStack').textContent = b.stack;
+  document.getElementById('cmWatchBtn').style.cssText = `width:100%;padding:15px;border-radius:12px;border:1px solid ${b.btnBorder};background:${b.btnBg};color:${b.btnColor};font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:3px;cursor:pointer;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 0 18px ${b.borderColor};`;
+  document.getElementById('confirmModal').style.borderColor = b.borderColor;
+
+  document.getElementById('overlay').classList.add('active');
+  document.getElementById('confirmModal').classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('overlay').classList.remove('active');
+  document.getElementById('confirmModal').classList.remove('active');
+  currentType = null;
+}
+
+function watchAd() {
+  if(!currentType) return;
+  const b = boosters[currentType];
+  closeModal();
+  cancelAnimationFrame(bubbleTimers[currentType]);
+  dismissBubble(currentType);
+
+  // Show activation toast
+  const toast = document.getElementById('toast');
+  document.getElementById('toastIcon').textContent = b.toastIcon;
+  document.getElementById('toastText').textContent = b.toastText;
+  toast.style.borderColor = b.toastColor;
+  toast.style.color = b.toastColor;
+  toast.classList.add('show');
+  setTimeout(()=>toast.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>

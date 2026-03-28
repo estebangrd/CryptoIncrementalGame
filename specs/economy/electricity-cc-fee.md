@@ -7,7 +7,7 @@
 | Fase | Economy Rebalance |
 | Estado | ✅ Implemented |
 | Prioridad | Critical |
-| Última actualización | 2026-03-26 |
+| Última actualización | 2026-03-27 |
 
 ## Descripción
 
@@ -25,8 +25,8 @@ Electricity weight values are used to compute a CC fee per tick:
 CC_fee_per_tick = totalElectricityWeight × (RATE_PERCENT / 100)
 ```
 
-- `totalElectricityWeight = Σ(hw.electricityCost × hw.owned)` — existing calculation, values scaled ×10
-- `RATE_PERCENT = 0.75` — configurable in `ELECTRICITY_FEE_CONFIG`
+- `totalElectricityWeight = Σ(hw.electricityCost × hw.owned)` — existing calculation
+- `RATE_PERCENT = 1.5` — configurable in `ELECTRICITY_FEE_CONFIG`
 - Net CC = mined CC - fee (clamped to 0)
 - `realMoney` is **never** drained by electricity
 
@@ -71,51 +71,51 @@ cryptoCoins = Math.max(0, cryptoCoins + netCoins);
 ```typescript
 // src/config/balanceConfig.ts
 export const ELECTRICITY_FEE_CONFIG = {
-  RATE_PERCENT: 0.75,
+  RATE_PERCENT: 1.5,
 };
 ```
 
-### Hardware Electricity Weights (×10 from original)
+### Hardware Electricity Weights
 
-| Hardware | Old electricityCost | New electricityCost (weight) |
-|----------|-------------------|------------------------------|
-| manual_mining | 0 | 0 |
-| basic_cpu | 0.5 | 5 |
-| advanced_cpu | 1.2 | 12 |
-| basic_gpu | 3 | 30 |
-| advanced_gpu | 7 | 70 |
-| asic_gen1 | 20 | 200 |
-| asic_gen2 | 45 | 450 |
-| asic_gen3 | 100 | 1000 |
-| mining_farm | 300 | 3000 |
-| quantum_miner | 900 | 9000 |
-| supercomputer | 3000 | 30000 |
+| Hardware | electricityCost (weight) |
+|----------|:---:|
+| manual_mining | 0 |
+| basic_cpu | 3 |
+| advanced_cpu | 10 |
+| basic_gpu | 40 |
+| advanced_gpu | 120 |
+| asic_gen1 | 300 |
+| asic_gen2 | 900 |
+| asic_gen3 | 2,500 |
+| mining_farm | 4,500 |
+| quantum_miner | 15,000 |
+| supercomputer | 50,000 |
 
 ## Example Scenarios
 
 ### Early Game (10 basic_cpu)
 
 ```
-totalWeight = 5 × 10 = 50
-feePerSec = 50 × 0.75 / 100 = 0.375 CC/sec
+totalWeight = 3 × 10 = 30
+feePerSec = 30 × 1.5 / 100 = 0.45 CC/sec
 grossCC = ~15 CC/sec (10 CPUs at era 0)
-netCC = 14.625 CC/sec (~2.5% loss)
+netCC = 14.55 CC/sec (~3% loss)
 ```
 
 ### Mid Game (5 asic_gen2)
 
 ```
-totalWeight = 450 × 5 = 2250
-feePerSec = 2250 × 0.75 / 100 = 16.875 CC/sec
+totalWeight = 900 × 5 = 4500
+feePerSec = 4500 × 1.5 / 100 = 67.5 CC/sec
 grossCC = ~187.5 CC/sec
-netCC = ~170.6 CC/sec (~9% loss)
+netCC = ~120 CC/sec (~36% loss)
 ```
 
 ### Late Game (3 quantum_miner)
 
 ```
-totalWeight = 9000 × 3 = 27000
-feePerSec = 27000 × 0.75 / 100 = 202.5 CC/sec
+totalWeight = 15000 × 3 = 45000
+feePerSec = 45000 × 1.5 / 100 = 675 CC/sec
 ```
 
 ## Archivos Modificados

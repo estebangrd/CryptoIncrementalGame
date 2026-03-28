@@ -166,7 +166,7 @@ Todas las specs siguen el mismo formato exhaustivo (Level 3):
 ## 🎮 Filosofía del Juego
 
 ### Balance
-- Primera run: 10-15 horas (active play)
+- Primera run: múltiples sesiones de juego activo (economy rebalance v2, 2026-03-27)
 - Cada prestige acelera ~50% la siguiente run
 - Siempre hay un "próximo objetivo" visible
 - Algo nuevo se desbloquea cada 15-60 minutos (early game)
@@ -254,6 +254,6 @@ Para preguntas sobre estas specs, consulta:
 
 ---
 
-**Última actualización**: 2026-03-21
+**Última actualización**: 2026-03-27
 **Versión del proyecto**: 0.0.1 (Phase 1-7)
 **Próxima fase**: Post-narrativa (Daily Missions, Market Events, Polish)

@@ -289,11 +289,13 @@
           <div class="stat-sub">H/s — Active</div>
           <svg class="sparkline" width="40" height="20" viewBox="0 0 40 20"><polyline points="0,18 7,14 14,16 20,8 27,10 33,4 40,6" fill="none" stroke="rgba(0,229,255,.5)" stroke-width="1.5"/></svg>
         </div>
+        <!-- Net Income: value = cryptoCoinsPerSecond + clickBoost (from manual mining).
+             When clicking: sub shows "+X click", otherwise "CC/sec". -->
         <div class="stat-card">
           <span class="stat-icon">◈</span>
           <div class="stat-label">Net Income</div>
           <div class="stat-value">+5.9K</div>
-          <div class="stat-sub">CC/sec</div>
+          <div class="stat-sub">+120 click</div>
           <svg class="sparkline" width="40" height="20" viewBox="0 0 40 20"><polyline points="0,16 7,12 14,14 20,6 27,9 33,3 40,5" fill="none" stroke="rgba(0,255,136,.5)" stroke-width="1.5"/></svg>
         </div>
         <div class="stat-card danger">
@@ -461,7 +463,7 @@
     <div class="tab-panel" id="tab-upgrades">
       <div class="sec-hdr">Research Lab</div>
 
-      <!-- Click Power -->
+      <!-- Click Power — always visible (type: 'always') -->
       <div class="upg-card">
         <div class="upg-top">
           <div class="upg-icon">👆</div>
@@ -469,7 +471,33 @@
         </div>
         <div class="divider"></div>
         <div class="upg-footer">
-          <div><div class="upg-cost-lbl">RESEARCH COST</div><div class="upg-cost">$1.0K</div></div>
+          <div><div class="upg-cost-lbl">RESEARCH COST</div><div class="upg-cost">$500</div></div>
+          <button class="upg-btn">ACQUIRE</button>
+        </div>
+      </div>
+
+      <!-- Hash Injection — hidden until 5× basic_gpu owned (type: 'hardware', hardwareId: 'basic_gpu', minOwned: 5) -->
+      <div class="upg-card">
+        <div class="upg-top">
+          <div class="upg-icon">⚡</div>
+          <div class="upg-info"><div class="upg-name">Hash Injection</div><div class="upg-desc">3× click multiplier (stacks with Click Power → 15×)</div></div>
+        </div>
+        <div class="divider"></div>
+        <div class="upg-footer">
+          <div><div class="upg-cost-lbl">RESEARCH COST</div><div class="upg-cost">$10.0K</div></div>
+          <button class="upg-btn">ACQUIRE</button>
+        </div>
+      </div>
+
+      <!-- Click Legend — hidden until 10× asic_gen3 owned (type: 'hardware', hardwareId: 'asic_gen3', minOwned: 10) -->
+      <div class="upg-card">
+        <div class="upg-top">
+          <div class="upg-icon">🏆</div>
+          <div class="upg-info"><div class="upg-name">Click Legend</div><div class="upg-desc">2× click multiplier (stacks → total 30×)</div></div>
+        </div>
+        <div class="divider"></div>
+        <div class="upg-footer">
+          <div><div class="upg-cost-lbl">RESEARCH COST</div><div class="upg-cost">$2.0M</div></div>
           <button class="upg-btn">ACQUIRE</button>
         </div>
       </div>

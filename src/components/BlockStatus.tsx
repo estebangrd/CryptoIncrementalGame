@@ -314,8 +314,8 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
         <NodeStat
           icon="🪙"
           label="Net Income"
-          value={`+${formatNumber(gameState.cryptoCoinsPerSecond)}`}
-          sub="CC/sec"
+          value={`+${formatNumber(gameState.cryptoCoinsPerSecond + clickBoost)}`}
+          sub={hasClickBoost ? `+${formatNumber(clickBoost)} click` : 'CC/sec'}
           variant="green"
         />
         <NodeStat

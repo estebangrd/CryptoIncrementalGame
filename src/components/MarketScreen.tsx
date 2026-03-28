@@ -253,7 +253,7 @@ const MarketScreen: React.FC = () => {
                       <View style={styles.earnBox}>
                         <Text style={styles.earnAmount}>{formatUSD(sellPreviewMoney)}</Text>
                         <Text style={styles.earnSub}>
-                          YOU'LL EARN · PRICE {formatPriceUSD(getSelectedCurrency()!.currentValue)} PER CC
+                          YOU'LL EARN · PRICE {formatPriceUSD(getSelectedCurrency()?.currentValue ?? 0)} PER CC
                         </Text>
                       </View>
 
@@ -311,16 +311,16 @@ const MarketScreen: React.FC = () => {
                             <Text style={styles.currencyIconSmall}>
                               {getLocalExchangePreview()!.fromCurrency === 'cryptocoin'
                                 ? '🪙'
-                                : getSelectedCurrency()!.icon}
+                                : getSelectedCurrency()?.icon}
                             </Text>
                             <Text style={styles.currencyText}>
                               {getLocalExchangePreview()!.fromCurrency === 'cryptocoin'
                                 ? 'CryptoCoin'
-                                : t(getSelectedCurrency()!.name)}
+                                : t(getSelectedCurrency()?.name)}
                               {' → '}
                               {getLocalExchangePreview()!.toCurrency === 'cryptocoin'
                                 ? 'CryptoCoin'
-                                : t(getSelectedCurrency()!.name)}
+                                : t(getSelectedCurrency()?.name)}
                             </Text>
                           </View>
                         </View>
@@ -590,7 +590,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.orbitron,
     fontSize: 11,
     color: colors.ng,
-    fontWeight: '700',
   },
 
   /* Sell outline (for non-CC exchange row) */

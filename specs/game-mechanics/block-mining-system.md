@@ -4,7 +4,7 @@
 - **Fase**: Phase 1 - Genesis (Implemented)
 - **Estado**: Implemented & Active
 - **Prioridad**: Critical (Core Game Mechanic)
-- **Última actualización**: 2026-03-05
+- **Última actualización**: 2026-03-27
 
 ## Descripción
 
@@ -50,16 +50,22 @@ Este sistema es el corazón del loop de gameplay: minar bloques → ganar Crypto
 
 **Diseño de balance:**
 - **Early game** (sin hardware): click = 50 coins = fuente primaria de ingresos
-- **Con upgrade clickPower**: click = 250 coins (5×) — impacto notable early-mid
-- **Midgame** (hardware produce 5,000+/sec): 250 coins/click = < 0.05 seg de producción → irrelevante
-- **Late game**: halvings reducen el reward base (50 → 25 → 12.5...) AND hardware escala exponencialmente → el click se vuelve testimonial
+- **Con Click Power**: click = 250 coins (5×) — impacto notable early-mid
+- **Con Hash Injection** (5× × 3×): click = 750 coins (15×) — extiende utilidad del click al mid game
+- **Con Click Legend** (5× × 3× × 2×): click = 1,500 coins (30×) — relevante en late game con ASICs
+- **Late game**: halvings reducen el reward base (50 → 25 → 12.5...) AND hardware escala exponencialmente
 
-**Upgrade clickPower:**
-- Existe UN solo upgrade de este tipo (`id: 'clickPower'`)
-- Multiplier: ×5
-- Costo: $1,000 dinero real
-- Se desbloquea siempre (visible desde el inicio del juego)
-- Intención de diseño: el jugador NO debería seguir haciendo click activo en midgame
+**Upgrades de Click (3 tiers, multiplicativos entre sí):**
+
+| ID | Nombre | Mult | Costo | Unlock | Total acumulado |
+|---|---|---|---|---|---|
+| `clickPower` | Click Power | ×5 | $500 | `type: 'always'` (siempre visible) | ×5 |
+| `clickMastery` | Hash Injection | ×3 | $10,000 | `type: 'hardware'` — 5× `basic_gpu` | ×15 |
+| `clickLegend` | Click Legend | ×2 | $2,000,000 | `type: 'hardware'` — 10× `asic_gen3` | ×30 |
+
+- Los upgrades se ocultan hasta que se cumple su `unlockCondition` (mismo sistema que todos los upgrades)
+- Los multiplicadores se apilan multiplicativamente: 5 × 3 × 2 = 30×
+- Cada tier extiende la utilidad del click manual a fases más avanzadas del juego
 
 ### Caso de Uso 3: Producción Automática Estable Post-Halvings
 **Dado que** el jugador tiene hardware activo y ha pasado por múltiples halvings (e.g., blocksMined = 5,000,000)
@@ -277,9 +283,17 @@ export const BLOCK_CONFIG = {
   TOTAL_BLOCKS: 21_000_000,      // Máximo de bloques minables
   INITIAL_REWARD: 50,            // Recompensa inicial por bloque
   HALVING_INTERVAL: 210_000,     // Bloques entre cada halving
-  INITIAL_DIFFICULTY: 1,         // Dificultad inicial (no usado actualmente)
-  DIFFICULTY_INCREASE_RATE: 0.00001  // Tasa de incremento (no usado actualmente)
+  INITIAL_DIFFICULTY: 1,         // Dificultad inicial
+  DIFFICULTY: {
+    AMPLITUDE: 0.8,              // Scaling factor
+    SCALE_BLOCKS: 200_000,       // Reference block count
+    EXPONENT: 0.65,              // Power curve exponent
+  },
+  ERA_BASE_PRICES: [0.08, 0.50, 2.00, 5.00, 8.00, 8.00, 8.00],
 };
+
+// Difficulty formula: 1.0 + AMPLITUDE × (blocksMined / SCALE_BLOCKS)^EXPONENT
+// At 0 blocks: 1.0, at 210K: ~1.83, at 1M: ~3.28, at 21M: ~17.47
 ```
 
 ## Estructura de Datos
@@ -328,7 +342,7 @@ interface Hardware {
 2. **Los bloques se minan de forma discreta**: Solo bloques completos, no fracciones (aunque mining speed puede ser decimal)
 2b. **El click manual siempre otorga mínimo 1 coin**: `Math.max(1, Math.floor(reward))` — nunca 0 ni decimal
 2c. **El click manual consume 1 bloque del supply**: Contribuye a los halvings igual que el minado automático
-2d. **Solo existe UN upgrade de clickPower (×5)**: No hay más tiers — la intención es que el jugador NO siga haciendo click en midgame
+2d. **Existen 3 tiers de click upgrades** (clickPower ×5, clickMastery ×3, clickLegend ×2) que se apilan multiplicativamente (máx ×30). Se ocultan hasta cumplir su `unlockCondition`
 3. **La recompensa se calcula en el momento del minado**: No se puede "guardar" una recompensa mayor
 4. **El halving es automático e irreversible**: Una vez que se reduce la recompensa, no vuelve a subir
 5. **El mining speed puede ser 0**: Si el jugador no tiene hardware o tiene solo manual mining inactivo

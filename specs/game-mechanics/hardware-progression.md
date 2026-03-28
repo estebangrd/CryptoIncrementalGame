@@ -4,13 +4,13 @@
 - **Fase**: Phase 1 - Genesis (Implemented)
 - **Estado**: Implemented & Active
 - **Prioridad**: Critical (Core Progression Mechanic)
-- **Última actualización**: 2026-02-21
+- **Última actualización**: 2026-03-27
 
 ## Descripción
 
-El sistema de progresión de hardware es la principal mecánica de upgrade del juego. Los jugadores compran hardware de minería que automáticamente mina bloques y genera CryptoCoins. El hardware está organizado en 8 niveles tecnológicos que se desbloquean progresivamente, desde CPUs básicos hasta ASICs de tercera generación.
+El sistema de progresión de hardware es la principal mecánica de upgrade del juego. Los jugadores compran hardware de minería que automáticamente mina bloques y genera CryptoCoins. El hardware está organizado en 11 niveles tecnológicos que se desbloquean progresivamente, desde CPUs básicos hasta Supercomputers.
 
-Cada nivel de hardware tiene costos crecientes (scaling exponencial), mayor producción, y mayores costos de electricidad. El sistema está diseñado para crear una curva de progresión satisfactoria donde el jugador siempre tiene un "siguiente objetivo" alcanzable.
+Cada nivel de hardware tiene costos crecientes (scaling exponencial con COST_MULTIPLIER 1.35), mayor producción, y mayores costos de electricidad (CC fee weights). El sistema está diseñado para crear una curva de progresión satisfactoria donde el jugador siempre tiene un "siguiente objetivo" alcanzable. Hardware se compra con $ (real money), no con CC.
 
 ## Objetivos
 - [x] Crear una progresión clara y satisfactoria de upgrades
@@ -75,8 +75,8 @@ Cada nivel de hardware tiene costos crecientes (scaling exponencial), mayor prod
   id: 'manual_mining',
   level: 1,
   baseCost: 0,
-  baseProduction: 10,      // Hash rate (cosmético)
-  blockReward: 50,         // CryptoCoins por bloque
+  baseProduction: 10,      // Hash rate (display only)
+  blockReward: 0,          // Deprecated: reward is global per era
   miningSpeed: 0.1,        // 0.1 bloques/segundo
   electricityCost: 0,      // Sin costo
   owned: 1,                // Siempre 1 (no comprable)
@@ -90,11 +90,11 @@ Cada nivel de hardware tiene costos crecientes (scaling exponencial), mayor prod
 {
   id: 'basic_cpu',
   level: 2,
-  baseCost: 500,           // CryptoCoins
+  baseCost: 25,            // $ (real money)
   baseProduction: 30,
-  blockReward: 45,
+  blockReward: 0,          // Deprecated
   miningSpeed: 0.3,        // 3x más rápido que manual
-  electricityCost: 0.5,    // $/segundo por unidad
+  electricityCost: 3,      // CC fee weight
   unlockRequirement: 'Always unlocked (first hardware)'
 }
 ```
@@ -105,26 +105,26 @@ Cada nivel de hardware tiene costos crecientes (scaling exponencial), mayor prod
 {
   id: 'advanced_cpu',
   level: 3,
-  baseCost: 2500,
+  baseCost: 150,
   baseProduction: 80,
-  blockReward: 42,
+  blockReward: 0,
   miningSpeed: 0.8,
-  electricityCost: 1.2,
+  electricityCost: 10,
   unlockRequirement: 'basic_cpu >= 5 owned'
 }
 ```
-**Propósito**: Primera upgrade significativa, introduce trade-off (reward ligeramente menor)
+**Propósito**: Primera upgrade significativa
 
 ### Nivel 4: Basic GPU
 ```typescript
 {
   id: 'basic_gpu',
   level: 4,
-  baseCost: 10000,
+  baseCost: 800,
   baseProduction: 250,
-  blockReward: 38,
+  blockReward: 0,
   miningSpeed: 2.5,
-  electricityCost: 3,
+  electricityCost: 40,
   unlockRequirement: 'advanced_cpu >= 5 owned'
 }
 ```
@@ -135,11 +135,11 @@ Cada nivel de hardware tiene costos crecientes (scaling exponencial), mayor prod
 {
   id: 'advanced_gpu',
   level: 5,
-  baseCost: 40000,
+  baseCost: 5000,
   baseProduction: 600,
-  blockReward: 35,
+  blockReward: 0,
   miningSpeed: 6,
-  electricityCost: 7,
+  electricityCost: 120,
   unlockRequirement: 'basic_gpu >= 5 owned'
 }
 ```
@@ -150,11 +150,11 @@ Cada nivel de hardware tiene costos crecientes (scaling exponencial), mayor prod
 {
   id: 'asic_gen1',
   level: 6,
-  baseCost: 125000,
+  baseCost: 35000,
   baseProduction: 1500,
-  blockReward: 30,
-  miningSpeed: 15,
-  electricityCost: 20,
+  blockReward: 0,
+  miningSpeed: 12,
+  electricityCost: 300,
   unlockRequirement: 'advanced_gpu >= 5 owned'
 }
 ```
@@ -165,30 +165,78 @@ Cada nivel de hardware tiene costos crecientes (scaling exponencial), mayor prod
 {
   id: 'asic_gen2',
   level: 7,
-  baseCost: 375000,
+  baseCost: 200000,
   baseProduction: 4000,
-  blockReward: 25,
-  miningSpeed: 40,
-  electricityCost: 45,
+  blockReward: 0,
+  miningSpeed: 30,
+  electricityCost: 900,
   unlockRequirement: 'asic_gen1 >= 5 owned'
 }
 ```
-**Propósito**: ASIC de segunda generación, para late game
+**Propósito**: ASIC de segunda generación
 
 ### Nivel 8: ASIC Gen 3
 ```typescript
 {
   id: 'asic_gen3',
   level: 8,
-  baseCost: 1000000,
+  baseCost: 1200000,
   baseProduction: 10000,
-  blockReward: 20,
-  miningSpeed: 100,
-  electricityCost: 100,
+  blockReward: 0,
+  miningSpeed: 60,
+  electricityCost: 2500,
   unlockRequirement: 'asic_gen2 >= 5 owned'
 }
 ```
-**Propósito**: Hardware endgame, para completar el juego rápidamente
+**Propósito**: Último ASIC, punto de inflexión hacia late game
+
+### Nivel 9: Mining Farm
+```typescript
+{
+  id: 'mining_farm',
+  level: 9,
+  baseCost: 8000000,
+  baseProduction: 50000,
+  blockReward: 0,
+  miningSpeed: 100,
+  electricityCost: 4500,
+  energyRequired: 500,     // MW per unit
+  unlockRequirement: 'asic_gen3 >= 5 owned'
+}
+```
+**Propósito**: Primer hardware que requiere energía (Energy System)
+
+### Nivel 10: Quantum Miner
+```typescript
+{
+  id: 'quantum_miner',
+  level: 10,
+  baseCost: 50000000,
+  baseProduction: 200000,
+  blockReward: 0,
+  miningSpeed: 200,
+  electricityCost: 15000,
+  energyRequired: 2000,    // MW per unit
+  unlockRequirement: 'mining_farm >= 5 owned'
+}
+```
+**Propósito**: Hardware de elite, requiere inversión masiva
+
+### Nivel 11: Supercomputer
+```typescript
+{
+  id: 'supercomputer',
+  level: 11,
+  baseCost: 500000000,
+  baseProduction: 1000000,
+  blockReward: 0,
+  miningSpeed: 600,
+  electricityCost: 50000,
+  energyRequired: 10000,   // MW per unit
+  unlockRequirement: 'quantum_miner >= 5 owned'
+}
+```
+**Propósito**: Hardware endgame, prácticamente inalcanzable en primera run
 
 ## Fórmulas y Cálculos
 
@@ -200,13 +248,13 @@ function calculateHardwareCost(hardware: Hardware): number {
   );
 }
 
-// Ejemplo con Basic CPU (baseCost: 500, multiplier: 1.15):
-// 1ra unidad: 500
-// 2da unidad: 575
-// 3ra unidad: 661
-// 5ta unidad: 875
-// 10ma unidad: 2023
-// 20ma unidad: 8181
+// Ejemplo con Basic CPU (baseCost: 25, multiplier: 1.35):
+// 1ra unidad: 25
+// 2da unidad: 33
+// 3ra unidad: 45
+// 5ta unidad: 83
+// 10ma unidad: 508
+// 20ma unidad: 10,307
 ```
 
 ### Producción de un Hardware
@@ -329,20 +377,26 @@ En `src/config/balanceConfig.ts`:
 
 ```typescript
 export const HARDWARE_CONFIG = {
-  COST_MULTIPLIER: 1.15,        // Crecimiento exponencial del costo
+  COST_MULTIPLIER: 1.35,        // Crecimiento exponencial del costo
   UNLOCK_REQUIREMENT: 5,        // Unidades necesarias para desbloquear siguiente
 
   levels: {
-    manual_mining: { baseCost: 0, baseProduction: 10, blockReward: 50, miningSpeed: 0.1, electricityCost: 0 },
-    basic_cpu: { baseCost: 500, baseProduction: 30, blockReward: 45, miningSpeed: 0.3, electricityCost: 0.5 },
-    advanced_cpu: { baseCost: 2500, baseProduction: 80, blockReward: 42, miningSpeed: 0.8, electricityCost: 1.2 },
-    basic_gpu: { baseCost: 10000, baseProduction: 250, blockReward: 38, miningSpeed: 2.5, electricityCost: 3 },
-    advanced_gpu: { baseCost: 40000, baseProduction: 600, blockReward: 35, miningSpeed: 6, electricityCost: 7 },
-    asic_gen1: { baseCost: 125000, baseProduction: 1500, blockReward: 30, miningSpeed: 15, electricityCost: 20 },
-    asic_gen2: { baseCost: 375000, baseProduction: 4000, blockReward: 25, miningSpeed: 40, electricityCost: 45 },
-    asic_gen3: { baseCost: 1000000, baseProduction: 10000, blockReward: 20, miningSpeed: 100, electricityCost: 100 },
+    manual_mining: { baseCost: 0, baseProduction: 10, blockReward: 0, miningSpeed: 0.1, electricityCost: 0 },
+    basic_cpu: { baseCost: 25, baseProduction: 30, blockReward: 0, miningSpeed: 0.3, electricityCost: 3 },
+    advanced_cpu: { baseCost: 150, baseProduction: 80, blockReward: 0, miningSpeed: 0.8, electricityCost: 10 },
+    basic_gpu: { baseCost: 800, baseProduction: 250, blockReward: 0, miningSpeed: 2.5, electricityCost: 40 },
+    advanced_gpu: { baseCost: 5000, baseProduction: 600, blockReward: 0, miningSpeed: 6, electricityCost: 120 },
+    asic_gen1: { baseCost: 35000, baseProduction: 1500, blockReward: 0, miningSpeed: 12, electricityCost: 300 },
+    asic_gen2: { baseCost: 200000, baseProduction: 4000, blockReward: 0, miningSpeed: 30, electricityCost: 900 },
+    asic_gen3: { baseCost: 1200000, baseProduction: 10000, blockReward: 0, miningSpeed: 60, electricityCost: 2500 },
+    mining_farm: { baseCost: 8000000, baseProduction: 50000, blockReward: 0, miningSpeed: 100, electricityCost: 4500 },
+    quantum_miner: { baseCost: 50000000, baseProduction: 200000, blockReward: 0, miningSpeed: 200, electricityCost: 15000 },
+    supercomputer: { baseCost: 500000000, baseProduction: 1000000, blockReward: 0, miningSpeed: 600, electricityCost: 50000 },
   }
 };
+
+// blockReward is deprecated — reward is global per era (see bitcoin-faithful-economy.md)
+// electricityCost is a CC fee weight (see electricity-cc-fee.md)
 ```
 
 ## Estructura de Datos
@@ -369,30 +423,34 @@ interface Hardware {
 
 ## Tabla de Progresión Económica
 
-| Hardware | Base Cost | Cost @10 owned | Cost @20 owned | Mining Speed | Block Reward | Production @10 owned |
-|----------|-----------|----------------|----------------|--------------|--------------|---------------------|
-| Basic CPU | 500 | 2,023 | 8,181 | 0.3 | 45 | 135 CC/s |
-| Advanced CPU | 2,500 | 10,114 | 40,906 | 0.8 | 42 | 336 CC/s |
-| Basic GPU | 10,000 | 40,456 | 163,665 | 2.5 | 38 | 950 CC/s |
-| Advanced GPU | 40,000 | 161,822 | 654,662 | 6 | 35 | 2,100 CC/s |
-| ASIC Gen 1 | 125,000 | 505,694 | 2,045,694 | 15 | 30 | 4,500 CC/s |
-| ASIC Gen 2 | 375,000 | 1,517,083 | 6,137,083 | 40 | 25 | 10,000 CC/s |
-| ASIC Gen 3 | 1,000,000 | 4,045,558 | 16,366,554 | 100 | 20 | 20,000 CC/s |
+| Hardware | Base Cost ($) | Cost @5 units ($) | Mining Speed | Electricity Weight |
+|----------|:---:|:---:|:---:|:---:|
+| Basic CPU | 25 | 249 | 0.3 | 3 |
+| Advanced CPU | 150 | 1,493 | 0.8 | 10 |
+| Basic GPU | 800 | 7,964 | 2.5 | 40 |
+| Advanced GPU | 5,000 | 49,772 | 6 | 120 |
+| ASIC Gen 1 | 35,000 | 348,403 | 12 | 300 |
+| ASIC Gen 2 | 200,000 | 1,990,876 | 30 | 900 |
+| ASIC Gen 3 | 1,200,000 | 11,945,258 | 60 | 2,500 |
+| Mining Farm | 8,000,000 | 79,635,050 | 100 | 4,500 |
+| Quantum Miner | 50,000,000 | 497,719,063 | 200 | 15,000 |
+| Supercomputer | 500,000,000 | 4,977,190,625 | 600 | 50,000 |
 
-**Nota**: Estos valores NO incluyen:
-- Costos de electricidad (restan de la producción)
-- Multipliers de upgrades (pueden duplicar o más)
-- Prestige multiplier (aplica al final)
+**Nota**:
+- `blockReward` is deprecated — reward is global per era (50 CC → 25 CC → 12.5 CC...)
+- `electricityCost` is a CC fee weight used by the CC Mining Fee system
+- Hardware se compra con $ (real money), no con CryptoCoins
+- Costos calculados con COST_MULTIPLIER 1.35
 
 ## Reglas de Negocio
 
 1. **El hardware se desbloquea secuencialmente**: No se puede saltar niveles
 2. **Se requieren exactamente 5 unidades para desbloquear**: No más, no menos
 3. **Manual Mining no se muestra en UI**: Pero existe internamente para el juego inicial
-4. **El costo aumenta exponencialmente**: Cada compra es ~15% más cara
+4. **El costo aumenta exponencialmente**: Cada compra es ~35% más cara
 5. **No hay límite de unidades**: El jugador puede comprar infinitas (solo limitado por costo)
 6. **La electricidad siempre se paga**: Aunque el jugador no tenga dinero (resta de producción)
-7. **El blockReward es fijo por hardware**: No se ve afectado por halvings (solo el global currentReward)
+7. **El blockReward es global por era**: Deprecated per-hardware blockReward — el reward es 50/2^era
 8. **Los upgrades afectan por categoría o ID exacto**: "cpu" afecta a basic_cpu y advanced_cpu
 9. **Prestige resetea el hardware owned**: No se mantiene entre prestiges
 10. **El tab "Hardware" requiere desbloqueo**: Se desbloquea con $200 real money ganado
