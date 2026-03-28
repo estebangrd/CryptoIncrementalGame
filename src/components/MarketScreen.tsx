@@ -68,6 +68,9 @@ const MarketScreen: React.FC = () => {
     }
   };
 
+  const getCryptoCoin = () =>
+    gameState.cryptocurrencies.find(c => c.id === 'cryptocoin') ?? null;
+
   const getSelectedCurrency = () => {
     if (!gameState.selectedCurrency) return null;
     return gameState.cryptocurrencies.find(c => c.id === gameState.selectedCurrency);
@@ -109,11 +112,11 @@ const MarketScreen: React.FC = () => {
   };
 
   const handleSellPress = () => {
-    const selectedCurrency = getSelectedCurrency();
-    if (!selectedCurrency) return;
+    const cc = getCryptoCoin();
+    if (!cc) return;
     const amount = Math.floor((gameState.cryptoCoins * amountPercent) / 100);
     if (amount <= 0 || amount > gameState.cryptoCoins) return;
-    const price = selectedCurrency.currentValue;
+    const price = cc.currentValue;
     if (price <= 0 || !isFinite(price)) return;
 
     setSellConfirming(true);
@@ -121,10 +124,10 @@ const MarketScreen: React.FC = () => {
   };
 
   const handleSellConfirm = () => {
-    const selectedCurrency = getSelectedCurrency();
-    if (!selectedCurrency) { clearSellConfirm(); return; }
+    const cc = getCryptoCoin();
+    if (!cc) { clearSellConfirm(); return; }
     const amount = Math.floor((gameState.cryptoCoins * amountPercent) / 100);
-    const price = selectedCurrency.currentValue;
+    const price = cc.currentValue;
     if (amount <= 0 || price <= 0 || !isFinite(price)) { clearSellConfirm(); return; }
 
     dispatch({ type: 'SELL_COINS_FOR_MONEY', payload: { amount, price } });
@@ -138,10 +141,10 @@ const MarketScreen: React.FC = () => {
   };
 
   const sellPreviewMoney = (() => {
-    const cur = getSelectedCurrency();
-    if (!cur) return 0;
+    const cc = getCryptoCoin();
+    if (!cc) return 0;
     const amount = Math.floor((gameState.cryptoCoins * amountPercent) / 100);
-    return amount * cur.currentValue;
+    return amount * cc.currentValue;
   })();
 
   const panResponder = useRef(
@@ -253,7 +256,7 @@ const MarketScreen: React.FC = () => {
                       <View style={styles.earnBox}>
                         <Text style={styles.earnAmount}>{formatUSD(sellPreviewMoney)}</Text>
                         <Text style={styles.earnSub}>
-                          YOU'LL EARN · PRICE {formatPriceUSD(getSelectedCurrency()?.currentValue ?? 0)} PER CC
+                          YOU'LL EARN · PRICE {formatPriceUSD(getCryptoCoin()?.currentValue ?? 0)} PER CC
                         </Text>
                       </View>
 
