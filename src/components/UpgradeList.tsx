@@ -240,7 +240,7 @@ const UpgradeList: React.FC = () => {
                     !canAfford && !isPurchased && styles.cannotAfford,
                     isPurchased && styles.ownedCost,
                   ]}>
-                    {isPurchased ? '—' : `$${formatNumber(upgrade.cost)}`}
+                    {`$${formatNumber(upgrade.cost)}`}
                   </Text>
                 </View>
 
