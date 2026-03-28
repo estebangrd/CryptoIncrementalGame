@@ -43,10 +43,11 @@ export const calculateTotalCoinsMined = (blocksMined: number): number => {
   return totalCoins;
 };
 
-// Bitcoin-faithful difficulty: scales with blocks mined, not hash rate
+// Difficulty scales with blocks mined using power curve
 export const calculateDifficulty = (blocksMined: number): number => {
-  const { AMPLITUDE, SCALE_BLOCKS } = BLOCK_CONFIG.DIFFICULTY;
-  return 1.0 + AMPLITUDE * Math.log10(1 + blocksMined / SCALE_BLOCKS);
+  const { AMPLITUDE, SCALE_BLOCKS, EXPONENT } = BLOCK_CONFIG.DIFFICULTY;
+  if (blocksMined <= 0) return 1.0;
+  return 1.0 + AMPLITUDE * Math.pow(blocksMined / SCALE_BLOCKS, EXPONENT);
 };
 
 // Get current era (0-indexed) based on blocks mined

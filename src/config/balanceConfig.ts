@@ -21,14 +21,16 @@ export const BLOCK_CONFIG = {
   // Dificultad inicial de minado
   INITIAL_DIFFICULTY: 1,
 
-  // Bitcoin-faithful difficulty: scales with blocks mined, not hash rate
+  // Difficulty scales with blocks mined using power curve
   DIFFICULTY: {
-    AMPLITUDE: 0.5,
-    SCALE_BLOCKS: 100_000,
+    AMPLITUDE: 0.8,
+    SCALE_BLOCKS: 200_000,
+    EXPONENT: 0.65,
   },
 
   // Base CC price per era (indexed by era number)
-  ERA_BASE_PRICES: [0.10, 2.00, 10.00, 40.00, 100.00, 100.00, 100.00],
+  // Eras 0-3 grow, Era 4+ halving dominates ($/block declines)
+  ERA_BASE_PRICES: [0.08, 0.50, 2.00, 5.00, 8.00, 8.00, 8.00],
 };
 
 // ============================================================================
@@ -36,7 +38,7 @@ export const BLOCK_CONFIG = {
 // ============================================================================
 export const ELECTRICITY_FEE_CONFIG = {
   // Percentage of totalElectricityWeight deducted as CC per tick
-  RATE_PERCENT: 0.75,
+  RATE_PERCENT: 1.5,
 };
 
 // ============================================================================
@@ -44,7 +46,7 @@ export const ELECTRICITY_FEE_CONFIG = {
 // ============================================================================
 export const HARDWARE_CONFIG = {
   // Multiplicador de costo al comprar múltiples unidades
-  COST_MULTIPLIER: 1.20,
+  COST_MULTIPLIER: 1.35,
 
   // Requisito de unidades del nivel anterior para desbloquear siguiente
   UNLOCK_REQUIREMENT: 5,
@@ -62,92 +64,92 @@ export const HARDWARE_CONFIG = {
 
     // Nivel 2: Basic CPU
     basic_cpu: {
-      baseCost: 30,              // $ (real money)
+      baseCost: 25,              // $ (real money)
       baseProduction: 30,        // Hash/s (display only)
       blockReward: 0,            // Deprecated: reward is global per era
       miningSpeed: 0.3,          // Bloques/segundo
-      electricityCost: 5,        // CC fee weight (×RATE_PERCENT = CC/sec)
+      electricityCost: 3,        // CC fee weight (×RATE_PERCENT = CC/sec)
     },
 
     // Nivel 3: Advanced CPU
     advanced_cpu: {
-      baseCost: 120,
+      baseCost: 150,
       baseProduction: 80,
       blockReward: 0,
       miningSpeed: 0.8,
-      electricityCost: 12,
+      electricityCost: 10,
     },
 
     // Nivel 4: Basic GPU
     basic_gpu: {
-      baseCost: 600,
+      baseCost: 800,
       baseProduction: 250,
       blockReward: 0,
       miningSpeed: 2.5,
-      electricityCost: 30,
+      electricityCost: 40,
     },
 
     // Nivel 5: Advanced GPU
     advanced_gpu: {
-      baseCost: 3000,
+      baseCost: 5000,
       baseProduction: 600,
       blockReward: 0,
       miningSpeed: 6,
-      electricityCost: 70,
+      electricityCost: 120,
     },
 
     // Nivel 6: ASIC Gen 1
     asic_gen1: {
-      baseCost: 24000,
+      baseCost: 35000,
       baseProduction: 1500,
       blockReward: 0,
       miningSpeed: 12,
-      electricityCost: 200,
+      electricityCost: 300,
     },
 
     // Nivel 7: ASIC Gen 2
     asic_gen2: {
-      baseCost: 96000,
+      baseCost: 200000,
       baseProduction: 4000,
       blockReward: 0,
       miningSpeed: 30,
-      electricityCost: 450,
+      electricityCost: 900,
     },
 
     // Nivel 8: ASIC Gen 3
     asic_gen3: {
-      baseCost: 384000,
+      baseCost: 1200000,
       baseProduction: 10000,
       blockReward: 0,
       miningSpeed: 60,
-      electricityCost: 1000,
+      electricityCost: 2500,
     },
 
     // Nivel 9: Mining Farm
     mining_farm: {
-      baseCost: 5120000,
+      baseCost: 8000000,
       baseProduction: 50000,
       blockReward: 0,
-      miningSpeed: 75,
-      electricityCost: 3000,
+      miningSpeed: 100,
+      electricityCost: 4500,
     },
 
     // Nivel 10: Quantum Miner
     quantum_miner: {
-      baseCost: 5000000,
+      baseCost: 50000000,
       baseProduction: 200000,
       blockReward: 0,
       miningSpeed: 200,
-      electricityCost: 9000,
+      electricityCost: 15000,
     },
 
     // Nivel 11: Supercomputer
     supercomputer: {
-      baseCost: 50000000,
+      baseCost: 500000000,
       baseProduction: 1000000,
       blockReward: 0,
-      miningSpeed: 500,
-      electricityCost: 30000,
+      miningSpeed: 600,
+      electricityCost: 50000,
     },
   },
 };
@@ -188,13 +190,13 @@ export const CRYPTO_CONFIG = {
 export const UPGRADE_CONFIG = {
   // Click Power - Aumenta CryptoCoins por click
   clickPower: {
-    cost: 1000,                // Costo en $ (dinero real)
+    cost: 500,                 // Costo en $ (dinero real)
     multiplier: 5,             // Multiplicador (5 = 5x coins por click)
   },
 
   // Hash Injection - 3x click (apilable con clickPower → total 15x)
   clickMastery: {
-    cost: 8000,
+    cost: 10000,
     multiplier: 3,
     unlockRequirement: {
       hardwareId: 'basic_gpu',
@@ -204,7 +206,7 @@ export const UPGRADE_CONFIG = {
 
   // Click Legend - 2x click (apilable → total 30x)
   clickLegend: {
-    cost: 100000,
+    cost: 250000,
     multiplier: 2,
     unlockRequirement: {
       hardwareId: 'asic_gen3',
@@ -214,7 +216,7 @@ export const UPGRADE_CONFIG = {
 
   // CPU Efficiency - Duplica velocidad de CPUs
   cpuEfficiency: {
-    cost: 5000,
+    cost: 600,
     multiplier: 2,             // Duplica producción
     unlockRequirement: {
       hardwareId: 'advanced_cpu',
@@ -224,7 +226,7 @@ export const UPGRADE_CONFIG = {
 
   // GPU Optimization - Duplica velocidad de GPUs
   gpuOptimization: {
-    cost: 25000,
+    cost: 20000,
     multiplier: 2,
     unlockRequirement: {
       hardwareId: 'advanced_gpu',
@@ -234,7 +236,7 @@ export const UPGRADE_CONFIG = {
 
   // ASIC Optimization - Duplica velocidad de ASICs
   asicOptimization: {
-    cost: 100000,
+    cost: 500000,
     multiplier: 2,
     unlockRequirement: {
       hardwareId: 'asic_gen3',
@@ -244,7 +246,7 @@ export const UPGRADE_CONFIG = {
 
   // Mining Farm Efficiency - Duplica velocidad de Mining Farm
   miningFarmEfficiency: {
-    cost: 500000,
+    cost: 3000000,
     multiplier: 2,
     unlockRequirement: {
       hardwareId: 'mining_farm',
@@ -254,7 +256,7 @@ export const UPGRADE_CONFIG = {
 
   // Quantum Coherence - Duplica velocidad de Quantum Miner
   quantumCoherence: {
-    cost: 2500000,
+    cost: 20000000,
     multiplier: 2,
     unlockRequirement: {
       hardwareId: 'quantum_miner',
@@ -264,7 +266,7 @@ export const UPGRADE_CONFIG = {
 
   // Supercomputer Overclock - Duplica velocidad de Supercomputer
   supercomputerOverclock: {
-    cost: 10000000,
+    cost: 200000000,
     multiplier: 2,
     unlockRequirement: {
       hardwareId: 'supercomputer',
@@ -285,7 +287,7 @@ export const UNLOCK_CONFIG = {
 
   // Desbloquear Hardware
   hardware: {
-    requiredMoney: 200,        // $ (dinero real) necesarios
+    requiredMoney: 150,        // $ (dinero real) necesarios
   },
 
   // Desbloquear Upgrades (Mejoras)
@@ -653,10 +655,10 @@ export const AD_BUBBLE_CONFIG = {
 // STARTER PACKS - RECOMPENSAS
 // ============================================================================
 export const STARTER_PACK_REWARDS = {
-  small:  { cryptoCoins: 6000,    realMoney: 75 },
-  medium: { cryptoCoins: 65000,   realMoney: 4000 },
-  large:  { cryptoCoins: 125000,  realMoney: 25000 },
-  mega:   { cryptoCoins: 400000,  realMoney: 100000 },
+  small:  { cryptoCoins: 3000,    realMoney: 60 },
+  medium: { cryptoCoins: 30000,   realMoney: 7000 },
+  large:  { cryptoCoins: 50000,   realMoney: 40000 },
+  mega:   { cryptoCoins: 150000,  realMoney: 300000 },
 } as const;
 
 // ============================================================================
@@ -678,21 +680,21 @@ export const PACK_CONFIG = {
   COOLDOWN_MS: 8 * 60 * 60 * 1000,    // 8h between offers
 
   small: {
-    ccRange: [5_000, 8_000] as [number, number],
-    cashRange: [50, 100] as [number, number],
+    ccRange: [3_000, 5_000] as [number, number],
+    cashRange: [40, 80] as [number, number],
     boosterDurationMs: 1 * 60 * 60 * 1000,  // 1h 2x production booster (always included)
     showUntilHardwareId: 'asic_gen3',
   },
   medium: {
-    ccRange: [50_000, 80_000] as [number, number],
-    cashRange: [3_000, 5_000] as [number, number],
+    ccRange: [20_000, 40_000] as [number, number],
+    cashRange: [5_000, 10_000] as [number, number],
     boosterDurationMs: 2 * 60 * 60 * 1000,  // 2h 2x production booster (always included)
     showAfterHardwareId: 'asic_gen3',
     showUntilHardwareId: 'quantum_miner',
   },
   large: {
-    ccRange: [100_000, 150_000] as [number, number],
-    cashRange: [20_000, 30_000] as [number, number],
+    ccRange: [40_000, 60_000] as [number, number],
+    cashRange: [30_000, 50_000] as [number, number],
     boosterDurationMs: 4 * 60 * 60 * 1000,  // 4h booster (when no electricity credits)
     showAfterHardwareId: 'quantum_miner',
     showUntilHardwareId: 'supercomputer',
@@ -700,8 +702,8 @@ export const PACK_CONFIG = {
     electricityHoursRange: [24, 48] as [number, number],
   },
   mega: {
-    ccRange: [300_000, 500_000] as [number, number],
-    cashRange: [75_000, 125_000] as [number, number],
+    ccRange: [100_000, 200_000] as [number, number],
+    cashRange: [200_000, 400_000] as [number, number],
     boosterDurationMs: 24 * 60 * 60 * 1000, // 24h booster (when no electricity credits)
     showAfterHardwareId: 'supercomputer',
     includeElectricity: true,
@@ -750,7 +752,15 @@ GUÍA DE AJUSTE DE BALANCE (Bitcoin-Faithful Economy):
 
 Block reward is GLOBAL (not per-hardware) and halves every 210,000 blocks.
 CC/sec = (totalMiningSpeed / difficulty) × globalBlockReward × multipliers
-Difficulty scales with blocks mined: 1.0 + 0.5 × log₁₀(1 + blocksMined / 100,000)
+Difficulty scales with blocks mined: 1.0 + 0.8 × (blocksMined / 200,000)^0.65
+
+$/block per era:
+  Era 0: 50 CC × $0.08 = $4.00/block
+  Era 1: 25 CC × $0.50 = $12.50/block (peak growth)
+  Era 2: 12.5 CC × $2.00 = $25.00/block (golden era)
+  Era 3: 6.25 CC × $5.00 = $31.25/block (plateau)
+  Era 4: 3.125 CC × $8.00 = $25.00/block (decline starts!)
+  Era 5+: halving dominates, $/block drops 50% each era
 
 1. Si el juego es muy difícil:
    - Reduce HARDWARE_CONFIG.levels.*.baseCost ($ costs)
@@ -764,7 +774,7 @@ Difficulty scales with blocks mined: 1.0 + 0.5 × log₁₀(1 + blocksMined / 10
 
 3. Para ajustar la progresión:
    - Modifica HARDWARE_CONFIG.UNLOCK_REQUIREMENT
-   - Ajusta BLOCK_CONFIG.DIFFICULTY.AMPLITUDE (higher = slower late game)
+   - Ajusta BLOCK_CONFIG.DIFFICULTY.AMPLITUDE/EXPONENT
    - Cambia BLOCK_CONFIG.HALVING_INTERVAL para afectar la economía a largo plazo
 
 VALORES RECOMENDADOS PARA TESTING:

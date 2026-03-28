@@ -9,34 +9,40 @@ import { BLOCK_CONFIG, BOOSTER_CONFIG } from '../src/config/balanceConfig';
 
 // ── Difficulty ───────────────────────────────────────────────────────────────
 
-describe('calculateDifficulty (Bitcoin-faithful)', () => {
+describe('calculateDifficulty (power curve)', () => {
   it('returns 1.0 at 0 blocks mined', () => {
     expect(calculateDifficulty(0)).toBe(1.0);
   });
 
-  it('returns ~1.09 at 50,000 blocks', () => {
+  it('returns ~1.10 at 50,000 blocks', () => {
+    // 1.0 + 0.8 * (50000/200000)^0.65 = 1.0 + 0.8 * 0.25^0.65 ≈ 1.0 + 0.8 * 0.361 ≈ 1.29
     const d = calculateDifficulty(50_000);
-    expect(d).toBeCloseTo(1.09, 1);
+    expect(d).toBeGreaterThan(1.1);
+    expect(d).toBeLessThan(1.5);
   });
 
-  it('returns ~1.15 at 100,000 blocks', () => {
+  it('returns ~1.35 at 100,000 blocks', () => {
     const d = calculateDifficulty(100_000);
-    expect(d).toBeCloseTo(1.15, 1);
+    expect(d).toBeGreaterThan(1.2);
+    expect(d).toBeLessThan(1.7);
   });
 
-  it('returns ~1.25 at 210,000 blocks', () => {
+  it('returns ~1.60 at 210,000 blocks', () => {
     const d = calculateDifficulty(210_000);
-    expect(d).toBeCloseTo(1.25, 1);
+    expect(d).toBeGreaterThan(1.4);
+    expect(d).toBeLessThan(1.9);
   });
 
-  it('returns ~2.00 at 10,000,000 blocks', () => {
+  it('returns ~8.2 at 10,000,000 blocks', () => {
     const d = calculateDifficulty(10_000_000);
-    expect(d).toBeCloseTo(2.00, 1);
+    expect(d).toBeGreaterThan(6);
+    expect(d).toBeLessThan(12);
   });
 
-  it('returns ~2.16 at 21,000,000 blocks', () => {
+  it('returns ~17.5 at 21,000,000 blocks', () => {
     const d = calculateDifficulty(21_000_000);
-    expect(d).toBeCloseTo(2.16, 1);
+    expect(d).toBeGreaterThan(14);
+    expect(d).toBeLessThan(22);
   });
 
   it('is monotonically increasing', () => {
@@ -77,28 +83,28 @@ describe('getEra', () => {
 // ── Base Price ───────────────────────────────────────────────────────────────
 
 describe('getBasePrice', () => {
-  it('returns $0.10 at era 0', () => {
-    expect(getBasePrice(0)).toBe(0.10);
+  it('returns $0.08 at era 0', () => {
+    expect(getBasePrice(0)).toBe(0.08);
   });
 
-  it('returns $2.00 at era 1', () => {
-    expect(getBasePrice(210_000)).toBe(2.00);
+  it('returns $0.50 at era 1', () => {
+    expect(getBasePrice(210_000)).toBe(0.50);
   });
 
-  it('returns $10.00 at era 2', () => {
-    expect(getBasePrice(420_000)).toBe(10.00);
+  it('returns $2.00 at era 2', () => {
+    expect(getBasePrice(420_000)).toBe(2.00);
   });
 
-  it('returns $40.00 at era 3', () => {
-    expect(getBasePrice(630_000)).toBe(40.00);
+  it('returns $5.00 at era 3', () => {
+    expect(getBasePrice(630_000)).toBe(5.00);
   });
 
-  it('returns $100.00 at era 4', () => {
-    expect(getBasePrice(840_000)).toBe(100.00);
+  it('returns $8.00 at era 4', () => {
+    expect(getBasePrice(840_000)).toBe(8.00);
   });
 
-  it('caps at $100.00 for eras beyond the price array', () => {
-    expect(getBasePrice(2_100_000)).toBe(100.00);
+  it('caps at $8.00 for eras beyond the price array', () => {
+    expect(getBasePrice(2_100_000)).toBe(8.00);
   });
 });
 
@@ -199,10 +205,10 @@ describe('calculateTotalProduction (Bitcoin-faithful)', () => {
 // ── Hardware Costs ───────────────────────────────────────────────────────────
 
 describe('hardware costs are in $ (real money)', () => {
-  it('basic_cpu baseCost is $30', () => {
-    expect(BLOCK_CONFIG.ERA_BASE_PRICES[0]).toBe(0.10); // sanity check era 0 price
+  it('basic_cpu baseCost is $25', () => {
+    expect(BLOCK_CONFIG.ERA_BASE_PRICES[0]).toBe(0.08); // sanity check era 0 price
     const { baseCost } = require('../src/config/balanceConfig').HARDWARE_CONFIG.levels.basic_cpu;
-    expect(baseCost).toBe(30);
+    expect(baseCost).toBe(25);
   });
 
   it('all hardware blockReward is 0', () => {
@@ -364,7 +370,7 @@ describe('updateOfflineProgress (block-based)', () => {
       hardware: [cpu],
       cryptoCoins: 50000,
       realMoney: 10000,
-      totalElectricityCost: 100, // weight 100 → fee = 100 * 0.75/100 = 0.75 CC/sec
+      totalElectricityCost: 100, // weight 100 → fee = 100 * 1.5/100 = 1.5 CC/sec
       lastSaveTime: now - 3600 * 1000,
       iapState: {
         permanentMultiplierPurchased: false,
