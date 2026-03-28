@@ -322,10 +322,10 @@ const styles = StyleSheet.create({
   // Time away
   timeAway: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'baseline',
     justifyContent: 'center',
     gap: 8,
-    paddingVertical: 10,
+    paddingVertical: 12,
     paddingHorizontal: 14,
     backgroundColor: 'rgba(255,255,255,0.03)',
     borderWidth: 1,
@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   taIcon: {
-    fontSize: 16,
+    fontSize: 15,
   },
   taText: {
     fontFamily: fonts.mono,
@@ -455,9 +455,9 @@ const styles = StyleSheet.create({
   },
   skipBtn: {
     fontFamily: fonts.mono,
-    fontSize: 11,
+    fontSize: 12,
     letterSpacing: 2,
-    color: 'rgba(255,255,255,0.18)',
+    color: 'rgba(255,255,255,0.22)',
     textAlign: 'center',
     paddingVertical: 12,
   },
