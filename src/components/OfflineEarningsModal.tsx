@@ -28,20 +28,19 @@ interface OfflineEarningsModalProps {
 }
 
 const formatDuration = (totalSec: number): string => {
-  const h = Math.floor(totalSec / 3600);
+  const d = Math.floor(totalSec / 86400);
+  const h = Math.floor((totalSec % 86400) / 3600);
   const m = Math.floor((totalSec % 3600) / 60);
+  if (d > 0) return `${d}d ${h}h`;
   if (h > 0) return `${h}h ${m}m`;
   return `${m}m`;
 };
 
 const pad2 = (n: number) => n.toString().padStart(2, '0');
 
-const formatLogTimestamp = (totalSec: number, fraction: number): string => {
-  const sec = Math.floor(totalSec * fraction);
-  const h = Math.floor(sec / 3600);
-  const m = Math.floor((sec % 3600) / 60);
-  const s = sec % 60;
-  return `[${pad2(h)}:${pad2(m)}:${pad2(s)}]`;
+const formatLogTimestamp = (secondsAway: number, fraction: number): string => {
+  const eventTime = new Date(Date.now() - (secondsAway * 1000) + (secondsAway * fraction * 1000));
+  return `[${pad2(eventTime.getHours())}:${pad2(eventTime.getMinutes())}:${pad2(eventTime.getSeconds())}]`;
 };
 
 const OfflineEarningsModal: React.FC<OfflineEarningsModalProps> = ({
