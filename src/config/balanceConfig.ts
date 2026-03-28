@@ -206,7 +206,7 @@ export const UPGRADE_CONFIG = {
 
   // Click Legend - 2x click (apilable → total 30x)
   clickLegend: {
-    cost: 250000,
+    cost: 2000000,
     multiplier: 2,
     unlockRequirement: {
       hardwareId: 'asic_gen3',
@@ -216,7 +216,7 @@ export const UPGRADE_CONFIG = {
 
   // CPU Efficiency - Duplica velocidad de CPUs
   cpuEfficiency: {
-    cost: 600,
+    cost: 1500,
     multiplier: 2,             // Duplica producción
     unlockRequirement: {
       hardwareId: 'advanced_cpu',
@@ -226,7 +226,7 @@ export const UPGRADE_CONFIG = {
 
   // GPU Optimization - Duplica velocidad de GPUs
   gpuOptimization: {
-    cost: 20000,
+    cost: 50000,
     multiplier: 2,
     unlockRequirement: {
       hardwareId: 'advanced_gpu',
@@ -236,7 +236,7 @@ export const UPGRADE_CONFIG = {
 
   // ASIC Optimization - Duplica velocidad de ASICs
   asicOptimization: {
-    cost: 500000,
+    cost: 10000000,
     multiplier: 2,
     unlockRequirement: {
       hardwareId: 'asic_gen3',
@@ -246,7 +246,7 @@ export const UPGRADE_CONFIG = {
 
   // Mining Farm Efficiency - Duplica velocidad de Mining Farm
   miningFarmEfficiency: {
-    cost: 3000000,
+    cost: 80000000,
     multiplier: 2,
     unlockRequirement: {
       hardwareId: 'mining_farm',
@@ -256,7 +256,7 @@ export const UPGRADE_CONFIG = {
 
   // Quantum Coherence - Duplica velocidad de Quantum Miner
   quantumCoherence: {
-    cost: 20000000,
+    cost: 500000000,
     multiplier: 2,
     unlockRequirement: {
       hardwareId: 'quantum_miner',
@@ -266,7 +266,7 @@ export const UPGRADE_CONFIG = {
 
   // Supercomputer Overclock - Duplica velocidad de Supercomputer
   supercomputerOverclock: {
-    cost: 200000000,
+    cost: 3000000000,
     multiplier: 2,
     unlockRequirement: {
       hardwareId: 'supercomputer',
