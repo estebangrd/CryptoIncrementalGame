@@ -60,9 +60,11 @@ const OfflineEarningsModal: React.FC<OfflineEarningsModalProps> = ({
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const shimmerAnim = useRef(new Animated.Value(0)).current;
   const dotAnim = useRef(new Animated.Value(1)).current;
+  const claimingRef = useRef(false);
 
   useEffect(() => {
     if (!visible) return;
+    claimingRef.current = false;
     fadeAnim.setValue(0);
 
     Animated.timing(fadeAnim, {
@@ -97,6 +99,9 @@ const OfflineEarningsModal: React.FC<OfflineEarningsModalProps> = ({
   }, [fadeAnim]);
 
   const handleWatchAd = useCallback(async () => {
+    if (claimingRef.current) return;
+    claimingRef.current = true;
+
     const pct = OFFLINE_SCREEN_CONFIG.REWARD_MIN_PCT +
       Math.floor(Math.random() * (OFFLINE_SCREEN_CONFIG.REWARD_MAX_PCT - OFFLINE_SCREEN_CONFIG.REWARD_MIN_PCT + 1));
     const claimAmount = Math.round(pendingEarnings * pct / 100);
@@ -115,7 +120,6 @@ const OfflineEarningsModal: React.FC<OfflineEarningsModalProps> = ({
     }
 
     if (!isRewardedAdReady()) {
-      // Fallback: grant immediately if ad not ready
       grantReward();
       return;
     }
@@ -123,12 +127,14 @@ const OfflineEarningsModal: React.FC<OfflineEarningsModalProps> = ({
     await showRewardedAd(
       () => grantReward(),
       () => {
-        // Ad dismissed without reward — do nothing, modal stays
+        claimingRef.current = false;
       },
     );
   }, [pendingEarnings, removeAdsPurchased, t, onClaim, showToast, fadeOut]);
 
   const handleSkip = useCallback(() => {
+    if (claimingRef.current) return;
+    claimingRef.current = true;
     fadeOut(() => onDismiss());
   }, [fadeOut, onDismiss]);
 
