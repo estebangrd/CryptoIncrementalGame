@@ -105,7 +105,10 @@ const OfflineEarningsModal: React.FC<OfflineEarningsModalProps> = ({
       Math.floor(Math.random() * (OFFLINE_SCREEN_CONFIG.REWARD_MAX_PCT - OFFLINE_SCREEN_CONFIG.REWARD_MIN_PCT + 1));
     const claimAmount = Math.round(pendingEarnings * pct / 100);
 
+    const grantedRef = { done: false };
     const grantReward = () => {
+      if (grantedRef.done) return;
+      grantedRef.done = true;
       fadeOut(() => {
         onClaim(claimAmount);
         const toastMsg = t('offline.toast').replace('{amount}', formatNumber(claimAmount));
