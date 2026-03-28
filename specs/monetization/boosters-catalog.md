@@ -1,38 +1,45 @@
 # Boosters and Starter Packs Catalog
 
 ## Estado
-- **Fase**: Phase 1 - Genesis (Designed, Not Implemented)
-- **Estado**: Specification Complete
-- **Prioridad**: Medium (Optional Monetization)
-- **Última actualización**: 2026-02-21
+- **Fase**: Phase 3 - Monetization
+- **Estado**: ✅ Implemented
+- **Prioridad**: High (Monetization)
+- **Última actualización**: 2026-03-28
 
 ## Descripción
 
 El catálogo de Boosters y Starter Packs proporciona opciones de monetización opcionales que aceleran la progresión del jugador sin romper el balance del juego. Todos los productos son completamente opcionales - el juego es 100% completable sin gastar dinero.
 
-**Boosters (Consumables):**
+**Production Boosters (Consumables):**
 - 2x Production Booster ($0.99) - 2x producción por 4 horas, consumable
 - 5x Production Booster ($2.99) - 5x producción por 24 horas, consumable
 - Permanent 2x Multiplier ($9.99) - 2x producción permanente, non-consumable
 
-**Starter Packs (One-Time):**
-- Small Pack ($0.99) - 10K CryptoCoins + $500, one-time
-- Medium Pack ($2.99) - 50K CryptoCoins + $2.5K, one-time
-- Large Pack ($4.99) - 150K CryptoCoins + $10K, one-time
-- Mega Pack ($9.99) - 500K CryptoCoins + $50K, one-time
+**Specialty Boosters (Consumables):**
+- Offline Miner ($1.99) - 8h de minado offline al 50% de producción; 30% chance de oferta extendida (12h)
+- Lucky Block ($0.99) - 5x recompensa por N bloques (200/1000/3000 según hashRate)
+- Market Pump ($0.99) - 2x precio de venta por 15 min; 30% chance de oferta extendida (20 min)
 
-Todos los boosters stackean multiplicativamente con prestige y rewarded ad boosts. Los starter packs otorgan AMBOS coins y money (no solo dinero), dando flexibilidad al jugador.
+**Dynamic Packs (Timed Offers):**
+Los packs ya NO son one-time estáticos. Son **ofertas dinámicas** con valores dentro de un rango, que aparecen por 20 minutos con 8h de cooldown. La visibilidad depende del hardware que posee el jugador:
+- Small Pack ($0.99) - 3-5K CC + $40-80 + 1h 2x booster (hasta poseer asic_gen3)
+- Medium Pack ($2.99) - 20-40K CC + $5-10K + 2h 2x booster (asic_gen3 → quantum_miner)
+- Large Pack ($4.99) - 40-60K CC + $30-50K + 4h booster + 24-48h crédito eléctrico (quantum_miner → supercomputer)
+- Mega Pack ($9.99) - 100-200K CC + $200-400K + 24h booster + 72-120h crédito eléctrico (post-supercomputer)
+
+Todos los boosters stackean multiplicativamente con prestige y rewarded ad boosts.
 
 ## Objetivos
-- [ ] Implementar 3 tipos de production boosters (2x, 5x, permanent)
-- [ ] Implementar 4 starter packs con recursos balanceados
-- [ ] Asegurar que boosters stackean correctamente con otros multipliers
-- [ ] Implementar timers de duración para boosters temporales
-- [ ] Prevenir stacking de boosters del mismo tipo (reemplazan, no suman)
-- [ ] Implementar one-time restrictions para starter packs
-- [ ] Mostrar indicadores visuales de boosters activos
-- [ ] Balancear precios para value proposition claro
-- [ ] Trackear purchases y conversión en Analytics
+- [x] Implementar 3 tipos de production boosters (2x, 5x, permanent)
+- [x] Implementar 3 specialty boosters (Offline Miner, Lucky Block, Market Pump)
+- [x] Implementar dynamic packs con ofertas timed y stage-based visibility
+- [x] Asegurar que boosters stackean correctamente con otros multipliers
+- [x] Implementar timers de duración para boosters temporales
+- [x] Prevenir stacking de boosters del mismo tipo (reemplazan, no suman)
+- [x] Implementar extended offer mechanic (30% chance) para specialty boosters
+- [x] Créditos de electricidad en Large/Mega packs (condicional a non-renewable energy)
+- [x] Mostrar indicadores visuales de boosters activos
+- [ ] Trackear purchases y conversión en Analytics (no implementado aún)
 
 ## Comportamiento Esperado
 
@@ -268,181 +275,143 @@ Todos los boosters stackean multiplicativamente con prestige y rewarded ad boost
   - "Production: 30,000 CC/s"
   - Tooltip: "Base × Prestige (1.5x) × Permanent (2x) × 5x Boost × Ad Boost (2x)"
 
-### STARTER PACKS
+### SPECIALTY BOOSTERS (Offline Miner, Lucky Block, Market Pump)
 
-### Caso de Uso 11: Ver Starter Packs en Store
-**Dado que** el usuario abre la sección "Starter Packs"
+### Caso de Uso 10b: Comprar Offline Miner
+**Dado que** el usuario quiere ganar recursos mientras la app está cerrada
+**Cuando** compra Offline Miner ($1.99)
+**Entonces**
+- Al abrir tab Boosters:
+  - 30% de probabilidad de ver oferta extendida (12h en vez de 8h)
+  - Si no extendida: "Offline Miner — 8h mining at 50% speed — $1.99"
+  - Si extendida: "Offline Miner — EXTENDED 12h mining at 50% speed — $1.99" (badge especial)
+- Al comprar:
+  - Activa minado offline: producción al 50% (`earningsMultiplier: 0.5`) durante `baseDurationMs` (8h) o `extendedDurationMs` (12h)
+  - Al reabrir la app, `OfflineEarningsModal` muestra las ganancias acumuladas
+  - Timer es real-time (no pausa)
+- Configuración: `BOOSTER_CONFIG.OFFLINE_MINER`
+
+### Caso de Uso 10c: Comprar Lucky Block
+**Dado que** el usuario quiere recompensas extra por los próximos bloques minados
+**Cuando** compra Lucky Block ($0.99)
+**Entonces**
+- Otorga 5x recompensa por bloque (`rewardMultiplier: 5`) durante los próximos N bloques
+- N depende del `totalHashRate` del jugador:
+  - hashRate < 5,000 → 200 bloques (`earlyBlocks`)
+  - 5,000 ≤ hashRate < 100,000 → 1,000 bloques (`midBlocks`)
+  - hashRate ≥ 100,000 → 3,000 bloques (`lateBlocks`)
+- Aplicado en la acción `ADD_PRODUCTION` del reducer
+- UI muestra badge: "Lucky Block: X blocks remaining"
+- Configuración: `BOOSTER_CONFIG.LUCKY_BLOCK`
+
+### Caso de Uso 10d: Comprar Market Pump
+**Dado que** el usuario quiere vender CryptoCoins a mejor precio
+**Cuando** compra Market Pump ($0.99)
+**Entonces**
+- Al abrir tab Boosters:
+  - 30% de probabilidad de ver oferta extendida (20 min en vez de 15 min)
+  - Si extendida: badge "EXTENDED" visible
+- Al comprar:
+  - Precio de venta se multiplica por 2x (`priceMultiplier: 2.0`) durante `baseDurationMs` (15 min) o `extendedDurationMs` (20 min)
+  - Aplicado en la acción `SELL_COINS_FOR_MONEY` del reducer
+  - UI muestra badge: "Market Pump: MM:SS remaining"
+  - Timer es real-time
+- Configuración: `BOOSTER_CONFIG.MARKET_PUMP`
+
+### Caso de Uso 10e: Extended Offer Mechanic (Offline Miner & Market Pump)
+**Dado que** Offline Miner y Market Pump tienen 30% chance de oferta extendida
+**Cuando** el usuario abre el tab Boosters
+**Entonces**
+- Se pre-rolla la oferta extendida (si aplica) al abrir el tab
+- El resultado se pasa via `pendingBoosterMetaRef` (ref exportada desde GameContext)
+- Si la oferta extendida está activa, la card muestra duración mejorada con badge visual
+- El roll NO se repite en cada render — solo al abrir el tab
+
+### DYNAMIC PACKS (Ofertas Dinámicas)
+
+### Caso de Uso 11: Ver Dynamic Pack en Store
+**Dado que** el usuario abre la sección "Packs"
 **Cuando** la pantalla carga
 **Entonces**
-- Se muestran 4 cards en grid (2×2):
+- Se muestra UN solo pack a la vez, basado en la etapa del jugador (hardware que posee):
+  - **Si NO tiene asic_gen3**: Small Pack (Starter Pack — $0.99)
+  - **Si tiene asic_gen3, NO quantum_miner**: Medium Pack (Growth Pack — $2.99)
+  - **Si tiene quantum_miner, NO supercomputer**: Large Pack (Mining Empire — $4.99)
+  - **Si tiene supercomputer**: Mega Pack (Crypto Titan — $9.99)
+- Visibilidad controlada por `showAfterHardwareId` / `showUntilHardwareId` en PACK_CONFIG
+- Si hay una oferta activa (timer > 0):
+  - Card muestra recursos con valores concretos (randorizados al generar la oferta)
+  - Timer countdown "Offer expires in MM:SS"
+  - Botón "Buy"
+- Si no hay oferta activa y cooldown terminó:
+  - Se genera una nueva oferta automáticamente
+  - CC y Cash se randomizan dentro de los rangos configurados
+  - Timer = 20 minutos (`OFFER_DURATION_MS`)
+- Si oferta expiró:
+  - Pack no visible o muestra "Next offer in HH:MM" (cooldown 8h)
 
-  **Small Pack:**
-  - Icono: Bronze chest
-  - Título: "Small Starter Pack"
-  - Recursos:
-    - "10,000 CryptoCoins"
-    - "$500 Real Money"
-    - Iconos de CC y $
-  - Precio: "$0.99"
-  - Botón: "Buy"
-  - Si comprado: Badge "Owned" (gris)
+### Caso de Uso 12: Contenido de cada Dynamic Pack
 
-  **Medium Pack:**
-  - Icono: Silver chest
-  - Título: "Medium Starter Pack"
-  - Badge: "Most Popular"
-  - Recursos:
-    - "50,000 CryptoCoins"
-    - "$2,500 Real Money"
-  - Precio: "$2.99"
-  - Botón: "Buy"
+**Small Pack (Starter Pack — $0.99):**
+- CC: 3,000 - 5,000 (randomizado)
+- Cash: $40 - $80 (randomizado)
+- Booster: 2x producción × 1h (siempre incluido)
+- Visible hasta poseer `asic_gen3`
 
-  **Large Pack:**
-  - Icono: Gold chest
-  - Título: "Large Starter Pack"
-  - Recursos:
-    - "150,000 CryptoCoins"
-    - "$10,000 Real Money"
-  - Precio: "$4.99"
-  - Botón: "Buy"
+**Medium Pack (Growth Pack — $2.99):**
+- CC: 20,000 - 40,000
+- Cash: $5,000 - $10,000
+- Booster: 2x producción × 2h
+- Visible desde `asic_gen3` hasta poseer `quantum_miner`
 
-  **Mega Pack:**
-  - Icono: Diamond/Rainbow chest
-  - Título: "Mega Starter Pack"
-  - Badge: "Best Value" (destacado)
-  - Recursos:
-    - "500,000 CryptoCoins"
-    - "$50,000 Real Money"
-  - Precio: "$9.99"
-  - Value highlight: "5x more than Medium Pack!"
-  - Botón: "Buy"
+**Large Pack (Mining Empire — $4.99):**
+- CC: 40,000 - 60,000
+- Cash: $30,000 - $50,000
+- Booster: 2x producción × 4h (cuando no hay electricidad)
+- **Crédito eléctrico**: 24-48h de energía gratis (si jugador tiene energía no-renovable activa)
+- Visible desde `quantum_miner` hasta poseer `supercomputer`
 
-### Caso de Uso 12: Comprar Small Starter Pack (Primera Vez)
-**Dado que** el usuario NO ha comprado Small Pack
-**Cuando** presiona "Buy Small Pack"
+**Mega Pack (Crypto Titan — $9.99):**
+- CC: 100,000 - 200,000
+- Cash: $200,000 - $400,000
+- Booster: 2x producción × 24h (cuando no hay electricidad)
+- **Crédito eléctrico**: 72-120h de energía gratis (si jugador tiene energía no-renovable activa)
+- Visible desde poseer `supercomputer` en adelante
+
+### Caso de Uso 13: Comprar Dynamic Pack
+**Dado que** hay una oferta activa con timer > 0
+**Cuando** el usuario presiona "Buy"
 **Entonces**
-- Mostrar confirmation dialog:
-  - Título: "Small Starter Pack"
-  - Recursos que recibirá:
-    - "✓ 10,000 CryptoCoins"
-    - "✓ $500 Real Money"
-  - Precio: "$0.99"
-  - Warning: "⚠️ Can only be purchased ONCE"
-  - Botones: "Cancel" | "Purchase"
-- Si selecciona Purchase:
-  - Procesar compra (IAP flow, one-time)
-  - Al completar:
-    - Otorgar recursos INMEDIATAMENTE:
-      - `cryptoCoins += 10000`
-      - `realMoney += 500`
-    - Marcar pack como comprado:
-      - `starterPacksPurchased.small = true`
-    - Mostrar success dialog:
-      - "Resources Received!"
-      - "✓ 10,000 CryptoCoins"
-      - "✓ $500 Real Money"
-      - Animación de coins/money cayendo
-    - UI actualiza balances con animación:
-      - CryptoCoins: 5,000 → 15,000 (animación count-up)
-      - Real Money: $100 → $600 (animación count-up)
-    - Store card actualizado:
-      - Badge: "Owned"
-      - Botón: "Owned" (gris, deshabilitado)
-    - Guardar en purchase history
-    - Finalizar transacción
-    - Log Analytics: `starter_pack_purchased` con pack: `small`
+- Procesar compra (IAP flow)
+- Al completar:
+  - Otorgar CC y Cash según los valores concretos de la oferta actual (`packCurrentCC`, `packCurrentCash`)
+  - Activar booster 2x producción por la duración del tier (`boosterDurationMs`)
+  - Si pack incluye electricidad Y jugador tiene non-renewable activa: otorgar crédito eléctrico (`packCurrentElectricityHours`)
+  - Mostrar success dialog con recursos otorgados
+  - La oferta desaparece, cooldown de 8h inicia
+- Acción del reducer: `PURCHASE_STARTER_PACK` usa valores dinámicos de `packCurrentCC`/`packCurrentCash` con fallback estático
 
-### Caso de Uso 13: Intentar Comprar Small Pack (Ya Comprado)
-**Dado que** el usuario YA compró Small Pack
-**Cuando** intenta comprarlo de nuevo
+### Caso de Uso 14: Créditos de Electricidad en Packs
+**Dado que** el jugador tiene energía no-renovable activa (coal, oil, nuclear)
+**Cuando** compra Large o Mega Pack
 **Entonces**
-- Botón está deshabilitado:
-  - Background gris
-  - Texto: "Owned"
-  - Badge: "Owned"
-- Si de alguna forma intenta comprarlo:
-  - Mostrar dialog: "You already purchased this pack"
-  - "Each starter pack can only be purchased once"
-  - Botón: "OK"
-  - NO procesar compra
-  - Log Analytics: `starter_pack_already_owned`
+- Además de CC, Cash y booster, recibe crédito eléctrico
+- Large: 24-48h de electricidad gratis (randomizado al generar oferta)
+- Mega: 72-120h de electricidad gratis
+- Crédito se aplica como horas sin costo de electricidad
+- Si jugador NO tiene energía no-renovable activa: el crédito NO se incluye en la oferta, solo se muestra CC + Cash + booster
 
-### Caso de Uso 14: Comprar Múltiples Starter Packs
-**Dado que** el usuario quiere varios packs
-**Cuando** compra Small, Medium, y Large en secuencia
+### Caso de Uso 15: Oferta Expira Sin Comprar
+**Dado que** hay una oferta activa
+**Cuando** el timer de 20 minutos llega a 0
 **Entonces**
-- Cada pack se compra independientemente:
-  - Small: +10K CC, +$500
-  - Medium: +50K CC, +$2.5K
-  - Large: +150K CC, +$10K
-- Recursos se suman:
-  - Total: +210K CC, +$13K
-- Cada pack se marca como purchased individualmente
-- Solo Mega Pack queda disponible para comprar
-- UI muestra progresión:
-  - "Packs Owned: 3/4"
-  - Solo Mega Pack tiene botón "Buy"
+- Oferta desaparece
+- Cooldown de 8h inicia (`COOLDOWN_MS`)
+- Próxima oferta genera nuevos valores randorizados dentro de los rangos
+- Estado: `packNextOfferAt = Date.now() + COOLDOWN_MS`
 
-### Caso de Uso 15: Value Comparison (Mega vs Others)
-**Dado que** el usuario está decidiendo qué pack comprar
-**Cuando** compara los packs
-**Entonces**
-- Value por dólar:
-  - Small: 10K CC + $500 = ~$0.99 value per $0.99 (1x)
-  - Medium: 50K CC + $2.5K = ~$2.99 value per $2.99 (1x)
-  - Large: 150K CC + $10K = ~$4.99 value per $4.99 (1x)
-  - Mega: 500K CC + $50K = ~$16+ value per $9.99 (1.6x)
-- Mega Pack es "Best Value":
-  - Badge destacado
-  - Tooltip: "Most coins and money per dollar!"
-- UI puede mostrar comparison chart (opcional):
-  - Barras comparando CC received
-  - Highlight en Mega Pack
-
-### Caso de Uso 16: Starter Pack en Early Game
-**Dado que** el usuario está en early game (0-2 horas jugadas)
-**Cuando** compra Small Pack
-**Entonces**
-- Recursos recibidos (10K CC + $500) son MUY significativos:
-  - Puede comprar inmediatamente:
-    - ~20 Basic CPUs
-    - O 5 Advanced CPUs
-    - O 1 Basic GPU
-  - Acelera progresión inicial en ~2-3 horas
-- Mostrar tip opcional:
-  - "Use CryptoCoins to buy hardware"
-  - "Use Real Money to unlock advanced features"
-- Log Analytics: `starter_pack_early_game` con playtime
-
-### Caso de Uso 17: Starter Pack en Late Game
-**Dado que** el usuario está en late game (10+ horas, cerca de prestige)
-**Cuando** compra Mega Pack
-**Entonces**
-- Recursos recibidos (500K CC + $50K) son menos impactantes:
-  - Puede comprar:
-    - ~2-3 ASIC Gen 3
-    - Algunos upgrades finales
-  - Acelera progresión final en ~1-2 horas
-- Still valuable pero menos game-changing que en early
-- Log Analytics: `starter_pack_late_game` con blocks_mined
-
-### Caso de Uso 18: Restore Purchases (Starter Packs)
-**Dado que** el usuario reinstala app después de comprar packs
-**Cuando** hace Restore Purchases
-**Entonces**
-- Sistema verifica compras previas
-- Para cada starter pack comprado:
-  - Marca como purchased: `starterPacksPurchased.X = true`
-  - Botón cambia a "Owned"
-  - Badge "Owned" aparece
-- IMPORTANTE: NO vuelve a otorgar recursos:
-  - Los recursos ya fueron usados en sesión anterior
-  - Solo se restaura el "flag" de purchased
-  - Previene que compre de nuevo
-- Mostrar: "Purchases restored (packs already redeemed)"
-
-### Caso de Uso 19: Todos los Boosters y Packs Activos
-**Dado que** el usuario compró todo
+### Caso de Uso 16: Todos los Boosters Activos
+**Dado que** el usuario compró múltiples boosters
 **Cuando** tiene todos los boosts activos
 **Entonces**
 - Producción total (ejemplo):
@@ -452,17 +421,19 @@ Todos los boosters stackean multiplicativamente con prestige y rewarded ad boost
   permanentMultiplier = 2.0x (permanent IAP)
   temporaryBooster = 5.0x (5x booster)
   adBoost = 2.0x (rewarded ad)
+  luckyBlock = 5x (por bloque, si activo)
 
   finalProduction = 1000 × 2.0 × 2.0 × 5.0 × 2.0 = 40,000 CC/s
+  + Lucky Block: cada bloque minado otorga 5× recompensa
+  + Market Pump: precio de venta 2× (si activo)
+  + Offline Miner: 50% de producción mientras app cerrada (si activo)
   ```
-- UI muestra TODOS los badges:
+- UI muestra badges activos:
   - "2x Permanent" (arco iris)
   - "5x Boost: 18:30:00" (violeta)
   - "2x Ad: 2:15:00" (dorado)
-- Stats screen muestra:
-  - "Total Spent: $25.94" (si compró todo)
-  - "Active Boosts: 3"
-  - "Starter Packs Owned: 4/4"
+  - "Lucky Block: 450 blocks" (si activo)
+  - "Market Pump: 12:30" (si activo)
 
 ## Fórmulas y Cálculos
 
@@ -535,135 +506,163 @@ function calculatePackValue(pack: 'small' | 'medium' | 'large' | 'mega'): {
 
 ## Constantes de Configuración
 
-En `src/config/iapConfig.ts`:
+En `src/config/balanceConfig.ts`:
 
 ```typescript
 export const BOOSTER_CONFIG = {
-  // 2x Production Booster
-  booster2x: {
-    productId: 'com.blockchaintycoon.booster2x',
-    price: 0.99,
+  // Production Boosters
+  BOOSTER_2X: {
     multiplier: 2.0,
-    duration: 4 * 60 * 60, // 4 horas en segundos
-    type: 'consumable',
+    durationMs: 4 * 60 * 60 * 1000,   // 4 horas
   },
-
-  // 5x Production Booster
-  booster5x: {
-    productId: 'com.blockchaintycoon.booster5x',
-    price: 2.99,
+  BOOSTER_5X: {
     multiplier: 5.0,
-    duration: 24 * 60 * 60, // 24 horas en segundos
-    type: 'consumable',
-    badge: 'Best Value',
+    durationMs: 24 * 60 * 60 * 1000,  // 24 horas
+  },
+  PERMANENT_MULTIPLIER: {
+    multiplier: 2.0,
+  },
+  REWARDED_AD_BOOST: {
+    multiplier: 2.0,
+    durationMs: 4 * 60 * 60 * 1000,   // 4 horas
+    cooldownMs: 5 * 60 * 1000,         // 5 minutos
   },
 
-  // Permanent 2x Multiplier
-  permanentMultiplier: {
-    productId: 'com.blockchaintycoon.permanent2x',
-    price: 9.99,
-    multiplier: 2.0,
-    duration: Infinity, // Permanente
-    type: 'non-consumable',
+  // Specialty Boosters
+  OFFLINE_MINER: {
+    baseDurationMs: 8 * 60 * 60 * 1000,      // 8h
+    extendedDurationMs: 12 * 60 * 60 * 1000,  // 12h (extended offer)
+    extendedOfferChance: 0.30,                 // 30% chance on tab open
+    earningsMultiplier: 0.5,                   // 50% of active production
+  },
+  LUCKY_BLOCK: {
+    rewardMultiplier: 5,                       // 5x block reward
+    earlyBlocks: 200,                          // blocks if hashRate < 5K
+    midBlocks: 1000,                           // blocks if 5K ≤ hashRate < 100K
+    lateBlocks: 3000,                          // blocks if hashRate ≥ 100K
+    earlyHashThreshold: 5000,
+    lateHashThreshold: 100000,
+  },
+  MARKET_PUMP: {
+    priceMultiplier: 2.0,                      // 2x sell price
+    baseDurationMs: 15 * 60 * 1000,            // 15 min
+    extendedDurationMs: 20 * 60 * 1000,        // 20 min
+    extendedOfferChance: 0.30,                 // 30% chance on tab open
   },
 };
 
-export const STARTER_PACK_CONFIG = {
+export const PACK_CONFIG = {
+  OFFER_DURATION_MS: 20 * 60 * 1000,  // 20 min active window
+  COOLDOWN_MS: 8 * 60 * 60 * 1000,    // 8h between offers
+
   small: {
-    productId: 'com.blockchaintycoon.starter_small',
-    price: 0.99,
-    rewards: {
-      cryptoCoins: 10000,
-      realMoney: 500,
-    },
-    type: 'one-time',
-    icon: 'bronze-chest',
+    ccRange: [3_000, 5_000],
+    cashRange: [40, 80],
+    boosterDurationMs: 1 * 60 * 60 * 1000,  // 1h 2x booster
+    showUntilHardwareId: 'asic_gen3',
   },
-
   medium: {
-    productId: 'com.blockchaintycoon.starter_medium',
-    price: 2.99,
-    rewards: {
-      cryptoCoins: 50000,
-      realMoney: 2500,
-    },
-    type: 'one-time',
-    icon: 'silver-chest',
-    badge: 'Most Popular',
+    ccRange: [20_000, 40_000],
+    cashRange: [5_000, 10_000],
+    boosterDurationMs: 2 * 60 * 60 * 1000,  // 2h 2x booster
+    showAfterHardwareId: 'asic_gen3',
+    showUntilHardwareId: 'quantum_miner',
   },
-
   large: {
-    productId: 'com.blockchaintycoon.starter_large',
-    price: 4.99,
-    rewards: {
-      cryptoCoins: 150000,
-      realMoney: 10000,
-    },
-    type: 'one-time',
-    icon: 'gold-chest',
+    ccRange: [40_000, 60_000],
+    cashRange: [30_000, 50_000],
+    boosterDurationMs: 4 * 60 * 60 * 1000,  // 4h booster
+    showAfterHardwareId: 'quantum_miner',
+    showUntilHardwareId: 'supercomputer',
+    includeElectricity: true,
+    electricityHoursRange: [24, 48],
   },
-
   mega: {
-    productId: 'com.blockchaintycoon.starter_mega',
-    price: 9.99,
-    rewards: {
-      cryptoCoins: 500000,
-      realMoney: 50000,
-    },
-    type: 'one-time',
-    icon: 'diamond-chest',
-    badge: 'Best Value',
+    ccRange: [100_000, 200_000],
+    cashRange: [200_000, 400_000],
+    boosterDurationMs: 24 * 60 * 60 * 1000, // 24h booster
+    showAfterHardwareId: 'supercomputer',
+    includeElectricity: true,
+    electricityHoursRange: [72, 120],
   },
 };
 ```
 
 ## Estructura de Datos
 
-### Booster State (GameState)
+### Booster & Pack State (GameState.iapState)
 ```typescript
-interface GameState {
-  iapState: {
-    // Permanent Multiplier
-    permanentMultiplierPurchased: boolean;
+interface IAPState {
+  // Permanent Multiplier
+  permanentMultiplierPurchased: boolean;
 
-    // Temporary Boosters (consumable, con timers)
-    booster2x: {
-      isActive: boolean;
-      activatedAt: number | null;
-      expiresAt: number | null;
-    };
-    booster5x: {
-      isActive: boolean;
-      activatedAt: number | null;
-      expiresAt: number | null;
-    };
-
-    // Starter Packs (one-time, flags only)
-    starterPacksPurchased: {
-      small: boolean;
-      medium: boolean;
-      large: boolean;
-      mega: boolean;
-    };
-
-    // Purchase history (includes all consumable purchases)
-    purchaseHistory: PurchaseRecord[];
+  // Temporary Production Boosters (consumable, con timers)
+  booster2x: {
+    isActive: boolean;
+    activatedAt: number | null;
+    expiresAt: number | null;
   };
+  booster5x: {
+    isActive: boolean;
+    activatedAt: number | null;
+    expiresAt: number | null;
+  };
+
+  // Specialty Boosters state
+  offlineMiner: {
+    isActive: boolean;
+    activatedAt: number | null;
+    expiresAt: number | null;
+  };
+  luckyBlock: {
+    isActive: boolean;
+    blocksRemaining: number;
+  };
+  marketPump: {
+    isActive: boolean;
+    activatedAt: number | null;
+    expiresAt: number | null;
+  };
+
+  // Dynamic Pack Offers (timed offers, not one-time)
+  packOfferExpiresAt: number;           // current offer expiry timestamp
+  packNextOfferAt: number;              // next offer generation timestamp (after cooldown)
+  packCurrentCC: number;                // randomized CC value for current offer
+  packCurrentCash: number;              // randomized Cash value for current offer
+  packCurrentElectricityHours: number;  // randomized electricity hours (0 if N/A)
+
+  // Flash Sale (Remove Ads)
+  flashSaleExpiresAt: number;
+  flashSaleCooldownUntil: number;
+
+  // Purchase history (includes all consumable purchases)
+  purchaseHistory: PurchaseRecord[];
 }
 ```
 
 ## Reglas de Negocio
 
+### Production Boosters
 1. **Boosters temporales NO stackean entre sí**: 5x reemplaza 2x, no se suman
 2. **Boosters SÍ stackean con otros multipliers**: Permanent × Prestige × Ad × Temporary
 3. **Permanent Multiplier es non-consumable**: Solo se puede comprar una vez
-4. **Starter Packs son one-time**: Cada pack solo se puede comprar UNA VEZ
-5. **Comprar booster mientras activo resetea timer**: No suma, reemplaza
-6. **Booster timer pausa durante offline**: Solo cuenta tiempo activo (discutible)
-7. **Starter packs otorgan AMBOS coins y money**: No solo dinero
-8. **Restore Purchases NO re-otorga starter pack resources**: Solo restaura flag
-9. **Mega Pack tiene mejor value**: Incentiva bigger purchase
-10. **Boosters consumables se pueden comprar ilimitadamente**: No hay límite
+4. **Comprar booster mientras activo resetea timer**: No suma, reemplaza
+5. **Timer es real-time**: No pausa durante offline
+
+### Specialty Boosters
+6. **Offline Miner**: Producción al 50% mientras app cerrada; duración 8h (o 12h si extended)
+7. **Lucky Block**: 5x reward por bloque durante N bloques; N escala con hashRate del jugador
+8. **Market Pump**: 2x precio de venta durante 15 min (o 20 min si extended)
+9. **Extended offers**: 30% chance, se pre-rolla al abrir tab Boosters (via `pendingBoosterMetaRef`); no re-rolla por render
+10. **Specialty boosters son independientes**: Se pueden usar simultáneamente entre sí y con production boosters
+
+### Dynamic Packs
+11. **Packs son ofertas dinámicas con timer**: 20 min de duración, 8h cooldown entre ofertas
+12. **Valores randomizados por oferta**: CC y Cash dentro de rangos configurados; cada nueva oferta genera nuevos valores
+13. **Visibilidad por stage**: Solo se muestra el pack correspondiente al hardware que el jugador posee
+14. **Crédito eléctrico condicional**: Solo en Large/Mega packs, y solo si el jugador tiene energía no-renovable activa
+15. **Booster incluido**: Cada pack activa booster 2x producción por la duración del tier
+16. **Packs se pueden comprar múltiples veces**: Cada oferta es una nueva compra (no one-time)
 
 ## UI/UX Requirements
 
@@ -718,7 +717,25 @@ Similares a IAP System spec (purchase validations, receipt validation, etc.)
 
 ## Notas de Implementación
 
-Ver IAP System spec para implementation details. Los boosters y starter packs usan el mismo IAPService con diferentes product IDs.
+### Archivos clave
+- `src/config/balanceConfig.ts` → `BOOSTER_CONFIG`, `PACK_CONFIG` (todas las constantes)
+- `src/contexts/GameContext.tsx` → Reducer actions: `ACTIVATE_BOOSTER`, `PURCHASE_STARTER_PACK`, `SET_PACK_OFFER`
+- `src/components/ShopScreen.tsx` → UI de las 3 tabs: `removeAds` | `boosters` | `packs`
+
+### Specialty Boosters — Puntos de aplicación en el reducer
+- **Lucky Block**: Se aplica en `ADD_PRODUCTION` — multiplica `blockReward` por `rewardMultiplier` y decrementa `blocksRemaining`
+- **Market Pump**: Se aplica en `SELL_COINS_FOR_MONEY` — multiplica precio de venta por `priceMultiplier`
+- **Offline Miner**: Hooks en `updateOfflineProgress` de `src/utils/gameLogic.ts`
+
+### Extended Offer mechanic
+- Pre-rolled al abrir tab Boosters via `pendingBoosterMetaRef` (ref exportada desde GameContext)
+- El resultado del roll se pasa al componente para mostrar la oferta extendida si aplica
+- El roll NO se repite por re-render
+
+### Dynamic Packs — Estado
+- `iapState.packOfferExpiresAt`: Timestamp de expiración de la oferta actual
+- `iapState.packNextOfferAt`: Timestamp de próxima generación de oferta (post-cooldown)
+- `iapState.packCurrentCC` / `packCurrentCash` / `packCurrentElectricityHours`: Valores concretos de la oferta actual
 
 ## Testing
 
@@ -819,27 +836,37 @@ analytics().logEvent('starter_pack_purchased', {
 - Input: Activa 5x (24h), cierra app por 25h
 - Expected: Al reabrir, booster expirado, offline earnings con boost hasta hora 24
 
-**Edge Case 3: Comprar todos los starter packs**
-- Input: Compra Small, Medium, Large, Mega
-- Expected: Todos marcados como owned, total +710K CC + $63K
-
-**Edge Case 4: Prestige con booster activo**
+**Edge Case 3: Prestige con booster activo**
 - Input: Hace prestige con 5x activo (10h restantes)
 - Expected: Booster PERSISTE después de prestige (es un boost temporal ganado)
 
+**Edge Case 4: Lucky Block con hashRate que cambia mid-boost**
+- Input: Compra Lucky Block con hashRate=4,000 (→200 blocks), luego compra hardware y hashRate sube a 6,000
+- Expected: Bloques restantes NO se recalculan. Los 200 bloques originales se mantienen.
+
+**Edge Case 5: Pack offer expira mientras usuario ve confirmation dialog**
+- Input: Usuario abre dialog de compra, timer llega a 0 antes de confirmar
+- Expected: Compra falla gracefully, mostrar "Offer expired"
+
+**Edge Case 6: Market Pump + venta de coins**
+- Input: Market Pump activo (2x precio), precio base = $100
+- Expected: Venta se realiza a $200 por coin (2x aplicado en `SELL_COINS_FOR_MONEY`)
+
+**Edge Case 7: Offline Miner + production booster stacking**
+- Input: Offline Miner activo (50% earnings) + 5x booster activo
+- Expected: Offline earnings = producción normal × 5x booster × 0.5 offline multiplier
+
+**Edge Case 8: Pack stage transition**
+- Input: Usuario ve Small Pack offer, compra asic_gen3 durante la oferta
+- Expected: Small Pack sigue visible hasta que expire/se compre. Próxima oferta será Medium Pack.
+
 ## Preguntas Abiertas
 
-- [ ] **Booster timer pausa offline?**: ¿Timer solo cuenta tiempo activo o tiempo real?
-  - **Recomendación**: Tiempo real (más simple, menos explotable)
-
-- [ ] **Click power boosters**: ¿Añadir boosters para click manual?
-  - **Recomendación**: Phase 3+, no prioritario
-
+- [x] ~~**Booster timer pausa offline?**~~: Resuelto — timers usan **tiempo real** (no pausan)
+- [x] ~~**Starter packs one-time?**~~: Resuelto — cambiaron a **dynamic packs** (recomprables, timed offers)
 - [ ] **Booster bundles**: ¿"3x boosters por precio de 2"?
-  - **Recomendación**: Phase 4+, aumenta complejidad
-
-- [ ] **Custom booster durations**: ¿Permitir comprar "8 horas de 5x"?
-  - **Recomendación**: No, mantener simple (4h/24h fijos)
+  - **Recomendación**: Post-launch, aumenta complejidad
+- [ ] **Analytics**: Ningún evento de analytics está implementado aún para boosters ni packs
 
 ## Referencias
 
