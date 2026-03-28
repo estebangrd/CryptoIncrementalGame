@@ -48,26 +48,17 @@ const OfflineEarningsModal: React.FC<OfflineEarningsModalProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const countAnim = useRef(new Animated.Value(0)).current;
   const shimmerAnim = useRef(new Animated.Value(0)).current;
   const dotAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     if (!visible) return;
     fadeAnim.setValue(0);
-    countAnim.setValue(0);
 
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 400,
       useNativeDriver: true,
-    }).start();
-
-    Animated.timing(countAnim, {
-      toValue: 1,
-      duration: 800,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: false,
     }).start();
 
     Animated.loop(
@@ -85,7 +76,7 @@ const OfflineEarningsModal: React.FC<OfflineEarningsModalProps> = ({
         Animated.timing(dotAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
       ]),
     ).start();
-  }, [visible, fadeAnim, countAnim, shimmerAnim, dotAnim]);
+  }, [visible, fadeAnim, shimmerAnim, dotAnim]);
 
   const fadeOut = useCallback((callback: () => void) => {
     Animated.timing(fadeAnim, {
@@ -131,10 +122,25 @@ const OfflineEarningsModal: React.FC<OfflineEarningsModalProps> = ({
     fadeOut(() => onDismiss());
   }, [fadeOut, onDismiss]);
 
-  const displayedAmount = countAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, pendingEarnings],
-  });
+  // JS-driven count-up (addListener on interpolated values is unreliable in RN 0.81)
+  const [displayedAmount, setDisplayedAmount] = React.useState('0');
+  useEffect(() => {
+    if (!visible || pendingEarnings <= 0) return;
+    const duration = 800;
+    const start = Date.now();
+    let raf: number;
+    const tick = () => {
+      const elapsed = Date.now() - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+      setDisplayedAmount(formatNumber(pendingEarnings * eased));
+      if (progress < 1) {
+        raf = requestAnimationFrame(tick);
+      }
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [visible, pendingEarnings]);
 
   const logLines = [
     { ts: '[--:--:01]', text: t('offline.logLine1') },
@@ -180,7 +186,7 @@ const OfflineEarningsModal: React.FC<OfflineEarningsModalProps> = ({
             <View style={styles.earningsTopLine} />
             <Text style={styles.ecLabel}>{t('offline.accumulated')}</Text>
             <View style={styles.ecAmountRow}>
-              <AnimatedNumber value={displayedAmount} />
+              <Text style={styles.ecAmount}>{displayedAmount}</Text>
               <Text style={styles.ecUnit}>CC</Text>
             </View>
             {wasCapped && (
@@ -212,20 +218,6 @@ const OfflineEarningsModal: React.FC<OfflineEarningsModalProps> = ({
       </Animated.View>
     </Modal>
   );
-};
-
-// Animated number display component
-const AnimatedNumber: React.FC<{ value: Animated.AnimatedInterpolation<number> }> = ({ value }) => {
-  const [displayText, setDisplayText] = React.useState('0');
-
-  useEffect(() => {
-    const id = value.addListener(({ value: v }) => {
-      setDisplayText(formatNumber(v));
-    });
-    return () => value.removeListener(id);
-  }, [value]);
-
-  return <Text style={styles.ecAmount}>{displayText}</Text>;
 };
 
 const styles = StyleSheet.create({
