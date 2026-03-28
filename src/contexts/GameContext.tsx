@@ -46,7 +46,7 @@ import {
   registerDevPurchaseCallback,
 } from '../services/IAPService';
 import { purchaseUpdatedListener, purchaseErrorListener } from 'react-native-iap';
-import { BOOSTER_CONFIG, STARTER_PACK_REWARDS, ENERGY_CONFIG, PACK_CONFIG, REGULATORY_EVENT_CONFIG, MARKET_OPPORTUNITY_CONFIG, LOCAL_PROTEST_CONFIG, ELECTRICITY_FEE_CONFIG, AD_BUBBLE_CONFIG } from '../config/balanceConfig';
+import { BOOSTER_CONFIG, STARTER_PACK_REWARDS, ENERGY_CONFIG, PACK_CONFIG, REGULATORY_EVENT_CONFIG, MARKET_OPPORTUNITY_CONFIG, LOCAL_PROTEST_CONFIG, ELECTRICITY_FEE_CONFIG, AD_BUBBLE_CONFIG, AI_CONFIG } from '../config/balanceConfig';
 import { buildEndgameStats, calculateTotalEndgameProductionMultiplier } from '../utils/endgameLogic';
 import Toast, { ToastInfo } from '../components/Toast';
 import { IAP_PRODUCT_IDS } from '../config/iapConfig';
@@ -156,7 +156,9 @@ type GameAction =
   | { type: 'TRIGGER_MARKET_OPPORTUNITY' }
   | { type: 'RESOLVE_MARKET_OPPORTUNITY'; payload: 'went_to_market' | 'auto_sold' | 'expired' }
   | { type: 'TRIGGER_LOCAL_PROTEST'; payload: { resourcesConsumed: number } }
-  | { type: 'DISMISS_LOCAL_PROTEST' };
+  | { type: 'DISMISS_LOCAL_PROTEST' }
+  | { type: 'CLAIM_OFFLINE_EARNINGS'; payload: { amount: number } }
+  | { type: 'DISMISS_OFFLINE_EARNINGS' };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
@@ -401,6 +403,11 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         goodEndingCount: action.payload.goodEndingCount ?? 0,
         lastEndgameStats: action.payload.lastEndgameStats ?? null,
         disconnectAttempted: action.payload.disconnectAttempted ?? false,
+        // Offline earnings modal defaults
+        pendingOfflineEarnings: 0,
+        offlineSecondsAway: 0,
+        offlineWasCapped: false,
+        offlineBlocksProcessed: 0,
         // Price history system migration
         priceSeed: action.payload.priceSeed ?? generatePriceSeed(),
         priceHistoryIndex: action.payload.priceHistoryIndex ?? generatePriceStartIndex(),
@@ -723,6 +730,10 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         priceSeed: generatePriceSeed(),
         priceHistoryIndex: generatePriceStartIndex(),
         priceHistory: undefined,
+        pendingOfflineEarnings: 0,
+        offlineSecondsAway: 0,
+        offlineWasCapped: false,
+        offlineBlocksProcessed: 0,
         regulatoryPressureEvent: null,
         marketOpportunityEvent: null,
         localProtestEvent: null,
@@ -1389,7 +1400,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       const { level } = action.payload;
       const ai = state.ai ?? getInitialAIState();
       if (!canPurchaseAILevel(state, level)) return state;
-      const config = { 1: { cost: 500_000 }, 2: { cost: 5_000_000 }, 3: { cost: 50_000_000 } }[level];
+      const config = AI_CONFIG.LEVELS[level as 1 | 2 | 3];
       const unlockedCrypto = getAIUnlockedCrypto(level);
       const isAutonomous = level === 3;
       const newAI = addAILogEntry(
@@ -1544,6 +1555,10 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         goodEndingCount: newGoodEndingCount,
         lastEndgameStats: state.lastEndgameStats,
         disconnectAttempted: false,
+        pendingOfflineEarnings: 0,
+        offlineSecondsAway: 0,
+        offlineWasCapped: false,
+        offlineBlocksProcessed: 0,
         regulatoryPressureEvent: null,
         marketOpportunityEvent: null,
         localProtestEvent: null,
@@ -1737,6 +1752,29 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       };
     }
 
+    // ── Offline Earnings Modal ──────────────────────────────────────────────
+    case 'CLAIM_OFFLINE_EARNINGS': {
+      const claimAmount = action.payload.amount;
+      return {
+        ...state,
+        cryptoCoins: state.cryptoCoins + claimAmount,
+        totalCryptoCoins: state.totalCryptoCoins + claimAmount,
+        pendingOfflineEarnings: 0,
+        offlineSecondsAway: 0,
+        offlineWasCapped: false,
+        offlineBlocksProcessed: 0,
+      };
+    }
+    case 'DISMISS_OFFLINE_EARNINGS': {
+      return {
+        ...state,
+        pendingOfflineEarnings: 0,
+        offlineSecondsAway: 0,
+        offlineWasCapped: false,
+        offlineBlocksProcessed: 0,
+      };
+    }
+
     default:
       return state;
   }
@@ -1794,6 +1832,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (savedState) {
         dispatch({ type: 'LOAD_GAME', payload: savedState });
+        dispatch({ type: 'UPDATE_OFFLINE_PROGRESS' });
       } else {
         dispatch({ type: 'SET_HYDRATED' });
       }
