@@ -27,6 +27,7 @@ import MarketOpportunityModal from './MarketOpportunityModal';
 import LocalProtestModal from './LocalProtestModal';
 import DisconnectModal from './DisconnectModal';
 import EndingScreen from './EndingScreen';
+import OfflineEarningsModal from './OfflineEarningsModal';
 import ShopScreen from './ShopScreen';
 import { getNewlyUnlockedAchievements } from '../utils/achievementLogic';
 import { getPendingNarrativeEvent } from '../utils/narrativeLogic';
@@ -235,7 +236,7 @@ const getPlanetResourceColor = (pct: number): string => {
 
 // ── GameScreen ─────────────────────────────────────────────────────
 const GameScreen: React.FC = () => {
-  const { gameState, dispatch, t } = useGame();
+  const { gameState, dispatch, t, showToast } = useGame();
   const insets = useSafeAreaInsets();
   const [showSettings, setShowSettings] = useState(false);
   const [showShop, setShowShop] = useState(false);
@@ -522,6 +523,19 @@ const GameScreen: React.FC = () => {
       <DisconnectModal
         visible={showDisconnect}
         onClose={() => dispatch({ type: 'ATTEMPT_DISCONNECT' })}
+      />
+
+      <OfflineEarningsModal
+        visible={gameState.pendingOfflineEarnings > 0}
+        pendingEarnings={gameState.pendingOfflineEarnings}
+        secondsAway={gameState.offlineSecondsAway}
+        wasCapped={gameState.offlineWasCapped}
+        blocksProcessed={gameState.offlineBlocksProcessed}
+        removeAdsPurchased={gameState.iapState.removeAdsPurchased}
+        t={t}
+        onClaim={(amount) => dispatch({ type: 'CLAIM_OFFLINE_EARNINGS', payload: { amount } })}
+        onDismiss={() => dispatch({ type: 'DISMISS_OFFLINE_EARNINGS' })}
+        showToast={showToast}
       />
 
       <EndingScreen

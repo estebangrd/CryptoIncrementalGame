@@ -1883,4 +1883,70 @@ export const translations: Translation = {
     es: 'Ahora no',
     pt: 'Agora não',
   },
+  // ── Offline Earnings Modal ────────────────────────────────────────────
+  'offline.logTitle': {
+    en: 'SYSTEM · Offline Mining',
+    es: 'SISTEMA · Minado Offline',
+    pt: 'SISTEMA · Mineração Offline',
+  },
+  'offline.logLine1': {
+    en: 'Hardware active during operator absence.',
+    es: 'Hardware activo durante ausencia del operador.',
+    pt: 'Hardware ativo durante ausência do operador.',
+  },
+  'offline.logLine2': {
+    en: 'Blocks processed: {blocks}. Status: pending validation.',
+    es: 'Bloques procesados: {blocks}. Estado: pendiente de validación.',
+    pt: 'Blocos processados: {blocks}. Status: pendente de validação.',
+  },
+  'offline.logLine3': {
+    en: 'Production retained. Operator presence required to release funds.',
+    es: 'Producción retenida. Se requiere presencia del operador para liberar fondos.',
+    pt: 'Produção retida. Presença do operador necessária para liberar fundos.',
+  },
+  'offline.timeAway': {
+    en: 'TIME AWAY',
+    es: 'TIEMPO FUERA',
+    pt: 'TEMPO AUSENTE',
+  },
+  'offline.accumulated': {
+    en: 'Accumulated production',
+    es: 'Producción acumulada',
+    pt: 'Produção acumulada',
+  },
+  'offline.capWarning': {
+    en: 'Production capped at 1h — come back more often to maximize',
+    es: 'Producción capada a 1h — volvé más seguido para maximizar',
+    pt: 'Produção limitada a 1h — volte mais vezes para maximizar',
+  },
+  'offline.claimTitle': {
+    en: 'Claim production',
+    es: 'Reclamar producción',
+    pt: 'Reclamar produção',
+  },
+  'offline.claimBody': {
+    en: 'Blocks mined during your absence are pending validation. Confirm your presence to claim them.',
+    es: 'Los bloques minados durante tu ausencia están pendientes de validación. Confirmá tu presencia para reclamarlos.',
+    pt: 'Os blocos minerados durante sua ausência estão pendentes de validação. Confirme sua presença para reclamá-los.',
+  },
+  'offline.watchAd': {
+    en: 'WATCH AD & CLAIM',
+    es: 'VER AD Y RECLAMAR',
+    pt: 'VER AD E RECLAMAR',
+  },
+  'offline.skip': {
+    en: 'Continue without claiming',
+    es: 'Continuar sin reclamar',
+    pt: 'Continuar sem reclamar',
+  },
+  'offline.toast': {
+    en: '⛏ {amount} CC claimed',
+    es: '⛏ {amount} CC reclamados',
+    pt: '⛏ {amount} CC reclamados',
+  },
+  'offline.claim': {
+    en: 'CLAIM',
+    es: 'RECLAMAR',
+    pt: 'RECLAMAR',
+  },
 };

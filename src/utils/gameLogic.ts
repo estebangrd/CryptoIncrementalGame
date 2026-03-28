@@ -282,35 +282,90 @@ export const updateOfflineProgress = (gameState: GameState): GameState => {
   const now = Date.now();
   const lastSave = gameState.lastSaveTime ?? now;
 
-  // Only apply offline earnings if offline miner is active
   const offlineMiner = gameState.iapState?.offlineMiner;
-  if (!offlineMiner?.isActive || !offlineMiner.expiresAt) {
+  const hasActiveOfflineMiner = offlineMiner?.isActive && offlineMiner.expiresAt;
+
+  // ── IAP Offline Miner path (existing logic — auto-credit at 50%) ──
+  if (hasActiveOfflineMiner) {
+    const offlineEnd = Math.min(now, offlineMiner.expiresAt!);
+    const offlineMs = Math.max(0, offlineEnd - lastSave);
+    const offlineSec = offlineMs / 1000;
+
+    if (offlineSec <= 0) {
+      return { ...gameState, lastSaveTime: now };
+    }
+
+    const constrainedMiningSpeed = getConstrainedMiningSpeed(gameState);
+    const allMult = getAllMultipliers(gameState);
+    const offlineSpeed = constrainedMiningSpeed * allMult * BALANCE_CONFIG.OFFLINE_EARNINGS_MULTIPLIER;
+
+    const difficulty = calculateDifficulty(gameState.blocksMined);
+    const blocksPerSec = offlineSpeed / difficulty;
+    const totalBlocks = Math.floor(blocksPerSec * offlineSec);
+
+    let coinsEarned = 0;
+    let blocksRemaining = totalBlocks;
+    let currentBlocksMined = gameState.blocksMined;
+
+    while (blocksRemaining > 0 && currentBlocksMined < GENESIS_CONSTANTS.TOTAL_BLOCKS) {
+      const reward = calculateCurrentReward(currentBlocksMined);
+      const nextHalving = calculateNextHalving(currentBlocksMined);
+      const blocksUntilHalving = nextHalving - currentBlocksMined;
+      const blocksThisBatch = Math.min(blocksRemaining, blocksUntilHalving, GENESIS_CONSTANTS.TOTAL_BLOCKS - currentBlocksMined);
+
+      coinsEarned += blocksThisBatch * reward;
+      currentBlocksMined += blocksThisBatch;
+      blocksRemaining -= blocksThisBatch;
+    }
+
+    const electricityWeight = gameState.totalElectricityCost ?? 0;
+    const ccFeeDrained = electricityWeight * ELECTRICITY_FEE_CONFIG.RATE_PERCENT / 100 * offlineSec;
+    const offlineMinerExpired = now >= offlineMiner.expiresAt!;
+    const netCoins = Math.max(0, coinsEarned - ccFeeDrained);
+
+    return {
+      ...gameState,
+      cryptoCoins: Math.max(0, gameState.cryptoCoins + netCoins),
+      totalCryptoCoins: gameState.totalCryptoCoins + coinsEarned,
+      blocksMined: currentBlocksMined,
+      difficulty: calculateDifficulty(currentBlocksMined),
+      currentReward: calculateCurrentReward(currentBlocksMined),
+      nextHalving: calculateNextHalving(currentBlocksMined),
+      lastSaveTime: now,
+      iapState: gameState.iapState ? {
+        ...gameState.iapState,
+        offlineMiner: offlineMinerExpired
+          ? { isActive: false, activatedAt: null, expiresAt: null }
+          : offlineMiner,
+      } : gameState.iapState,
+    };
+  }
+
+  // ── Free offline earnings path — store as pending (requires ad to claim) ──
+  const rawOfflineSec = Math.max(0, (now - lastSave) / 1000);
+
+  if (rawOfflineSec < OFFLINE_SCREEN_CONFIG.MIN_OFFLINE_SECONDS) {
     return { ...gameState, lastSaveTime: now };
   }
 
-  // Cap offline time to the miner's remaining active window
-  const offlineEnd = Math.min(now, offlineMiner.expiresAt);
-  const offlineMs = Math.max(0, offlineEnd - lastSave);
-  const offlineSec = offlineMs / 1000;
+  const wasCapped = rawOfflineSec > OFFLINE_SCREEN_CONFIG.MAX_OFFLINE_SECONDS;
+  const cappedSec = Math.min(rawOfflineSec, OFFLINE_SCREEN_CONFIG.MAX_OFFLINE_SECONDS);
 
-  if (offlineSec <= 0) {
-    return { ...gameState, lastSaveTime: now };
-  }
-
-  // Simulate real block mining at 50% mining speed
   const constrainedMiningSpeed = getConstrainedMiningSpeed(gameState);
   const allMult = getAllMultipliers(gameState);
-  const offlineSpeed = constrainedMiningSpeed * allMult * BALANCE_CONFIG.OFFLINE_EARNINGS_MULTIPLIER;
+  const speed = constrainedMiningSpeed * allMult;
 
-  let blocksMined = gameState.blocksMined;
-  const difficulty = calculateDifficulty(blocksMined);
-  const blocksPerSec = offlineSpeed / difficulty;
-  const totalBlocks = Math.floor(blocksPerSec * offlineSec);
+  if (speed <= 0) {
+    return { ...gameState, lastSaveTime: now };
+  }
 
-  // Process blocks through halvings for accurate CC calculation
+  const difficulty = calculateDifficulty(gameState.blocksMined);
+  const blocksPerSec = speed / difficulty;
+  const totalBlocks = Math.floor(blocksPerSec * cappedSec);
+
   let coinsEarned = 0;
   let blocksRemaining = totalBlocks;
-  let currentBlocksMined = blocksMined;
+  let currentBlocksMined = gameState.blocksMined;
 
   while (blocksRemaining > 0 && currentBlocksMined < GENESIS_CONSTANTS.TOTAL_BLOCKS) {
     const reward = calculateCurrentReward(currentBlocksMined);
@@ -323,29 +378,21 @@ export const updateOfflineProgress = (gameState: GameState): GameState => {
     blocksRemaining -= blocksThisBatch;
   }
 
-  // Drain CC mining fee (electricity weight × rate)
   const electricityWeight = gameState.totalElectricityCost ?? 0;
-  const ccFeeDrained = electricityWeight * ELECTRICITY_FEE_CONFIG.RATE_PERCENT / 100 * offlineSec;
-
-  const offlineMinerExpired = now >= offlineMiner.expiresAt;
-
+  const ccFeeDrained = electricityWeight * ELECTRICITY_FEE_CONFIG.RATE_PERCENT / 100 * cappedSec;
   const netCoins = Math.max(0, coinsEarned - ccFeeDrained);
+
+  if (netCoins <= 0) {
+    return { ...gameState, lastSaveTime: now };
+  }
 
   return {
     ...gameState,
-    cryptoCoins: Math.max(0, gameState.cryptoCoins + netCoins),
-    totalCryptoCoins: gameState.totalCryptoCoins + coinsEarned,
-    blocksMined: currentBlocksMined,
-    difficulty: calculateDifficulty(currentBlocksMined),
-    currentReward: calculateCurrentReward(currentBlocksMined),
-    nextHalving: calculateNextHalving(currentBlocksMined),
     lastSaveTime: now,
-    iapState: gameState.iapState ? {
-      ...gameState.iapState,
-      offlineMiner: offlineMinerExpired
-        ? { isActive: false, activatedAt: null, expiresAt: null }
-        : offlineMiner,
-    } : gameState.iapState,
+    pendingOfflineEarnings: netCoins,
+    offlineSecondsAway: rawOfflineSec,
+    offlineWasCapped: wasCapped,
+    offlineBlocksProcessed: totalBlocks,
   };
 };
 
@@ -357,7 +404,7 @@ export const formatNumber = (num: number): string => {
   return (num / 1000000000000).toFixed(1) + 'T';
 };
 
-import { UNLOCK_CONFIG, HARDWARE_CONFIG, BOOSTER_CONFIG, BALANCE_CONFIG, BLOCK_CONFIG, ELECTRICITY_FEE_CONFIG, AD_BUBBLE_CONFIG } from '../config/balanceConfig';
+import { UNLOCK_CONFIG, HARDWARE_CONFIG, BOOSTER_CONFIG, BALANCE_CONFIG, BLOCK_CONFIG, ELECTRICITY_FEE_CONFIG, AD_BUBBLE_CONFIG, OFFLINE_SCREEN_CONFIG } from '../config/balanceConfig';
 
 // Rango del seed: 90000–96000 → BTC/seed ≈ volatility factor around 1.0
 const PRICE_SEED_MIN = 90000;
@@ -552,6 +599,11 @@ export const getInitialGameState = (): GameState => {
     goodEndingCount: 0,
     lastEndgameStats: null,
     disconnectAttempted: false,
+    // Offline earnings modal
+    pendingOfflineEarnings: 0,
+    offlineSecondsAway: 0,
+    offlineWasCapped: false,
+    offlineBlocksProcessed: 0,
     // IAP & Ad state
     iapState: {
       removeAdsPurchased: false,

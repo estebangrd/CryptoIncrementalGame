@@ -712,6 +712,16 @@ export const PACK_CONFIG = {
 } as const;
 
 // ============================================================================
+// OFFLINE EARNINGS SCREEN
+// ============================================================================
+export const OFFLINE_SCREEN_CONFIG = {
+  MIN_OFFLINE_SECONDS: 300,     // 5 min minimum to show modal
+  MAX_OFFLINE_SECONDS: 3600,    // 1h cap on production
+  REWARD_MIN_PCT: 80,           // minimum % on ad watch
+  REWARD_MAX_PCT: 100,          // maximum %
+} as const;
+
+// ============================================================================
 // EVENTOS NARRATIVOS INTERACTIVOS (PHASE 6)
 // ============================================================================
 export const REGULATORY_EVENT_CONFIG = {

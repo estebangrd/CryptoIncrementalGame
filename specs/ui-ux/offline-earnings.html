@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Offline Earnings</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ng: #00ff88; --nc: #00e5ff; --ny: #ffd600; --nr: #ff3d5a; --np: #a040ff;
+    --bg: #020810; --dim: rgba(255,255,255,0.4); --dim2: rgba(255,255,255,0.18);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;overflow:hidden;}
+  body{background:var(--bg);font-family:'Rajdhani',sans-serif;color:#fff;position:relative;}
+  body::before{
+    content:'';position:fixed;inset:0;
+    background-image:linear-gradient(rgba(0,255,136,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,136,0.025) 1px,transparent 1px);
+    background-size:40px 40px;pointer-events:none;z-index:0;
+  }
+  body::after{
+    content:'';position:fixed;inset:0;
+    background:radial-gradient(ellipse at 50% 0%,rgba(0,255,136,0.07) 0%,transparent 55%);
+    pointer-events:none;z-index:0;
+  }
+
+  .scanline{position:fixed;top:0;left:0;right:0;height:1px;background:rgba(0,255,136,.05);animation:scan 8s linear infinite;pointer-events:none;z-index:200;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  @keyframes fadeOut{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-8px)}}
+  @keyframes scan{0%{top:0}100%{top:100vh}}
+
+  /* ── SHELL ── */
+  .shell{
+    position:relative;z-index:1;
+    max-width:420px;margin:0 auto;
+    height:100vh;display:flex;flex-direction:column;
+    overflow:hidden;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar{
+    flex-shrink:0;display:flex;align-items:center;justify-content:space-between;
+    padding:14px 18px 10px;
+    border-bottom:1px solid rgba(0,255,136,.1);
+    background:rgba(2,8,16,.97);
+  }
+  .logo{font-family:'Orbitron',monospace;font-size:12px;font-weight:900;letter-spacing:2.5px;color:var(--ng);text-shadow:0 0 14px rgba(0,255,136,.5);}
+  .logo span{color:var(--nc);}
+  .run-info{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:2px;}
+
+  /* ── MAIN CONTENT ── */
+  .main{
+    flex:1;overflow-y:auto;scrollbar-width:none;
+    padding:24px 18px 32px;
+    display:flex;flex-direction:column;gap:16px;
+  }
+  .main::-webkit-scrollbar{display:none;}
+
+  /* ── NARRATIVE LOG ── */
+  .narrative-card{
+    background:rgba(0,0,0,.35);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:12px;padding:14px 16px;
+    position:relative;
+  }
+  .narrative-card::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,transparent,var(--nc),transparent);opacity:.5;
+  }
+  .log-header{
+    display:flex;align-items:center;gap:6px;margin-bottom:10px;
+  }
+  .log-dot{width:5px;height:5px;border-radius:50%;background:var(--nc);box-shadow:0 0 5px var(--nc);animation:blink 1s step-end infinite;}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+  .log-source{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:2px;color:rgba(0,229,255,.6);text-transform:uppercase;white-space:normal;line-height:1.4;}
+
+  .log-lines{display:flex;flex-direction:column;gap:5px;}
+  .log-line{
+    font-family:'Share Tech Mono',monospace;
+    font-size:10px;line-height:1.6;
+    color:rgba(255,255,255,.5);
+  }
+  .log-line .ts{color:rgba(0,229,255,.35);margin-right:8px;}
+  .log-line.highlight{color:rgba(255,255,255,.8);}
+  .log-line .acc{color:var(--nc);}
+
+  /* ── TIME AWAY ── */
+  .time-away{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    padding:10px 14px;
+    background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);
+    border-radius:10px;
+  }
+  .ta-icon{font-size:16px;}
+  .ta-text{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--dim);letter-spacing:2px;}
+  .ta-time{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;color:#fff;}
+
+  /* ── EARNINGS REVEAL ── */
+  .earnings-card{
+    background:linear-gradient(135deg,rgba(0,255,136,.06),rgba(0,229,255,.04));
+    border:1px solid rgba(0,255,136,.22);
+    border-radius:16px;padding:20px 18px;
+    position:relative;overflow:hidden;text-align:center;
+  }
+  .earnings-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--ng),var(--nc));}
+
+  .ec-label{
+    font-family:'Share Tech Mono',monospace;font-size:8px;
+    letter-spacing:4px;color:var(--dim);text-transform:uppercase;margin-bottom:10px;
+  }
+  .ec-amount-row{
+    display:flex;align-items:baseline;justify-content:center;gap:8px;
+  }
+  .ec-amount{
+    font-family:'Orbitron',monospace;font-size:40px;font-weight:900;
+    color:var(--ng);text-shadow:0 0 30px rgba(0,255,136,.45);
+    line-height:1;
+    animation:countUp .8s ease-out forwards;
+  }
+  @keyframes countUp{0%{opacity:0;transform:translateY(10px)}100%{opacity:1;transform:translateY(0)}}
+  .ec-unit{font-family:'Share Tech Mono',monospace;font-size:14px;color:rgba(0,255,136,.65);letter-spacing:3px;}
+
+  /* Cap warning */
+  .cap-note{
+    display:flex;align-items:center;gap:6px;
+    padding:7px 12px;
+    background:rgba(255,214,0,.06);border:1px solid rgba(255,214,0,.15);
+    border-radius:8px;margin-top:10px;
+    font-family:'Share Tech Mono',monospace;font-size:9px;color:rgba(255,214,0,.6);
+    letter-spacing:1px;
+  }
+
+  /* ── AD OFFER ── */
+  .ad-offer{
+    background:rgba(0,0,0,.25);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:14px;padding:16px;
+  }
+  .ao-title{
+    font-family:'Orbitron',monospace;font-size:12px;font-weight:700;
+    color:#fff;letter-spacing:1px;margin-bottom:4px;
+    display:flex;align-items:center;gap:7px;
+  }
+  .ao-sub{
+    font-family:'Rajdhani',sans-serif;font-size:13px;
+    color:var(--dim);line-height:1.5;margin-bottom:14px;
+  }
+  .ao-sub em{color:rgba(255,255,255,.75);font-style:normal;}
+
+  /* Range indicator */
+  .ao-range{
+    display:flex;align-items:center;gap:8px;margin-bottom:14px;
+  }
+  .range-bar{
+    flex:1;height:6px;background:rgba(255,255,255,.06);
+    border-radius:3px;overflow:hidden;position:relative;
+  }
+  .range-fill{
+    position:absolute;left:0;top:0;bottom:0;
+    background:linear-gradient(90deg,rgba(0,255,136,.4),var(--ng));
+    border-radius:3px;
+    animation:rangePulse 2s ease-in-out infinite;
+  }
+  @keyframes rangePulse{0%,100%{opacity:.7}50%{opacity:1}}
+  .range-labels{display:flex;justify-content:space-between;margin-top:4px;}
+  .range-label{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--dim2);letter-spacing:1px;}
+  .range-label.max{color:var(--ng);}
+
+  /* ── BUTTONS ── */
+  .watch-btn{
+    width:100%;padding:16px;border-radius:12px;border:none;
+    background:linear-gradient(135deg,rgba(0,255,136,.16),rgba(0,229,255,.1));
+    border:1px solid var(--ng);
+    color:var(--ng);font-family:'Orbitron',monospace;
+    font-size:13px;font-weight:700;letter-spacing:3px;
+    cursor:pointer;position:relative;overflow:hidden;
+    box-shadow:0 0 20px rgba(0,255,136,.15);
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    margin-bottom:8px;
+  }
+  .watch-btn::before{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(135deg,transparent 30%,rgba(0,255,136,.08) 50%,transparent 70%);
+    transform:translateX(-100%);animation:shimmer 2.5s infinite;
+  }
+  @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+  .watch-btn:active{transform:scale(.97);}
+
+  .skip-btn{
+    width:100%;padding:12px;background:transparent;border:none;
+    font-family:'Share Tech Mono',monospace;font-size:10px;
+    letter-spacing:2px;color:var(--dim2);cursor:pointer;text-align:center;
+  }
+
+  /* ── REVEAL SCREEN ── */
+  .reveal-screen{
+    display:none;
+    flex:1;flex-direction:column;align-items:center;justify-content:center;
+    padding:24px 18px;gap:16px;text-align:center;
+  }
+  .reveal-screen.active{display:flex;}
+
+  .reveal-icon{font-size:64px;animation:revealBounce .6s cubic-bezier(0.22,1,0.36,1) forwards;opacity:0;}
+  @keyframes revealBounce{0%{transform:scale(0);opacity:0}70%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+
+  .reveal-label{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:4px;color:var(--dim);text-transform:uppercase;}
+  .reveal-pct{
+    font-family:'Orbitron',monospace;font-size:52px;font-weight:900;
+    color:var(--ng);text-shadow:0 0 40px rgba(0,255,136,.5);line-height:1;
+    animation:revealNum .5s ease-out .3s both;
+  }
+  @keyframes revealNum{0%{opacity:0;transform:scale(.8)}100%{opacity:1;transform:scale(1)}}
+  .reveal-of{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--dim);letter-spacing:2px;}
+  .reveal-amount{
+    font-family:'Orbitron',monospace;font-size:28px;font-weight:900;
+    color:#fff;animation:revealNum .5s ease-out .5s both;
+  }
+  .reveal-unit{font-family:'Share Tech Mono',monospace;font-size:10px;color:rgba(0,255,136,.55);letter-spacing:3px;}
+
+  .reveal-log{
+    background:rgba(0,0,0,.3);border:1px solid rgba(0,255,136,.12);
+    border-radius:10px;padding:10px 14px;width:100%;text-align:left;
+    animation:revealNum .5s ease-out .7s both;
+  }
+  .rl-line{font-family:'Share Tech Mono',monospace;font-size:9px;color:rgba(0,255,136,.5);line-height:1.8;letter-spacing:.5px;}
+  .rl-line .ts{color:rgba(0,255,136,.25);}
+
+  .collect-btn{
+    width:100%;padding:16px;border-radius:12px;
+    background:linear-gradient(135deg,rgba(0,255,136,.16),rgba(0,229,255,.1));
+    border:1px solid var(--ng);color:var(--ng);
+    font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:3px;
+    cursor:pointer;position:relative;overflow:hidden;
+    box-shadow:0 0 20px rgba(0,255,136,.15);
+    animation:revealNum .5s ease-out .9s both;
+  }
+  .collect-btn:active{transform:scale(.97);}
+
+</style>
+</head>
+<body>
+
+<div class="scanline"></div>
+
+<!-- Toast -->
+<div id="toast" style="position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-10px);z-index:70;background:rgba(2,8,16,.97);border-radius:12px;padding:10px 18px;display:flex;align-items:center;gap:8px;font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;opacity:0;pointer-events:none;transition:all .25s ease;box-shadow:0 4px 20px rgba(0,0,0,.5);white-space:nowrap;border:1px solid var(--ng);color:var(--ng);">
+  <span class="toast-icon">⛏</span>
+  <span class="toast-text"></span>
+</div>
+
+<div class="shell">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="logo">BLOCK<span>CHAIN</span> TYCOON</div>
+    <div class="run-info">RUN #2 · GENESIS</div>
+  </div>
+
+  <!-- MAIN SCREEN -->
+  <div class="main" id="mainScreen">
+
+    <!-- Narrative log -->
+    <div class="narrative-card">
+      <div class="log-header">
+        <div class="log-dot"></div>
+        <div class="log-source" id="logSource">SISTEMA · Minado Offline</div>
+      </div>
+      <div class="log-lines" id="logLines"></div>
+    </div>
+
+    <!-- Time away -->
+    <div class="time-away">
+      <div class="ta-icon">⏱</div>
+      <div class="ta-text">TIEMPO FUERA</div>
+      <div class="ta-time" id="timeAway">2h 34m</div>
+    </div>
+
+    <!-- Earnings -->
+    <div class="earnings-card">
+      <div class="ec-label">Producción acumulada</div>
+      <div class="ec-amount-row">
+        <div class="ec-amount" id="earningsAmount">847.2K</div>
+        <div class="ec-unit">CC</div>
+      </div>
+      <div class="cap-note" id="capNote" style="display:none;">
+        ⚠ Producción capada a 1h — volvé más seguido para maximizar
+      </div>
+    </div>
+
+    <!-- Ad offer -->
+    <div class="ad-offer">
+      <div class="ao-title">📺 Reclamar producción</div>
+      <div class="ao-sub" id="offerSub">
+        Los bloques minados durante tu ausencia están pendientes de validación. Confirmá tu presencia para reclamarlos.
+      </div>
+      <button class="watch-btn" onclick="watchAd()">
+        📺 VER AD Y RECLAMAR
+      </button>
+      <button class="skip-btn" onclick="skipAd()">Continuar sin reclamar</button>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+const logs = [
+  {ts:'[02:34:09]', text:'Hardware activo durante ausencia del operador.', hl:false},
+  {ts:'[02:34:10]', text:'Bloques procesados: <span class="acc">14,120</span>. Estado: pendiente de validación.', hl:false},
+  {ts:'[02:34:12]', text:'Producción retenida. Se requiere presencia del operador para liberar fondos.', hl:false},
+];
+const totalEarnings = 847200;
+
+// Render log lines
+document.getElementById('logLines').innerHTML = logs.map(l=>
+  `<div class="log-line${l.hl?' highlight':''}">
+    <span class="ts">${l.ts}</span>${l.text}
+  </div>`
+).join('');
+
+function closeScreen() {
+  document.querySelector('.shell').style.animation = 'fadeOut .3s ease-out forwards';
+  setTimeout(()=> document.querySelector('.shell').style.display = 'none', 300);
+}
+
+function showToast(msg, color) {
+  const t = document.getElementById('toast');
+  t.style.borderColor = color;
+  t.style.color = color;
+  t.querySelector('.toast-icon').textContent = '⛏';
+  t.querySelector('.toast-text').textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3500);
+}
+
+function watchAd() {
+  const pct = Math.floor(Math.random() * 21) + 80;
+  const received = Math.round(totalEarnings * pct / 100);
+  const fmt = n => n >= 1000000 ? (n/1000000).toFixed(1)+'M' : n >= 1000 ? (n/1000).toFixed(1)+'K' : n;
+  closeScreen();
+  setTimeout(()=> showToast(`${fmt(received)} CC reclamados`, 'var(--ng)'), 350);
+}
+
+function skipAd() {
+  closeScreen();
+}
+
+// Animate earnings count up
+const target = 847.2, dur = 800, t0 = performance.now();
+function countUp(now) {
+  const p = Math.min((now-t0)/dur, 1);
+  const ease = 1 - Math.pow(1-p, 3);
+  document.getElementById('earningsAmount').textContent = (target*ease).toFixed(1)+'K';
+  if(p < 1) requestAnimationFrame(countUp);
+}
+requestAnimationFrame(countUp);
+</script>
+</body>
+</html>

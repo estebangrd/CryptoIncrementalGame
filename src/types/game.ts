@@ -347,6 +347,11 @@ export interface GameState {
   goodEndingCount: number;         // total good endings
   lastEndgameStats: EndgameStats | null;
   disconnectAttempted: boolean;    // player already saw the disconnect popup
+  // Offline earnings modal
+  pendingOfflineEarnings: number;   // CC pending claim, 0 = no modal
+  offlineSecondsAway: number;       // actual time away for display
+  offlineWasCapped: boolean;        // true if production was capped at 1h
+  offlineBlocksProcessed: number;   // estimated blocks for narrative log
   // Banner Events (Phase 6 — interactive narrative)
   regulatoryPressureEvent: RegulatoryPressureEvent | null;
   marketOpportunityEvent: MarketOpportunityEvent | null;
