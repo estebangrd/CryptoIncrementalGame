@@ -7,6 +7,7 @@ export const colors = {
   nc: '#00e5ff',    // neon cyan
   ny: '#ffd600',    // neon yellow
   nr: '#ff3d5a',    // neon red
+  np: '#a040ff',    // neon purple
   dim: 'rgba(255,255,255,0.4)',
   bng: 'rgba(0,255,136,0.22)',
   bnc: 'rgba(0,229,255,0.18)',

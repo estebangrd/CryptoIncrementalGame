@@ -25,6 +25,7 @@ interface OfflineEarningsModalProps {
   onClaim: (amount: number) => void;
   onDismiss: () => void;
   showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
+  onShowEarningsToast?: (amount: number) => void;
 }
 
 const formatDuration = (totalSec: number): string => {
@@ -54,6 +55,7 @@ const OfflineEarningsModal: React.FC<OfflineEarningsModalProps> = ({
   onClaim,
   onDismiss,
   showToast,
+  onShowEarningsToast,
 }) => {
   const insets = useSafeAreaInsets();
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -99,8 +101,12 @@ const OfflineEarningsModal: React.FC<OfflineEarningsModalProps> = ({
 
     const grantReward = () => {
       onClaim(claimAmount);
-      const toastMsg = t('offline.toast').replace('{amount}', formatNumber(claimAmount));
-      showToast(toastMsg, 'success');
+      if (onShowEarningsToast) {
+        onShowEarningsToast(claimAmount);
+      } else {
+        const toastMsg = t('offline.toast').replace('{amount}', formatNumber(claimAmount));
+        showToast(toastMsg, 'success');
+      }
     };
 
     if (removeAdsPurchased || !isRewardedAdReady()) {
@@ -112,7 +118,7 @@ const OfflineEarningsModal: React.FC<OfflineEarningsModalProps> = ({
       () => grantReward(),
       () => setClaiming(false),
     );
-  }, [claiming, pendingEarnings, removeAdsPurchased, t, onClaim, showToast]);
+  }, [claiming, pendingEarnings, removeAdsPurchased, t, onClaim, showToast, onShowEarningsToast]);
 
   const handleSkip = useCallback(() => {
     if (claiming) return;

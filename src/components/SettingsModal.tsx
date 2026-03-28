@@ -23,9 +23,11 @@ interface SettingsModalProps {
   onTestGoodEnding?: () => void;
   onTestAICollapse?: () => void;
   onTestHumanCollapse?: () => void;
+  onTestAchievementToast?: () => void;
+  onTestEarningsToast?: () => void;
 }
 
-const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose, onReset, onOpenShop, onTestGoodEnding, onTestAICollapse, onTestHumanCollapse }) => {
+const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose, onReset, onOpenShop, onTestGoodEnding, onTestAICollapse, onTestHumanCollapse, onTestAchievementToast, onTestEarningsToast }) => {
   const { gameState, currentLanguage, setLanguage, t, dispatch, showToast } = useGame();
   const [showAchievements, setShowAchievements] = useState(false);
 
@@ -156,6 +158,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose, onReset
 
               <TouchableOpacity style={[styles.actionButton, { marginTop: 8, backgroundColor: '#5c3a1a' }]} onPress={onTestHumanCollapse}>
                 <Text style={styles.actionButtonText}>🔥 Test Human Collapse (Debug)</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={[styles.actionButton, { marginTop: 8, backgroundColor: '#3a2a5c' }]} onPress={onTestAchievementToast}>
+                <Text style={styles.actionButtonText}>🏅 Test Achievement Toast (Debug)</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={[styles.actionButton, { marginTop: 8, backgroundColor: '#0a2a1a' }]} onPress={onTestEarningsToast}>
+                <Text style={styles.actionButtonText}>⛏ Test Earnings Toast (Debug)</Text>
               </TouchableOpacity>
 
               <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>

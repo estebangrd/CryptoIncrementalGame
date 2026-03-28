@@ -21,6 +21,7 @@ import AdBoosterBubbles from './AdBoosterBubbles';
 import BoosterNotch from './BoosterNotch';
 import { REMOVE_ADS_CONFIG } from '../config/iapConfig';
 import AchievementToast from './AchievementToast';
+import EarningsToast from './EarningsToast';
 import NarrativeEventModal from './NarrativeEventModal';
 import RegulatoryPressureModal from './RegulatoryPressureModal';
 import MarketOpportunityModal from './MarketOpportunityModal';
@@ -32,6 +33,7 @@ import ShopScreen from './ShopScreen';
 import { getNewlyUnlockedAchievements } from '../utils/achievementLogic';
 import { getPendingNarrativeEvent } from '../utils/narrativeLogic';
 import { Achievement } from '../types/game';
+import { ALL_ACHIEVEMENTS } from '../data/achievements';
 import { colors, fonts } from '../config/theme';
 import { logEvent } from '../services/analytics';
 
@@ -248,6 +250,7 @@ const GameScreen: React.FC = () => {
   const [debugGoodEnding, setDebugGoodEnding] = useState(false);
   const [debugAICollapse, setDebugAICollapse] = useState(false);
   const [debugHumanCollapse, setDebugHumanCollapse] = useState(false);
+  const [earningsToastAmount, setEarningsToastAmount] = useState<number | null>(null);
   const prevAchievementsRef = useRef(gameState.achievements);
   const firstHydratedRef = useRef(true);
 
@@ -332,6 +335,27 @@ const GameScreen: React.FC = () => {
 
   const handleDismissToast = useCallback(() => {
     setToastQueue(prev => prev.slice(1));
+  }, []);
+
+  const handleTestAchievementToast = useCallback(() => {
+    const idx = Math.floor(Math.random() * ALL_ACHIEVEMENTS.length);
+    const sample = { ...ALL_ACHIEVEMENTS[idx], unlocked: true, unlockedAt: Date.now() };
+    setToastQueue(prev => [...prev, sample]);
+    setShowSettings(false);
+  }, []);
+
+  const handleShowEarningsToast = useCallback((amount: number) => {
+    setEarningsToastAmount(amount);
+  }, []);
+
+  const handleDismissEarningsToast = useCallback(() => {
+    setEarningsToastAmount(null);
+  }, []);
+
+  const handleTestEarningsToast = useCallback(() => {
+    const randomAmount = Math.floor(Math.random() * 2000000) + 50000;
+    setEarningsToastAmount(randomAmount);
+    setShowSettings(false);
   }, []);
 
   const mineFlashAnim = useRef(new Animated.Value(0)).current;
@@ -486,6 +510,8 @@ const GameScreen: React.FC = () => {
         onTestGoodEnding={() => { setShowSettings(false); setDebugGoodEnding(true); }}
         onTestAICollapse={() => { setShowSettings(false); setDebugAICollapse(true); }}
         onTestHumanCollapse={() => { setShowSettings(false); setDebugHumanCollapse(true); }}
+        onTestAchievementToast={handleTestAchievementToast}
+        onTestEarningsToast={handleTestEarningsToast}
       />
 
       <AdBanner onHeightChange={setAdBannerHeight} />
@@ -494,6 +520,12 @@ const GameScreen: React.FC = () => {
         achievement={toastQueue[0] ?? null}
         displayName={toastQueue[0]?.name || toastQueue[0]?.nameKey || ''}
         onDismiss={handleDismissToast}
+      />
+
+      <EarningsToast
+        amount={earningsToastAmount}
+        label={t('offline.claimed')}
+        onDismiss={handleDismissEarningsToast}
       />
 
       <NarrativeEventModal
@@ -537,6 +569,7 @@ const GameScreen: React.FC = () => {
         onClaim={(amount) => dispatch({ type: 'CLAIM_OFFLINE_EARNINGS', payload: { amount } })}
         onDismiss={() => dispatch({ type: 'DISMISS_OFFLINE_EARNINGS' })}
         showToast={showToast}
+        onShowEarningsToast={handleShowEarningsToast}
       />
 
       <EndingScreen

@@ -1944,6 +1944,11 @@ export const translations: Translation = {
     es: '⛏ {amount} CC reclamados',
     pt: '⛏ {amount} CC reclamados',
   },
+  'offline.claimed': {
+    en: 'claimed',
+    es: 'reclamados',
+    pt: 'reclamados',
+  },
   'offline.claim': {
     en: 'CLAIM',
     es: 'RECLAMAR',
