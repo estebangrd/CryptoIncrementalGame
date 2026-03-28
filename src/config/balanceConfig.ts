@@ -755,6 +755,39 @@ export const LOCAL_PROTEST_CONFIG = {
 };
 
 // ============================================================================
+// PRICE ENGINE — Ornstein-Uhlenbeck mean-reverting process
+// ============================================================================
+export const PRICE_ENGINE = {
+  // OU process parameters
+  THETA: 0.12,          // mean-reversion speed (higher = snaps back faster)
+  SIGMA: 0.045,         // base volatility per tick
+  CLAMP_MIN: -0.30,     // min deviation from era base price (−30%)
+  CLAMP_MAX: 0.40,      // max deviation from era base price (+40%)
+
+  // Chart window size (number of price points displayed)
+  CHART_WINDOW: 30,
+
+  // Market regimes: each overrides theta/sigma/drift for its duration
+  REGIMES: {
+    normal:   { weight: 40, minTicks: 20, maxTicks: 60,  drift: 0,      sigma: 1.0, theta: 1.0 },
+    bull:     { weight: 18, minTicks: 15, maxTicks: 40,  drift: 0.008,  sigma: 1.2, theta: 0.8 },
+    bear:     { weight: 18, minTicks: 15, maxTicks: 40,  drift: -0.008, sigma: 1.2, theta: 0.8 },
+    volatile: { weight: 12, minTicks: 8,  maxTicks: 20,  drift: 0,      sigma: 2.0, theta: 0.6 },
+    spike:    { weight: 6,  minTicks: 3,  maxTicks: 8,   drift: 0.025,  sigma: 2.5, theta: 0.4 },
+    crash:    { weight: 6,  minTicks: 3,  maxTicks: 8,   drift: -0.030, sigma: 2.5, theta: 0.4 },
+  } as Record<string, {
+    weight: number; minTicks: number; maxTicks: number;
+    drift: number; sigma: number; theta: number;
+  }>,
+
+  // Blocking rules: regime X cannot follow regime Y
+  BLOCKED_TRANSITIONS: {
+    spike: ['spike', 'crash'],
+    crash: ['crash', 'spike'],
+  } as Record<string, string[]>,
+} as const;
+
+// ============================================================================
 // NOTAS DE BALANCE
 // ============================================================================
 /*

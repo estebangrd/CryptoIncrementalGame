@@ -74,9 +74,3 @@ jest.mock('./src/services/cryptoAPI', () => ({
   fetchCryptoPrices: jest.fn(() => Promise.resolve([])),
   shouldUpdatePrices: jest.fn(() => false),
 }));
-
-// Price history service mock
-jest.mock('./src/services/priceHistoryService', () => ({
-  initializePriceHistory: jest.fn(() => Promise.resolve()),
-  updateAllPriceHistory: jest.fn(() => Promise.resolve()),
-}));

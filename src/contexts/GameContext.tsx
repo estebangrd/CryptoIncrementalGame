@@ -4,7 +4,8 @@ import { GameState, Cryptocurrency, PrestigeRun, RunStats, AILevel, EndingType, 
 import { hardwareProgression } from '../data/hardwareData';
 import { initialUpgrades } from '../data/gameData';
 import { cryptocurrencies } from '../data/cryptocurrencies';
-import { getInitialGameState, updateOfflineProgress, checkAndUpdateUnlocks, generatePriceSeed, generatePriceStartIndex, getInitialChartWindow } from '../utils/gameLogic';
+import { getInitialGameState, updateOfflineProgress, checkAndUpdateUnlocks } from '../utils/gameLogic';
+import { tickOU, generateInitialChartWindow, getInitialPriceEngineState, smoothEraTransition } from '../utils/priceEngine';
 import {
   canPrestige,
   calculateProductionMultiplier,
@@ -35,7 +36,6 @@ import {
 } from '../utils/marketLogic';
 import { saveGameState, loadGameState, saveLanguage, loadLanguage } from '../utils/storage';
 import { translations } from '../data/translations';
-import { BTC_PRICE_HISTORY } from '../data/btcPriceHistory';
 import { initializeAdMob, loadInterstitial, showInterstitialIfEligible } from '../services/AdMobService';
 import {
   initializeIAP,
@@ -410,9 +410,10 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         offlineSecondsAway: 0,
         offlineWasCapped: false,
         offlineBlocksProcessed: 0,
-        // Price history system migration
-        priceSeed: action.payload.priceSeed ?? generatePriceSeed(),
-        priceHistoryIndex: action.payload.priceHistoryIndex ?? generatePriceStartIndex(),
+        // Price engine migration (OU replaces BTC dataset)
+        priceDeviation: action.payload.priceDeviation ?? 0,
+        priceRegime: action.payload.priceRegime ?? 'normal',
+        priceRegimeTicksLeft: action.payload.priceRegimeTicksLeft ?? getInitialPriceEngineState().priceRegimeTicksLeft,
         unlockedTabs: {
           market: action.payload.unlockedTabs?.market ?? false,
           hardware: action.payload.unlockedTabs?.hardware ?? false,
@@ -422,12 +423,12 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           chronicle: action.payload.unlockedTabs?.chronicle ?? false,
         },
       };
-      // Initialize chart window if missing (new field or first load)
+      // Initialize chart window if missing (migration from BTC dataset or first load)
       if (!loadedState.priceHistory?.['cryptocoin']) {
         loadedState.priceHistory = {
           ...loadedState.priceHistory,
           cryptocoin: {
-            prices: getInitialChartWindow(loadedState.priceHistoryIndex, loadedState.priceSeed),
+            prices: generateInitialChartWindow(loadedState.blocksMined ?? 0),
             lastUpdate: Date.now(),
           },
         };
@@ -729,9 +730,13 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         planetResourcesVisible: false,
         collapseTriggered: false,
         goodEndingTriggered: false,
-        priceSeed: generatePriceSeed(),
-        priceHistoryIndex: generatePriceStartIndex(),
-        priceHistory: undefined,
+        ...getInitialPriceEngineState(),
+        priceHistory: {
+          cryptocoin: {
+            prices: generateInitialChartWindow(0),
+            lastUpdate: Date.now(),
+          },
+        },
         pendingOfflineEarnings: 0,
         offlineSecondsAway: 0,
         offlineWasCapped: false,
@@ -758,17 +763,34 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         marketState: updateMarketState(state.marketState),
       };
     case 'ADVANCE_PRICE_INDEX': {
-      const nextIndex = (state.priceHistoryIndex + 1) % BTC_PRICE_HISTORY.length;
-      // Era-based price: basePrice × BTC volatility factor
-      const eraBasePrice = getBasePrice(state.blocksMined);
-      const newPrice = eraBasePrice * (BTC_PRICE_HISTORY[nextIndex] / state.priceSeed);
-      const prevWindow = state.priceHistory?.['cryptocoin']?.prices ?? [];
-      const newWindow = [...prevWindow, newPrice].slice(-30);
+      // OU tick: generate next price from mean-reverting process
+      const engineState = {
+        priceDeviation: state.priceDeviation ?? 0,
+        priceRegime: state.priceRegime ?? 'normal',
+        priceRegimeTicksLeft: state.priceRegimeTicksLeft ?? 30,
+      };
+      const ouResult = tickOU(engineState, state.blocksMined);
+
+      // Era transition smoothing: if era changed, recalc deviation
+      const prevPrices = state.priceHistory?.['cryptocoin']?.prices ?? [];
+      const lastPrice = prevPrices.length > 0 ? prevPrices[prevPrices.length - 1] : ouResult.price;
+      const eraChanged = prevPrices.length > 0 && getBasePrice(state.blocksMined) !== getBasePrice(Math.max(0, state.blocksMined - 1));
+      let finalState = ouResult.state;
+      let finalPrice = ouResult.price;
+      if (eraChanged) {
+        const newDev = smoothEraTransition(lastPrice, state.blocksMined);
+        finalState = { ...finalState, priceDeviation: newDev };
+        finalPrice = getBasePrice(state.blocksMined) * (1 + newDev);
+      }
+
+      const newWindow = [...prevPrices, finalPrice].slice(-30);
       return {
         ...state,
-        priceHistoryIndex: nextIndex,
+        priceDeviation: finalState.priceDeviation,
+        priceRegime: finalState.priceRegime,
+        priceRegimeTicksLeft: finalState.priceRegimeTicksLeft,
         cryptocurrencies: state.cryptocurrencies.map(c =>
-          c.id === 'cryptocoin' ? { ...c, currentValue: newPrice } : c
+          c.id === 'cryptocoin' ? { ...c, currentValue: finalPrice } : c
         ),
         priceHistory: {
           ...state.priceHistory,

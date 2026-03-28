@@ -8,15 +8,15 @@
 
 ## Descripción
 
-El Market System permite a los jugadores convertir CryptoCoins en Real Money ($) mediante la venta en un mercado simulado. Los precios de las criptomonedas fluctúan basándose en datos históricos reales de Bitcoin almacenados localmente en el dispositivo (sin dependencia de APIs externas en runtime). El dinero real ($) se usa para comprar hardware avanzado y upgrades, creando un loop económico: CryptoCoins → Real Money → Hardware → Más CryptoCoins.
+El Market System permite a los jugadores convertir CryptoCoins en Real Money ($) mediante la venta en un mercado simulado. Los precios de las criptomonedas fluctúan usando un proceso estocástico Ornstein-Uhlenbeck (OU) con regímenes de mercado, sin dependencia de APIs externas ni datasets estáticos. El dinero real ($) se usa para comprar hardware avanzado y upgrades, creando un loop económico: CryptoCoins → Real Money → Hardware → Más CryptoCoins.
 
-El CryptoCoin nativo deriva su precio del historial de Bitcoin escalado por un factor variable (seed de partida, rango 90,000-96,000) y multiplicado por el precio base de la era actual (`ERA_BASE_PRICES`). Las otras criptomonedas (BTC, ETH, DOGE, ADA) son puramente cosméticas/de referencia y solo se usan para dar contexto de mercado.
+El CryptoCoin nativo deriva su precio del precio base de la era actual (`ERA_BASE_PRICES`) multiplicado por `(1 + priceDeviation)`, donde `priceDeviation` es un valor mean-reverting generado por el motor OU (rango -30% a +40%). Las otras criptomonedas (BTC, ETH, DOGE, ADA) son puramente cosméticas/de referencia y solo se usan para dar contexto de mercado.
 
 ## Objetivos
 - [x] Crear un puente económico entre progresión gratuita y monetización
-- [x] Simular un mercado de criptomonedas con datos históricos reales
-- [x] Funcionar 100% offline sin dependencias de API en runtime
-- [x] Proporcionar variabilidad entre partidas mediante seed aleatoria
+- [x] Simular un mercado de criptomonedas con fluctuaciones visibles (OU + regímenes)
+- [x] Funcionar 100% offline sin dependencias de API o datasets externos
+- [x] Proporcionar variabilidad entre partidas mediante proceso estocástico
 - [x] Proporcionar información visual de tendencias de precios
 - [x] Desbloquear progresivamente para no overwhelm al jugador
 
@@ -34,15 +34,16 @@ El CryptoCoin nativo deriva su precio del historial de Bitcoin escalado por un f
 - Se muestra una confirmación: "Sold X CC for $Y"
 - Se verifica si se desbloqueó el Hardware tab ($150 threshold)
 
-### Caso de Uso 2: Actualización de Precios (Historial Local)
+### Caso de Uso 2: Actualización de Precios (Motor OU)
 **Dado que** el jugador tiene el Market abierto
 **Cuando** pasan 5 segundos desde la última actualización (`MARKET_CONFIG.UPDATE_INTERVAL = 5000ms`)
 **Entonces**
-- Se avanza 1 posición en el historial de BTC (`priceHistoryIndex++`)
-- El nuevo precio de CryptoCoin = `ERA_BASE_PRICES[currentEra] × (BTC_PRICE_HISTORY[index] / priceSeed)`
+- Se ejecuta un tick del proceso Ornstein-Uhlenbeck (`tickOU()`)
+- El nuevo precio = `ERA_BASE_PRICES[currentEra] × (1 + priceDeviation)`
+- `priceDeviation` se actualiza: mean-reversion + volatilidad del régimen + drift
 - Se agrega el nuevo precio al chart (ventana deslizante de 30 puntos)
 - Se descarta el punto más antiguo del chart
-- Si `index` llega al final del dataset, hace loop: `index = 0`
+- Si el régimen actual expira (`priceRegimeTicksLeft === 0`), se selecciona uno nuevo
 
 ### Caso de Uso 3: Ver Detalles de Criptomoneda
 **Dado que** el jugador abre la lista de criptomonedas en el Market
@@ -83,11 +84,12 @@ El CryptoCoin nativo deriva su precio del historial de Bitcoin escalado por un f
 
 **Fórmula de precio**:
 ```
-cryptoCoinPrice = ERA_BASE_PRICES[currentEra] × (BTC_PRICE_HISTORY[priceHistoryIndex] / priceSeed)
+cryptoCoinPrice = ERA_BASE_PRICES[currentEra] × (1 + priceDeviation)
 ```
-- `BTC_PRICE_HISTORY`: array de precios históricos de BTC almacenado localmente
-- `priceSeed`: factor divisor aleatorio generado al crear la partida, rango **90,000–96,000** (PRICE_SEED_MIN=90000, PRICE_SEED_RANGE=6000)
+- `priceDeviation`: valor mean-reverting generado por proceso Ornstein-Uhlenbeck, rango **-0.30 a +0.40**
 - `ERA_BASE_PRICES`: [0.08, 0.50, 2.00, 5.00, 8.00, 8.00, 8.00] — el precio base sube con cada era
+- Parámetros OU: theta=0.12 (velocidad de reversión), sigma=0.045 (volatilidad base)
+- 6 regímenes de mercado (normal/bull/bear/volatile/spike/crash) modifican theta/sigma/drift
 
 ### Bitcoin (BTC)
 ```typescript
@@ -232,52 +234,66 @@ function simulatePrice(baseValue: number, volatility: number): number {
 // Precio puede variar entre $8.50 y $11.50
 ```
 
-## Sistema de Historial Local de Precios
+## Motor de Precios — Ornstein-Uhlenbeck con Regímenes
 
 ### Diseño General
-En lugar de consumir APIs externas en runtime (con restricciones de ToS comerciales y dependencia de conectividad), el juego usa un dataset histórico real de Litecoin almacenado localmente. Esto provee:
-- Inmersión con movimientos de precio reales
-- Funcionamiento 100% offline
-- Sin restricciones legales de uso comercial
-- Variabilidad entre partidas mediante seed
+En lugar de consumir APIs externas o datasets estáticos de BTC (que producían variaciones <0.1% por tick, resultando en charts planos), el juego usa un proceso estocástico Ornstein-Uhlenbeck (OU) con regímenes de mercado. Esto provee:
+- Fluctuaciones visibles (~2.5% por tick vs 0.04% anterior)
+- Tendencias recognizables (bulls, bears, spikes, crashes)
+- Funcionamiento 100% offline, sin archivos de datos externos
+- Control total del game designer sobre la volatilidad
+- Variabilidad natural entre partidas (proceso aleatorio)
 
-### Dataset
-- **Fuente**: Bitcoin (BTC) — datos históricos de precio
-- **Formato**: Array de floats (precio USD), almacenado localmente
-- **Ubicación**: `src/data/btcPriceHistory.ts` (o array embebido en `gameLogic.ts`)
-- **Uso**: El precio se divide por el seed (90K-96K) y se multiplica por ERA_BASE_PRICES
-
-### Seed de Partida
+### Proceso OU (Mean-Reverting)
 ```typescript
-// Generada aleatoriamente al crear una partida nueva, persiste toda la partida
-const PRICE_SEED_MIN = 90000;
-const PRICE_SEED_RANGE = 6000;
-const priceSeed = PRICE_SEED_MIN + Math.floor(Math.random() * PRICE_SEED_RANGE);
-// rango: 90,000–96,000
+// Cada tick (5 segundos):
+newDeviation = deviation + theta * (0 - deviation) + sigma * gaussianNoise + drift
+price = ERA_BASE_PRICES[currentEra] * (1 + newDeviation)
 ```
 
-- `priceSeed` determina cuánto vale el CryptoCoin relativo al BTC
-- Un seed de 90,000 → precio más alto → más dinero por venta → partida más fácil
-- Un seed de 96,000 → precio más bajo → partida más ajustada
-- El rango mantiene la variabilidad sin romper el balance
-- Rango de precios base resultante: ~$1.03–$1.38/CC (promedio ~$1.20)
+- `theta` (0.12): velocidad de reversión a la media — previene que el precio diverga
+- `sigma` (0.045): volatilidad base por tick
+- `drift`: tendencia direccional (0 en normal, positivo en bull, negativo en bear)
+- `deviation` se clampea a [-0.30, +0.40] como safety rails
 
-### Actualización cada 5 segundos
+### Regímenes de Mercado
+| Régimen | Peso | Duración | Drift | Sigma | Theta | Efecto |
+|---------|:----:|:--------:|:-----:|:-----:|:-----:|--------|
+| normal | 40 | 20-60 ticks | 0 | 1.0x | 1.0x | Fluctuación base |
+| bull | 18 | 15-40 ticks | +0.008 | 1.2x | 0.8x | Tendencia alcista |
+| bear | 18 | 15-40 ticks | -0.008 | 1.2x | 0.8x | Tendencia bajista |
+| volatile | 12 | 8-20 ticks | 0 | 2.0x | 0.6x | Alta volatilidad |
+| spike | 6 | 3-8 ticks | +0.025 | 2.5x | 0.4x | Subida brusca |
+| crash | 6 | 3-8 ticks | -0.030 | 2.5x | 0.4x | Caída brusca |
+
+- **Blocking rules**: spike no puede seguir a spike/crash; crash no puede seguir a crash/spike
+- Al expirar un régimen se selecciona uno nuevo por peso ponderado (excluyendo bloqueados)
+
+### Estado Persistente
 ```typescript
-// Cada 5 segundos (MARKET_CONFIG.UPDATE_INTERVAL = 5000ms)
-priceHistoryIndex = (priceHistoryIndex + 1) % BTC_PRICE_HISTORY.length;
-const eraBasePrice = BLOCK_CONFIG.ERA_BASE_PRICES[currentEra];
-const newCryptoCoinPrice = eraBasePrice * (BTC_PRICE_HISTORY[priceHistoryIndex] / priceSeed);
+// En GameState (persiste en AsyncStorage)
+priceDeviation: number;          // rango -0.30 a +0.40
+priceRegime: string;             // 'normal' | 'bull' | 'bear' | 'volatile' | 'spike' | 'crash'
+priceRegimeTicksLeft: number;    // ticks restantes en régimen actual
 ```
 
-- Al llegar al final del dataset hace **loop** seamless al inicio
-- `priceHistoryIndex` y `priceSeed` se persisten en el GameState (AsyncStorage)
-- El precio escala con la era actual (ERA_BASE_PRICES): más alto en eras avanzadas
+### Transición de Era
+Cuando `blocksMined` cruza un halving boundary (cambio de era), la desviación se recalcula para mantener continuidad de precio:
+```
+newDeviation = (oldPrice / newEraBasePrice) - 1
+```
+Clampeado a [-0.30, +0.40].
 
 ### Chart (últimos 30 puntos)
 - Ventana deslizante de 30 puntos: cada 5 segundos entra 1 punto nuevo, sale el más viejo
-- Seed inicial del chart: los 30 puntos anteriores al `priceHistoryStartIndex` en el dataset
+- Inicialización: se ejecutan 30 ticks OU para poblar el chart al crear/cargar partida
 - Título en UI: "Price Evolution"
+
+### Configuración
+Todos los parámetros están en `balanceConfig.ts` → `PRICE_ENGINE`:
+- Parámetros OU: `THETA`, `SIGMA`, `CLAMP_MIN`, `CLAMP_MAX`
+- Definiciones de regímenes: `REGIMES` (weight, minTicks, maxTicks, drift, sigma, theta)
+- Reglas de bloqueo: `BLOCKED_TRANSITIONS`
 
 ## Estructura de Datos
 
@@ -315,8 +331,9 @@ interface GameState {
       lastUpdate: number;
     };
   };
-  priceSeed: number;                    // Factor divisor BTC→CC (90,000–96,000), fijo por partida
-  priceHistoryIndex: number;            // Posición actual en ltcPriceHistory (0..N-1)
+  priceDeviation: number;              // OU deviation from era base (-0.30 to +0.40)
+  priceRegime: string;                 // Current market regime name
+  priceRegimeTicksLeft: number;        // Ticks remaining in current regime
 }
 ```
 
@@ -427,9 +444,9 @@ function shouldUnlockHardware(gameState: GameState): boolean {
 
 ### Requiere
 - `GameContext` - State management
-- `balanceConfig.ts` - Valores base de criptos
-- `Block Mining System` - Para generar CryptoCoins
-- `src/utils/gameLogic.ts` - Dataset histórico de BTC (BTC_PRICE_HISTORY array)
+- `balanceConfig.ts` → `PRICE_ENGINE` - Parámetros OU y regímenes
+- `Block Mining System` - Para generar CryptoCoins y determinar era actual
+- `src/utils/priceEngine.ts` - Motor de precios OU (tickOU, pickRegime, etc.)
 
 ### Bloquea
 - `Hardware Tab` - Se desbloquea después de ganar $150
@@ -437,21 +454,20 @@ function shouldUnlockHardware(gameState: GameState): boolean {
 
 ### Relacionado con
 - `Progressive Unlock System` - Market tab unlock
-- `Price History Service` - Para charts
-- `AsyncStorage` - Para persistir precios offline
+- `AsyncStorage` - Para persistir estado OU y ventana de precios
 
 ## Criterios de Aceptación
 
 - [x] El jugador puede vender CryptoCoins por Real Money
-- [x] Los precios se derivan del historial local de LTC (sin API en runtime)
+- [x] Los precios se generan con proceso OU mean-reverting (sin API ni datasets en runtime)
 - [x] El Market se desbloquea con 10 bloques + 500 CC
 - [x] El Hardware tab se desbloquea con $150 earned
 - [x] Los precios persisten entre sesiones
 - [x] El juego funciona 100% offline
 - [x] Se muestran charts de tendencias de precio (últimos 30 minutos)
 - [x] Las transacciones tienen validaciones de seguridad
-- [x] La seed se genera aleatoriamente al crear partida nueva y persiste
-- [x] El historial hace loop seamless al llegar al final del dataset
+- [x] El estado del motor OU (deviation, régimen, ticksLeft) persiste entre sesiones
+- [x] Las fluctuaciones de precio son visibles en el chart (~2.5% por tick)
 - [x] Las notificaciones de unlock se muestran correctamente
 
 ## Notas de Implementación
@@ -459,10 +475,11 @@ function shouldUnlockHardware(gameState: GameState): boolean {
 ### Archivos Principales
 - `src/components/MarketScreen.tsx` - UI del Market
 - `src/components/PriceChart.tsx` - Gráfico de precios
-- `src/services/cryptoAPI.ts` - Integración con CoinGecko
-- `src/services/priceHistoryService.ts` - Historial de precios
+- `src/utils/priceEngine.ts` - Motor OU de precios (tickOU, regímenes, chart window)
+- `src/config/balanceConfig.ts` → `PRICE_ENGINE` - Parámetros OU y regímenes
+- `src/services/cryptoAPI.ts` - Integración con CoinGecko (BTC/ETH/DOGE/ADA cosméticos)
 - `src/data/cryptocurrencies.ts` - Definición de criptos
-- `src/contexts/GameContext.tsx` - Actions de venta y actualización
+- `src/contexts/GameContext.tsx` - Actions de venta y actualización (ADVANCE_PRICE_INDEX)
 
 ### CoinGecko API Integration
 ```typescript
@@ -668,10 +685,10 @@ describe('Market E2E', () => {
 
 ## Performance Considerations
 
-- **Dataset en memoria**: `ltcPriceHistory` se importa una vez al arrancar, no se lee de disco cada minuto
+- **Sin dataset en memoria**: El motor OU genera precios on-the-fly (sin archivos de 1.6MB)
 - **Chart rendering**: Usar react-native-chart-kit o Victory (optimizado)
 - **Price updates**: No re-render innecesarios, usar React.memo
-- **Storage**: Persistir solo `priceSeed`, `priceHistoryIndex`, y la ventana de 30 puntos del chart
+- **Storage**: Persistir `priceDeviation`, `priceRegime`, `priceRegimeTicksLeft`, y la ventana de 30 puntos del chart
 
 ## Analytics
 

@@ -398,21 +398,22 @@ function calculateHardwareROI(hardware: Hardware): {
 4. Hacer prestige al llegar a 21M bloques
 5. Repetir con multipliers de prestige para runs más rápidos
 
-## Precio de CryptoCoin — Referencia de Mercado
+## Precio de CryptoCoin — Motor de Precios OU
 
-El precio de CC se genera dinámicamente usando datos históricos de BTC divididos por un seed aleatorio:
+El precio de CC se genera dinámicamente usando un proceso Ornstein-Uhlenbeck mean-reverting con regímenes de mercado:
 
 ```
-seed ∈ [90,000 – 96,000]
-CC_price = BTC_price_history[index] / seed
+CC_price = ERA_BASE_PRICES[currentEra] × (1 + priceDeviation)
+priceDeviation = mean-reverting OU process, range [-0.30, +0.40]
 ```
 
-**Rango de precios base**: $1.03 – $1.38/CC
-**Precio promedio de referencia**: **$1.20/CC**
-**Precio efectivo de venta** (tras comisión 1%): **$1.19/CC**
-**Fuente**: `gameLogic.ts` → `PRICE_SEED_MIN = 90,000`, `PRICE_SEED_RANGE = 6,000`
+**Parámetros OU**: theta=0.12, sigma=0.045, clamped [-0.30, +0.40]
+**Fluctuación por tick**: ~2.5% (vs 0.04% con el antiguo dataset BTC)
+**6 regímenes**: normal (40%), bull/bear (18% c/u), volatile (12%), spike/crash (6% c/u)
+**Precio base por era**: $0.08 → $0.50 → $2.00 → $5.00 → $8.00
+**Fuente**: `balanceConfig.ts` → `PRICE_ENGINE`, `src/utils/priceEngine.ts`
 
-> La fluctuación de mercado (±20%) promedia a 0, por lo que $1.20 es el valor esperado correcto para simulaciones.
+> La desviación mean-reverts a 0, por lo que ERA_BASE_PRICES[era] es el valor esperado para simulaciones de largo plazo.
 
 ---
 

@@ -319,9 +319,10 @@ export interface GameState {
   totalRealMoneyEarned: number;
   // Price history system
   priceHistory?: { [cryptoId: string]: { prices: number[]; lastUpdate: number } };
-  // BTC local dataset system
-  priceSeed: number;         // divisor BTC→CC, rango 90000–96000, fijo por partida
-  priceHistoryIndex: number; // posición actual en BTC_PRICE_HISTORY
+  // Price engine (Ornstein-Uhlenbeck)
+  priceDeviation: number;          // current deviation from era base, range ~ -0.30 to +0.40
+  priceRegime: string;             // current regime name (normal, bull, bear, volatile, spike, crash)
+  priceRegimeTicksLeft: number;    // ticks remaining in current regime
   // IAP, Ads and Achievements systems
   iapState: IAPState;
   adState: AdState;

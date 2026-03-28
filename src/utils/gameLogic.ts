@@ -1,6 +1,6 @@
 import { GameState, Hardware, Upgrade, IAPState, AdState, AdBoostState, AdHashBoostState, AdMarketBoostState } from '../types/game';
-import { BTC_PRICE_HISTORY } from '../data/btcPriceHistory';
 import { GENESIS_CONSTANTS, calculateDifficulty, calculateCurrentReward, calculateNextHalving } from './blockLogic';
+import { generateInitialChartWindow, getInitialPriceEngineState } from './priceEngine';
 import { getInitialMarketState } from './marketLogic';
 import { getInitialEnergyState, getActiveHardwareWithEnergyConstraint } from './energyLogic';
 import { getAIProductionMultiplier, getInitialAIState } from './aiLogic';
@@ -404,27 +404,7 @@ export const formatNumber = (num: number): string => {
   return (num / 1000000000000).toFixed(1) + 'T';
 };
 
-import { UNLOCK_CONFIG, HARDWARE_CONFIG, BOOSTER_CONFIG, BALANCE_CONFIG, BLOCK_CONFIG, ELECTRICITY_FEE_CONFIG, AD_BUBBLE_CONFIG, OFFLINE_SCREEN_CONFIG } from '../config/balanceConfig';
-
-// Rango del seed: 90000–96000 → BTC/seed ≈ volatility factor around 1.0
-const PRICE_SEED_MIN = 90000;
-const PRICE_SEED_RANGE = 6000; // 90000–96000
-// Punto de inicio acotado al primer mes para garantizar ≥2 meses antes del loop
-const FIRST_MONTH_POINTS = 30 * 24 * 60; // 43,200
-
-export const generatePriceSeed = (): number =>
-  Math.floor(Math.random() * PRICE_SEED_RANGE) + PRICE_SEED_MIN;
-
-export const generatePriceStartIndex = (): number =>
-  Math.floor(Math.random() * FIRST_MONTH_POINTS);
-
-// Era 0 base price ($0.10) × BTC volatility factor
-export const getInitialChartWindow = (startIndex: number, seed: number): number[] =>
-  Array.from({ length: 30 }, (_, i) => {
-    const idx = (startIndex - 29 + i + BTC_PRICE_HISTORY.length) % BTC_PRICE_HISTORY.length;
-    const eraBasePrice = BLOCK_CONFIG.ERA_BASE_PRICES[0]; // Era 0
-    return eraBasePrice * (BTC_PRICE_HISTORY[idx] / seed);
-  });
+import { UNLOCK_CONFIG, HARDWARE_CONFIG, BOOSTER_CONFIG, BALANCE_CONFIG, ELECTRICITY_FEE_CONFIG, AD_BUBBLE_CONFIG, OFFLINE_SCREEN_CONFIG } from '../config/balanceConfig';
 
 // Progressive unlock system
 export const UNLOCK_REQUIREMENTS = {
@@ -512,10 +492,9 @@ export const isHardwareUnlocked = (gameState: GameState, hardware: Hardware): bo
 };
 
 export const getInitialGameState = (): GameState => {
-  const priceSeed = generatePriceSeed();
-  const priceHistoryIndex = generatePriceStartIndex();
-  const eraBasePrice = BLOCK_CONFIG.ERA_BASE_PRICES[0]; // Era 0
-  const initialCCPrice = eraBasePrice * (BTC_PRICE_HISTORY[priceHistoryIndex] / priceSeed);
+  const initialPrices = generateInitialChartWindow(0);
+  const initialCCPrice = initialPrices[initialPrices.length - 1];
+  const priceState = getInitialPriceEngineState();
 
   return {
     isHydrated: false,
@@ -572,12 +551,13 @@ export const getInitialGameState = (): GameState => {
     // Real money system
     realMoney: 0,
     totalRealMoneyEarned: 0,
-    // Price history system
-    priceSeed,
-    priceHistoryIndex,
+    // Price engine (Ornstein-Uhlenbeck)
+    priceDeviation: priceState.priceDeviation,
+    priceRegime: priceState.priceRegime,
+    priceRegimeTicksLeft: priceState.priceRegimeTicksLeft,
     priceHistory: {
       cryptocoin: {
-        prices: getInitialChartWindow(priceHistoryIndex, priceSeed),
+        prices: initialPrices,
         lastUpdate: Date.now(),
       },
     },

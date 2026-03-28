@@ -10,7 +10,7 @@ Este directorio contiene todas las especificaciones técnicas exhaustivas (Level
 |------|--------|------|-----------|-------------|
 | [Block Mining System](game-mechanics/block-mining-system.md) | ✅ Implemented | Phase 1 | Critical | Sistema central de minado con halvings tipo Bitcoin |
 | [Hardware Progression](game-mechanics/hardware-progression.md) | ✅ Implemented | Phase 1 | Critical | 8 niveles de hardware con desbloqueo progresivo |
-| [Market System](game-mechanics/market-system.md) | ✅ Implemented | Phase 2 | High | Venta de CryptoCoins por dinero real con API |
+| [Market System](game-mechanics/market-system.md) | ✅ Implemented | Phase 2 | High | Venta de CryptoCoins por dinero real (motor OU) |
 | [Prestige System](game-mechanics/prestige-system.md) | ✅ Implemented | Phase 2 | High | Sistema de reinicio con bonos permanentes |
 | [Energy System](game-mechanics/energy-system.md) | ✅ Implemented | Phase 4 | High | Generación energética: renovables/no-renovables, balance MW, control de IA |
 | [AI System](game-mechanics/ai-system.md) | ✅ Implemented | Phase 5 | High | IA con 3 niveles de autonomía, cryptos exclusivas, control irreversible |

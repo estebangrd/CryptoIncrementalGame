@@ -123,10 +123,10 @@ src/
 │   ├── marketLogic.ts   # Market and NPC logic
 │   ├── prestigeLogic.ts # Prestige calculations
 │   ├── exchangeLogic.ts # Currency exchange
+│   ├── priceEngine.ts   # OU price simulation (market regimes)
 │   └── storage.ts       # AsyncStorage wrapper
 ├── services/
-│   ├── cryptoAPI.ts     # External price API integration
-│   └── priceHistoryService.ts # Price history tracking
+│   └── cryptoAPI.ts     # External price API integration
 └── config/
     └── balanceConfig.ts # **CENTRAL BALANCE CONFIGURATION**
 ```
