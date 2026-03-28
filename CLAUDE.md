@@ -79,8 +79,8 @@ The game uses React Context (`GameContext`) with a centralized reducer pattern f
 - Real money is used to buy hardware and upgrades in later stages
 
 **Progressive Unlock System** (`src/utils/gameLogic.ts`):
-- **Market**: Unlocks after 15 blocks mined AND 1000 CryptoCoins earned
-- **Hardware**: Unlocks after earning $200 real money
+- **Market**: Unlocks after 10 blocks mined AND 500 CryptoCoins earned
+- **Hardware**: Unlocks after earning $150 real money
 - **Upgrades**: Unlocks after buying any hardware
 - **Prestige**: Unlocks at prestige level ≥ 1 (future implementation)
 - Hardware within the Hardware tab unlocks sequentially (need 5 units of previous level)

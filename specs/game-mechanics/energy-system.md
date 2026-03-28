@@ -4,7 +4,7 @@
 - **Fase**: Phase 4 — La Crisis Energética (narrativa)
 - **Estado**: Implemented
 - **Prioridad**: High
-- **Última actualización**: 2026-03-01
+- **Última actualización**: 2026-03-28
 - **Depende de**: Hardware tiers 9-11 implementados (Opción B)
 
 ---
@@ -82,23 +82,23 @@ El sistema tiene tres momentos narrativos distintos:
 ### Fuentes de Energía
 
 #### Renovables (cap total: 8,000 MW)
-| Fuente | MW generados | Costo ($) | Ícono |
-|--------|-------------|-----------|-------|
-| Solar Farm | 200 MW | $5,000 | ☀️ |
-| Wind Farm | 800 MW | $20,000 | 💨 |
-| Hydroelectric Dam | 3,000 MW | $150,000 | 💧 |
-| Geothermal Plant | 5,000 MW | $800,000 | 🌋 |
+| Fuente | MW generados | Costo base ($) | Cost Multiplier | Ícono |
+|--------|-------------|----------------|-----------------|-------|
+| Solar Farm | 100 MW | $250,000 | 1.2× | ☀️ |
+| Wind Farm | 400 MW | $1,000,000 | 1.2× | 💨 |
+| Hydroelectric Dam | 1,500 MW | $5,000,000 | 1.2× | 💧 |
+| Geothermal Plant | 2,500 MW | $25,000,000 | 1.2× | 🌋 |
 
-*El cap de 8,000 MW permite operar cómodamente Mining Farms y algunos Quantum Miners, pero no 5× Supercomputer sin no-renovables.*
+*El cap de 8,000 MW permite operar cómodamente Mining Farms y algunos Quantum Miners, pero no 5× Supercomputer sin no-renovables. Los costos escalan 1.2× por unidad comprada (exponencial).*
 
 #### No-renovables (sin cap, depletan Recursos del Planeta)
-| Fuente | MW generados | Costo ($) | Depleción (% planeta/MW/s) | Ícono |
-|--------|-------------|-----------|---------------------------|-------|
-| Coal Plant | 1,000 MW | $2,000 | 0.0001% | 🏭 |
-| Oil Refinery | 5,000 MW | $8,000 | 0.00008% | 🛢️ |
-| Nuclear Reactor | 20,000 MW | $300,000 | 0.00005% | ☢️ |
+| Fuente | MW generados | Costo base ($) | Cost Multiplier | Depleción (% planeta/MW/s) | Ícono |
+|--------|-------------|----------------|-----------------|---------------------------|-------|
+| Coal Plant | 500 MW | $100,000 | 1.2× | 0.0000033% | 🏭 |
+| Oil Refinery | 2,500 MW | $400,000 | 1.2× | 0.0000027% | 🛢️ |
+| Nuclear Reactor | 10,000 MW | $10,000,000 | 1.2× | 0.0000017% | ☢️ |
 
-*Nuclear es más "eficiente" en depleción por MW, pero el costo de escala lo hace devastador de todos modos.*
+*Nuclear es más "eficiente" en depleción por MW, pero el costo de escala lo hace devastador de todos modos. Depletion rates son lentos individualmente (~30× menores que el diseño original) para permitir acumulación gradual del impacto planetario.*
 
 ### Requerimientos de Energía por Hardware
 | Hardware | Tier | Energía requerida por unidad |
@@ -177,54 +177,63 @@ Agregar en `src/config/balanceConfig.ts`:
 export const ENERGY_CONFIG = {
   RENEWABLE_CAP_MW: 8_000,
 
+  NON_RENEWABLE_UNLOCK_THRESHOLD: 0.8, // 80% del cap renovable
+
   SOURCES: {
     solar_farm: {
-      mwPerUnit: 200,
-      costPerUnit: 5_000,
+      mwPerUnit: 100,
+      costPerUnit: 250_000,
+      costMultiplier: 1.2,
       isRenewable: true,
       depletionPerMwPerSecond: 0,
       icon: '☀️',
     },
     wind_farm: {
-      mwPerUnit: 800,
-      costPerUnit: 20_000,
+      mwPerUnit: 400,
+      costPerUnit: 1_000_000,
+      costMultiplier: 1.2,
       isRenewable: true,
       depletionPerMwPerSecond: 0,
       icon: '💨',
     },
     hydroelectric_dam: {
-      mwPerUnit: 3_000,
-      costPerUnit: 150_000,
+      mwPerUnit: 1_500,
+      costPerUnit: 5_000_000,
+      costMultiplier: 1.2,
       isRenewable: true,
       depletionPerMwPerSecond: 0,
       icon: '💧',
     },
     geothermal_plant: {
-      mwPerUnit: 5_000,
-      costPerUnit: 800_000,
+      mwPerUnit: 2_500,
+      costPerUnit: 25_000_000,
+      costMultiplier: 1.2,
       isRenewable: true,
       depletionPerMwPerSecond: 0,
       icon: '🌋',
     },
     coal_plant: {
-      mwPerUnit: 1_000,
-      costPerUnit: 2_000,
+      mwPerUnit: 500,
+      costPerUnit: 100_000,
+      costMultiplier: 1.2,
       isRenewable: false,
-      depletionPerMwPerSecond: 0.0001,
+      depletionPerMwPerSecond: 0.0000033,
       icon: '🏭',
     },
     oil_refinery: {
-      mwPerUnit: 5_000,
-      costPerUnit: 8_000,
+      mwPerUnit: 2_500,
+      costPerUnit: 400_000,
+      costMultiplier: 1.2,
       isRenewable: false,
-      depletionPerMwPerSecond: 0.00008,
+      depletionPerMwPerSecond: 0.0000027,
       icon: '🛢️',
     },
     nuclear_reactor: {
-      mwPerUnit: 20_000,
-      costPerUnit: 300_000,
+      mwPerUnit: 10_000,
+      costPerUnit: 10_000_000,
+      costMultiplier: 1.2,
       isRenewable: false,
-      depletionPerMwPerSecond: 0.00005,
+      depletionPerMwPerSecond: 0.0000017,
       icon: '☢️',
     },
   },

@@ -2,12 +2,12 @@
 
 ## Estado
 - **Fase**: Game Length Extension (Pre-Phase 4)
-- **Estado**: Implemented & Active
+- **Estado**: ⚠️ Superseded by `bitcoin-faithful-economy.md`
 - **Prioridad**: High
-- **Última actualización**: 2026-03-27
-- **Nota**: Los valores de esta spec fueron **superados** por el Economy Rebalance v2 (2026-03-27). Los valores actuales están en `balanceConfig.ts` y documentados en `bitcoin-faithful-economy.md`. Esta spec se mantiene como referencia histórica.
+- **Última actualización**: 2026-03-28
+- **Nota**: Los valores de esta spec fueron **superados** por el Economy Rebalance v2 (2026-03-27). Los valores actuales están en `balanceConfig.ts` y documentados en `bitcoin-faithful-economy.md`. Esta spec se mantiene como referencia histórica. Los costos reales implementados son significativamente menores a los propuestos aquí (ej: basic_cpu=$25 vs $500 propuesto).
 - **Objetivo conjunto**: Alcanzar game length significativo por primera run
-- **Contribución de esta opción**: ~2-3x slowdown en adquisición de hardware (posteriormente rebalanceado)
+- **Contribución de esta opción**: ~2-3x slowdown en adquisición de hardware (posteriormente rebalanceado por bitcoin-faithful-economy)
 
 ## Descripción
 
@@ -48,16 +48,18 @@ Afecta **todas las partidas** (saves existentes y nuevas).
 
 ### HARDWARE_CONFIG.levels — Todos los campos
 
-| Hardware | baseCost actual | baseCost nuevo | miningSpeed actual | miningSpeed nuevo | blockReward actual | blockReward nuevo |
-|----------|----------------|----------------|-------------------|-------------------|-------------------|-------------------|
-| manual_mining | 0 | 0 | 0.1 | 0.1 | 50 | 50 |
-| basic_cpu | 100 | 500 | 0.3 | 0.3 | 45 | 45 |
-| advanced_cpu | 400 | 2,500 | 0.8 | 0.8 | 42 | 42 |
-| basic_gpu | 1,500 | 12,000 | 2.5 | 2.5 | 38 | 38 |
-| advanced_gpu | 5,000 | 45,000 | 6 | 6 | 35 | 35 |
-| asic_gen1 | 15,000 | 180,000 | 15 | 12 | 30 | 30 |
-| asic_gen2 | 50,000 | 600,000 | 40 | 30 | 25 | 25 |
-| asic_gen3 | 150,000 | 2,000,000 | 100 | 60 | 20 | 20 |
+> **⚠️ NOTA**: Los valores "nuevo" de esta tabla fueron **superados** por `bitcoin-faithful-economy.md`. Los valores reales implementados en `balanceConfig.ts` son los de la columna "Implementado (actual)".
+
+| Hardware | baseCost (esta spec) | Implementado (actual) | miningSpeed (esta spec) | Implementado (actual) |
+|----------|---------------------|-----------------------|------------------------|-----------------------|
+| manual_mining | 0 | 0 | 0.1 | 0.1 |
+| basic_cpu | 500 | **25** | 0.3 | 0.3 |
+| advanced_cpu | 2,500 | **150** | 0.8 | 0.8 |
+| basic_gpu | 12,000 | **800** | 2.5 | 2.5 |
+| advanced_gpu | 45,000 | **5,000** | 6 | 6 |
+| asic_gen1 | 180,000 | **35,000** | 12 | 12 |
+| asic_gen2 | 600,000 | **200,000** | 30 | 30 |
+| asic_gen3 | 2,000,000 | **1,200,000** | 60 | 60 |
 
 **Nota sobre electricityCost**: No se modifica en esta opción. La Opción C diseñará ese sistema por separado.
 

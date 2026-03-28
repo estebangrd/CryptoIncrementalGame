@@ -35,7 +35,7 @@ Este directorio contiene todas las especificaciones técnicas exhaustivas (Level
 | Spec | Estado | Fase | Prioridad | Descripción |
 |------|--------|------|-----------|-------------|
 | [Balance and Formulas](economy/balance-and-formulas.md) | ✅ Documented | Phase 1-2 | Critical | Todas las fórmulas y progresión económica |
-| [Opción A — Rebalanceo de Costos](economy/option-a-cost-rebalancing.md) | ✅ Implemented | Game Length | High | COST_MULTIPLIER 1.20, costos ASIC ×5-13x, miningSpeed reducida |
+| [Opción A — Rebalanceo de Costos](economy/option-a-cost-rebalancing.md) | ⚠️ Superseded | Game Length | High | Superseded by bitcoin-faithful-economy (valores difieren del código) |
 | [Opción B — Nuevos Tiers de Hardware](economy/option-b-hardware-tiers.md) | ✅ Implemented | Game Length | High | Mining Farm, Quantum Miner, Supercomputer (niveles 9-11) |
 | [Opción C — Electricidad como Constraint](economy/option-c-electricity-constraint.md) | ⚠️ Superseded | Game Length | High | Superseded by CC Mining Fee |
 | [Opción D — Dificultad Progresiva de Red](economy/option-d-progressive-difficulty.md) | 📋 Planned | Game Length | High | difficulty = 1 + (progress)^2, reduce effectiveMiningSpeed |
@@ -67,10 +67,10 @@ Este directorio contiene todas las especificaciones técnicas exhaustivas (Level
 ## 📊 Estado General
 
 - **Total de Specs**: 28
-- **Implementadas**: 22 (79%)
-- **Parciales**: 0 (0%)
+- **Implementadas**: 21 (75%)
+- **Superseded**: 2 (7%)
 - **Documentadas**: 3 (11%)
-- **Planeadas**: 3 (11%)
+- **Planeadas**: 2 (7%)
 
 ### Por Fase
 - **Phase 1 (Genesis)**: 2/2 implementadas ✅
@@ -254,6 +254,6 @@ Para preguntas sobre estas specs, consulta:
 
 ---
 
-**Última actualización**: 2026-03-27
+**Última actualización**: 2026-03-28
 **Versión del proyecto**: 0.0.1 (Phase 1-7)
 **Próxima fase**: Post-narrativa (Daily Missions, Market Events, Polish)

@@ -4,13 +4,13 @@
 - **Fase**: Phase 2 - Expansion (Implemented)
 - **Estado**: Implemented & Active
 - **Prioridad**: High (Monetization Bridge)
-- **Última actualización**: 2026-03-19
+- **Última actualización**: 2026-03-28
 
 ## Descripción
 
-El Market System permite a los jugadores convertir CryptoCoins en Real Money ($) mediante la venta en un mercado simulado. Los precios de las criptomonedas fluctúan basándose en datos históricos reales de Litecoin almacenados localmente en el dispositivo (sin dependencia de APIs externas en runtime). El dinero real ($) se usa para comprar hardware avanzado y upgrades, creando un loop económico: CryptoCoins → Real Money → Hardware → Más CryptoCoins.
+El Market System permite a los jugadores convertir CryptoCoins en Real Money ($) mediante la venta en un mercado simulado. Los precios de las criptomonedas fluctúan basándose en datos históricos reales de Bitcoin almacenados localmente en el dispositivo (sin dependencia de APIs externas en runtime). El dinero real ($) se usa para comprar hardware avanzado y upgrades, creando un loop económico: CryptoCoins → Real Money → Hardware → Más CryptoCoins.
 
-El CryptoCoin nativo deriva su precio del historial de Litecoin escalado por un factor variable (seed de partida). Las otras criptomonedas (BTC, ETH, DOGE, ADA) son puramente cosméticas/de referencia y solo se usan para dar contexto de mercado.
+El CryptoCoin nativo deriva su precio del historial de Bitcoin escalado por un factor variable (seed de partida, rango 90,000-96,000) y multiplicado por el precio base de la era actual (`ERA_BASE_PRICES`). Las otras criptomonedas (BTC, ETH, DOGE, ADA) son puramente cosméticas/de referencia y solo se usan para dar contexto de mercado.
 
 ## Objetivos
 - [x] Crear un puente económico entre progresión gratuita y monetización
@@ -32,14 +32,14 @@ El CryptoCoin nativo deriva su precio del historial de Litecoin escalado por un 
 - Se acredita el Real Money ($)
 - Se actualiza `totalRealMoneyEarned` (para stats y unlocks)
 - Se muestra una confirmación: "Sold X CC for $Y"
-- Se verifica si se desbloqueó el Hardware tab ($200 threshold)
+- Se verifica si se desbloqueó el Hardware tab ($150 threshold)
 
 ### Caso de Uso 2: Actualización de Precios (Historial Local)
 **Dado que** el jugador tiene el Market abierto
-**Cuando** pasa 1 minuto desde la última actualización
+**Cuando** pasan 5 segundos desde la última actualización (`MARKET_CONFIG.UPDATE_INTERVAL = 5000ms`)
 **Entonces**
-- Se avanza 1 posición en el historial local de Litecoin (`priceHistoryIndex++`)
-- El nuevo precio de CryptoCoin = `ltcPrice[index] / priceSeed`
+- Se avanza 1 posición en el historial de BTC (`priceHistoryIndex++`)
+- El nuevo precio de CryptoCoin = `ERA_BASE_PRICES[currentEra] × (BTC_PRICE_HISTORY[index] / priceSeed)`
 - Se agrega el nuevo precio al chart (ventana deslizante de 30 puntos)
 - Se descarta el punto más antiguo del chart
 - Si `index` llega al final del dataset, hace loop: `index = 0`
@@ -57,7 +57,7 @@ El CryptoCoin nativo deriva su precio del historial de Litecoin escalado por un 
 
 ### Caso de Uso 4: Desbloqueo del Market
 **Dado que** el jugador está en fase inicial del juego
-**Cuando** mina 15 bloques Y acumula 1000 CryptoCoins
+**Cuando** mina 10 bloques Y acumula 500 CryptoCoins
 **Entonces**
 - El tab "Market" se desbloquea en el bottom navigation
 - Se muestra un tutorial toast: "🔓 Market Unlocked! Sell your coins for real money"
@@ -83,10 +83,11 @@ El CryptoCoin nativo deriva su precio del historial de Litecoin escalado por un 
 
 **Fórmula de precio**:
 ```
-cryptoCoinPrice = ltcHistoricalPrice[priceHistoryIndex] / priceSeed
+cryptoCoinPrice = ERA_BASE_PRICES[currentEra] × (BTC_PRICE_HISTORY[priceHistoryIndex] / priceSeed)
 ```
-- `ltcHistoricalPrice`: array de precios históricos de LTC (3 meses, 1 punto/minuto)
-- `priceSeed`: factor divisor aleatorio generado al crear la partida, rango **68–72** (base: 70)
+- `BTC_PRICE_HISTORY`: array de precios históricos de BTC almacenado localmente
+- `priceSeed`: factor divisor aleatorio generado al crear la partida, rango **90,000–96,000** (PRICE_SEED_MIN=90000, PRICE_SEED_RANGE=6000)
+- `ERA_BASE_PRICES`: [0.08, 0.50, 2.00, 5.00, 8.00, 8.00, 8.00] — el precio base sube con cada era
 
 ### Bitcoin (BTC)
 ```typescript
@@ -213,7 +214,7 @@ async function fetchCryptoPrices(
 ```typescript
 function shouldUpdatePrices(lastUpdateTime: number): boolean {
   const now = Date.now();
-  const UPDATE_INTERVAL = 60 * 1000; // 1 minuto
+  const UPDATE_INTERVAL = MARKET_CONFIG.UPDATE_INTERVAL; // 5000ms (5 segundos)
 
   return (now - lastUpdateTime) >= UPDATE_INTERVAL;
 }
@@ -241,43 +242,42 @@ En lugar de consumir APIs externas en runtime (con restricciones de ToS comercia
 - Variabilidad entre partidas mediante seed
 
 ### Dataset
-- **Fuente**: Litecoin (LTC) — ya usado como base para CryptoCoin
-- **Ventana**: 3 meses de historia (≈ 129,600 puntos a 1 punto/minuto)
-- **Formato**: Array de floats (precio USD), descargado una vez por el dev y commiteado al repo
-- **Ubicación**: `src/data/ltcPriceHistory.ts` (exporta array numérico)
-- **Tamaño estimado**: ~1–1.5 MB
+- **Fuente**: Bitcoin (BTC) — datos históricos de precio
+- **Formato**: Array de floats (precio USD), almacenado localmente
+- **Ubicación**: `src/data/btcPriceHistory.ts` (o array embebido en `gameLogic.ts`)
+- **Uso**: El precio se divide por el seed (90K-96K) y se multiplica por ERA_BASE_PRICES
 
 ### Seed de Partida
 ```typescript
 // Generada aleatoriamente al crear una partida nueva, persiste toda la partida
-const priceSeed = Math.floor(Math.random() * 5) + 68; // rango: 68–72 (base: 70)
-
-// Punto de entrada aleatorio dentro del primer mes del dataset
-// Garantiza al menos 2 meses de historial antes del loop
-const FIRST_MONTH_POINTS = 30 * 24 * 60; // 43,200 puntos
-const priceHistoryStartIndex = Math.floor(Math.random() * FIRST_MONTH_POINTS);
+const PRICE_SEED_MIN = 90000;
+const PRICE_SEED_RANGE = 6000;
+const priceSeed = PRICE_SEED_MIN + Math.floor(Math.random() * PRICE_SEED_RANGE);
+// rango: 90,000–96,000
 ```
 
-- `priceSeed` determina cuánto vale el CryptoCoin relativo al LTC
-- Un seed de 68 → precio más alto → más dinero por venta → partida más fácil
-- Un seed de 72 → precio más bajo → partida más ajustada
-- El rango ±2 mantiene la variabilidad sin romper el balance
+- `priceSeed` determina cuánto vale el CryptoCoin relativo al BTC
+- Un seed de 90,000 → precio más alto → más dinero por venta → partida más fácil
+- Un seed de 96,000 → precio más bajo → partida más ajustada
+- El rango mantiene la variabilidad sin romper el balance
+- Rango de precios base resultante: ~$1.03–$1.38/CC (promedio ~$1.20)
 
-### Reproducción Minuto a Minuto
+### Actualización cada 5 segundos
 ```typescript
-// Cada minuto
-priceHistoryIndex = (priceHistoryIndex + 1) % ltcPriceHistory.length;
-const newCryptoCoinPrice = ltcPriceHistory[priceHistoryIndex] / priceSeed;
+// Cada 5 segundos (MARKET_CONFIG.UPDATE_INTERVAL = 5000ms)
+priceHistoryIndex = (priceHistoryIndex + 1) % BTC_PRICE_HISTORY.length;
+const eraBasePrice = BLOCK_CONFIG.ERA_BASE_PRICES[currentEra];
+const newCryptoCoinPrice = eraBasePrice * (BTC_PRICE_HISTORY[priceHistoryIndex] / priceSeed);
 ```
 
 - Al llegar al final del dataset hace **loop** seamless al inicio
-- El loop solo ocurre después de ~60 días de juego diario (prácticamente invisible)
 - `priceHistoryIndex` y `priceSeed` se persisten en el GameState (AsyncStorage)
+- El precio escala con la era actual (ERA_BASE_PRICES): más alto en eras avanzadas
 
-### Chart (últimos 30 minutos)
-- Ventana deslizante de 30 puntos: cada minuto entra 1 punto nuevo, sale el más viejo
+### Chart (últimos 30 puntos)
+- Ventana deslizante de 30 puntos: cada 5 segundos entra 1 punto nuevo, sale el más viejo
 - Seed inicial del chart: los 30 puntos anteriores al `priceHistoryStartIndex` en el dataset
-- Título en UI: "Price Evolution (30min)"
+- Título en UI: "Price Evolution"
 
 ## Estructura de Datos
 
@@ -315,7 +315,7 @@ interface GameState {
       lastUpdate: number;
     };
   };
-  priceSeed: number;                    // Factor divisor LTC→CC (68–72), fijo por partida
+  priceSeed: number;                    // Factor divisor BTC→CC (90,000–96,000), fijo por partida
   priceHistoryIndex: number;            // Posición actual en ltcPriceHistory (0..N-1)
 }
 ```
@@ -323,13 +323,13 @@ interface GameState {
 ## Reglas de Negocio
 
 1. **Solo se puede vender CryptoCoin nativo**: BTC, ETH, etc. son solo referencia cosmética de precio
-2. **Los precios se actualizan cada 1 minuto**: Avanzando 1 punto en el historial local de LTC
+2. **Los precios se actualizan cada 5 segundos**: Avanzando 1 punto en el historial local de BTC (`MARKET_CONFIG.UPDATE_INTERVAL = 5000ms`)
 3. **Sin dependencia de red en runtime**: Todo el historial de precios es local
 4. **No hay fees de transacción**: Por ahora, futura feature
 5. **No se puede vender más de lo que se tiene**: Validación estricta
 6. **El dinero real no se puede convertir de vuelta a CryptoCoins**: Solo va en una dirección
-7. **Market se desbloquea con 15 bloques + 1000 CC**: Ambas condiciones deben cumplirse
-8. **Hardware tab se desbloquea con $200 earned**: No importa el balance actual, sino el total ganado
+7. **Market se desbloquea con 10 bloques + 500 CC**: Ambas condiciones deben cumplirse (`UNLOCK_CONFIG.market`)
+8. **Hardware tab se desbloquea con $150 earned**: No importa el balance actual, sino el total ganado (`UNLOCK_CONFIG.hardware.requiredMoney`)
 9. **Los precios persisten offline**: Se guardan con el game state
 10. **Transacciones muy grandes son bloqueadas**: Límite de $100M para prevenir bugs. Indicar con un mensaje al usuario para que pueda vender un monto menor.
 
@@ -337,9 +337,10 @@ interface GameState {
 
 ### Market Tab Unlock
 ```typescript
+// En balanceConfig.ts → UNLOCK_CONFIG.market
 const UNLOCK_REQUIREMENTS = {
-  MARKET_BLOCKS: 15,        // Bloques minados necesarios
-  MARKET_COINS: 1000,       // CryptoCoins necesarios
+  MARKET_BLOCKS: 10,        // Bloques minados necesarios
+  MARKET_COINS: 500,        // CryptoCoins necesarios
 };
 
 function shouldUnlockMarket(gameState: GameState): boolean {
@@ -350,8 +351,9 @@ function shouldUnlockMarket(gameState: GameState): boolean {
 
 ### Hardware Tab Unlock
 ```typescript
+// En balanceConfig.ts → UNLOCK_CONFIG.hardware
 const UNLOCK_REQUIREMENTS = {
-  HARDWARE_MONEY: 200,      // $ total earned necesarios
+  HARDWARE_MONEY: 150,      // $ total earned necesarios
 };
 
 function shouldUnlockHardware(gameState: GameState): boolean {
@@ -427,10 +429,10 @@ function shouldUnlockHardware(gameState: GameState): boolean {
 - `GameContext` - State management
 - `balanceConfig.ts` - Valores base de criptos
 - `Block Mining System` - Para generar CryptoCoins
-- `src/data/ltcPriceHistory.ts` - Dataset histórico local de LTC (3 meses, 1 punto/min)
+- `src/utils/gameLogic.ts` - Dataset histórico de BTC (BTC_PRICE_HISTORY array)
 
 ### Bloquea
-- `Hardware Tab` - Se desbloquea después de ganar $200
+- `Hardware Tab` - Se desbloquea después de ganar $150
 - `Upgrade System` - Muchos upgrades cuestan Real Money
 
 ### Relacionado con
@@ -442,8 +444,8 @@ function shouldUnlockHardware(gameState: GameState): boolean {
 
 - [x] El jugador puede vender CryptoCoins por Real Money
 - [x] Los precios se derivan del historial local de LTC (sin API en runtime)
-- [x] El Market se desbloquea con 15 bloques + 1000 CC
-- [x] El Hardware tab se desbloquea con $200 earned
+- [x] El Market se desbloquea con 10 bloques + 500 CC
+- [x] El Hardware tab se desbloquea con $150 earned
 - [x] Los precios persisten entre sesiones
 - [x] El juego funciona 100% offline
 - [x] Se muestran charts de tendencias de precio (últimos 30 minutos)
@@ -618,7 +620,7 @@ describe('Market Integration', () => {
     expect(newState.totalRealMoneyEarned).toBe(10);
   });
 
-  it('should unlock hardware tab after $200 earned', () => {
+  it('should unlock hardware tab after $150 earned', () => {
     let state = {
       cryptoCoins: 100000,
       realMoney: 0,
@@ -626,13 +628,13 @@ describe('Market Integration', () => {
       unlockedTabs: { hardware: false }
     };
 
-    // Vender suficiente para ganar $200
+    // Vender suficiente para ganar $150
     state = gameReducer(state, {
       type: 'SELL_COINS_FOR_MONEY',
-      payload: { amount: 100000, price: 0.002 } // $200
+      payload: { amount: 75000, price: 0.002 } // $150
     });
 
-    expect(state.totalRealMoneyEarned).toBe(200);
+    expect(state.totalRealMoneyEarned).toBe(150);
     expect(state.unlockedTabs.hardware).toBe(true);
   });
 });

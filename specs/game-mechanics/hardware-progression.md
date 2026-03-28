@@ -44,7 +44,7 @@ Cada nivel de hardware tiene costos crecientes (scaling exponencial con COST_MUL
 - La descripción del hardware se muestra completa (no "???")
 
 ### Caso de Uso 3: Comprar Hardware con Real Money
-**Dado que** el tab "Hardware" está desbloqueado (requiere $200 total earned)
+**Dado que** el tab "Hardware" está desbloqueado (requiere $150 total earned)
 **Cuando** el jugador intenta comprar hardware
 **Entonces**
 - Si el hardware está en el tab "Hardware": usa Real Money ($) como moneda
@@ -453,7 +453,7 @@ interface Hardware {
 7. **El blockReward es global por era**: Deprecated per-hardware blockReward — el reward es 50/2^era
 8. **Los upgrades afectan por categoría o ID exacto**: "cpu" afecta a basic_cpu y advanced_cpu
 9. **Prestige resetea el hardware owned**: No se mantiene entre prestiges
-10. **El tab "Hardware" requiere desbloqueo**: Se desbloquea con $200 real money ganado
+10. **El tab "Hardware" requiere desbloqueo**: Se desbloquea con $150 real money ganado (`UNLOCK_CONFIG.hardware.requiredMoney`)
 
 ## UI/UX Requirements
 
@@ -487,7 +487,7 @@ La visibilidad NO debe condicionar por `electricityCost > 0` — siempre renderi
   - Sonido: Efecto de unlock (si audio habilitado)
 
 ### Hardware Tab Unlock
-- [ ] Cuando el jugador gana $200 por primera vez:
+- [ ] Cuando el jugador gana $150 por primera vez:
   - Se desbloquea el tab "Hardware" en el bottom sheet
   - Toast: "🔓 Hardware Shop Unlocked!"
   - El tab aparece junto a "Market", "Upgrades", etc.
@@ -540,7 +540,7 @@ La visibilidad NO debe condicionar por `electricityCost > 0` — siempre renderi
 - [x] Los upgrades multiplican la producción correctamente
 - [x] El hardware owned persiste entre sesiones
 - [x] Las notificaciones de unlock se muestran
-- [x] El tab Hardware se desbloquea con $200
+- [x] El tab Hardware se desbloquea con $150
 - [x] Toda la UI muestra valores traducidos
 
 ## Notas de Implementación

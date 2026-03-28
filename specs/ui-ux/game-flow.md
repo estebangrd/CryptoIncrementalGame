@@ -4,7 +4,7 @@
 - **Fase**: Phase 1 - Genesis (Design Complete)
 - **Estado**: Specification Complete
 - **Prioridad**: Critical (Core UX Design)
-- **Última actualización**: 2026-02-21
+- **Última actualización**: 2026-03-28
 
 ## Descripción
 
@@ -165,11 +165,11 @@ analytics().logEvent('hardware_unlocked', {
 ---
 
 #### Fase 4: Market Unlock (10-20 minutos)
-**Usuario**: Alcanza 15 bloques minados + 1,000 CC
+**Usuario**: Alcanza 10 bloques minados + 500 CC
 **Goal**: Aprender a vender coins por Real Money
 
 **Flow**:
-1. Sistema detecta: blocksMined >= 15 AND cryptoCoins >= 1000
+1. Sistema detecta: blocksMined >= 10 AND cryptoCoins >= 500
 2. Celebración full-screen:
    - "🎊 Market Unlocked!"
    - "You can now sell CryptoCoins for real money ($)"
@@ -181,7 +181,7 @@ analytics().logEvent('hardware_unlocked', {
 4. MarketScreen se muestra:
    - Lista de criptomonedas (Bitcoin, Ethereum, etc.)
    - CryptoCoin destacado:
-     - Balance: 1,000+ CC
+     - Balance: 500+ CC
      - Price: $0.001/CC
      - Button: "SELL"
    - Input: "Amount to sell"
@@ -191,7 +191,7 @@ analytics().logEvent('hardware_unlocked', {
    - Preview: "You'll get: $0.50"
    - Button "SELL" → Confirmación → Success
    - realMoney: $0 → $0.50
-   - cryptoCoins: 1,000 → 500
+   - cryptoCoins: 500 → 250
 7. Toast: "✅ Sold 500 CC for $0.50"
 
 **UI Changes**:
@@ -260,11 +260,11 @@ analytics().logEvent('first_upgrade_purchased', {
 ---
 
 #### Fase 6: Hardware Tab Unlock (1-2 horas)
-**Usuario**: Gana total de $200 vendiendo coins
+**Usuario**: Gana total de $150 vendiendo coins
 **Goal**: Acceder a hardware avanzado (si implementado)
 
 **Flow**:
-1. Sistema detecta: totalRealMoneyEarned >= $200
+1. Sistema detecta: totalRealMoneyEarned >= $150
 2. Celebración:
    - "🔓 Hardware Shop Unlocked!"
    - "Advanced hardware is now available for purchase with $"
@@ -279,7 +279,7 @@ analytics().logEvent('first_upgrade_purchased', {
 **Analytics**:
 ```typescript
 analytics().logEvent('hardware_tab_unlocked', {
-  total_money_earned: 200,
+  total_money_earned: 150,
   time_to_unlock: timeFromStart,
 });
 ```
@@ -492,11 +492,11 @@ analytics().logEvent('session_started', {
 | 1 | Manual Mining | Always available | 0s |
 | 2 | Basic CPU | Always available | ~2 min |
 | 3 | Advanced CPU | 5 Basic CPUs owned | ~10 min |
-| 4 | Market Tab | 15 blocks + 1,000 CC | ~15 min |
+| 4 | Market Tab | 10 blocks + 500 CC | ~15 min |
 | 5 | Basic GPU | 5 Advanced CPUs owned | ~30 min |
 | 6 | Upgrades Tab | 1+ hardware owned | ~30 min |
 | 7 | Advanced GPU | 5 Basic GPUs owned | ~1 hour |
-| 8 | Hardware Tab | $200 total earned | ~1.5 hours |
+| 8 | Hardware Tab | $150 total earned | ~1.5 hours |
 | 9 | ASIC Gen 1 | 5 Advanced GPUs owned | ~3 hours |
 | 10 | ASIC Gen 2 | 5 ASIC Gen 1 owned | ~5 hours |
 | 11 | ASIC Gen 3 | 5 ASIC Gen 2 owned | ~8 hours |
@@ -606,7 +606,7 @@ analytics().logEvent('session_started', {
 - **Skippable**: Yes (user can close without buying)
 
 #### Tutorial 3: Market Unlock
-- **Trigger**: Market unlocks (15 blocks + 1,000 CC)
+- **Trigger**: Market unlocks (10 blocks + 500 CC)
 - **Type**: Full-screen modal (celebratory)
 - **Message**: "🎊 Market Unlocked! Sell CryptoCoins for real money ($)"
 - **Dismissal**: User taps "Open Market" button
@@ -669,7 +669,7 @@ analytics().logEvent('session_started', {
 - All from State 2
 - Market tab ✅
 - Upgrades tab ✅
-- Hardware tab ✅ (after $200)
+- Hardware tab ✅ (after $150)
 - Multiple hardware tiers unlocked
 - Real Money balance ($)
 - Production stats detailed
@@ -725,8 +725,8 @@ El orden visual de las pestañas en la barra inferior es fijo:
 | Posición | Tab | Ícono | Condición de unlock |
 |----------|-----|-------|---------------------|
 | 1 | Mining | ⛏️ | Siempre visible |
-| 2 | Market | 📈 | 15 bloques + 1,000 CC |
-| 3 | Hardware | 💻 | $200 total ganados |
+| 2 | Market | 📈 | 10 bloques + 500 CC |
+| 3 | Hardware | 💻 | $150 total ganados |
 | 4 | Upgrades | 🔧 | 1+ hardware comprado |
 | 5 | Energy | ⚡ | Primer hardware tier 9+ |
 | 6 | Chronicle | 📖 | Evento narrativo activado |
@@ -818,7 +818,7 @@ Load State (AsyncStorage)
 ---
 
 #### MarketScreen
-**Accessible**: After unlocking (15 blocks + 1,000 CC)
+**Accessible**: After unlocking (10 blocks + 500 CC)
 **Content**:
 - List of cryptocurrencies (Bitcoin, Ethereum, etc.)
 - CryptoCoin highlighted:

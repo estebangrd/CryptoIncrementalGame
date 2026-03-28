@@ -4,7 +4,7 @@
 - **Fase**: Game Length Extension (Pre-Phase 4)
 - **Estado**: Implemented & Active
 - **Prioridad**: High
-- **Última actualización**: 2026-03-04
+- **Última actualización**: 2026-03-28
 - **Objetivo conjunto**: Alcanzar 10-15h por primera run (combinado con Opciones A, C y D)
 - **Contribución de esta opción**: Agregar 3 capas de contenido endgame que requieren horas para alcanzar
 
@@ -41,27 +41,24 @@ Actualmente el juego termina en ASIC Gen 3 (nivel 8). Una vez que el jugador tie
 {
   id: 'mining_farm',
   level: 9,
-  baseCost: 8_000_000,       // 8M CryptoCoins
+  baseCost: 8_000_000,       // $8M (real money)
   baseProduction: 50_000,    // Hash/s (cosmético)
-  blockReward: 15,           // CC por bloque
-  miningSpeed: 150,          // Bloques/segundo por unidad
-  electricityCost: 300,      // $/segundo por unidad (ciudad entera)
+  blockReward: 0,            // Deprecated: reward is global per era
+  miningSpeed: 100,          // Bloques/segundo por unidad
+  electricityCost: 4_500,    // CC fee weight
+  energyRequired: 500,       // MW per unit
   unlockRequirement: 'asic_gen3 >= 5 owned',
 }
 ```
 
 **Narrativa**: Una instalación industrial dedicada exclusivamente a minar. Consume la energía eléctrica de una ciudad entera. Los periódicos empiezan a hablar de "el apagón cripto".
 
-**Producción por unidad**: 150 × 15 = 2,250 CC/s
-**Comparación con ASIC Gen 3 (post-A)**: ASIC Gen 3 hace 60 × 20 = 1,200 CC/s. La Mining Farm hace +87.5% más, pero cuesta 4x más de baseCost.
+**Nota**: Requiere energía (500 MW/unidad) — primer hardware que activa el Energy System.
 
-**Costo acumulado para 5 unidades** (con COST_MULTIPLIER 1.20):
-- 1ra: 8,000,000
-- 2da: 9,600,000
-- 3ra: 11,520,000
-- 4ta: 13,824,000
-- 5ta: 16,588,800
-- **Total: ~59.5M CC**
+**Costo acumulado para 5 unidades** (con COST_MULTIPLIER 1.35):
+- 1ra: $8,000,000
+- 5ta: ~$26.5M
+- **Total 5 units: ~$79.6M**
 
 ---
 
@@ -71,27 +68,22 @@ Actualmente el juego termina en ASIC Gen 3 (nivel 8). Una vez que el jugador tie
 {
   id: 'quantum_miner',
   level: 10,
-  baseCost: 50_000_000,      // 50M CryptoCoins
+  baseCost: 50_000_000,      // $50M (real money)
   baseProduction: 200_000,   // Hash/s (cosmético)
-  blockReward: 10,           // CC por bloque (los bloques fáciles se acabaron)
-  miningSpeed: 400,          // Bloques/segundo por unidad
-  electricityCost: 900,      // $/segundo (país entero)
+  blockReward: 0,            // Deprecated: reward is global per era
+  miningSpeed: 200,          // Bloques/segundo por unidad
+  electricityCost: 15_000,   // CC fee weight
+  energyRequired: 2_000,     // MW per unit
   unlockRequirement: 'mining_farm >= 5 owned',
 }
 ```
 
 **Narrativa**: Computadoras cuánticas que explotan la superposición para explorar millones de nonces simultáneamente. Los físicos dicen que es "técnicamente imposible". El jugador lo construyó igual.
 
-**Producción por unidad**: 400 × 10 = 4,000 CC/s
-**Comparación con Mining Farm**: +78% más CC/s por unidad, costo baseCost 6.25x mayor.
-
-**Costo acumulado para 5 unidades** (con COST_MULTIPLIER 1.20):
-- 1ra: 50,000,000
-- 2da: 60,000,000
-- 3ra: 72,000,000
-- 4ta: 86,400,000
-- 5ta: 103,680,000
-- **Total: ~372M CC**
+**Costo acumulado para 5 unidades** (con COST_MULTIPLIER 1.35):
+- 1ra: $50,000,000
+- 5ta: ~$165.6M
+- **Total 5 units: ~$497.7M**
 
 ---
 
@@ -101,47 +93,42 @@ Actualmente el juego termina en ASIC Gen 3 (nivel 8). Una vez que el jugador tie
 {
   id: 'supercomputer',
   level: 11,
-  baseCost: 300_000_000,     // 300M CryptoCoins
+  baseCost: 500_000_000,     // $500M (real money)
   baseProduction: 1_000_000, // Hash/s (cosmético)
-  blockReward: 5,            // CC por bloque (casi no queda nada)
-  miningSpeed: 1_000,        // Bloques/segundo por unidad
-  electricityCost: 3_000,    // $/segundo (recursos del planeta)
+  blockReward: 0,            // Deprecated: reward is global per era
+  miningSpeed: 600,          // Bloques/segundo por unidad
+  electricityCost: 50_000,   // CC fee weight
+  energyRequired: 10_000,    // MW per unit
   unlockRequirement: 'quantum_miner >= 5 owned',
 }
 ```
 
 **Narrativa**: Una megaestructura global que convierte la energía del núcleo terrestre en poder de cómputo. Los satélites muestran que las luces de las ciudades se están apagando. El usuario es oficialmente el mayor consumidor de energía en la historia de la humanidad.
 
-**Producción por unidad**: 1,000 × 5 = 5,000 CC/s
-**Comparación con Quantum Miner**: +25% CC/s por unidad, pero el verdadero valor está en la `miningSpeed` masiva (2.5x más rápido en minar bloques).
-
-**Costo acumulado para 5 unidades** (con COST_MULTIPLIER 1.20):
-- 1ra: 300,000,000
-- 2da: 360,000,000
-- 3ra: 432,000,000
-- 4ta: 518,400,000
-- 5ta: 622,080,000
-- **Total: ~2.23B CC**
+**Costo acumulado para 5 unidades** (con COST_MULTIPLIER 1.35):
+- 1ra: $500,000,000
+- 5ta: ~$1.66B
+- **Total 5 units: ~$4.98B**
 
 ---
 
 ## Tabla Completa de Progresión (Hardware Levels 1-11)
 
-| Hardware | Level | baseCost | miningSpeed | blockReward | CC/s por unidad | electricityCost |
-|----------|-------|----------|-------------|-------------|-----------------|-----------------|
-| manual_mining | 1 | 0 | 0.1 | 50 | 5 | 0 |
-| basic_cpu | 2 | 500 | 0.3 | 45 | 13.5 | 0.5 |
-| advanced_cpu | 3 | 2,500 | 0.8 | 42 | 33.6 | 1.2 |
-| basic_gpu | 4 | 12,000 | 2.5 | 38 | 95 | 3 |
-| advanced_gpu | 5 | 45,000 | 6 | 35 | 210 | 7 |
-| asic_gen1 | 6 | 180,000 | 12 | 30 | 360 | 20 |
-| asic_gen2 | 7 | 600,000 | 30 | 25 | 750 | 45 |
-| asic_gen3 | 8 | 2,000,000 | 60 | 20 | 1,200 | 100 |
-| mining_farm | 9 | 8,000,000 | 150 | 15 | 2,250 | 300 |
-| quantum_miner | 10 | 50,000,000 | 400 | 10 | 4,000 | 900 |
-| supercomputer | 11 | 300,000,000 | 1,000 | 5 | 5,000 | 3,000 |
+| Hardware | Level | baseCost ($) | miningSpeed | Electricity Weight | Energy (MW) |
+|----------|-------|-------------|-------------|-------------------|-------------|
+| manual_mining | 1 | 0 | 0.1 | 0 | — |
+| basic_cpu | 2 | 25 | 0.3 | 3 | — |
+| advanced_cpu | 3 | 150 | 0.8 | 10 | — |
+| basic_gpu | 4 | 800 | 2.5 | 40 | — |
+| advanced_gpu | 5 | 5,000 | 6 | 120 | — |
+| asic_gen1 | 6 | 35,000 | 12 | 300 | — |
+| asic_gen2 | 7 | 200,000 | 30 | 900 | — |
+| asic_gen3 | 8 | 1,200,000 | 60 | 2,500 | — |
+| mining_farm | 9 | 8,000,000 | 100 | 4,500 | 500 |
+| quantum_miner | 10 | 50,000,000 | 200 | 15,000 | 2,000 |
+| supercomputer | 11 | 500,000,000 | 600 | 50,000 | 10,000 |
 
-*Nota: Los costos de los niveles 1-8 incluyen el rebalanceo de la Opción A.*
+*Nota: Los valores reflejan la implementación actual (`bitcoin-faithful-economy.md`). `blockReward` está deprecated — el reward es global por era. `electricityCost` es un CC fee weight. COST_MULTIPLIER: 1.35.*
 
 ## Análisis de Velocidad de Completado (Estimación)
 
@@ -165,23 +152,23 @@ Agregar bajo `HARDWARE_CONFIG.levels`:
 mining_farm: {
   baseCost: 8_000_000,
   baseProduction: 50_000,
-  blockReward: 15,
-  miningSpeed: 150,
-  electricityCost: 300,
+  blockReward: 0,            // Deprecated: reward is global per era
+  miningSpeed: 100,
+  electricityCost: 4_500,    // CC fee weight
 },
 quantum_miner: {
   baseCost: 50_000_000,
   baseProduction: 200_000,
-  blockReward: 10,
-  miningSpeed: 400,
-  electricityCost: 900,
+  blockReward: 0,
+  miningSpeed: 200,
+  electricityCost: 15_000,
 },
 supercomputer: {
-  baseCost: 300_000_000,
+  baseCost: 500_000_000,
   baseProduction: 1_000_000,
-  blockReward: 5,
-  miningSpeed: 1_000,
-  electricityCost: 3_000,
+  blockReward: 0,
+  miningSpeed: 600,
+  electricityCost: 50_000,
 },
 ```
 
@@ -281,9 +268,9 @@ Esto permite agregar upgrades futuros que afecten solo a los nuevos tiers.
 ## Reglas de Negocio
 
 1. **Desbloqueo secuencial**: Mining Farm requiere 5× ASIC Gen 3, Quantum Miner requiere 5× Mining Farm, Supercomputer requiere 5× Quantum Miner.
-2. **blockReward decreciente**: Los bloques "fáciles" ya se minaron. Los nuevos tiers tienen blockReward más bajo (15, 10, 5) — se mina más rápido pero cada bloque vale menos CC.
-3. **electricityCost como señal narrativa**: Los costos de electricidad escalan agresivamente (300, 900, 3000) para que la Opción C (constraint de electricidad) los afecte dramáticamente.
-4. **Sin mecánica nueva**: Esta opción es solo datos (balanceConfig + hardwareData + translations). No requiere cambios en el reducer ni en la lógica.
+2. **blockReward deprecated**: El reward es ahora global por era (ERA_BASE_PRICES) — ver `bitcoin-faithful-economy.md`. Todos los hardware tienen `blockReward: 0`.
+3. **electricityCost como CC fee weight**: Los weights escalan agresivamente (4,500 / 15,000 / 50,000) y se multiplican por `ELECTRICITY_FEE_CONFIG.RATE_PERCENT` (1.5%) para calcular el CC deducido por tick.
+4. **Requieren energía**: Los 3 nuevos tiers requieren MW del Energy System (500 / 2,000 / 10,000 MW por unidad).
 5. **Compatibilidad con saves existentes**: Nuevos hardware aparecen en el save como `owned: 0`, se desbloquean normalmente.
 
 ## Criterios de Aceptación
@@ -306,26 +293,26 @@ describe('New Hardware Tiers', () => {
     const farm = hardwareProgression.find(h => h.id === 'mining_farm')!;
     expect(farm.level).toBe(9);
     expect(farm.baseCost).toBe(8_000_000);
-    expect(farm.miningSpeed).toBe(150);
-    expect(farm.blockReward).toBe(15);
-    expect(farm.electricityCost).toBe(300);
+    expect(farm.miningSpeed).toBe(100);
+    expect(farm.blockReward).toBe(0);
+    expect(farm.electricityCost).toBe(4_500);
   });
 
   it('quantum_miner should have correct values', () => {
     const qm = hardwareProgression.find(h => h.id === 'quantum_miner')!;
     expect(qm.level).toBe(10);
     expect(qm.baseCost).toBe(50_000_000);
-    expect(qm.miningSpeed).toBe(400);
-    expect(qm.blockReward).toBe(10);
+    expect(qm.miningSpeed).toBe(200);
+    expect(qm.blockReward).toBe(0);
   });
 
   it('supercomputer should have correct values', () => {
     const sc = hardwareProgression.find(h => h.id === 'supercomputer')!;
     expect(sc.level).toBe(11);
-    expect(sc.baseCost).toBe(300_000_000);
-    expect(sc.miningSpeed).toBe(1_000);
-    expect(sc.blockReward).toBe(5);
-    expect(sc.electricityCost).toBe(3_000);
+    expect(sc.baseCost).toBe(500_000_000);
+    expect(sc.miningSpeed).toBe(600);
+    expect(sc.blockReward).toBe(0);
+    expect(sc.electricityCost).toBe(50_000);
   });
 
   it('should unlock mining_farm after 5 asic_gen3', () => {
