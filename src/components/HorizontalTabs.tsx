@@ -108,10 +108,10 @@ const HorizontalTabs: React.FC<HorizontalTabsProps> = ({ onMineBlock, onClickBoo
               <Text style={[styles.tabLabel, isActive && styles.tabLabelActive, isLocked && styles.tabLabelLocked]}>
                 {tab.label}
               </Text>
-              {tab.id === 'market' && (gameState.activeMarketEvents ?? []).length > 0 && (
+              {tab.id === 'market' && ((gameState.activeMarketEvents ?? []).length > 0 || gameState.marketOpportunityEvent?.status === 'active') && (
                 <View style={[
                   styles.tabDot,
-                  getCompositeMultiplier(gameState.activeMarketEvents ?? []) >= 1
+                  gameState.marketOpportunityEvent?.status === 'active' || getCompositeMultiplier(gameState.activeMarketEvents ?? []) >= 1
                     ? styles.tabDotGreen
                     : styles.tabDotRed
                 ]} />

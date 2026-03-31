@@ -678,9 +678,10 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           newState.activeMarketEvents = addOrRefreshEvent(newState.activeMarketEvents, 'halving_anticipation', now);
         }
 
-        // f) Random events (whale_dump, media_hype)
+        // f) Random events (whale_dump, media_hype) — gated behind $500 earned
         const lastCheck = newState.lastRandomEventCheck ?? 0;
-        if (now - lastCheck >= MARKET_EVENT_CONFIG.RANDOM_CHECK_INTERVAL_MS) {
+        const earnedEnough = (newState.totalRealMoneyEarned || 0) >= 500;
+        if (earnedEnough && now - lastCheck >= MARKET_EVENT_CONFIG.RANDOM_CHECK_INTERVAL_MS) {
           newState.lastRandomEventCheck = now;
           if (Math.random() < MARKET_EVENT_CONFIG.whale_dump.probability) {
             newState.activeMarketEvents = addOrRefreshEvent(newState.activeMarketEvents, 'whale_dump', now);

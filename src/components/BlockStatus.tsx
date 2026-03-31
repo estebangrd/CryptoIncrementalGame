@@ -181,7 +181,7 @@ const statStyles = StyleSheet.create({
 });
 
 // ── BlockStatus ────────────────────────────────────────────────────
-export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock, onClickBoostChange, t: _t }) => {
+export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock, onClickBoostChange, t }) => {
   const blockInfo = formatBlockInfo(gameState);
   const [clickBoost, setClickBoost] = useState(0);
   const clickTimestamps = useRef<number[]>([]);
@@ -320,7 +320,7 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
         />
         <NodeStat
           icon="🔌"
-          label="Electricity"
+          label={t('game.stats.power')}
           value={hasElectricity ? formatNumber(gameState.totalElectricityCost) : '0'}
           sub="kW/h"
           variant={hasElectricity ? 'red' : 'cyan'}
@@ -414,6 +414,7 @@ const styles = StyleSheet.create({
   },
   container: {
     padding: 12,
+    paddingBottom: 28,
     gap: 10,
   },
   statRow: {
@@ -536,7 +537,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.ng,
     borderRadius: 13,
-    paddingVertical: 16,
+    paddingVertical: 22,
     overflow: 'hidden',
     shadowColor: colors.ng,
     shadowOffset: { width: 0, height: 0 },

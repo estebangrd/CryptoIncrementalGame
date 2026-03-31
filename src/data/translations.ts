@@ -2119,6 +2119,11 @@ export const translations: Translation = {
     es: 'Vendé todo tu stack ahora — sin abrir Market',
     pt: 'Venda todo seu stack agora — sem abrir Market',
   },
+  'marketOpportunity.activeLabel': {
+    en: '📈 Market Opportunity +25%',
+    es: '📈 Oportunidad de mercado +25%',
+    pt: '📈 Oportunidade de mercado +25%',
+  },
   // Regulatory Pressure modal — decision
   'regulatory.category': {
     en: 'EXTERNAL PRESSURE · REGULATORY',

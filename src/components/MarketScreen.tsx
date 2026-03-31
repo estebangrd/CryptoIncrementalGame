@@ -186,6 +186,17 @@ const MarketScreen: React.FC = () => {
                   </View>
                 )}
 
+                {/* Market Opportunity +25% active indicator */}
+                {gameState.marketOpportunityEvent?.status === 'active' && (
+                  <View style={styles.eventLabelsRow}>
+                    <View style={[styles.eventLabel, styles.eventLabelGreen]}>
+                      <Text style={[styles.eventLabelText, styles.eventLabelTextGreen]}>
+                        {t('marketOpportunity.activeLabel')}
+                      </Text>
+                    </View>
+                  </View>
+                )}
+
                 {/* Sell section */}
                 <View style={styles.sellCard}>
                   <Text style={styles.sellTitle}>💰 SELL COINS</Text>
