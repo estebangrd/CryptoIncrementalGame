@@ -25,12 +25,14 @@ const BORDER: Record<string, string> = {
 const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
   const translateY = useRef(new Animated.Value(-80)).current;
   const opacity = useRef(new Animated.Value(0)).current;
+  const onDismissRef = useRef(onDismiss);
+  onDismissRef.current = onDismiss;
 
   useEffect(() => {
     if (!toast) return;
     translateY.setValue(-80);
     opacity.setValue(0);
-    Animated.sequence([
+    const anim = Animated.sequence([
       Animated.parallel([
         Animated.timing(translateY, { toValue: 0, duration: 250, useNativeDriver: true }),
         Animated.timing(opacity, { toValue: 1, duration: 250, useNativeDriver: true }),
@@ -40,8 +42,10 @@ const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
         Animated.timing(translateY, { toValue: -80, duration: 250, useNativeDriver: true }),
         Animated.timing(opacity, { toValue: 0, duration: 250, useNativeDriver: true }),
       ]),
-    ]).start(() => onDismiss());
-  }, [toast, translateY, opacity, onDismiss]);
+    ]);
+    anim.start(() => onDismissRef.current());
+    return () => anim.stop();
+  }, [toast, translateY, opacity]);
 
   if (!toast) return null;
 

@@ -187,6 +187,11 @@ Cuando hay al menos un evento de precio activo, mostrar un dot de color en el ta
 
 Cuando se activa un market event, mostrar un toast breve (3 segundos) con el label y el efecto del evento. Usa el sistema de toasts existente.
 
+**Reglas de implementación:**
+- El toast debe mostrarse exactamente **una vez** por evento nuevo. La detección de eventos nuevos usa un ref con IDs previos para deduplicar.
+- `filterExpiredEvents` debe devolver la **misma referencia** de array si ningún evento expiró. Esto evita que el `useEffect` de detección se dispare en cada tick de producción.
+- El componente `Toast` no debe re-disparar su animación por cambios en callbacks del padre. Usar un ref para `onDismiss` para que la animación solo dependa del cambio de `toast`.
+
 ---
 
 ## AI Cryptos — Endgame (Referencia futura)

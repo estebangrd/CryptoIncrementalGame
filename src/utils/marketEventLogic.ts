@@ -17,8 +17,9 @@ export const filterExpiredEvents = (
   events: ActiveMarketEvent[],
   now: number,
 ): ActiveMarketEvent[] => {
-  if (!events || events.length === 0) return [];
-  return events.filter(e => e.expiresAt === null || e.expiresAt > now);
+  if (!events || events.length === 0) return events ?? [];
+  const filtered = events.filter(e => e.expiresAt === null || e.expiresAt > now);
+  return filtered.length === events.length ? events : filtered;
 };
 
 /**
