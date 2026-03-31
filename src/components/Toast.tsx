@@ -38,10 +38,7 @@ const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
         Animated.timing(opacity, { toValue: 1, duration: 250, useNativeDriver: true }),
       ]),
       Animated.delay(2500),
-      Animated.parallel([
-        Animated.timing(translateY, { toValue: -80, duration: 250, useNativeDriver: true }),
-        Animated.timing(opacity, { toValue: 0, duration: 250, useNativeDriver: true }),
-      ]),
+      Animated.timing(opacity, { toValue: 0, duration: 300, useNativeDriver: true }),
     ]);
     anim.start(() => onDismissRef.current());
     return () => anim.stop();
