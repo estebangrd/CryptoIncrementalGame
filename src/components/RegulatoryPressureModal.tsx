@@ -43,7 +43,7 @@ function computeAppealOutcome(resources: number): AppealOutcome {
 }
 
 const RegulatoryPressureModal: React.FC<Props> = ({ event }) => {
-  const { dispatch } = useGame();
+  const { dispatch, t } = useGame();
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
   const shakeAnim = useRef(new Animated.Value(0)).current;
@@ -149,8 +149,8 @@ const RegulatoryPressureModal: React.FC<Props> = ({ event }) => {
                 <Text style={styles.iconText}>⚠️</Text>
               </View>
               <View style={styles.headerTextCol}>
-                <Text style={[styles.category, styles.categoryRed]}>PRESIÓN EXTERNA · REGULATORIO</Text>
-                <Text style={styles.title}>Reguladores de la UE proponen impuesto de emergencia</Text>
+                <Text style={[styles.category, styles.categoryRed]}>{t('regulatory.category')}</Text>
+                <Text style={styles.title}>{t('regulatory.title')}</Text>
               </View>
             </View>
 
@@ -165,24 +165,24 @@ const RegulatoryPressureModal: React.FC<Props> = ({ event }) => {
                 />
               </View>
               <View style={styles.timerLabels}>
-                <Text style={styles.timerLabel}>Decidí ahora</Text>
+                <Text style={styles.timerLabel}>{t('regulatory.timerLabel')}</Text>
                 <Text style={styles.timerLabel}>{timeLeft}</Text>
               </View>
             </View>
 
             {/* Description */}
             <Text style={styles.description}>
-              La Comisión Europea propone un impuesto del 40% a operaciones de minado que superen 50K H/s. Debés decidir ahora.
+              {t('regulatory.description')}
             </Text>
 
             {/* Tags */}
             <View style={styles.tagsRow}>
               <View style={[styles.tag, styles.tagNegative]}>
-                <Text style={[styles.tagText, styles.tagTextNegative]}>−30% Hash Rate si ignorás</Text>
+                <Text style={[styles.tagText, styles.tagTextNegative]}>{t('regulatory.tagPenalty')}</Text>
               </View>
               <View style={[styles.tag, styles.tagNeutral]}>
                 <Text style={[styles.tagText, styles.tagTextNeutral]}>
-                  Costo: ${REGULATORY_EVENT_CONFIG.TAX_AMOUNT.toLocaleString()}
+                  {t('regulatory.tagCost')}{REGULATORY_EVENT_CONFIG.TAX_AMOUNT.toLocaleString()}
                 </Text>
               </View>
             </View>
@@ -193,9 +193,9 @@ const RegulatoryPressureModal: React.FC<Props> = ({ event }) => {
               onPress={() => dispatch({ type: 'RESOLVE_REGULATORY_PRESSURE', payload: 'pay' })}
               activeOpacity={0.75}
             >
-              <Text style={[styles.btnText, styles.btnTextRed]}>💰 PAGAR IMPUESTO</Text>
+              <Text style={[styles.btnText, styles.btnTextRed]}>{t('regulatory.btnPay')}</Text>
               <Text style={styles.btnSub}>
-                Costo: ${REGULATORY_EVENT_CONFIG.TAX_AMOUNT.toLocaleString()} — operación continúa normalmente
+                {t('regulatory.btnPaySub').replace('${amount}', REGULATORY_EVENT_CONFIG.TAX_AMOUNT.toLocaleString())}
               </Text>
             </TouchableOpacity>
 
@@ -204,9 +204,9 @@ const RegulatoryPressureModal: React.FC<Props> = ({ event }) => {
               onPress={() => dispatch({ type: 'RESOLVE_REGULATORY_PRESSURE', payload: 'appeal' })}
               activeOpacity={0.75}
             >
-              <Text style={[styles.btnText, styles.btnTextSecondary]}>⚖️ APELAR LEGALMENTE</Text>
+              <Text style={[styles.btnText, styles.btnTextSecondary]}>{t('regulatory.btnAppeal')}</Text>
               <Text style={styles.btnSub}>
-                Demora la decisión — costo ${REGULATORY_EVENT_CONFIG.LEGAL_FEE.toLocaleString()} en abogados
+                {t('regulatory.btnAppealSub').replace('${amount}', REGULATORY_EVENT_CONFIG.LEGAL_FEE.toLocaleString())}
               </Text>
             </TouchableOpacity>
 
@@ -215,7 +215,7 @@ const RegulatoryPressureModal: React.FC<Props> = ({ event }) => {
               onPress={() => dispatch({ type: 'RESOLVE_REGULATORY_PRESSURE', payload: 'ignore' })}
               activeOpacity={0.75}
             >
-              <Text style={styles.btnDismissText}>IGNORAR</Text>
+              <Text style={styles.btnDismissText}>{t('regulatory.btnIgnore')}</Text>
             </TouchableOpacity>
           </View>
         </Animated.View>
@@ -230,7 +230,7 @@ interface AppealResultProps {
 }
 
 const AppealResultModal: React.FC<AppealResultProps> = ({ outcome, event: _event }) => {
-  const { dispatch } = useGame();
+  const { dispatch, t } = useGame();
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
 
@@ -267,15 +267,15 @@ const AppealResultModal: React.FC<AppealResultProps> = ({ outcome, event: _event
                 <Text style={styles.iconText}>⚖️</Text>
               </View>
               <View style={styles.headerTextCol}>
-                <Text style={styles.category}>RESULTADO LEGAL · APELACIÓN</Text>
+                <Text style={styles.category}>{t('regulatory.appealCategory')}</Text>
                 {outcome === 'success' && (
-                  <Text style={styles.title}>Apelación exitosa — impuesto anulado</Text>
+                  <Text style={styles.title}>{t('regulatory.appealSuccess')}</Text>
                 )}
                 {outcome === 'partial' && (
-                  <Text style={styles.title}>Acuerdo parcial — impuesto reducido</Text>
+                  <Text style={styles.title}>{t('regulatory.appealPartial')}</Text>
                 )}
                 {outcome === 'rejected' && (
-                  <Text style={styles.title}>Apelación rechazada — fallo definitivo</Text>
+                  <Text style={styles.title}>{t('regulatory.appealRejected')}</Text>
                 )}
               </View>
             </View>
@@ -283,19 +283,19 @@ const AppealResultModal: React.FC<AppealResultProps> = ({ outcome, event: _event
             {outcome === 'success' && (
               <>
                 <Text style={styles.description}>
-                  El tribunal europeo falló a tu favor. El impuesto fue declarado desproporcionado y queda sin efecto. Tus ${cfg.LEGAL_FEE.toLocaleString()} en honorarios legales fueron suficientes.
+                  {t('regulatory.successDesc').replace('${amount}', cfg.LEGAL_FEE.toLocaleString())}
                 </Text>
                 <View style={styles.tagsRow}>
-                  <View style={[styles.tag, styles.tagPositive]}><Text style={[styles.tagText, styles.tagTextPositive]}>Impuesto anulado</Text></View>
-                  <View style={[styles.tag, styles.tagPositive]}><Text style={[styles.tagText, styles.tagTextPositive]}>Hash rate sin cambios</Text></View>
-                  <View style={[styles.tag, styles.tagNeutral]}><Text style={[styles.tagText, styles.tagTextNeutral]}>Costo total: ${cfg.LEGAL_FEE.toLocaleString()}</Text></View>
+                  <View style={[styles.tag, styles.tagPositive]}><Text style={[styles.tagText, styles.tagTextPositive]}>{t('regulatory.tagVoided')}</Text></View>
+                  <View style={[styles.tag, styles.tagPositive]}><Text style={[styles.tagText, styles.tagTextPositive]}>{t('regulatory.tagHashRateOk')}</Text></View>
+                  <View style={[styles.tag, styles.tagNeutral]}><Text style={[styles.tagText, styles.tagTextNeutral]}>{t('regulatory.tagTotalCost')}{cfg.LEGAL_FEE.toLocaleString()}</Text></View>
                 </View>
                 <TouchableOpacity
                   style={[styles.btn, styles.btnGreen]}
                   onPress={() => dispatch({ type: 'RESOLVE_REGULATORY_APPEAL', payload: { outcome: 'success' } })}
                   activeOpacity={0.75}
                 >
-                  <Text style={[styles.btnText, styles.btnTextGreen]}>✓ RECIBIDO</Text>
+                  <Text style={[styles.btnText, styles.btnTextGreen]}>{t('regulatory.btnReceived')}</Text>
                 </TouchableOpacity>
               </>
             )}
@@ -303,28 +303,28 @@ const AppealResultModal: React.FC<AppealResultProps> = ({ outcome, event: _event
             {outcome === 'partial' && (
               <>
                 <Text style={styles.description}>
-                  El tribunal aceptó un acuerdo. Pagarás el 20% del impuesto original. La operación continúa sin penalización adicional.
+                  {t('regulatory.partialDesc')}
                 </Text>
                 <View style={styles.tagsRow}>
-                  <View style={[styles.tag, styles.tagWarning]}><Text style={[styles.tagText, styles.tagTextWarning]}>Pago reducido: ${cfg.PARTIAL_AMOUNT.toLocaleString()}</Text></View>
-                  <View style={[styles.tag, styles.tagPositive]}><Text style={[styles.tagText, styles.tagTextPositive]}>Hash rate sin cambios</Text></View>
-                  <View style={[styles.tag, styles.tagNeutral]}><Text style={[styles.tagText, styles.tagTextNeutral]}>Costo total: ${(cfg.LEGAL_FEE + cfg.PARTIAL_AMOUNT).toLocaleString()}</Text></View>
+                  <View style={[styles.tag, styles.tagWarning]}><Text style={[styles.tagText, styles.tagTextWarning]}>{t('regulatory.tagReduced')}{cfg.PARTIAL_AMOUNT.toLocaleString()}</Text></View>
+                  <View style={[styles.tag, styles.tagPositive]}><Text style={[styles.tagText, styles.tagTextPositive]}>{t('regulatory.tagHashRateOk')}</Text></View>
+                  <View style={[styles.tag, styles.tagNeutral]}><Text style={[styles.tagText, styles.tagTextNeutral]}>{t('regulatory.tagTotalCost')}{(cfg.LEGAL_FEE + cfg.PARTIAL_AMOUNT).toLocaleString()}</Text></View>
                 </View>
                 <TouchableOpacity
                   style={[styles.btn, styles.btnYellow]}
                   onPress={() => dispatch({ type: 'RESOLVE_REGULATORY_APPEAL', payload: { outcome: 'partial', choice: 'pay' } })}
                   activeOpacity={0.75}
                 >
-                  <Text style={[styles.btnText, styles.btnTextYellow]}>💰 PAGAR ${cfg.PARTIAL_AMOUNT.toLocaleString()}</Text>
-                  <Text style={styles.btnSub}>Acuerdo aceptado — operación continúa</Text>
+                  <Text style={[styles.btnText, styles.btnTextYellow]}>{t('regulatory.btnPayAmount')}{cfg.PARTIAL_AMOUNT.toLocaleString()}</Text>
+                  <Text style={styles.btnSub}>{t('regulatory.btnAcceptDeal')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.btn, styles.btnSecondary]}
                   onPress={() => dispatch({ type: 'RESOLVE_REGULATORY_APPEAL', payload: { outcome: 'partial', choice: 'accept_penalty' } })}
                   activeOpacity={0.75}
                 >
-                  <Text style={[styles.btnText, styles.btnTextSecondary]}>RECHAZAR ACUERDO</Text>
-                  <Text style={styles.btnSub}>Aceptar penalización de hash rate −30%</Text>
+                  <Text style={[styles.btnText, styles.btnTextSecondary]}>{t('regulatory.btnRejectDeal')}</Text>
+                  <Text style={styles.btnSub}>{t('regulatory.btnRejectDealSub')}</Text>
                 </TouchableOpacity>
               </>
             )}
@@ -332,28 +332,28 @@ const AppealResultModal: React.FC<AppealResultProps> = ({ outcome, event: _event
             {outcome === 'rejected' && (
               <>
                 <Text style={styles.description}>
-                  El tribunal rechazó la apelación. Debés pagar el impuesto original más una multa por demora. No hay más instancias posibles.
+                  {t('regulatory.rejectedDesc')}
                 </Text>
                 <View style={styles.tagsRow}>
-                  <View style={[styles.tag, styles.tagNegative]}><Text style={[styles.tagText, styles.tagTextNegative]}>Impuesto completo: ${cfg.TAX_AMOUNT.toLocaleString()}</Text></View>
-                  <View style={[styles.tag, styles.tagNegative]}><Text style={[styles.tagText, styles.tagTextNegative]}>Multa por demora: $8,000</Text></View>
-                  <View style={[styles.tag, styles.tagWarning]}><Text style={[styles.tagText, styles.tagTextWarning]}>Total: ${cfg.REJECTED_TOTAL.toLocaleString()} o −30% hash rate</Text></View>
+                  <View style={[styles.tag, styles.tagNegative]}><Text style={[styles.tagText, styles.tagTextNegative]}>{t('regulatory.tagFullTax')}{cfg.TAX_AMOUNT.toLocaleString()}</Text></View>
+                  <View style={[styles.tag, styles.tagNegative]}><Text style={[styles.tagText, styles.tagTextNegative]}>{t('regulatory.tagLateFine')}</Text></View>
+                  <View style={[styles.tag, styles.tagWarning]}><Text style={[styles.tagText, styles.tagTextWarning]}>{t('regulatory.tagTotalOrPenalty').replace('${amount}', cfg.REJECTED_TOTAL.toLocaleString())}</Text></View>
                 </View>
                 <TouchableOpacity
                   style={[styles.btn, styles.btnRed]}
                   onPress={() => dispatch({ type: 'RESOLVE_REGULATORY_APPEAL', payload: { outcome: 'rejected', choice: 'pay' } })}
                   activeOpacity={0.75}
                 >
-                  <Text style={[styles.btnText, styles.btnTextRed]}>💰 PAGAR ${cfg.REJECTED_TOTAL.toLocaleString()}</Text>
-                  <Text style={styles.btnSub}>Operación continúa sin penalización</Text>
+                  <Text style={[styles.btnText, styles.btnTextRed]}>{t('regulatory.btnPayAmount')}{cfg.REJECTED_TOTAL.toLocaleString()}</Text>
+                  <Text style={styles.btnSub}>{t('regulatory.btnContinueNoPenalty')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.btn, styles.btnSecondary]}
                   onPress={() => dispatch({ type: 'RESOLVE_REGULATORY_APPEAL', payload: { outcome: 'rejected', choice: 'accept_penalty' } })}
                   activeOpacity={0.75}
                 >
-                  <Text style={[styles.btnText, styles.btnTextSecondary]}>ACEPTAR PENALIZACIÓN</Text>
-                  <Text style={styles.btnSub}>−30% hash rate por 24h — sin costo adicional</Text>
+                  <Text style={[styles.btnText, styles.btnTextSecondary]}>{t('regulatory.btnAcceptPenalty')}</Text>
+                  <Text style={styles.btnSub}>{t('regulatory.btnAcceptPenaltySub')}</Text>
                 </TouchableOpacity>
               </>
             )}

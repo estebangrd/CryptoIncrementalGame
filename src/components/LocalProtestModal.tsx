@@ -48,10 +48,7 @@ const LocalProtestModal: React.FC<Props> = ({ event }) => {
   if (!event || event.status !== 'active') return null;
 
   const pct = event.resourcesConsumedAtTrigger;
-  const description =
-    `Tu operación consumió el ${pct}% de la capacidad eléctrica regional. ` +
-    `Tres comunidades cercanas reportaron apagones de 6 horas. ` +
-    `Grupos ambientalistas iniciaron una campaña en tu contra.`;
+  const description = t('localProtest.description').replace('{pct}', String(pct));
 
   return (
     <Modal transparent={true} animationType="fade" visible={true} onRequestClose={() => {}}>
@@ -78,8 +75,8 @@ const LocalProtestModal: React.FC<Props> = ({ event }) => {
                 <Text style={styles.iconText}>🌍</Text>
               </View>
               <View style={styles.headerTextCol}>
-                <Text style={styles.category}>ALERTA · IMPACTO OPERACIONAL</Text>
-                <Text style={styles.title}>Apagón regional — comunidades protestan</Text>
+                <Text style={styles.category}>{t('localProtest.category')}</Text>
+                <Text style={styles.title}>{t('localProtest.title')}</Text>
               </View>
             </View>
 
@@ -89,13 +86,13 @@ const LocalProtestModal: React.FC<Props> = ({ event }) => {
             {/* Tags */}
             <View style={styles.tagsRow}>
               <View style={[styles.tag, styles.tagNeutral]}>
-                <Text style={[styles.tagText, styles.tagTextNeutral]}>Sin impacto mecánico inmediato</Text>
+                <Text style={[styles.tagText, styles.tagTextNeutral]}>{t('localProtest.tagNoImpact')}</Text>
               </View>
               <View style={[styles.tag, styles.tagWarning]}>
-                <Text style={[styles.tagText, styles.tagTextWarning]}>Presión regulatoria aumenta</Text>
+                <Text style={[styles.tagText, styles.tagTextWarning]}>{t('localProtest.tagPressure')}</Text>
               </View>
               <View style={[styles.tag, styles.tagNegative]}>
-                <Text style={[styles.tagText, styles.tagTextNegative]}>Reputación: ↓</Text>
+                <Text style={[styles.tagText, styles.tagTextNegative]}>{t('localProtest.tagReputation')}</Text>
               </View>
             </View>
 

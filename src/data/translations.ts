@@ -2038,4 +2038,252 @@ export const translations: Translation = {
     es: '20% menos energía por 30 min',
     pt: '20% menos energia por 30 min',
   },
+  'localProtest.category': {
+    en: 'ALERT · OPERATIONAL IMPACT',
+    es: 'ALERTA · IMPACTO OPERACIONAL',
+    pt: 'ALERTA · IMPACTO OPERACIONAL',
+  },
+  'localProtest.title': {
+    en: 'Regional blackout — communities protest',
+    es: 'Apagón regional — comunidades protestan',
+    pt: 'Apagão regional — comunidades protestam',
+  },
+  'localProtest.description': {
+    en: 'Your operation consumed {pct}% of regional electrical capacity. Three nearby communities reported 6-hour blackouts. Environmental groups launched a campaign against you.',
+    es: 'Tu operación consumió el {pct}% de la capacidad eléctrica regional. Tres comunidades cercanas reportaron apagones de 6 horas. Grupos ambientalistas iniciaron una campaña en tu contra.',
+    pt: 'Sua operação consumiu {pct}% da capacidade elétrica regional. Três comunidades próximas relataram apagões de 6 horas. Grupos ambientalistas iniciaram uma campanha contra você.',
+  },
+  'localProtest.tagNoImpact': {
+    en: 'No immediate mechanical impact',
+    es: 'Sin impacto mecánico inmediato',
+    pt: 'Sem impacto mecânico imediato',
+  },
+  'localProtest.tagPressure': {
+    en: 'Regulatory pressure increases',
+    es: 'Presión regulatoria aumenta',
+    pt: 'Pressão regulatória aumenta',
+  },
+  'localProtest.tagReputation': {
+    en: 'Reputation: ↓',
+    es: 'Reputación: ↓',
+    pt: 'Reputação: ↓',
+  },
+  // Market Opportunity modal
+  'marketOpportunity.category': {
+    en: 'OPPORTUNITY · MARKET',
+    es: 'OPORTUNIDAD · MERCADO',
+    pt: 'OPORTUNIDADE · MERCADO',
+  },
+  'marketOpportunity.title': {
+    en: 'Extreme volatility — CC price +25%',
+    es: 'Volatilidad extrema — precio CC +25%',
+    pt: 'Volatilidade extrema — preço CC +25%',
+  },
+  'marketOpportunity.timerLabel': {
+    en: 'Opportunity window',
+    es: 'Ventana de oportunidad',
+    pt: 'Janela de oportunidade',
+  },
+  'marketOpportunity.description': {
+    en: 'Unusual market conditions generated a demand spike. CryptoCoin price rose 25%. The window lasts approximately 10 minutes — the market moves on its own.',
+    es: 'Condiciones inusuales de mercado generaron un spike de demanda. El precio de CryptoCoin subió un 25%. La ventana dura aproximadamente 10 minutos — el mercado se mueve solo.',
+    pt: 'Condições incomuns de mercado geraram um pico de demanda. O preço do CryptoCoin subiu 25%. A janela dura aproximadamente 10 minutos — o mercado se move sozinho.',
+  },
+  'marketOpportunity.tagPrice': {
+    en: '+25% current price',
+    es: '+25% precio actual',
+    pt: '+25% preço atual',
+  },
+  'marketOpportunity.tagTimer': {
+    en: '⏱ ~10 minutes',
+    es: '⏱ ~10 minutos',
+    pt: '⏱ ~10 minutos',
+  },
+  'marketOpportunity.btnGoToMarket': {
+    en: '⚡ GO TO MARKET NOW',
+    es: '⚡ IR AL MERCADO AHORA',
+    pt: '⚡ IR AO MERCADO AGORA',
+  },
+  'marketOpportunity.btnGoToMarketSub': {
+    en: 'Open the Market tab to sell at the current price',
+    es: 'Abrí el tab Market para vender al precio actual',
+    pt: 'Abra a aba Market para vender ao preço atual',
+  },
+  'marketOpportunity.btnAutoSell': {
+    en: 'AUTO-SELL 100%',
+    es: 'VENDER 100% AUTOMÁTICAMENTE',
+    pt: 'VENDER 100% AUTOMATICAMENTE',
+  },
+  'marketOpportunity.btnAutoSellSub': {
+    en: 'Sell your entire stack now — without opening Market',
+    es: 'Vendé todo tu stack ahora — sin abrir Market',
+    pt: 'Venda todo seu stack agora — sem abrir Market',
+  },
+  // Regulatory Pressure modal — decision
+  'regulatory.category': {
+    en: 'EXTERNAL PRESSURE · REGULATORY',
+    es: 'PRESIÓN EXTERNA · REGULATORIO',
+    pt: 'PRESSÃO EXTERNA · REGULATÓRIO',
+  },
+  'regulatory.title': {
+    en: 'EU regulators propose emergency tax',
+    es: 'Reguladores de la UE proponen impuesto de emergencia',
+    pt: 'Reguladores da UE propõem imposto de emergência',
+  },
+  'regulatory.timerLabel': {
+    en: 'Decide now',
+    es: 'Decidí ahora',
+    pt: 'Decida agora',
+  },
+  'regulatory.description': {
+    en: 'The European Commission proposes a 40% tax on mining operations exceeding 50K H/s. You must decide now.',
+    es: 'La Comisión Europea propone un impuesto del 40% a operaciones de minado que superen 50K H/s. Debés decidir ahora.',
+    pt: 'A Comissão Europeia propõe um imposto de 40% sobre operações de mineração que excedam 50K H/s. Você deve decidir agora.',
+  },
+  'regulatory.tagPenalty': {
+    en: '−30% Hash Rate if ignored',
+    es: '−30% Hash Rate si ignorás',
+    pt: '−30% Hash Rate se ignorar',
+  },
+  'regulatory.tagCost': {
+    en: 'Cost: $',
+    es: 'Costo: $',
+    pt: 'Custo: $',
+  },
+  'regulatory.btnPay': {
+    en: '💰 PAY TAX',
+    es: '💰 PAGAR IMPUESTO',
+    pt: '💰 PAGAR IMPOSTO',
+  },
+  'regulatory.btnPaySub': {
+    en: 'Cost: ${amount} — operation continues normally',
+    es: 'Costo: ${amount} — operación continúa normalmente',
+    pt: 'Custo: ${amount} — operação continua normalmente',
+  },
+  'regulatory.btnAppeal': {
+    en: '⚖️ APPEAL LEGALLY',
+    es: '⚖️ APELAR LEGALMENTE',
+    pt: '⚖️ APELAR LEGALMENTE',
+  },
+  'regulatory.btnAppealSub': {
+    en: 'Delays the decision — cost ${amount} in lawyers',
+    es: 'Demora la decisión — costo ${amount} en abogados',
+    pt: 'Atrasa a decisão — custo ${amount} em advogados',
+  },
+  'regulatory.btnIgnore': {
+    en: 'IGNORE',
+    es: 'IGNORAR',
+    pt: 'IGNORAR',
+  },
+  // Regulatory Pressure modal — appeal result
+  'regulatory.appealCategory': {
+    en: 'LEGAL RESULT · APPEAL',
+    es: 'RESULTADO LEGAL · APELACIÓN',
+    pt: 'RESULTADO LEGAL · APELAÇÃO',
+  },
+  'regulatory.appealSuccess': {
+    en: 'Appeal successful — tax voided',
+    es: 'Apelación exitosa — impuesto anulado',
+    pt: 'Apelação bem-sucedida — imposto anulado',
+  },
+  'regulatory.appealPartial': {
+    en: 'Partial agreement — tax reduced',
+    es: 'Acuerdo parcial — impuesto reducido',
+    pt: 'Acordo parcial — imposto reduzido',
+  },
+  'regulatory.appealRejected': {
+    en: 'Appeal rejected — final ruling',
+    es: 'Apelación rechazada — fallo definitivo',
+    pt: 'Apelação rejeitada — decisão definitiva',
+  },
+  'regulatory.successDesc': {
+    en: 'The European court ruled in your favor. The tax was deemed disproportionate and is voided. Your ${amount} in legal fees were sufficient.',
+    es: 'El tribunal europeo falló a tu favor. El impuesto fue declarado desproporcionado y queda sin efecto. Tus ${amount} en honorarios legales fueron suficientes.',
+    pt: 'O tribunal europeu decidiu a seu favor. O imposto foi considerado desproporcional e anulado. Seus ${amount} em honorários legais foram suficientes.',
+  },
+  'regulatory.tagVoided': {
+    en: 'Tax voided',
+    es: 'Impuesto anulado',
+    pt: 'Imposto anulado',
+  },
+  'regulatory.tagHashRateOk': {
+    en: 'Hash rate unchanged',
+    es: 'Hash rate sin cambios',
+    pt: 'Hash rate sem alterações',
+  },
+  'regulatory.tagTotalCost': {
+    en: 'Total cost: $',
+    es: 'Costo total: $',
+    pt: 'Custo total: $',
+  },
+  'regulatory.btnReceived': {
+    en: '✓ RECEIVED',
+    es: '✓ RECIBIDO',
+    pt: '✓ RECEBIDO',
+  },
+  'regulatory.partialDesc': {
+    en: 'The court accepted a settlement. You will pay 20% of the original tax. Operation continues without additional penalty.',
+    es: 'El tribunal aceptó un acuerdo. Pagarás el 20% del impuesto original. La operación continúa sin penalización adicional.',
+    pt: 'O tribunal aceitou um acordo. Você pagará 20% do imposto original. A operação continua sem penalização adicional.',
+  },
+  'regulatory.tagReduced': {
+    en: 'Reduced payment: $',
+    es: 'Pago reducido: $',
+    pt: 'Pagamento reduzido: $',
+  },
+  'regulatory.btnPayAmount': {
+    en: '💰 PAY $',
+    es: '💰 PAGAR $',
+    pt: '💰 PAGAR $',
+  },
+  'regulatory.btnAcceptDeal': {
+    en: 'Deal accepted — operation continues',
+    es: 'Acuerdo aceptado — operación continúa',
+    pt: 'Acordo aceito — operação continua',
+  },
+  'regulatory.btnRejectDeal': {
+    en: 'REJECT DEAL',
+    es: 'RECHAZAR ACUERDO',
+    pt: 'REJEITAR ACORDO',
+  },
+  'regulatory.btnRejectDealSub': {
+    en: 'Accept hash rate penalty −30%',
+    es: 'Aceptar penalización de hash rate −30%',
+    pt: 'Aceitar penalização de hash rate −30%',
+  },
+  'regulatory.rejectedDesc': {
+    en: 'The court rejected the appeal. You must pay the original tax plus a late penalty. No further appeals are possible.',
+    es: 'El tribunal rechazó la apelación. Debés pagar el impuesto original más una multa por demora. No hay más instancias posibles.',
+    pt: 'O tribunal rejeitou a apelação. Você deve pagar o imposto original mais uma multa por atraso. Não há mais instâncias possíveis.',
+  },
+  'regulatory.tagFullTax': {
+    en: 'Full tax: $',
+    es: 'Impuesto completo: $',
+    pt: 'Imposto completo: $',
+  },
+  'regulatory.tagLateFine': {
+    en: 'Late penalty: $8,000',
+    es: 'Multa por demora: $8,000',
+    pt: 'Multa por atraso: $8.000',
+  },
+  'regulatory.tagTotalOrPenalty': {
+    en: 'Total: ${amount} or −30% hash rate',
+    es: 'Total: ${amount} o −30% hash rate',
+    pt: 'Total: ${amount} ou −30% hash rate',
+  },
+  'regulatory.btnContinueNoPenalty': {
+    en: 'Operation continues without penalty',
+    es: 'Operación continúa sin penalización',
+    pt: 'Operação continua sem penalização',
+  },
+  'regulatory.btnAcceptPenalty': {
+    en: 'ACCEPT PENALTY',
+    es: 'ACEPTAR PENALIZACIÓN',
+    pt: 'ACEITAR PENALIZAÇÃO',
+  },
+  'regulatory.btnAcceptPenaltySub': {
+    en: '−30% hash rate for 24h — no additional cost',
+    es: '−30% hash rate por 24h — sin costo adicional',
+    pt: '−30% hash rate por 24h — sem custo adicional',
+  },
 };

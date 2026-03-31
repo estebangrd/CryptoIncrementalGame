@@ -22,7 +22,7 @@ interface Props {
 }
 
 const MarketOpportunityModal: React.FC<Props> = ({ event }) => {
-  const { dispatch } = useGame();
+  const { dispatch, t } = useGame();
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
   const [timeLeft, setTimeLeft] = useState('');
@@ -75,8 +75,8 @@ const MarketOpportunityModal: React.FC<Props> = ({ event }) => {
                 <Text style={styles.iconText}>📈</Text>
               </View>
               <View style={styles.headerTextCol}>
-                <Text style={styles.category}>OPORTUNIDAD · MERCADO</Text>
-                <Text style={styles.title}>Volatilidad extrema — precio CC +25%</Text>
+                <Text style={styles.category}>{t('marketOpportunity.category')}</Text>
+                <Text style={styles.title}>{t('marketOpportunity.title')}</Text>
               </View>
             </View>
 
@@ -91,23 +91,23 @@ const MarketOpportunityModal: React.FC<Props> = ({ event }) => {
                 />
               </View>
               <View style={styles.timerLabels}>
-                <Text style={styles.timerLabel}>Ventana de oportunidad</Text>
+                <Text style={styles.timerLabel}>{t('marketOpportunity.timerLabel')}</Text>
                 <Text style={styles.timerLabel}>{timeLeft}</Text>
               </View>
             </View>
 
             {/* Description */}
             <Text style={styles.description}>
-              Condiciones inusuales de mercado generaron un spike de demanda. El precio de CryptoCoin subió un 25%. La ventana dura aproximadamente 10 minutos — el mercado se mueve solo.
+              {t('marketOpportunity.description')}
             </Text>
 
             {/* Tags */}
             <View style={styles.tagsRow}>
               <View style={[styles.tag, styles.tagPositive]}>
-                <Text style={[styles.tagText, styles.tagTextPositive]}>+25% precio actual</Text>
+                <Text style={[styles.tagText, styles.tagTextPositive]}>{t('marketOpportunity.tagPrice')}</Text>
               </View>
               <View style={[styles.tag, styles.tagWarning]}>
-                <Text style={[styles.tagText, styles.tagTextWarning]}>⏱ ~10 minutos</Text>
+                <Text style={[styles.tagText, styles.tagTextWarning]}>{t('marketOpportunity.tagTimer')}</Text>
               </View>
             </View>
 
@@ -117,8 +117,8 @@ const MarketOpportunityModal: React.FC<Props> = ({ event }) => {
               onPress={() => dispatch({ type: 'RESOLVE_MARKET_OPPORTUNITY', payload: 'went_to_market' })}
               activeOpacity={0.75}
             >
-              <Text style={[styles.btnText, styles.btnTextGreen]}>⚡ IR AL MERCADO AHORA</Text>
-              <Text style={styles.btnSub}>Abrí el tab Market para vender al precio actual</Text>
+              <Text style={[styles.btnText, styles.btnTextGreen]}>{t('marketOpportunity.btnGoToMarket')}</Text>
+              <Text style={styles.btnSub}>{t('marketOpportunity.btnGoToMarketSub')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -126,8 +126,8 @@ const MarketOpportunityModal: React.FC<Props> = ({ event }) => {
               onPress={() => dispatch({ type: 'RESOLVE_MARKET_OPPORTUNITY', payload: 'auto_sold' })}
               activeOpacity={0.75}
             >
-              <Text style={[styles.btnText, styles.btnTextSecondary]}>VENDER 100% AUTOMÁTICAMENTE</Text>
-              <Text style={styles.btnSub}>Vendé todo tu stack ahora — sin abrir Market</Text>
+              <Text style={[styles.btnText, styles.btnTextSecondary]}>{t('marketOpportunity.btnAutoSell')}</Text>
+              <Text style={styles.btnSub}>{t('marketOpportunity.btnAutoSellSub')}</Text>
             </TouchableOpacity>
           </View>
         </Animated.View>
