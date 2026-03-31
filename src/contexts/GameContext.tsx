@@ -309,6 +309,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         totalPrestigeGains: action.payload.totalPrestigeGains || 0,
         realMoney: action.payload.realMoney || 0,
         totalRealMoneyEarned: action.payload.totalRealMoneyEarned || 0,
+        totalSellCount: action.payload.totalSellCount || 0,
         // Ensure new prestige fields exist if missing from old saves
         prestigeProductionMultiplier: action.payload.prestigeProductionMultiplier
           ?? calculateProductionMultiplier(action.payload.prestigeLevel ?? 0),
@@ -455,6 +456,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         },
         realMoney: 0,
         totalRealMoneyEarned: 0,
+        totalSellCount: 0,
         energy: getInitialEnergyState(),
         renewableCapUpgrades: [],
         planetResources: 100,
@@ -678,10 +680,10 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           newState.activeMarketEvents = addOrRefreshEvent(newState.activeMarketEvents, 'halving_anticipation', now);
         }
 
-        // f) Random events (whale_dump, media_hype) — gated behind $500 earned
+        // f) Random events (whale_dump, media_hype) — gated: 5k blocks OR 10 sells
         const lastCheck = newState.lastRandomEventCheck ?? 0;
-        const earnedEnough = (newState.totalRealMoneyEarned || 0) >= 500;
-        if (earnedEnough && now - lastCheck >= MARKET_EVENT_CONFIG.RANDOM_CHECK_INTERVAL_MS) {
+        const randomEventsUnlocked = newState.blocksMined >= 5000 || (newState.totalSellCount || 0) >= 10;
+        if (randomEventsUnlocked && now - lastCheck >= MARKET_EVENT_CONFIG.RANDOM_CHECK_INTERVAL_MS) {
           newState.lastRandomEventCheck = now;
           if (Math.random() < MARKET_EVENT_CONFIG.whale_dump.probability) {
             newState.activeMarketEvents = addOrRefreshEvent(newState.activeMarketEvents, 'whale_dump', now);
@@ -759,6 +761,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         cryptoCoins: 0,
         realMoney: 0,
         totalRealMoneyEarned: 0,
+        totalSellCount: 0,
         totalCryptoCoins: 0,
         hardware: resetHardware,
         upgrades: resetUpgrades,
@@ -882,6 +885,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         cryptoCoins: state.cryptoCoins - coinsToSell,
         realMoney: newRealMoneyAfterSell,
         totalRealMoneyEarned: state.totalRealMoneyEarned + moneyEarned,
+        totalSellCount: (state.totalSellCount || 0) + 1,
       };
 
       if (shouldTriggerRegulatory) {
@@ -1588,6 +1592,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         cryptoCoins: 0,
         realMoney: 0,
         totalRealMoneyEarned: 0,
+        totalSellCount: 0,
         totalCryptoCoins: 0,
         hardware: resetHardware,
         upgrades: resetUpgrades,

@@ -332,6 +332,7 @@ export interface GameState {
   // Real money system
   realMoney: number; // Dollars earned from selling coins
   totalRealMoneyEarned: number;
+  totalSellCount: number;
   // Price history system
   priceHistory?: { [cryptoId: string]: { prices: number[]; lastUpdate: number } };
   // Price engine (Ornstein-Uhlenbeck)
