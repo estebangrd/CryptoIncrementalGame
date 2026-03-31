@@ -7,6 +7,7 @@ import {
   RewardedAdEventType,
 } from 'react-native-google-mobile-ads';
 import { getAdUnitId, AD_TIMING } from '../config/adConfig';
+import { OFFLINE_SCREEN_CONFIG } from '../config/balanceConfig';
 import { GameState } from '../types/game';
 import { logEvent } from './analytics';
 
@@ -133,6 +134,12 @@ export const showInterstitialIfEligible = (gameState: GameState): boolean => {
 
   // No mostrar en la primera sesión
   if (gameState.adState.isFirstSession) {
+    return false;
+  }
+
+  // No mostrar si offline ≥ 5 min (offline earnings modal takes priority)
+  const offlineSec = (Date.now() - (gameState.lastSaveTime || Date.now())) / 1000;
+  if (offlineSec >= OFFLINE_SCREEN_CONFIG.MIN_OFFLINE_SECONDS) {
     return false;
   }
 
