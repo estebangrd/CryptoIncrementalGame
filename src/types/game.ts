@@ -11,6 +11,26 @@ export interface Cryptocurrency {
   aiLevelRequired?: number; // 1, 2, or 3 — only visible when AI is at this level+
 }
 
+// ─── Market Events (price unification) ────────────────────────────────────────
+
+export type MarketEventId =
+  | 'halving_anticipation'
+  | 'halving_shock'
+  | 'market_spike'
+  | 'blackout_regional'
+  | 'ai_autonomous'
+  | 'planetary_collapse_incoming'
+  | 'whale_dump'
+  | 'media_hype';
+
+export interface ActiveMarketEvent {
+  id: MarketEventId;
+  multiplier: number;
+  activatedAt: number;
+  expiresAt: number | null;  // null = permanent (until explicit cancellation)
+  labelKey: string;
+}
+
 // ─── AI System types (Phase 5) ────────────────────────────────────────────────
 
 export type AILevel = 0 | 1 | 2 | 3;
@@ -276,7 +296,6 @@ export interface GameState {
   cryptoCoinsPerSecond: number;
   totalElectricityCost: number; // Total electricity cost per second
   cryptocurrencies: Cryptocurrency[];
-  selectedCurrency: string | null; // ID of the currently selected cryptocurrency
   hardware: Hardware[];
   upgrades: Upgrade[];
   lastSaveTime: number;
@@ -285,8 +304,6 @@ export interface GameState {
   prestigeLevel: number;
   prestigeMultiplier: number;       // backwards compat — equals prestigeProductionMultiplier
   marketUpdateTime: number;
-  // Prestige system (legacy, kept for backwards compat)
-  currencyBalances: { [currencyId: string]: number };
   totalPrestigeGains: number;
   // New prestige fields
   prestigeProductionMultiplier: number;
@@ -303,8 +320,6 @@ export interface GameState {
   difficulty: number;
   totalHashRate: number;
   phase: 'genesis' | 'expansion' | 'institutional' | 'singularity' | 'multiverse';
-  // Market system
-  marketState: MarketState;
   // Progressive unlock system
   unlockedTabs: {
     market: boolean;
@@ -358,6 +373,10 @@ export interface GameState {
   marketOpportunityEvent: MarketOpportunityEvent | null;
   localProtestEvent: LocalProtestEvent | null;
   activeBannerEvent: 'regulatory_pressure' | 'market_opportunity' | 'local_protest' | null;
+  // Market events (price unification)
+  activeMarketEvents: ActiveMarketEvent[];
+  lastRandomEventCheck: number;
+  rationingPenaltyUntil: number;
 }
 
 export interface Hardware {
@@ -418,48 +437,4 @@ export interface Translation {
   };
 }
 
-// NPC (Non-Player Character) types
-export interface NPC {
-  id: string;
-  name: string;
-  nameKey: string;
-  type: 'buyer' | 'seller' | 'trader';
-  behavior: 'conservative' | 'aggressive' | 'speculative';
-  baseDemand: number; // Base demand for coins
-  priceSensitivity: number; // How much price affects demand
-  maxPurchaseAmount: number; // Maximum coins they can buy
-  minPurchaseAmount: number; // Minimum coins they will buy
-  priceMultiplier: number; // Multiplier for their offer price
-  lastActivity: number; // Last time they were active
-  cooldown: number; // Time between activities
-}
-
-// Market event types
-export interface MarketEvent {
-  id: string;
-  name: string;
-  nameKey: string;
-  description: string;
-  descriptionKey: string;
-  type: 'pizza' | 'regulation' | 'adoption' | 'crash' | 'boom';
-  duration: number; // Duration in milliseconds
-  priceMultiplier: number; // How it affects prices
-  demandMultiplier: number; // How it affects demand
-  probability: number; // Probability of occurring (0-1)
-  lastOccurred: number; // Last time this event occurred
-  cooldown: number; // Minimum time between occurrences
-}
-
-// Market state
-export interface MarketState {
-  basePrice: number; // Base price of the coin
-  currentPrice: number; // Current market price
-  priceHistory: number[]; // Price history for charts
-  totalVolume: number; // Total trading volume
-  dailyVolume: number; // Daily trading volume
-  liquidity: number; // Market liquidity (0-1)
-  fearGreedIndex: number; // Market sentiment (-1 to 1)
-  lastUpdate: number; // Last market update
-  activeEvents: MarketEvent[]; // Currently active events
-  npcs: NPC[]; // Active NPCs
-}
+// Legacy Market types removed — see ActiveMarketEvent for new system

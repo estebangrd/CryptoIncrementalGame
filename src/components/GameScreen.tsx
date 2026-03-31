@@ -253,6 +253,21 @@ const GameScreen: React.FC = () => {
   const [earningsToastAmount, setEarningsToastAmount] = useState<number | null>(null);
   const prevAchievementsRef = useRef(gameState.achievements);
   const firstHydratedRef = useRef(true);
+  const prevMarketEventsRef = useRef(gameState.activeMarketEvents ?? []);
+
+  // Toast on new market events
+  useEffect(() => {
+    const current = gameState.activeMarketEvents ?? [];
+    const prev = prevMarketEventsRef.current;
+    const prevIds = new Set(prev.map(e => e.id));
+    const newEvents = current.filter(e => !prevIds.has(e.id));
+    for (const evt of newEvents) {
+      const toastKey = evt.labelKey.replace('marketEvent.', 'marketEvent.toast.');
+      const msg = t(toastKey);
+      showToast(msg, evt.multiplier >= 1 ? 'success' : 'warning');
+    }
+    prevMarketEventsRef.current = current;
+  }, [gameState.activeMarketEvents]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Planet meter pulse
   const pulseAnim = useRef(new Animated.Value(1)).current;

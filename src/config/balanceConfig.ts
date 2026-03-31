@@ -162,26 +162,6 @@ export const CRYPTO_CONFIG = {
     baseValue: 0.001,          // Valor base en $ por CryptoCoin
     volatility: 0.1,           // 10% de volatilidad
   },
-
-  bitcoin: {
-    baseValue: 10,             // Valor base en $ por Bitcoin
-    volatility: 0.15,          // 15% de volatilidad
-  },
-
-  ethereum: {
-    baseValue: 5,              // Valor base en $ por Ethereum
-    volatility: 0.2,           // 20% de volatilidad
-  },
-
-  dogecoin: {
-    baseValue: 0.01,           // Valor base en $ por Dogecoin
-    volatility: 0.3,           // 30% de volatilidad
-  },
-
-  cardano: {
-    baseValue: 0.05,           // Valor base en $ por Cardano
-    volatility: 0.25,          // 25% de volatilidad
-  },
 };
 
 // ============================================================================
@@ -631,7 +611,7 @@ export const AD_BUBBLE_CONFIG = {
   },
   MARKET_BOOST: {
     multiplier: 1.25,                       // +25% sell price (shop = 2x)
-    durationMs: 3 * 60 * 1000,             // 3 min effect
+    durationMs: 10 * 60 * 1000,            // 10 min effect (aligned with market_spike)
   },
   ENERGY_RESTORE: {
     recoveryPercent: 0.50,                  // 50% of current MW deficit
@@ -785,6 +765,69 @@ export const PRICE_ENGINE = {
     spike: ['spike', 'crash'],
     crash: ['crash', 'spike'],
   } as Record<string, string[]>,
+} as const;
+
+// ============================================================================
+// MARKET EVENTS — price modifiers triggered by game state
+// ============================================================================
+export const MARKET_EVENT_CONFIG = {
+  halving_anticipation: {
+    multiplier: 1.25,
+    blocksThreshold: 10_000,     // activate when ≤ 10K blocks to next halving
+    labelKey: 'marketEvent.halvingAnticipation',
+    toastKey: 'marketEvent.toast.halvingAnticipation',
+    // permanent until halving occurs (cancelled explicitly)
+  },
+  halving_shock: {
+    multiplier: 0.75,
+    durationMs: 5 * 60 * 1000,  // 5 min
+    labelKey: 'marketEvent.halvingShock',
+    toastKey: 'marketEvent.toast.halvingShock',
+  },
+  market_spike: {
+    multiplier: 1.25,
+    durationMs: 10 * 60 * 1000, // 10 min
+    labelKey: 'marketEvent.marketSpike',
+    toastKey: 'marketEvent.toast.marketSpike',
+  },
+  blackout_regional: {
+    multiplier: 0.91,
+    durationMs: 6 * 60 * 1000,  // 6 min
+    labelKey: 'marketEvent.blackoutRegional',
+    toastKey: 'marketEvent.toast.blackoutRegional',
+  },
+  ai_autonomous: {
+    multiplier: 1.15,
+    // permanent
+    labelKey: 'marketEvent.aiAutonomous',
+    toastKey: 'marketEvent.toast.aiAutonomous',
+  },
+  planetary_collapse_incoming: {
+    multiplier: 0.60,
+    // permanent
+    labelKey: 'marketEvent.planetaryCollapse',
+    toastKey: 'marketEvent.toast.planetaryCollapse',
+  },
+  whale_dump: {
+    multiplier: 0.85,
+    durationMs: 4 * 60 * 1000,  // 4 min
+    probability: 0.04,           // 4% per minute
+    labelKey: 'marketEvent.whaleDump',
+    toastKey: 'marketEvent.toast.whaleDump',
+  },
+  media_hype: {
+    multiplier: 1.18,
+    durationMs: 5 * 60 * 1000,  // 5 min
+    probability: 0.04,           // 4% per minute
+    labelKey: 'marketEvent.mediaHype',
+    toastKey: 'marketEvent.toast.mediaHype',
+  },
+  RANDOM_CHECK_INTERVAL_MS: 60_000, // check random events every 60s
+} as const;
+
+export const LOCAL_PROTEST_RATIONING = {
+  ENERGY_REDUCTION: 0.20,         // 20% less energy capacity
+  DURATION_MS: 30 * 60 * 1000,   // 30 min
 } as const;
 
 // ============================================================================

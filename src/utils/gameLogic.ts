@@ -1,7 +1,6 @@
 import { GameState, Hardware, Upgrade, IAPState, AdState, AdBoostState, AdHashBoostState, AdMarketBoostState } from '../types/game';
 import { GENESIS_CONSTANTS, calculateDifficulty, calculateCurrentReward, calculateNextHalving } from './blockLogic';
 import { generateInitialChartWindow, getInitialPriceEngineState } from './priceEngine';
-import { getInitialMarketState } from './marketLogic';
 import { getInitialEnergyState, getActiveHardwareWithEnergyConstraint } from './energyLogic';
 import { getAIProductionMultiplier, getInitialAIState } from './aiLogic';
 import { hardwareProgression } from '../data/hardwareData';
@@ -504,7 +503,6 @@ export const getInitialGameState = (): GameState => {
     cryptocurrencies: cryptocurrencies.map(c =>
       c.id === 'cryptocoin' ? { ...c, currentValue: initialCCPrice } : c
     ),
-    selectedCurrency: null,
     hardware: hardwareProgression,
     upgrades: initialUpgrades,
     lastSaveTime: Date.now(),
@@ -513,7 +511,6 @@ export const getInitialGameState = (): GameState => {
     prestigeLevel: 0,
     prestigeMultiplier: 1,
     marketUpdateTime: Date.now(),
-    currencyBalances: {},
     totalPrestigeGains: 0,
     // New prestige fields
     prestigeProductionMultiplier: 1,
@@ -537,8 +534,6 @@ export const getInitialGameState = (): GameState => {
     difficulty: GENESIS_CONSTANTS.INITIAL_DIFFICULTY,
     totalHashRate: 0,
     phase: 'genesis',
-    // Market system
-    marketState: getInitialMarketState(),
     // Progressive unlock system
     unlockedTabs: {
       market: false,
@@ -629,5 +624,9 @@ export const getInitialGameState = (): GameState => {
     adHashBoost: { isActive: false, activatedAt: null, expiresAt: null } as AdHashBoostState,
     adMarketBoost: { isActive: false, activatedAt: null, expiresAt: null } as AdMarketBoostState,
     energyBonusMW: 0,
+    // Market events
+    activeMarketEvents: [],
+    lastRandomEventCheck: Date.now(),
+    rationingPenaltyUntil: 0,
   } as GameState;
 };

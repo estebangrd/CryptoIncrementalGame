@@ -16,6 +16,7 @@ import ChronicleScreen from './ChronicleScreen';
 import { BlockStatus } from './BlockStatus';
 import { colors, fonts } from '../config/theme';
 import { logEvent } from '../services/analytics';
+import { getCompositeMultiplier } from '../utils/marketEventLogic';
 
 type ActiveTab = 'mining' | 'market' | 'hardware' | 'upgrades' | 'prestige' | 'energy' | 'chronicle';
 
@@ -107,6 +108,14 @@ const HorizontalTabs: React.FC<HorizontalTabsProps> = ({ onMineBlock, onClickBoo
               <Text style={[styles.tabLabel, isActive && styles.tabLabelActive, isLocked && styles.tabLabelLocked]}>
                 {tab.label}
               </Text>
+              {tab.id === 'market' && (gameState.activeMarketEvents ?? []).length > 0 && (
+                <View style={[
+                  styles.tabDot,
+                  getCompositeMultiplier(gameState.activeMarketEvents ?? []) >= 1
+                    ? styles.tabDotGreen
+                    : styles.tabDotRed
+                ]} />
+              )}
             </TouchableOpacity>
           );
         })}
@@ -176,6 +185,18 @@ const styles = StyleSheet.create({
   },
   tabLabelLocked: {
     color: colors.dim,
+  },
+  tabDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginLeft: 2,
+  },
+  tabDotGreen: {
+    backgroundColor: colors.ng,
+  },
+  tabDotRed: {
+    backgroundColor: '#ff3d5a',
   },
   content: {
     flex: 1,

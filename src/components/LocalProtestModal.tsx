@@ -22,7 +22,7 @@ interface Props {
 }
 
 const LocalProtestModal: React.FC<Props> = ({ event }) => {
-  const { dispatch } = useGame();
+  const { gameState, dispatch, t } = useGame();
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
   const shakeAnim = useRef(new Animated.Value(0)).current;
@@ -99,14 +99,29 @@ const LocalProtestModal: React.FC<Props> = ({ event }) => {
               </View>
             </View>
 
-            {/* Action */}
-            <TouchableOpacity
-              style={styles.btn}
-              onPress={() => dispatch({ type: 'DISMISS_LOCAL_PROTEST' })}
-              activeOpacity={0.75}
-            >
-              <Text style={styles.btnText}>CONTINUAR OPERACIÓN</Text>
-            </TouchableOpacity>
+            {/* Choices */}
+            <View style={styles.choiceRow}>
+              <TouchableOpacity
+                style={styles.btnRationing}
+                onPress={() => dispatch({ type: 'DISMISS_LOCAL_PROTEST', payload: { choice: 'rationing' } })}
+                activeOpacity={0.75}
+              >
+                <Text style={styles.btnText}>{t('localProtest.choiceRationing')}</Text>
+                <Text style={styles.btnSub}>{t('localProtest.rationingDesc')}</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.btn}
+                onPress={() => {
+                  const cost = Math.round(gameState.realMoney * 0.15);
+                  dispatch({ type: 'DISMISS_LOCAL_PROTEST', payload: { choice: 'compensation', compensationCost: cost } });
+                }}
+                activeOpacity={0.75}
+              >
+                <Text style={styles.btnText}>{t('localProtest.choiceCompensation')}</Text>
+                <Text style={styles.btnSub}>${Math.round(gameState.realMoney * 0.15).toLocaleString()}</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </Animated.View>
       </View>
@@ -155,12 +170,19 @@ const styles = StyleSheet.create({
   tagTextWarning: { color: '#ffd600' },
   tagNegative: { backgroundColor: 'rgba(255,61,90,0.1)', borderColor: 'rgba(255,61,90,0.22)' },
   tagTextNegative: { color: '#ff3d5a' },
+  choiceRow: { flexDirection: 'row', gap: 10 },
   btn: {
-    borderRadius: 10, borderWidth: 1,
+    flex: 1, borderRadius: 10, borderWidth: 1,
     borderColor: '#ffd600', backgroundColor: 'rgba(255,214,0,0.12)',
     paddingVertical: 12, alignItems: 'center',
   },
-  btnText: { fontFamily: fonts.orbitron, fontSize: 11, letterSpacing: 2, color: '#ffd600' },
+  btnRationing: {
+    flex: 1, borderRadius: 10, borderWidth: 1,
+    borderColor: 'rgba(255,61,90,0.4)', backgroundColor: 'rgba(255,61,90,0.08)',
+    paddingVertical: 12, alignItems: 'center',
+  },
+  btnText: { fontFamily: fonts.orbitron, fontSize: 10, letterSpacing: 1, color: '#ffd600' },
+  btnSub: { fontFamily: fonts.rajdhani, fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 2 },
 });
 
 export default LocalProtestModal;

@@ -95,27 +95,6 @@ export const translations: Translation = {
     es: 'CryptoCoin',
     pt: 'CryptoCoin',
   },
-  'bitcoin': {
-    en: 'Bitcoin',
-    es: 'Bitcoin',
-    pt: 'Bitcoin',
-  },
-  'ethereum': {
-    en: 'Ethereum',
-    es: 'Ethereum',
-    pt: 'Ethereum',
-  },
-  'dogecoin': {
-    en: 'Dogecoin',
-    es: 'Dogecoin',
-    pt: 'Dogecoin',
-  },
-  'cardano': {
-    en: 'Cardano',
-    es: 'Cardano',
-    pt: 'Cardano',
-  },
-
   // Hardware
   'hardware.manualMining': {
     en: 'Manual Mining',
@@ -1953,5 +1932,110 @@ export const translations: Translation = {
     en: 'CLAIM',
     es: 'RECLAMAR',
     pt: 'RECLAMAR',
+  },
+
+  // ── Market Events (price unification) ──────────────────────────────────────
+  'marketEvent.halvingAnticipation': {
+    en: 'Halving incoming',
+    es: 'Halving inminente',
+    pt: 'Halving iminente',
+  },
+  'marketEvent.halvingShock': {
+    en: 'Post-halving correction',
+    es: 'Corrección post-halving',
+    pt: 'Correção pós-halving',
+  },
+  'marketEvent.marketSpike': {
+    en: 'Market spike',
+    es: 'Alza de mercado',
+    pt: 'Alta do mercado',
+  },
+  'marketEvent.blackoutRegional': {
+    en: 'Regional blackout',
+    es: 'Apagón regional',
+    pt: 'Apagão regional',
+  },
+  'marketEvent.aiAutonomous': {
+    en: 'AI trading active',
+    es: 'IA operando en mercado',
+    pt: 'IA operando no mercado',
+  },
+  'marketEvent.planetaryCollapse': {
+    en: 'Market panic',
+    es: 'Pánico de mercado',
+    pt: 'Pânico de mercado',
+  },
+  'marketEvent.whaleDump': {
+    en: 'Whale dump',
+    es: 'Venta masiva',
+    pt: 'Venda massiva',
+  },
+  'marketEvent.mediaHype': {
+    en: 'Media hype',
+    es: 'Euforia mediática',
+    pt: 'Euforia mediática',
+  },
+  // Toast messages
+  'marketEvent.toast.halvingAnticipation': {
+    en: '📈 Halving incoming — price +25%',
+    es: '📈 Halving inminente — precio +25%',
+    pt: '📈 Halving iminente — preço +25%',
+  },
+  'marketEvent.toast.halvingShock': {
+    en: '📉 Post-halving correction — price -25%',
+    es: '📉 Corrección post-halving — precio -25%',
+    pt: '📉 Correção pós-halving — preço -25%',
+  },
+  'marketEvent.toast.marketSpike': {
+    en: '📈 Market spike — price +25%',
+    es: '📈 Alza de mercado — precio +25%',
+    pt: '📈 Alta do mercado — preço +25%',
+  },
+  'marketEvent.toast.blackoutRegional': {
+    en: '📉 Regional blackout — price -9%',
+    es: '📉 Apagón regional — precio -9%',
+    pt: '📉 Apagão regional — preço -9%',
+  },
+  'marketEvent.toast.aiAutonomous': {
+    en: '📈 AI trading active — price +15%',
+    es: '📈 IA operando en mercado — precio +15%',
+    pt: '📈 IA operando no mercado — preço +15%',
+  },
+  'marketEvent.toast.planetaryCollapse': {
+    en: '📉 Market panic — price -40%',
+    es: '📉 Pánico de mercado — precio -40%',
+    pt: '📉 Pânico de mercado — preço -40%',
+  },
+  'marketEvent.toast.whaleDump': {
+    en: '📉 Whale dump — price -15%',
+    es: '📉 Venta masiva — precio -15%',
+    pt: '📉 Venda massiva — preço -15%',
+  },
+  'marketEvent.toast.mediaHype': {
+    en: '📈 Media hype — price +18%',
+    es: '📈 Euforia mediática — precio +18%',
+    pt: '📈 Euforia mediática — preço +18%',
+  },
+  // Net multiplier label
+  'marketEvent.netMultiplier': {
+    en: 'Net',
+    es: 'Neto',
+    pt: 'Líquido',
+  },
+  // Local Protest choices
+  'localProtest.choiceRationing': {
+    en: 'Accept rationing',
+    es: 'Aceptar racionamiento',
+    pt: 'Aceitar racionamento',
+  },
+  'localProtest.choiceCompensation': {
+    en: 'Pay compensation',
+    es: 'Pagar compensación',
+    pt: 'Pagar compensação',
+  },
+  'localProtest.rationingDesc': {
+    en: '20% energy reduction for 30 min',
+    es: '20% menos energía por 30 min',
+    pt: '20% menos energia por 30 min',
   },
 };

@@ -6,17 +6,13 @@ import {
   StyleSheet,
   ScrollView,
   PanResponder,
-  Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 
 import { useGame } from '../contexts/GameContext';
 import { colors, fonts } from '../config/theme';
-import {
-  getExchangePreview,
-  formatCurrencyAmount
-} from '../utils/exchangeLogic';
 import { formatNumber } from '../utils/gameLogic';
+import { getCompositeMultiplier } from '../utils/marketEventLogic';
 import PriceChart from './PriceChart';
 
 const formatUSD = (amount: number): string => `$${formatNumber(amount)}`;
@@ -49,7 +45,7 @@ const MarketScreen: React.FC = () => {
 
   useEffect(() => {
     clearSellConfirm();
-  }, [amountPercent, gameState.selectedCurrency]);
+  }, [amountPercent]);
 
   useEffect(() => {
     return () => {
@@ -57,59 +53,11 @@ const MarketScreen: React.FC = () => {
     };
   }, []);
 
-  const handleSelectCurrency = (currencyId: string) => {
-    // CryptoCoin is always expanded — ignore toggle
-    if (currencyId === 'cryptocoin') return;
-    if (gameState.selectedCurrency === currencyId) {
-      dispatch({ type: 'SELECT_CURRENCY', payload: null });
-    } else {
-      dispatch({ type: 'SELECT_CURRENCY', payload: currencyId });
-      setAmountPercent(50);
-    }
-  };
-
   const getCryptoCoin = () =>
     gameState.cryptocurrencies.find(c => c.id === 'cryptocoin') ?? null;
 
-  const getSelectedCurrency = () => {
-    if (!gameState.selectedCurrency) return null;
-    return gameState.cryptocurrencies.find(c => c.id === gameState.selectedCurrency);
-  };
-
   const getPriceHistoryForChart = (cryptoId: string): number[] =>
     gameState.priceHistory?.[cryptoId]?.prices ?? [1.0];
-
-  const handleExchange = () => {
-    const selectedCurrency = getSelectedCurrency();
-    if (!selectedCurrency) return;
-
-    const preview = getExchangePreview(gameState, selectedCurrency.id, amountPercent);
-    if (!preview) return;
-
-    Alert.alert(
-      'Confirm Exchange',
-      `Exchange ${formatCurrencyAmount(preview.fromAmount, preview.fromSymbol)} for ${formatCurrencyAmount(
-        preview.toAmount,
-        preview.toSymbol
-      )}?\n\nFee: ${preview.fee.toFixed(1)}%`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Exchange',
-          onPress: () => {
-            dispatch({
-              type: 'EXCHANGE_CURRENCY',
-              payload: {
-                fromCurrency: preview.fromCurrency,
-                toCurrency: preview.toCurrency,
-                amount: preview.fromAmount,
-              },
-            });
-          },
-        },
-      ]
-    );
-  };
 
   const handleSellPress = () => {
     const cc = getCryptoCoin();
@@ -132,12 +80,6 @@ const MarketScreen: React.FC = () => {
 
     dispatch({ type: 'SELL_COINS_FOR_MONEY', payload: { amount, price } });
     clearSellConfirm();
-  };
-
-  const getLocalExchangePreview = () => {
-    const selectedCurrency = getSelectedCurrency();
-    if (!selectedCurrency) return null;
-    return getExchangePreview(gameState, selectedCurrency.id, amountPercent);
   };
 
   const sellPreviewMoney = (() => {
@@ -176,12 +118,6 @@ const MarketScreen: React.FC = () => {
     })
   ).current;
 
-  const isCryptoUnlocked = (cryptoId: string) => {
-    if (cryptoId === 'cryptocoin') return true;
-    const purchasedUpgrades = gameState.upgrades.filter(u => u.purchased).length;
-    return purchasedUpgrades >= 4;
-  };
-
   return (
     <View style={styles.container}>
       {/* Section header */}
@@ -196,18 +132,11 @@ const MarketScreen: React.FC = () => {
       </View>
 
       <ScrollView style={styles.list} contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false} scrollEnabled={scrollEnabled}>
-        {(gameState.cryptocurrencies || []).filter(c => isCryptoUnlocked(c.id)).map((crypto) => {
-          const isCryptoCoin = crypto.id === 'cryptocoin';
-          const isSelected = isCryptoCoin || crypto.id === gameState.selectedCurrency;
-
+        {(gameState.cryptocurrencies || []).filter(c => c.id === 'cryptocoin').map((crypto) => {
           return (
             <View key={crypto.id} style={styles.cryptoBlock}>
               {/* Coin row */}
-              <TouchableOpacity
-                style={[styles.coinRow, isSelected && styles.coinRowSelected]}
-                onPress={() => handleSelectCurrency(crypto.id)}
-                activeOpacity={0.8}
-              >
+              <View style={[styles.coinRow, styles.coinRowSelected]}>
                 <LinearGradient
                   colors={['#ffd600', '#ff8c00']}
                   start={{ x: 0.14, y: 0.14 }}
@@ -224,149 +153,88 @@ const MarketScreen: React.FC = () => {
                   </Text>
                 </View>
 
-              </TouchableOpacity>
+              </View>
 
-              {/* Expanded section */}
-              {isSelected && (
-                <View style={styles.expandedContent}>
-                  <PriceChart priceHistory={getPriceHistoryForChart(crypto.id)} />
+              {/* Expanded section — always open for CC */}
+              <View style={styles.expandedContent}>
+                <PriceChart priceHistory={getPriceHistoryForChart(crypto.id)} />
 
-                  {/* Sell section — CryptoCoin */}
-                  {crypto.id === 'cryptocoin' && (
-                    <View style={styles.sellCard}>
-                      <Text style={styles.sellTitle}>💰 SELL COINS</Text>
-
-                      <Text style={styles.sliderPct}>{amountPercent}%</Text>
-
-                      <View style={styles.sliderContainer}>
-                        <View
-                          ref={sliderRef}
-                          style={styles.sliderTrack}
-                          {...panResponder.panHandlers}
-                        >
-                          <View style={[styles.sliderFill, { width: `${amountPercent}%` }]} />
-                          <View style={[styles.sliderThumb, { left: `${amountPercent}%`, marginLeft: -(amountPercent / 100) * 18 }]} />
+                {/* Market event labels */}
+                {(gameState.activeMarketEvents ?? []).length > 0 && (
+                  <View style={styles.eventLabelsRow}>
+                    {(gameState.activeMarketEvents ?? []).slice(0, 2).map(evt => {
+                      const isPositive = evt.multiplier >= 1;
+                      return (
+                        <View key={evt.id} style={[styles.eventLabel, isPositive ? styles.eventLabelGreen : styles.eventLabelRed]}>
+                          <Text style={[styles.eventLabelText, isPositive ? styles.eventLabelTextGreen : styles.eventLabelTextRed]}>
+                            {t(evt.labelKey)}
+                          </Text>
                         </View>
-                        <View style={styles.sliderLabels}>
-                          <Text style={styles.sliderLabel}>1%</Text>
-                          <Text style={styles.sliderLabel}>100%</Text>
-                        </View>
-                      </View>
-
-                      <View style={styles.earnBox}>
-                        <Text style={styles.earnAmount}>{formatUSD(sellPreviewMoney)}</Text>
-                        <Text style={styles.earnSub}>
-                          YOU'LL EARN · PRICE {formatPriceUSD(getCryptoCoin()?.currentValue ?? 0)} PER CC
+                      );
+                    })}
+                    {(() => {
+                      const net = getCompositeMultiplier(gameState.activeMarketEvents ?? []);
+                      const pct = Math.round((net - 1) * 100);
+                      const sign = pct >= 0 ? '+' : '';
+                      const isPositive = pct >= 0;
+                      return (
+                        <Text style={[styles.netMultiplier, isPositive ? styles.eventLabelTextGreen : styles.eventLabelTextRed]}>
+                          {t('marketEvent.netMultiplier')} {sign}{pct}%
                         </Text>
-                      </View>
+                      );
+                    })()}
+                  </View>
+                )}
 
-                      {sellConfirming ? (
-                        <View style={styles.confirmRow}>
-                          <TouchableOpacity style={styles.cancelButton} onPress={clearSellConfirm}>
-                            <Text style={styles.cancelButtonText}>✕ Cancel</Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity style={styles.confirmSellButton} onPress={handleSellConfirm}>
-                            <Text style={styles.confirmSellButtonText}>
-                              ✓ Sell {formatUSD(sellPreviewMoney)}
-                            </Text>
-                          </TouchableOpacity>
-                        </View>
-                      ) : (
-                        <TouchableOpacity onPress={handleSellPress} activeOpacity={0.82}>
-                          <LinearGradient
-                            colors={['#ff6b2b', '#ff3d5a']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={styles.sellButton}
-                          >
-                            <Text style={styles.sellButtonText}>⚡ EXECUTE SELL ORDER</Text>
-                          </LinearGradient>
-                        </TouchableOpacity>
-                      )}
+                {/* Sell section */}
+                <View style={styles.sellCard}>
+                  <Text style={styles.sellTitle}>💰 SELL COINS</Text>
+                  <Text style={styles.sliderPct}>{amountPercent}%</Text>
+                  <View style={styles.sliderContainer}>
+                    <View
+                      ref={sliderRef}
+                      style={styles.sliderTrack}
+                      {...panResponder.panHandlers}
+                    >
+                      <View style={[styles.sliderFill, { width: `${amountPercent}%` }]} />
+                      <View style={[styles.sliderThumb, { left: `${amountPercent}%`, marginLeft: -(amountPercent / 100) * 18 }]} />
                     </View>
-                  )}
-
-                  {/* Exchange section — other currencies */}
-                  {crypto.id !== 'cryptocoin' && (
-                    <View style={styles.sellCard}>
-                      <Text style={styles.sellTitle}>📊 EXCHANGE</Text>
-
-                      <Text style={styles.sliderPct}>{amountPercent}%</Text>
-
-                      <View style={styles.sliderContainer}>
-                        <View
-                          ref={sliderRef}
-                          style={styles.sliderTrack}
-                          {...panResponder.panHandlers}
-                        >
-                          <View style={[styles.sliderFill, { width: `${amountPercent}%` }]} />
-                          <View style={[styles.sliderThumb, { left: `${amountPercent}%`, marginLeft: -(amountPercent / 100) * 18 }]} />
-                        </View>
-                        <View style={styles.sliderLabels}>
-                          <Text style={styles.sliderLabel}>1%</Text>
-                          <Text style={styles.sliderLabel}>100%</Text>
-                        </View>
-                      </View>
-
-                      {getLocalExchangePreview() && (
-                        <View style={styles.exchangeRow}>
-                          <View style={styles.currencyDisplay}>
-                            <Text style={styles.currencyIconSmall}>
-                              {getLocalExchangePreview()!.fromCurrency === 'cryptocoin'
-                                ? '🪙'
-                                : getSelectedCurrency()?.icon}
-                            </Text>
-                            <Text style={styles.currencyText}>
-                              {getLocalExchangePreview()!.fromCurrency === 'cryptocoin'
-                                ? 'CryptoCoin'
-                                : t(getSelectedCurrency()?.name)}
-                              {' → '}
-                              {getLocalExchangePreview()!.toCurrency === 'cryptocoin'
-                                ? 'CryptoCoin'
-                                : t(getSelectedCurrency()?.name)}
-                            </Text>
-                          </View>
-                        </View>
-                      )}
-
-                      {getLocalExchangePreview() && (
-                        <View style={styles.earnBox}>
-                          <Text style={styles.earnAmount}>
-                            {formatCurrencyAmount(
-                              getLocalExchangePreview()!.toAmount,
-                              getLocalExchangePreview()!.toSymbol
-                            )}
-                          </Text>
-                          <Text style={styles.earnSub}>
-                            YOU'LL RECEIVE · FEE {getLocalExchangePreview()!.fee.toFixed(1)}%
-                          </Text>
-                        </View>
-                      )}
-
-                      <View style={styles.confirmRow}>
-                        <TouchableOpacity style={styles.exchangeButton} onPress={handleExchange}>
-                          <Text style={styles.exchangeButtonText}>Exchange</Text>
-                        </TouchableOpacity>
-
-                        {sellConfirming ? (
-                          <>
-                            <TouchableOpacity style={styles.cancelButton} onPress={clearSellConfirm}>
-                              <Text style={styles.cancelButtonText}>✕</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.confirmSellButton} onPress={handleSellConfirm}>
-                              <Text style={styles.confirmSellButtonText}>✓ {formatUSD(sellPreviewMoney)}</Text>
-                            </TouchableOpacity>
-                          </>
-                        ) : (
-                          <TouchableOpacity style={styles.sellOutlineButton} onPress={handleSellPress}>
-                            <Text style={styles.sellOutlineButtonText}>Sell</Text>
-                          </TouchableOpacity>
-                        )}
-                      </View>
+                    <View style={styles.sliderLabels}>
+                      <Text style={styles.sliderLabel}>1%</Text>
+                      <Text style={styles.sliderLabel}>100%</Text>
                     </View>
+                  </View>
+                  <View style={styles.earnBox}>
+                    <Text style={styles.earnAmount}>{formatUSD(sellPreviewMoney)}</Text>
+                    <Text style={styles.earnSub}>
+                      YOU'LL EARN · PRICE {formatPriceUSD(getCryptoCoin()?.currentValue ?? 0)} PER CC
+                    </Text>
+                  </View>
+                  {sellConfirming ? (
+                    <View style={styles.confirmRow}>
+                      <TouchableOpacity style={styles.cancelButton} onPress={clearSellConfirm}>
+                        <Text style={styles.cancelButtonText}>✕ Cancel</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.confirmSellButton} onPress={handleSellConfirm}>
+                        <Text style={styles.confirmSellButtonText}>
+                          ✓ Sell {formatUSD(sellPreviewMoney)}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <TouchableOpacity onPress={handleSellPress} activeOpacity={0.82}>
+                      <LinearGradient
+                        colors={['#ff6b2b', '#ff3d5a']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.sellButton}
+                      >
+                        <Text style={styles.sellButtonText}>⚡ EXECUTE SELL ORDER</Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
                   )}
                 </View>
-              )}
+              </View>
             </View>
           );
         })}
@@ -452,6 +320,44 @@ const styles = StyleSheet.create({
   /* Expanded */
   expandedContent: {
     gap: 8,
+  },
+
+  /* Event labels */
+  eventLabelsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 6,
+    paddingHorizontal: 2,
+  },
+  eventLabel: {
+    borderRadius: 4,
+    borderWidth: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  eventLabelGreen: {
+    backgroundColor: 'rgba(0,255,136,0.08)',
+    borderColor: 'rgba(0,255,136,0.25)',
+  },
+  eventLabelRed: {
+    backgroundColor: 'rgba(255,61,90,0.08)',
+    borderColor: 'rgba(255,61,90,0.25)',
+  },
+  eventLabelText: {
+    fontFamily: fonts.rajdhani,
+    fontSize: 11,
+  },
+  eventLabelTextGreen: {
+    color: colors.ng,
+  },
+  eventLabelTextRed: {
+    color: '#ff3d5a',
+  },
+  netMultiplier: {
+    fontFamily: fonts.rajdhaniBold,
+    fontSize: 11,
+    marginLeft: 'auto',
   },
 
   /* Sell card */

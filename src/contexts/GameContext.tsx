@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect, useState, useCallback, ReactNode } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
-import { GameState, Cryptocurrency, PrestigeRun, RunStats, AILevel, EndingType, OfflineMinerState, LuckyBlockState, MarketPumpState, RegulatoryPressureEvent, MarketOpportunityEvent } from '../types/game';
+import { GameState, Cryptocurrency, PrestigeRun, RunStats, AILevel, EndingType, OfflineMinerState, LuckyBlockState, MarketPumpState, RegulatoryPressureEvent, MarketOpportunityEvent, MarketEventId } from '../types/game';
 import { hardwareProgression } from '../data/hardwareData';
 import { initialUpgrades } from '../data/gameData';
 import { cryptocurrencies } from '../data/cryptocurrencies';
@@ -12,7 +12,6 @@ import {
   calculateClickMultiplier,
   checkBadgeUnlocks,
 } from '../utils/prestigeLogic';
-import { performExchange } from '../utils/exchangeLogic';
 import {
   calculateCurrentReward,
   calculateNextHalving,
@@ -28,12 +27,6 @@ import {
   getAllMultipliers,
   getConstrainedMiningSpeed,
 } from '../utils/gameLogic';
-import {
-  updateMarketState,
-  processNPCPurchase,
-  updateMarketAfterTransaction,
-  getInitialMarketState
-} from '../utils/marketLogic';
 import { saveGameState, loadGameState, saveLanguage, loadLanguage } from '../utils/storage';
 import { translations } from '../data/translations';
 import { initializeAdMob, loadInterstitial, showInterstitialIfEligible } from '../services/AdMobService';
@@ -46,7 +39,7 @@ import {
   registerDevPurchaseCallback,
 } from '../services/IAPService';
 import { purchaseUpdatedListener, purchaseErrorListener } from 'react-native-iap';
-import { BOOSTER_CONFIG, STARTER_PACK_REWARDS, ENERGY_CONFIG, PACK_CONFIG, REGULATORY_EVENT_CONFIG, MARKET_OPPORTUNITY_CONFIG, LOCAL_PROTEST_CONFIG, ELECTRICITY_FEE_CONFIG, AD_BUBBLE_CONFIG, AI_CONFIG } from '../config/balanceConfig';
+import { BOOSTER_CONFIG, STARTER_PACK_REWARDS, ENERGY_CONFIG, PACK_CONFIG, REGULATORY_EVENT_CONFIG, MARKET_OPPORTUNITY_CONFIG, LOCAL_PROTEST_CONFIG, ELECTRICITY_FEE_CONFIG, AD_BUBBLE_CONFIG, AI_CONFIG, MARKET_EVENT_CONFIG, LOCAL_PROTEST_RATIONING, BLOCK_CONFIG } from '../config/balanceConfig';
 import { buildEndgameStats, calculateTotalEndgameProductionMultiplier } from '../utils/endgameLogic';
 import Toast, { ToastInfo } from '../components/Toast';
 import { IAP_PRODUCT_IDS } from '../config/iapConfig';
@@ -74,6 +67,8 @@ import {
   generateAISuggestion,
 } from '../utils/aiLogic';
 import { checkNarrativeThresholds } from '../utils/narrativeLogic';
+import { getCompositeMultiplier, filterExpiredEvents, addOrRefreshEvent, removeEvent, isEventActive } from '../utils/marketEventLogic';
+import { getBlocksUntilHalving } from '../utils/blockLogic';
 import { logEvent, initializeAnalytics } from '../services/analytics';
 import { trackAction } from '../services/analytics/analyticsMiddleware';
 
@@ -94,14 +89,10 @@ export type GameAction =
   | { type: 'SET_HYDRATED' }
   | { type: 'UPDATE_OFFLINE_PROGRESS' }
   | { type: 'ADD_PRODUCTION' }
-  | { type: 'SELECT_CURRENCY'; payload: string | null }
   | { type: 'UPDATE_MARKET' }
   | { type: 'DO_PRESTIGE' }
-  | { type: 'EXCHANGE_CURRENCY'; payload: { fromCurrency: string; toCurrency: string; amount: number } }
   | { type: 'MINE_BLOCK' }
-  | { type: 'UPDATE_MARKET_STATE' }
   | { type: 'ADVANCE_PRICE_INDEX' }
-  | { type: 'SELL_TO_NPC'; payload: { npcId: string; amount: number } }
   | { type: 'SELL_COINS_FOR_MONEY'; payload: { amount: number; price: number } }
   | { type: 'BUY_HARDWARE_WITH_MONEY'; payload: string }
   | { type: 'SET_LANGUAGE'; payload: string }
@@ -158,7 +149,9 @@ export type GameAction =
   | { type: 'TRIGGER_MARKET_OPPORTUNITY' }
   | { type: 'RESOLVE_MARKET_OPPORTUNITY'; payload: 'went_to_market' | 'auto_sold' | 'expired' }
   | { type: 'TRIGGER_LOCAL_PROTEST'; payload: { resourcesConsumed: number } }
-  | { type: 'DISMISS_LOCAL_PROTEST' }
+  | { type: 'DISMISS_LOCAL_PROTEST'; payload?: { choice: 'rationing' | 'compensation'; compensationCost?: number } }
+  | { type: 'APPLY_MARKET_EVENT'; payload: { eventId: MarketEventId } }
+  | { type: 'CANCEL_MARKET_EVENT'; payload: MarketEventId }
   | { type: 'CLAIM_OFFLINE_EARNINGS'; payload: { amount: number } }
   | { type: 'DISMISS_OFFLINE_EARNINGS' };
 
@@ -171,12 +164,18 @@ export const pendingBoosterMetaRef: { current: { offlineMinerDurationMs?: number
 // Helper function to recalculate all game stats
 const recalculateGameStats = (state: GameState): GameState => {
   // Update energy required based on current hardware ownership
-  const energyWithRequired = state.energy
+  let energyWithRequired = state.energy
     ? {
         ...state.energy,
         totalRequiredMW: calculateTotalRequiredMW(state.hardware),
       }
     : getInitialEnergyState();
+
+  // Apply rationing energy penalty if active
+  if (state.rationingPenaltyUntil > 0 && Date.now() < state.rationingPenaltyUntil) {
+    const reducedMW = Math.floor(energyWithRequired.totalGeneratedMW * (1 - LOCAL_PROTEST_RATIONING.ENERGY_REDUCTION));
+    energyWithRequired = { ...energyWithRequired, totalGeneratedMW: reducedMW };
+  }
 
   const stateWithEnergy = { ...state, energy: energyWithRequired };
 
@@ -306,11 +305,8 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         ...action.payload,
         hardware: migratedHardware,
         cryptocurrencies: action.payload.cryptocurrencies || cryptocurrencies,
-        selectedCurrency: action.payload.selectedCurrency || null,
         marketUpdateTime: action.payload.marketUpdateTime || Date.now(),
-        currencyBalances: action.payload.currencyBalances || {},
         totalPrestigeGains: action.payload.totalPrestigeGains || 0,
-        marketState: action.payload.marketState || getInitialMarketState(),
         realMoney: action.payload.realMoney || 0,
         totalRealMoneyEarned: action.payload.totalRealMoneyEarned || 0,
         // Ensure new prestige fields exist if missing from old saves
@@ -399,6 +395,10 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         marketOpportunityEvent: action.payload.marketOpportunityEvent ?? null,
         localProtestEvent: action.payload.localProtestEvent ?? null,
         activeBannerEvent: action.payload.activeBannerEvent ?? null,
+        // Market events migration
+        activeMarketEvents: filterExpiredEvents(action.payload.activeMarketEvents ?? [], Date.now()),
+        lastRandomEventCheck: action.payload.lastRandomEventCheck ?? Date.now(),
+        rationingPenaltyUntil: action.payload.rationingPenaltyUntil ?? 0,
         collapseTriggered: action.payload.collapseTriggered ?? false,
         goodEndingTriggered: action.payload.goodEndingTriggered ?? false,
         collapseCount: action.payload.collapseCount ?? 0,
@@ -441,13 +441,10 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       const resetState = {
         ...getInitialGameState(),
         cryptocurrencies: cryptocurrencies,
-        selectedCurrency: null,
         hardware: hardwareProgression,
         upgrades: initialUpgrades,
         marketUpdateTime: Date.now(),
-        currencyBalances: {},
         totalPrestigeGains: 0,
-        marketState: getInitialMarketState(),
         unlockedTabs: {
           market: false,
           hardware: false,
@@ -475,6 +472,9 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         marketOpportunityEvent: null,
         localProtestEvent: null,
         activeBannerEvent: null,
+        activeMarketEvents: [],
+        lastRandomEventCheck: Date.now(),
+        rationingPenaltyUntil: 0,
       };
       return recalculateGameStats(resetState);
     case 'UPDATE_OFFLINE_PROGRESS':
@@ -569,6 +569,20 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
               resourcesConsumedAtTrigger: resourcesConsumed,
             };
             newState.activeBannerEvent = 'local_protest';
+            // Blackout market event fires alongside local protest
+            newState.activeMarketEvents = addOrRefreshEvent(
+              newState.activeMarketEvents ?? [], 'blackout_regional', Date.now()
+            );
+          }
+
+          // Planetary collapse incoming market event (resources <= 20%)
+          if (
+            newResources <= 20 &&
+            !isEventActive(newState.activeMarketEvents ?? [], 'planetary_collapse_incoming')
+          ) {
+            newState.activeMarketEvents = addOrRefreshEvent(
+              newState.activeMarketEvents ?? [], 'planetary_collapse_incoming', Date.now()
+            );
           }
 
           // Trigger collapse when planet reaches 0% (collapse takes priority)
@@ -639,16 +653,53 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           newState.activeBannerEvent = null;
         }
 
+        // ── Market events tick ──────────────────────────────────────────
+        const now = Date.now();
+
+        // a) Filter expired market events
+        newState.activeMarketEvents = filterExpiredEvents(newState.activeMarketEvents ?? [], now);
+
+        // b) Halving transition detection
+        const HALVING_INTERVAL = BLOCK_CONFIG.HALVING_INTERVAL;
+        const prevEra = Math.floor(state.blocksMined / HALVING_INTERVAL);
+        const newEra = Math.floor(newState.blocksMined / HALVING_INTERVAL);
+        if (newEra > prevEra) {
+          // Halving just happened
+          newState.activeMarketEvents = removeEvent(newState.activeMarketEvents, 'halving_anticipation');
+          newState.activeMarketEvents = addOrRefreshEvent(newState.activeMarketEvents, 'halving_shock', now);
+        }
+
+        // c) Halving anticipation
+        if (
+          getBlocksUntilHalving(newState.blocksMined) <= MARKET_EVENT_CONFIG.halving_anticipation.blocksThreshold &&
+          !isEventActive(newState.activeMarketEvents, 'halving_anticipation') &&
+          !isEventActive(newState.activeMarketEvents, 'halving_shock')
+        ) {
+          newState.activeMarketEvents = addOrRefreshEvent(newState.activeMarketEvents, 'halving_anticipation', now);
+        }
+
+        // f) Random events (whale_dump, media_hype)
+        const lastCheck = newState.lastRandomEventCheck ?? 0;
+        if (now - lastCheck >= MARKET_EVENT_CONFIG.RANDOM_CHECK_INTERVAL_MS) {
+          newState.lastRandomEventCheck = now;
+          if (Math.random() < MARKET_EVENT_CONFIG.whale_dump.probability) {
+            newState.activeMarketEvents = addOrRefreshEvent(newState.activeMarketEvents, 'whale_dump', now);
+          }
+          if (Math.random() < MARKET_EVENT_CONFIG.media_hype.probability) {
+            newState.activeMarketEvents = addOrRefreshEvent(newState.activeMarketEvents, 'media_hype', now);
+          }
+        }
+
+        // g) Auto-expire rationing penalty
+        if (newState.rationingPenaltyUntil > 0 && now >= newState.rationingPenaltyUntil) {
+          newState.rationingPenaltyUntil = 0;
+        }
+
         return recalculateGameStats(newState);
       }
 
       return state;
     }
-    case 'SELECT_CURRENCY':
-      return {
-        ...state,
-        selectedCurrency: action.payload,
-      };
     case 'UPDATE_MARKET':
       return {
         ...state,
@@ -745,11 +796,12 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         marketOpportunityEvent: null,
         localProtestEvent: null,
         activeBannerEvent: null,
+        activeMarketEvents: [],
+        lastRandomEventCheck: Date.now(),
+        rationingPenaltyUntil: 0,
       };
       return recalculateGameStats(prestigedState);
     }
-    case 'EXCHANGE_CURRENCY':
-      return performExchange(state, action.payload.fromCurrency, action.payload.toCurrency, action.payload.amount);
     case 'MINE_BLOCK': {
       if (canMineBlock(state)) {
         const minedState = mineBlock(state);
@@ -757,11 +809,6 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       }
       return state;
     }
-    case 'UPDATE_MARKET_STATE':
-      return {
-        ...state,
-        marketState: updateMarketState(state.marketState),
-      };
     case 'ADVANCE_PRICE_INDEX': {
       // OU tick: generate next price from mean-reverting process
       const engineState = {
@@ -783,6 +830,9 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         finalPrice = getBasePrice(state.blocksMined) * (1 + newDev);
       }
 
+      // Apply market event composite multiplier to the visible price
+      finalPrice *= getCompositeMultiplier(state.activeMarketEvents ?? []);
+
       const newWindow = [...prevPrices, finalPrice].slice(-30);
       return {
         ...state,
@@ -798,21 +848,6 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         },
       };
     }
-    case 'SELL_TO_NPC':
-      const npc = state.marketState.npcs.find(n => n.id === action.payload.npcId);
-      if (!npc || npc.type !== 'buyer') return state;
-
-      const amount = Math.min(action.payload.amount, state.cryptoCoins);
-      if (amount <= 0) return state;
-
-      const transaction = processNPCPurchase(npc, amount, state.marketState.currentPrice);
-      const updatedMarketState = updateMarketAfterTransaction(state.marketState, transaction.coinsReceived);
-
-      return {
-        ...state,
-        cryptoCoins: state.cryptoCoins - transaction.coinsSold,
-        marketState: updatedMarketState,
-      };
     case 'SELL_COINS_FOR_MONEY':
       const coinsToSell = Math.min(action.payload.amount, state.cryptoCoins);
       if (coinsToSell <= 0) return state;
@@ -828,12 +863,8 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         Date.now() < state.iapState.marketPump.expiresAt
         ? BOOSTER_CONFIG.MARKET_PUMP.priceMultiplier
         : 1;
-      const adMarketMult = state.adMarketBoost?.isActive &&
-        state.adMarketBoost.expiresAt !== null &&
-        Date.now() < state.adMarketBoost.expiresAt
-        ? AD_BUBBLE_CONFIG.MARKET_BOOST.multiplier
-        : 1;
-      const moneyEarned = coinsToSell * action.payload.price * pumpMultiplier * adMarketMult;
+      // Ad market boost effect is now in the visible price via market_spike event
+      const moneyEarned = coinsToSell * action.payload.price * pumpMultiplier;
       if (!isFinite(moneyEarned) || moneyEarned <= 0) return state;
 
       const newRealMoneyAfterSell = state.realMoney + moneyEarned;
@@ -1237,6 +1268,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           activatedAt: now,
           expiresAt: now + AD_BUBBLE_CONFIG.MARKET_BOOST.durationMs,
         },
+        activeMarketEvents: addOrRefreshEvent(state.activeMarketEvents ?? [], 'market_spike', now),
       };
     }
     case 'EXPIRE_AD_MARKET_BOOST':
@@ -1449,6 +1481,9 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         ai: newAI,
         aiCryptosUnlocked: [...(state.aiCryptosUnlocked ?? []), unlockedCrypto],
         energy: newEnergy,
+        ...(isAutonomous ? {
+          activeMarketEvents: addOrRefreshEvent(state.activeMarketEvents ?? [], 'ai_autonomous', Date.now()),
+        } : {}),
       });
     }
 
@@ -1587,6 +1622,9 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         marketOpportunityEvent: null,
         localProtestEvent: null,
         activeBannerEvent: null,
+        activeMarketEvents: [],
+        lastRandomEventCheck: Date.now(),
+        rationingPenaltyUntil: 0,
       };
       return recalculateGameStats(prestigedState);
     }
@@ -1714,7 +1752,8 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     case 'RESOLVE_MARKET_OPPORTUNITY': {
       const oppChoice = action.payload;
       if (oppChoice === 'auto_sold') {
-        const currentPrice = state.marketState?.currentPrice ?? 0.001;
+        const ccCrypto = state.cryptocurrencies.find(c => c.id === 'cryptocoin');
+        const currentPrice = ccCrypto?.currentValue ?? 0.001;
         const coinsToSellOpp = state.cryptoCoins;
         const moneyFromOpp = coinsToSellOpp * currentPrice * MARKET_OPPORTUNITY_CONFIG.PRICE_MULTIPLIER;
         const baseOpp = {
@@ -1739,9 +1778,6 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
             ? { ...state.marketOpportunityEvent, status: 'resolved' as const, outcome: 'went_to_market' as const }
             : null,
           activeBannerEvent: null,
-          marketState: state.marketState
-            ? { ...state.marketState, currentPrice: state.marketState.currentPrice * MARKET_OPPORTUNITY_CONFIG.PRICE_MULTIPLIER }
-            : state.marketState,
         };
       }
       // expired
@@ -1767,12 +1803,38 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       };
     }
     case 'DISMISS_LOCAL_PROTEST': {
-      return {
+      const choice = action.payload?.choice;
+      let protestState = {
         ...state,
         localProtestEvent: state.localProtestEvent
           ? { ...state.localProtestEvent, status: 'resolved' as const }
           : null,
-        activeBannerEvent: null,
+        activeBannerEvent: null as typeof state.activeBannerEvent,
+      };
+      if (choice === 'rationing') {
+        protestState.rationingPenaltyUntil = Date.now() + LOCAL_PROTEST_RATIONING.DURATION_MS;
+      } else if (choice === 'compensation' && action.payload?.compensationCost) {
+        protestState = {
+          ...protestState,
+          realMoney: Math.max(0, state.realMoney - (action.payload.compensationCost ?? 0)),
+        };
+      }
+      return protestState;
+    }
+
+    // ── Market Events (external triggers) ──────────────────────────────────
+    case 'APPLY_MARKET_EVENT': {
+      return {
+        ...state,
+        activeMarketEvents: addOrRefreshEvent(
+          state.activeMarketEvents ?? [], action.payload.eventId, Date.now()
+        ),
+      };
+    }
+    case 'CANCEL_MARKET_EVENT': {
+      return {
+        ...state,
+        activeMarketEvents: removeEvent(state.activeMarketEvents ?? [], action.payload),
       };
     }
 
@@ -1812,10 +1874,9 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return nextState;
   }, []);
 
-  const [gameState, dispatch] = useReducer(analyticsReducer, recalculateGameStats({
-    ...getInitialGameState(),
-    selectedCurrency: 'cryptocoin',
-  }));
+  const [gameState, dispatch] = useReducer(analyticsReducer, recalculateGameStats(
+    getInitialGameState()
+  ));
 
   const gameStateRef = React.useRef(gameState);
   React.useEffect(() => {
@@ -1953,15 +2014,6 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     const interval = setInterval(() => {
       dispatch({ type: 'UPDATE_MARKET' });
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // Update market state every 30 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      dispatch({ type: 'UPDATE_MARKET_STATE' });
     }, 30000);
 
     return () => clearInterval(interval);
