@@ -314,6 +314,7 @@ export interface GameState {
   currentRunStats: RunStats;
   // Phase 1: Genesis - Block system
   blocksMined: number;
+  blockAccumulator: number;
   totalBlocks: number;
   currentReward: number;
   nextHalving: number;

@@ -204,7 +204,7 @@ const recalculateGameStats = (state: GameState): GameState => {
     cryptoCoinsPerSecond: ccProduction,
     totalElectricityCost: totalElectricityCost,
     totalHashRate: totalHashRate,
-    difficulty: calculateDifficulty(stateWithEnergy.blocksMined),
+    difficulty: calculateDifficulty(getConstrainedMiningSpeed(stateWithEnergy)),
     currentReward: calculateCurrentReward(stateWithEnergy.blocksMined),
     nextHalving: calculateNextHalving(stateWithEnergy.blocksMined),
   };
@@ -274,26 +274,14 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
 
       return recalculateGameStats(updatedState);
     case 'LOAD_GAME': {
-      // Migrate old hardware keys to new format
+      // Migrate hardware: refresh all balance values from fresh hardwareProgression,
+      // preserving only the player's owned count
       const migratedHardware = action.payload.hardware?.map(hw => {
-        // Create a mapping of old keys to new keys
-        const keyMigrations: { [key: string]: { nameKey: string; descriptionKey: string } } = {
-          'manual_mining': { nameKey: 'hardware.manualMining', descriptionKey: 'hardware.manualMiningDesc' },
-          'basic_cpu': { nameKey: 'hardware.basicCPU', descriptionKey: 'hardware.basicCPUDesc' },
-          'advanced_cpu': { nameKey: 'hardware.advancedCPU', descriptionKey: 'hardware.advancedCPUDesc' },
-          'basic_gpu': { nameKey: 'hardware.basicGPU', descriptionKey: 'hardware.basicGPUDesc' },
-          'advanced_gpu': { nameKey: 'hardware.advancedGPU', descriptionKey: 'hardware.advancedGPUDesc' },
-          'asic_gen1': { nameKey: 'hardware.asicGen1', descriptionKey: 'hardware.asicGen1Desc' },
-          'asic_gen2': { nameKey: 'hardware.asicGen2', descriptionKey: 'hardware.asicGen2Desc' },
-          'asic_gen3': { nameKey: 'hardware.asicGen3', descriptionKey: 'hardware.asicGen3Desc' },
-        };
-
-        const migration = keyMigrations[hw.id];
-        if (migration) {
+        const fresh = hardwareProgression.find(h => h.id === hw.id);
+        if (fresh) {
           return {
-            ...hw,
-            nameKey: migration.nameKey,
-            descriptionKey: migration.descriptionKey,
+            ...fresh,              // fresh balance values (miningSpeed, costMultiplier, etc.)
+            owned: hw.owned,       // preserve player progress
           };
         }
         return hw;
@@ -489,9 +477,10 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       const allMult = getAllMultipliers(state);
       const constrainedMiningSpeed = getConstrainedMiningSpeed(state);
       const boostedSpeed = constrainedMiningSpeed * allMult;
-      const difficulty = calculateDifficulty(state.blocksMined);
+      const difficulty = calculateDifficulty(constrainedMiningSpeed);
       const effectiveBlocksPerSec = boostedSpeed / difficulty;
-      const blocksToMine = Math.floor(effectiveBlocksPerSec);
+      const accumulated = (state.blockAccumulator ?? 0) + effectiveBlocksPerSec;
+      const blocksToMine = Math.floor(accumulated);
 
       if (blocksToMine > 0 && canMineBlock(state)) {
         let newState = { ...state };
@@ -505,7 +494,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           newState.currentReward = rewardThisBlock;
           newState.nextHalving = calculateNextHalving(newState.blocksMined);
         }
-        newState.difficulty = calculateDifficulty(newState.blocksMined);
+        newState.difficulty = calculateDifficulty(constrainedMiningSpeed);
 
         // Lucky Block bonus: extra CC per block (rewardMultiplier - 1)
         if (state.iapState.luckyBlock.isActive && state.iapState.luckyBlock.blocksRemaining > 0 && blocksToMine > 0) {
@@ -698,10 +687,12 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           newState.rationingPenaltyUntil = 0;
         }
 
+        newState.blockAccumulator = accumulated - blocksToMine;
         return recalculateGameStats(newState);
       }
 
-      return state;
+      // No blocks to mine yet — still accumulate fractional progress
+      return { ...state, blockAccumulator: accumulated };
     }
     case 'UPDATE_MARKET':
       return {

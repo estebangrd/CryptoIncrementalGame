@@ -164,7 +164,7 @@ export const calculateTotalProduction = (gameState: GameState): number => {
   const allMult = getAllMultipliers(gameState);
   const boostedSpeed = constrainedMiningSpeed * allMult;
 
-  const difficulty = calculateDifficulty(gameState.blocksMined ?? 0);
+  const difficulty = calculateDifficulty(constrainedMiningSpeed);
   const globalBlockReward = calculateCurrentReward(gameState.blocksMined ?? 0);
 
   const blocksPerSecond = boostedSpeed / difficulty;
@@ -298,7 +298,7 @@ export const updateOfflineProgress = (gameState: GameState): GameState => {
     const allMult = getAllMultipliers(gameState);
     const offlineSpeed = constrainedMiningSpeed * allMult * BALANCE_CONFIG.OFFLINE_EARNINGS_MULTIPLIER;
 
-    const difficulty = calculateDifficulty(gameState.blocksMined);
+    const difficulty = calculateDifficulty(constrainedMiningSpeed);
     const blocksPerSec = offlineSpeed / difficulty;
     const totalBlocks = Math.floor(blocksPerSec * offlineSec);
 
@@ -327,7 +327,7 @@ export const updateOfflineProgress = (gameState: GameState): GameState => {
       cryptoCoins: Math.max(0, gameState.cryptoCoins + netCoins),
       totalCryptoCoins: gameState.totalCryptoCoins + coinsEarned,
       blocksMined: currentBlocksMined,
-      difficulty: calculateDifficulty(currentBlocksMined),
+      difficulty: calculateDifficulty(constrainedMiningSpeed),
       currentReward: calculateCurrentReward(currentBlocksMined),
       nextHalving: calculateNextHalving(currentBlocksMined),
       lastSaveTime: now,
@@ -358,7 +358,7 @@ export const updateOfflineProgress = (gameState: GameState): GameState => {
     return { ...gameState, lastSaveTime: now };
   }
 
-  const difficulty = calculateDifficulty(gameState.blocksMined);
+  const difficulty = calculateDifficulty(constrainedMiningSpeed);
   const blocksPerSec = speed / difficulty;
   const totalBlocks = Math.floor(blocksPerSec * cappedSec);
 
@@ -528,6 +528,7 @@ export const getInitialGameState = (): GameState => {
     },
     // Phase 1: Genesis - Block system
     blocksMined: 0,
+    blockAccumulator: 0,
     totalBlocks: GENESIS_CONSTANTS.TOTAL_BLOCKS,
     currentReward: GENESIS_CONSTANTS.INITIAL_REWARD,
     nextHalving: GENESIS_CONSTANTS.HALVING_INTERVAL,

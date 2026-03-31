@@ -23,14 +23,14 @@ export const BLOCK_CONFIG = {
 
   // Difficulty scales with blocks mined using power curve
   DIFFICULTY: {
-    AMPLITUDE: 0.8,
-    SCALE_BLOCKS: 200_000,
+    AMPLITUDE: 0.25,
+    SCALE: 100,
     EXPONENT: 0.65,
   },
 
   // Base CC price per era (indexed by era number)
   // Eras 0-3 grow, Era 4+ halving dominates ($/block declines)
-  ERA_BASE_PRICES: [0.08, 0.50, 2.00, 5.00, 8.00, 8.00, 8.00],
+  ERA_BASE_PRICES: [0.08, 0.50, 2.00, 5.00, 12.00, 28.00, 65.00, 150.00, 350.00, 800.00],
 };
 
 // ============================================================================
@@ -47,6 +47,21 @@ export const ELECTRICITY_FEE_CONFIG = {
 export const HARDWARE_CONFIG = {
   // Multiplicador de costo al comprar múltiples unidades
   COST_MULTIPLIER: 1.35,
+
+  // Per-tier cost multipliers (lower tiers scale faster, late-game scales gently)
+  COST_MULTIPLIER_BY_ID: {
+    manual_mining: 1.35,
+    basic_cpu: 1.35,
+    advanced_cpu: 1.35,
+    basic_gpu: 1.28,
+    advanced_gpu: 1.28,
+    asic_gen1: 1.22,
+    asic_gen2: 1.22,
+    asic_gen3: 1.22,
+    mining_farm: 1.15,
+    quantum_miner: 1.15,
+    supercomputer: 1.15,
+  } as Record<string, number>,
 
   // Requisito de unidades del nivel anterior para desbloquear siguiente
   UNLOCK_REQUIREMENT: 5,
@@ -76,7 +91,7 @@ export const HARDWARE_CONFIG = {
       baseCost: 150,
       baseProduction: 80,
       blockReward: 0,
-      miningSpeed: 0.8,
+      miningSpeed: 2.0,
       electricityCost: 10,
     },
 
@@ -85,7 +100,7 @@ export const HARDWARE_CONFIG = {
       baseCost: 800,
       baseProduction: 250,
       blockReward: 0,
-      miningSpeed: 2.5,
+      miningSpeed: 12.5,
       electricityCost: 40,
     },
 
@@ -94,7 +109,7 @@ export const HARDWARE_CONFIG = {
       baseCost: 5000,
       baseProduction: 600,
       blockReward: 0,
-      miningSpeed: 6,
+      miningSpeed: 90,
       electricityCost: 120,
     },
 
@@ -103,7 +118,7 @@ export const HARDWARE_CONFIG = {
       baseCost: 35000,
       baseProduction: 1500,
       blockReward: 0,
-      miningSpeed: 12,
+      miningSpeed: 730,
       electricityCost: 300,
     },
 
@@ -112,7 +127,7 @@ export const HARDWARE_CONFIG = {
       baseCost: 200000,
       baseProduction: 4000,
       blockReward: 0,
-      miningSpeed: 30,
+      miningSpeed: 4800,
       electricityCost: 900,
     },
 
@@ -121,7 +136,7 @@ export const HARDWARE_CONFIG = {
       baseCost: 1200000,
       baseProduction: 10000,
       blockReward: 0,
-      miningSpeed: 60,
+      miningSpeed: 33000,
       electricityCost: 2500,
     },
 
@@ -130,7 +145,7 @@ export const HARDWARE_CONFIG = {
       baseCost: 8000000,
       baseProduction: 50000,
       blockReward: 0,
-      miningSpeed: 100,
+      miningSpeed: 255000,
       electricityCost: 4500,
     },
 
@@ -139,7 +154,7 @@ export const HARDWARE_CONFIG = {
       baseCost: 50000000,
       baseProduction: 200000,
       blockReward: 0,
-      miningSpeed: 200,
+      miningSpeed: 1800000,
       electricityCost: 15000,
     },
 
@@ -148,7 +163,7 @@ export const HARDWARE_CONFIG = {
       baseCost: 500000000,
       baseProduction: 1000000,
       blockReward: 0,
-      miningSpeed: 600,
+      miningSpeed: 21000000,
       electricityCost: 50000,
     },
   },
@@ -837,16 +852,17 @@ export const LOCAL_PROTEST_RATIONING = {
 GUÍA DE AJUSTE DE BALANCE (Bitcoin-Faithful Economy):
 
 Block reward is GLOBAL (not per-hardware) and halves every 210,000 blocks.
-CC/sec = (totalMiningSpeed / difficulty) × globalBlockReward × multipliers
-Difficulty scales with blocks mined: 1.0 + 0.8 × (blocksMined / 200,000)^0.65
+CC/sec = (totalMiningSpeed × multipliers / difficulty) × globalBlockReward
+Difficulty scales with hash rate: 1.0 + 0.25 × (totalMiningSpeed / 100)^0.65
 
 $/block per era:
   Era 0: 50 CC × $0.08 = $4.00/block
   Era 1: 25 CC × $0.50 = $12.50/block (peak growth)
   Era 2: 12.5 CC × $2.00 = $25.00/block (golden era)
   Era 3: 6.25 CC × $5.00 = $31.25/block (plateau)
-  Era 4: 3.125 CC × $8.00 = $25.00/block (decline starts!)
-  Era 5+: halving dominates, $/block drops 50% each era
+  Era 4: 3.125 CC × $12.00 = $37.50/block (continued growth)
+  Era 5: 1.5625 CC × $28.00 = $43.75/block
+  Era 6+: $/block continues growing through era 9
 
 1. Si el juego es muy difícil:
    - Reduce HARDWARE_CONFIG.levels.*.baseCost ($ costs)

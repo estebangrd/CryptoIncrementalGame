@@ -1,58 +1,54 @@
 /**
  * Tests for Bitcoin-faithful economy redesign.
- * Validates difficulty scaling, era system, base pricing, and global block reward.
+ * Validates difficulty scaling (hash-rate-based), era system, base pricing, and global block reward.
  */
 
-import { calculateDifficulty, getEra, getBasePrice, calculateCurrentReward, calculateNextHalving, GENESIS_CONSTANTS } from '../src/utils/blockLogic';
-import { calculateTotalProduction, calculateTotalMiningSpeed, getAllMultipliers, updateOfflineProgress } from '../src/utils/gameLogic';
-import { BLOCK_CONFIG, BOOSTER_CONFIG } from '../src/config/balanceConfig';
+import { calculateDifficulty, getEra, getBasePrice, calculateCurrentReward, GENESIS_CONSTANTS } from '../src/utils/blockLogic';
+import { calculateTotalProduction, getAllMultipliers, updateOfflineProgress } from '../src/utils/gameLogic';
+import { BLOCK_CONFIG } from '../src/config/balanceConfig';
 
-// ── Difficulty ───────────────────────────────────────────────────────────────
+// ── Difficulty (hash-rate-based) ─────────────────────────────────────────────
 
-describe('calculateDifficulty (power curve)', () => {
-  it('returns 1.0 at 0 blocks mined', () => {
+describe('calculateDifficulty (hash-rate-based power curve)', () => {
+  it('returns 1.0 at 0 mining speed', () => {
     expect(calculateDifficulty(0)).toBe(1.0);
   });
 
-  it('returns ~1.10 at 50,000 blocks', () => {
-    // 1.0 + 0.8 * (50000/200000)^0.65 = 1.0 + 0.8 * 0.25^0.65 ≈ 1.0 + 0.8 * 0.361 ≈ 1.29
-    const d = calculateDifficulty(50_000);
-    expect(d).toBeGreaterThan(1.1);
-    expect(d).toBeLessThan(1.5);
+  it('returns ~1.003 at mining speed 0.3 (1 basic_cpu)', () => {
+    const d = calculateDifficulty(0.3);
+    expect(d).toBeGreaterThan(1.0);
+    expect(d).toBeLessThan(1.01);
   });
 
-  it('returns ~1.35 at 100,000 blocks', () => {
-    const d = calculateDifficulty(100_000);
-    expect(d).toBeGreaterThan(1.2);
-    expect(d).toBeLessThan(1.7);
+  it('returns moderate difficulty at mining speed 100', () => {
+    // 1.0 + 0.25 * (100/100)^0.65 = 1.25
+    const d = calculateDifficulty(100);
+    expect(d).toBeCloseTo(1.25, 1);
   });
 
-  it('returns ~1.60 at 210,000 blocks', () => {
-    const d = calculateDifficulty(210_000);
-    expect(d).toBeGreaterThan(1.4);
-    expect(d).toBeLessThan(1.9);
-  });
-
-  it('returns ~8.2 at 10,000,000 blocks', () => {
-    const d = calculateDifficulty(10_000_000);
-    expect(d).toBeGreaterThan(6);
-    expect(d).toBeLessThan(12);
-  });
-
-  it('returns ~17.5 at 21,000,000 blocks', () => {
-    const d = calculateDifficulty(21_000_000);
-    expect(d).toBeGreaterThan(14);
-    expect(d).toBeLessThan(22);
+  it('returns high difficulty at mining speed 1,000,000', () => {
+    // 1.0 + 0.25 * (1000000/100)^0.65
+    const d = calculateDifficulty(1_000_000);
+    expect(d).toBeGreaterThan(100);
+    expect(d).toBeLessThan(500);
   });
 
   it('is monotonically increasing', () => {
     let prev = calculateDifficulty(0);
-    const checkpoints = [1000, 10_000, 50_000, 100_000, 210_000, 500_000, 1_000_000, 10_000_000, 21_000_000];
-    for (const blocks of checkpoints) {
-      const d = calculateDifficulty(blocks);
+    const checkpoints = [0.1, 1, 10, 100, 1000, 10_000, 100_000, 1_000_000, 21_000_000];
+    for (const speed of checkpoints) {
+      const d = calculateDifficulty(speed);
       expect(d).toBeGreaterThan(prev);
       prev = d;
     }
+  });
+
+  it('sublinear scaling: 10x speed does NOT produce 10x difficulty', () => {
+    const d1 = calculateDifficulty(100);
+    const d10 = calculateDifficulty(1000);
+    // With exponent 0.65, ratio should be much less than 10
+    expect(d10 / d1).toBeLessThan(5);
+    expect(d10 / d1).toBeGreaterThan(1);
   });
 });
 
@@ -99,12 +95,16 @@ describe('getBasePrice', () => {
     expect(getBasePrice(630_000)).toBe(5.00);
   });
 
-  it('returns $8.00 at era 4', () => {
-    expect(getBasePrice(840_000)).toBe(8.00);
+  it('returns $12.00 at era 4', () => {
+    expect(getBasePrice(840_000)).toBe(12.00);
   });
 
-  it('caps at $8.00 for eras beyond the price array', () => {
-    expect(getBasePrice(2_100_000)).toBe(8.00);
+  it('returns $28.00 at era 5', () => {
+    expect(getBasePrice(1_050_000)).toBe(28.00);
+  });
+
+  it('caps at $800.00 for eras beyond the price array', () => {
+    expect(getBasePrice(2_100_000)).toBe(800.00);
   });
 });
 
@@ -169,24 +169,27 @@ describe('calculateTotalProduction (Bitcoin-faithful)', () => {
   });
 
   it('uses global formula: (miningSpeed / difficulty) × globalReward', () => {
-    // At blocksMined=0: difficulty=1.0, reward=50
-    // basic_cpu with miningSpeed=0.3: CC/s = (0.3 / 1.0) × 50 = 15
+    // At blocksMined=0: reward=50
+    // basic_cpu with miningSpeed=0.3: difficulty ≈ 1.003
+    // CC/s ≈ (0.3 / 1.003) × 50 ≈ 14.96
     const cpu = { id: 'basic_cpu', miningSpeed: 0.3, baseProduction: 30, blockReward: 0, owned: 1, energyRequired: 0 };
     const state = makeState({ hardware: [cpu], blocksMined: 0 });
-    expect(calculateTotalProduction(state)).toBeCloseTo(15, 1);
+    const prod = calculateTotalProduction(state);
+    expect(prod).toBeGreaterThan(14);
+    expect(prod).toBeLessThan(16);
   });
 
-  it('difficulty reduces production at higher block counts', () => {
+  it('halving reduces production at higher block counts', () => {
     const cpu = { id: 'basic_cpu', miningSpeed: 0.3, baseProduction: 30, blockReward: 0, owned: 1, energyRequired: 0 };
     const stateEarly = makeState({ hardware: [cpu], blocksMined: 0 });
     const stateLate = makeState({ hardware: [cpu], blocksMined: 210_000 });
     const prodEarly = calculateTotalProduction(stateEarly);
     const prodLate = calculateTotalProduction(stateLate);
-    // Late: reward halved (25) AND difficulty higher (~1.25) → much less production
+    // Late: reward halved (25) → less production
     expect(prodLate).toBeLessThan(prodEarly);
   });
 
-  it('buying hardware always increases production (difficulty does not change)', () => {
+  it('buying hardware always increases production', () => {
     const cpu1 = { id: 'basic_cpu', miningSpeed: 0.3, baseProduction: 30, blockReward: 0, owned: 1, energyRequired: 0 };
     const cpu5 = { ...cpu1, owned: 5 };
     const state1 = makeState({ hardware: [cpu1], blocksMined: 100_000 });
@@ -197,8 +200,11 @@ describe('calculateTotalProduction (Bitcoin-faithful)', () => {
   it('hardware blockReward=0 does not affect production (uses global reward)', () => {
     const cpu = { id: 'basic_cpu', miningSpeed: 1, baseProduction: 10, blockReward: 0, owned: 1, energyRequired: 0 };
     const state = makeState({ hardware: [cpu], blocksMined: 0 });
-    // CC/s = (1 / 1.0) × 50 = 50 (uses global reward, ignores hardware.blockReward)
-    expect(calculateTotalProduction(state)).toBe(50);
+    // CC/s = (1 / difficulty) × 50, difficulty ≈ 1.25 for speed=1
+    // CC/s ≈ 50 / 1.25 = 40 (approx)
+    const prod = calculateTotalProduction(state);
+    expect(prod).toBeGreaterThan(30);
+    expect(prod).toBeLessThan(50);
   });
 });
 
@@ -254,6 +260,8 @@ describe('boosters multiply mining speed (not CC output)', () => {
     });
     const baseProd = calculateTotalProduction(base);
     const boostedProd = calculateTotalProduction(boosted);
+    // With hash-rate-based difficulty, boosted speed has same difficulty (pre-multiplier)
+    // so ratio should be exactly 2.0
     expect(boostedProd / baseProd).toBeCloseTo(2.0, 5);
   });
 
@@ -270,7 +278,7 @@ describe('boosters multiply mining speed (not CC output)', () => {
     });
     const baseProd = calculateTotalProduction(base);
     const stackedProd = calculateTotalProduction(stacked);
-    // 3 (prestige) × 2 (permanent) = 6x
+    // 3 (prestige) × 2 (permanent) = 6x (multipliers bypass difficulty)
     expect(stackedProd / baseProd).toBeCloseTo(6.0, 5);
   });
 

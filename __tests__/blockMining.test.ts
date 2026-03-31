@@ -318,11 +318,14 @@ describe('manual_mining exclusion from auto-production stats', () => {
 
     it('still counts real hardware alongside manual_mining', () => {
       // Bitcoin-faithful: CC/s = (miningSpeed / difficulty) × globalBlockReward
-      // At blocksMined=0: difficulty=1.0, reward=50
-      // basic_cpu: miningSpeed=1 → CC/s = (1 / 1.0) × 50 = 50
+      // At blocksMined=0: reward=50, difficulty based on miningSpeed=1
+      // difficulty ≈ 1.0 + 0.25*(1/100)^0.65 ≈ 1.0012
+      // CC/s ≈ (1 / 1.0012) × 50 ≈ 49.94
       const cpu = { id: 'basic_cpu', baseProduction: 10, miningSpeed: 1, blockReward: 0, owned: 1, energyRequired: 0 };
       const state = makeProductionState({ hardware: [MANUAL_MINING, cpu], blocksMined: 0 });
-      expect(calculateTotalProduction(state)).toBe(50);
+      const prod = calculateTotalProduction(state);
+      expect(prod).toBeGreaterThan(49);
+      expect(prod).toBeLessThanOrEqual(50);
     });
 
     it('prestige multiplier does not inflate production from manual_mining alone', () => {

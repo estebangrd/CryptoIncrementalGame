@@ -43,11 +43,11 @@ export const calculateTotalCoinsMined = (blocksMined: number): number => {
   return totalCoins;
 };
 
-// Difficulty scales with blocks mined using power curve
-export const calculateDifficulty = (blocksMined: number): number => {
-  const { AMPLITUDE, SCALE_BLOCKS, EXPONENT } = BLOCK_CONFIG.DIFFICULTY;
-  if (blocksMined <= 0) return 1.0;
-  return 1.0 + AMPLITUDE * Math.pow(blocksMined / SCALE_BLOCKS, EXPONENT);
+// Difficulty scales with total mining speed (hash-rate-based)
+export const calculateDifficulty = (totalMiningSpeed: number): number => {
+  const { AMPLITUDE, SCALE, EXPONENT } = BLOCK_CONFIG.DIFFICULTY;
+  if (totalMiningSpeed <= 0) return 1.0;
+  return 1.0 + AMPLITUDE * Math.pow(totalMiningSpeed / SCALE, EXPONENT);
 };
 
 // Get current era (0-indexed) based on blocks mined
@@ -104,9 +104,6 @@ export const mineBlock = (gameState: GameState): GameState => {
   
   // Update next halving
   newGameState.nextHalving = calculateNextHalving(newGameState.blocksMined);
-  
-  // Update difficulty based on blocks mined
-  newGameState.difficulty = calculateDifficulty(newGameState.blocksMined);
   
   return newGameState;
 };

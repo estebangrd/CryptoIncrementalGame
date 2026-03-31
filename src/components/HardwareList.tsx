@@ -12,6 +12,7 @@ import {
   calculateHardwareElectricityCost,
   calculateHardwareMiningSpeed,
   isHardwareUnlocked,
+  getConstrainedMiningSpeed,
 } from '../utils/gameLogic';
 import { calculateDifficulty, calculateCurrentReward } from '../utils/blockLogic';
 import { colors, fonts } from '../config/theme';
@@ -135,7 +136,7 @@ const HardwareList: React.FC = () => {
           const electricityCost = calculateHardwareElectricityCost(hardware);
           const miningSpeed = calculateHardwareMiningSpeed(hardware, gameState.upgrades);
           // Global formula: CC/sec = (miningSpeed / difficulty) × globalBlockReward
-          const difficulty = calculateDifficulty(gameState.blocksMined);
+          const difficulty = calculateDifficulty(getConstrainedMiningSpeed(gameState));
           const globalReward = calculateCurrentReward(gameState.blocksMined);
           const coinsPerSecond = (miningSpeed / difficulty) * globalReward;
 
