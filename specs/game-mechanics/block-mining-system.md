@@ -346,6 +346,7 @@ interface Hardware {
 3. **La recompensa se calcula en el momento del minado**: No se puede "guardar" una recompensa mayor
 4. **El halving es automático e irreversible**: Una vez que se reduce la recompensa, no vuelve a subir
 5. **El mining speed puede ser 0**: Si el jugador no tiene hardware o tiene solo manual mining inactivo
+5b. **El click boost del minado manual se resetea al cambiar de pestaña**: Cuando `BlockStatus` se desmonta (el jugador navega fuera de la pestaña Mining), `onClickBoostChange(0)` debe ejecutarse en el cleanup del `useEffect` para que el display de CC/s en el hero no quede congelado con el boost del click anterior
 6. **La producción neta considera electricidad**: `netProduction = totalProduction - totalElectricityCost`
 7. **El prestige multiplier se aplica DESPUÉS de calcular producción base**: `finalProduction = baseProduction * prestigeMultiplier`
 8. **Los bloques minados persisten entre sesiones**: Se guardan en AsyncStorage

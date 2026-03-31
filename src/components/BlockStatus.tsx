@@ -223,6 +223,7 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
 
   useEffect(() => {
     onClickBoostChange?.(clickBoost);
+    return () => onClickBoostChange?.(0);
   }, [clickBoost, onClickBoostChange]);
 
   const handleMineClick = useCallback(() => {

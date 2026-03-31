@@ -1997,15 +1997,17 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   // Auto-update crypto coins every second
+  // Uses gameStateRef to avoid stale closure — the interval is created once
+  // and never torn down by dependency changes, preventing timing gaps.
   useEffect(() => {
     const interval = setInterval(() => {
-      if (gameState.cryptoCoinsPerSecond > 0) {
+      if (gameStateRef.current.cryptoCoinsPerSecond > 0) {
         dispatch({ type: 'ADD_PRODUCTION' });
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [gameState.cryptoCoinsPerSecond]);
+  }, []);
 
   // Update market prices every 30 seconds
   useEffect(() => {
