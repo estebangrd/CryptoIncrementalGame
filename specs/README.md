@@ -16,6 +16,7 @@ Este directorio contiene todas las especificaciones técnicas exhaustivas (Level
 | [AI System](game-mechanics/ai-system.md) | ✅ Implemented | Phase 5 | High | IA con 3 niveles de autonomía, cryptos exclusivas, control irreversible |
 | [Narrative Events](game-mechanics/narrative-events.md) | ✅ Implemented | Phase 6 | High | Medidor de Recursos del Planeta, 5 hitos narrativos, pestaña Crónica |
 | [Endgame Collapse](game-mechanics/endgame-collapse.md) | ✅ Implemented | Phase 7 | High | Colapso planetario, buen ending alternativo, bonos de prestige diferenciados |
+| [Market Price Unification](game-mechanics/market-price-unification.md) | ✅ Implemented | Phase 2 | High | Precio unificado CC, motor OU, market events (whale dump, media hype, etc.) |
 
 ### 💰 Monetization (Monetización)
 
@@ -66,15 +67,15 @@ Este directorio contiene todas las especificaciones técnicas exhaustivas (Level
 
 ## 📊 Estado General
 
-- **Total de Specs**: 28
-- **Implementadas**: 21 (75%)
+- **Total de Specs**: 29
+- **Implementadas**: 22 (76%)
 - **Superseded**: 2 (7%)
-- **Documentadas**: 3 (11%)
+- **Documentadas**: 3 (10%)
 - **Planeadas**: 2 (7%)
 
 ### Por Fase
 - **Phase 1 (Genesis)**: 2/2 implementadas ✅
-- **Phase 2 (Expansion)**: 2/2 implementadas ✅
+- **Phase 2 (Expansion)**: 3/3 implementadas ✅
 - **Phase 3 (Monetization)**: 9/9 specs implementadas ✅ (misiones diarias/XP/leaderboards pendientes, sin spec aún)
 - **Phase 6 (Narrative)**: 2/3 implementadas ✅ (Narrative Events + Interactive Banners; Game Narrative Arc pendiente)
 
@@ -101,7 +102,6 @@ Este directorio contiene todas las especificaciones técnicas exhaustivas (Level
 
 ### 📅 Post-narrativa
 - Daily Missions System
-- Market Events
 - Animations & Polish
 - Sound System
 - Social Features
@@ -254,6 +254,6 @@ Para preguntas sobre estas specs, consulta:
 
 ---
 
-**Última actualización**: 2026-03-28
+**Última actualización**: 2026-04-01
 **Versión del proyecto**: 0.0.1 (Phase 1-7)
 **Próxima fase**: Post-narrativa (Daily Missions, Market Events, Polish)
