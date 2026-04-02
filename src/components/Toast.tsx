@@ -3,7 +3,7 @@ import { Animated, Text, StyleSheet } from 'react-native';
 
 export interface ToastInfo {
   message: string;
-  type: 'success' | 'error' | 'info';
+  type: 'success' | 'error' | 'info' | 'warning';
 }
 
 interface ToastProps {
@@ -15,11 +15,13 @@ const BG: Record<string, string> = {
   success: '#0d2e1a',
   error: '#2e0d0d',
   info: '#1a1a2e',
+  warning: '#2e2a0d',
 };
 const BORDER: Record<string, string> = {
   success: '#00ff88',
   error: '#ff4444',
   info: '#4a9eff',
+  warning: '#ffd600',
 };
 
 const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
