@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Easing 
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import { GameState } from '../types/game';
 import { formatBlockInfo } from '../utils/blockLogic';
-import { formatNumber } from '../utils/gameLogic';
+import { formatNumber, formatSignedNumber } from '../utils/gameLogic';
 import { colors, fonts } from '../config/theme';
 
 const CLICK_WINDOW_MS = 1000;
@@ -315,9 +315,9 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
         <NodeStat
           icon="🪙"
           label="Net Income"
-          value={`+${formatNumber(gameState.cryptoCoinsPerSecond + clickBoost)}`}
+          value={formatSignedNumber(gameState.cryptoCoinsPerSecond + clickBoost)}
           sub={hasClickBoost ? `+${formatNumber(clickBoost)} click` : 'CC/sec'}
-          variant="green"
+          variant={(gameState.cryptoCoinsPerSecond + clickBoost) < 0 ? 'red' : 'green'}
         />
         <NodeStat
           icon="🔌"

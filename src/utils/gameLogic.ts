@@ -457,11 +457,18 @@ export const creditCryptoCoins = (gameState: GameState, ccAmount: number): GameS
 };
 
 export const formatNumber = (num: number): string => {
-  if (num < 1000) return num.toFixed(1);
-  if (num < 1000000) return (num / 1000).toFixed(1) + 'K';
-  if (num < 1000000000) return (num / 1000000).toFixed(1) + 'M';
-  if (num < 1000000000000) return (num / 1000000000).toFixed(1) + 'B';
-  return (num / 1000000000000).toFixed(1) + 'T';
+  const abs = Math.abs(num);
+  const sign = num < 0 ? '-' : '';
+  if (abs < 1000) return num.toFixed(1);
+  if (abs < 1000000) return sign + (abs / 1000).toFixed(1) + 'K';
+  if (abs < 1000000000) return sign + (abs / 1000000).toFixed(1) + 'M';
+  if (abs < 1000000000000) return sign + (abs / 1000000000).toFixed(1) + 'B';
+  return sign + (abs / 1000000000000).toFixed(1) + 'T';
+};
+
+export const formatSignedNumber = (num: number): string => {
+  const prefix = num > 0 ? '+' : '';
+  return prefix + formatNumber(num);
 };
 
 import { UNLOCK_CONFIG, HARDWARE_CONFIG, BOOSTER_CONFIG, BALANCE_CONFIG, ELECTRICITY_FEE_CONFIG, AD_BUBBLE_CONFIG, OFFLINE_SCREEN_CONFIG } from '../config/balanceConfig';

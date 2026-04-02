@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGame } from '../contexts/GameContext';
-import { formatNumber } from '../utils/gameLogic';
+import { formatNumber, formatSignedNumber } from '../utils/gameLogic';
 import { clearGameData } from '../utils/storage';
 import HorizontalTabs from './HorizontalTabs';
 import SettingsModal from './SettingsModal';
@@ -36,6 +36,7 @@ import { Achievement } from '../types/game';
 import { ALL_ACHIEVEMENTS } from '../data/achievements';
 import { colors, fonts } from '../config/theme';
 import { logEvent } from '../services/analytics';
+import { MARKET_EVENT_META } from '../config/balanceConfig';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -262,9 +263,20 @@ const GameScreen: React.FC = () => {
     const prevIds = new Set(prev.map(e => e.id));
     const newEvents = current.filter(e => !prevIds.has(e.id));
     for (const evt of newEvents) {
-      const toastKey = evt.labelKey.replace('marketEvent.', 'marketEvent.toast.');
-      const msg = t(toastKey);
-      showToast(msg, evt.multiplier >= 1 ? 'success' : 'warning');
+      const meta = MARKET_EVENT_META[evt.id];
+      const headline = t(evt.labelKey);
+      const toastType = evt.multiplier >= 1 ? 'success' : 'warning';
+      if (meta) {
+        showToast(headline, toastType, {
+          tag: meta.tag,
+          headline,
+          delta: meta.delta,
+          durationLabel: meta.durationLabel,
+          polarity: evt.multiplier >= 1 ? 'pos' : 'neg',
+        });
+      } else {
+        showToast(headline, toastType);
+      }
     }
     prevMarketEventsRef.current = current;
   }, [gameState.activeMarketEvents]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -476,7 +488,7 @@ const GameScreen: React.FC = () => {
           <View style={styles.tickerPill}>
             <Animated.View style={[styles.tickerDot, { opacity: dotAnim }]} />
             <Text style={styles.tickerText}>
-              +{formatNumber(gameState.cryptoCoinsPerSecond + miningClickBoost)} CC/s
+              {formatSignedNumber(gameState.cryptoCoinsPerSecond + miningClickBoost)} CC/s
             </Text>
           </View>
         </View>
