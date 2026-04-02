@@ -1,4 +1,4 @@
 <resources>
-    <string name="app_name">CryptoIncrementalGame</string>
-    <integer name="react_native_dev_server_port">8181</integer>
+    <string name="app_name">Blockchain Tycoon</string>
+    <integer name="react_native_dev_server_port">8081</integer>
 </resources>
