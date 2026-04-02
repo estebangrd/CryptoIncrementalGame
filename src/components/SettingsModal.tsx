@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,8 @@ import { restorePurchases } from '../services/IAPService';
 import { IAP_PRODUCT_IDS } from '../config/iapConfig';
 import AchievementsScreen from './AchievementsScreen';
 import { debugForceSpawnRef } from './AdBoosterBubbles';
+import { MARKET_EVENT_CONFIG } from '../config/balanceConfig';
+import type { ToastInfo } from './Toast';
 
 interface SettingsModalProps {
   visible: boolean;
@@ -30,6 +32,18 @@ interface SettingsModalProps {
 const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose, onReset, onOpenShop, onTestGoodEnding, onTestAICollapse, onTestHumanCollapse, onTestAchievementToast, onTestEarningsToast }) => {
   const { gameState, currentLanguage, setLanguage, t, dispatch, showToast } = useGame();
   const [showAchievements, setShowAchievements] = useState(false);
+
+  const MARKET_TOAST_LIST: { toastKey: string; multiplier: number; label: string }[] = [
+    { toastKey: MARKET_EVENT_CONFIG.halving_anticipation.toastKey, multiplier: MARKET_EVENT_CONFIG.halving_anticipation.multiplier, label: 'Halving Anticipation' },
+    { toastKey: MARKET_EVENT_CONFIG.halving_shock.toastKey, multiplier: MARKET_EVENT_CONFIG.halving_shock.multiplier, label: 'Halving Shock' },
+    { toastKey: MARKET_EVENT_CONFIG.market_spike.toastKey, multiplier: MARKET_EVENT_CONFIG.market_spike.multiplier, label: 'Market Spike' },
+    { toastKey: MARKET_EVENT_CONFIG.blackout_regional.toastKey, multiplier: MARKET_EVENT_CONFIG.blackout_regional.multiplier, label: 'Blackout Regional' },
+    { toastKey: MARKET_EVENT_CONFIG.ai_autonomous.toastKey, multiplier: MARKET_EVENT_CONFIG.ai_autonomous.multiplier, label: 'AI Autonomous' },
+    { toastKey: MARKET_EVENT_CONFIG.planetary_collapse_incoming.toastKey, multiplier: MARKET_EVENT_CONFIG.planetary_collapse_incoming.multiplier, label: 'Planetary Collapse' },
+    { toastKey: MARKET_EVENT_CONFIG.whale_dump.toastKey, multiplier: MARKET_EVENT_CONFIG.whale_dump.multiplier, label: 'Whale Dump' },
+    { toastKey: MARKET_EVENT_CONFIG.media_hype.toastKey, multiplier: MARKET_EVENT_CONFIG.media_hype.multiplier, label: 'Media Hype' },
+  ];
+  const marketToastIndexRef = useRef(0);
 
   const handleLanguageChange = async (languageCode: string) => {
     await setLanguage(languageCode);
@@ -179,6 +193,20 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose, onReset
                   <Text style={styles.actionButtonText}>⚡ Energy</Text>
                 </TouchableOpacity>
               </View>
+
+              <TouchableOpacity style={[styles.actionButton, { marginTop: 8, backgroundColor: '#2a2a0a' }]} onPress={() => { dispatch({ type: 'APPLY_MARKET_EVENT', payload: { eventId: 'media_hype' } }); onClose(); }}>
+                <Text style={styles.actionButtonText}>📰 Trigger Media Hype (Debug)</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={[styles.actionButton, { marginTop: 8, backgroundColor: '#1a2a2a' }]} onPress={() => {
+                const idx = marketToastIndexRef.current;
+                const evt = MARKET_TOAST_LIST[idx];
+                const toastType: ToastInfo['type'] = evt.multiplier >= 1 ? 'success' : 'warning';
+                showToast(t(evt.toastKey), toastType);
+                marketToastIndexRef.current = (idx + 1) % MARKET_TOAST_LIST.length;
+              }}>
+                <Text style={styles.actionButtonText}>🔔 Cycle Market Toasts ({MARKET_TOAST_LIST.length})</Text>
+              </TouchableOpacity>
             </View>
 
             {/* Ads & Purchases */}
