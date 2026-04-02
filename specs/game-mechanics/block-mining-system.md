@@ -785,9 +785,11 @@ analytics().logEvent('genesis_complete', {
   - ¿O todos deberían usar el currentReward global?
   - **Recomendación**: Mantener actual (cada HW tiene su reward) para variedad
 
-- [ ] **Mining cuando app está cerrada**: ¿Cómo calcular bloques offline?
-  - Actualmente usa `updateOfflineProgress()` pero no está claro si mina bloques o solo coins
-  - **Recomendación**: Calcular bloques minados offline con 50% de rate (como está configurado)
+- [x] **Mining cuando app está cerrada**: ¿Cómo calcular bloques offline?
+  - `updateOfflineProgress()` calcula bloques y coins; almacena como `pendingOfflineEarnings` + `offlineBlocksProcessed`
+  - `claimOfflineEarnings()` aplica coins Y avanza `blocksMined`, `difficulty`, `currentReward`, `nextHalving`
+  - **Regla**: Toda CC que entra al sistema debe avanzar el contador de bloques para mantener la integridad del génesis
+  - **Bug fix (2026-04-01)**: Antes solo sumaba coins sin avanzar blocksMined — offline CC no contaban para genesis
 
 ## Referencias
 

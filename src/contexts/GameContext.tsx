@@ -4,7 +4,7 @@ import { GameState, Cryptocurrency, PrestigeRun, RunStats, AILevel, EndingType, 
 import { hardwareProgression } from '../data/hardwareData';
 import { initialUpgrades } from '../data/gameData';
 import { cryptocurrencies } from '../data/cryptocurrencies';
-import { getInitialGameState, updateOfflineProgress, checkAndUpdateUnlocks } from '../utils/gameLogic';
+import { getInitialGameState, updateOfflineProgress, checkAndUpdateUnlocks, claimOfflineEarnings } from '../utils/gameLogic';
 import { tickOU, generateInitialChartWindow, getInitialPriceEngineState, smoothEraTransition } from '../utils/priceEngine';
 import {
   canPrestige,
@@ -1837,16 +1837,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
 
     // ── Offline Earnings Modal ──────────────────────────────────────────────
     case 'CLAIM_OFFLINE_EARNINGS': {
-      const claimAmount = action.payload.amount;
-      return {
-        ...state,
-        cryptoCoins: state.cryptoCoins + claimAmount,
-        totalCryptoCoins: state.totalCryptoCoins + claimAmount,
-        pendingOfflineEarnings: 0,
-        offlineSecondsAway: 0,
-        offlineWasCapped: false,
-        offlineBlocksProcessed: 0,
-      };
+      return claimOfflineEarnings(state, action.payload.amount);
     }
     case 'DISMISS_OFFLINE_EARNINGS': {
       return {

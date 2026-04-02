@@ -413,3 +413,102 @@ describe('updateOfflineProgress (block-based)', () => {
     expect(result.blocksMined).toBeLessThanOrEqual(GENESIS_CONSTANTS.TOTAL_BLOCKS);
   });
 });
+
+// ── Free Offline Earnings (ad-gated) — genesis tracking ─────────────────────
+
+describe('free offline earnings must update genesis stats', () => {
+  const makeState = (overrides: any = {}): any => ({
+    hardware: [],
+    upgrades: [],
+    energy: { totalGeneratedMW: 0, totalRequiredMW: 0, sources: {} },
+    prestigeProductionMultiplier: 1,
+    prestigeMultiplier: 1,
+    adBoost: { isActive: false, expiresAt: null },
+    iapState: {
+      permanentMultiplierPurchased: false,
+      booster2x: { isActive: false, expiresAt: null },
+      booster5x: { isActive: false, expiresAt: null },
+      offlineMiner: { isActive: false, activatedAt: null, expiresAt: null },
+    },
+    ai: { level: 0 },
+    blocksMined: 0,
+    cryptoCoins: 0,
+    totalCryptoCoins: 0,
+    realMoney: 10000,
+    totalElectricityCost: 0,
+    cryptoCoinsPerSecond: 0,
+    lastSaveTime: Date.now(),
+    pendingOfflineEarnings: 0,
+    offlineSecondsAway: 0,
+    offlineWasCapped: false,
+    offlineBlocksProcessed: 0,
+    ...overrides,
+  });
+
+  it('updateOfflineProgress stores pending coins and blocks for free path', () => {
+    const now = Date.now();
+    const cpu = { id: 'basic_cpu', miningSpeed: 10, baseProduction: 10, blockReward: 0, owned: 1, energyRequired: 0 };
+    const state = makeState({
+      hardware: [cpu],
+      lastSaveTime: now - 600 * 1000, // 10 min ago (above MIN_OFFLINE_SECONDS)
+    });
+    const result = updateOfflineProgress(state);
+    expect(result.pendingOfflineEarnings).toBeGreaterThan(0);
+    expect(result.offlineBlocksProcessed).toBeGreaterThan(0);
+    // blocksMined should NOT change yet (pending claim)
+    expect(result.blocksMined).toBe(0);
+  });
+
+  it('claimOfflineEarnings updates blocksMined alongside coins', () => {
+    const { claimOfflineEarnings } = require('../src/utils/gameLogic');
+    const state = makeState({
+      blocksMined: 1000,
+      cryptoCoins: 500,
+      totalCryptoCoins: 500,
+      pendingOfflineEarnings: 50000,
+      offlineBlocksProcessed: 1000,
+    });
+    const result = claimOfflineEarnings(state, 50000);
+    // Coins must be credited
+    expect(result.cryptoCoins).toBe(500 + 50000);
+    expect(result.totalCryptoCoins).toBe(500 + 50000);
+    // blocksMined MUST advance by offlineBlocksProcessed
+    expect(result.blocksMined).toBe(2000);
+    // Genesis state must be updated
+    expect(result.currentReward).toBeDefined();
+    expect(result.difficulty).toBeDefined();
+    expect(result.nextHalving).toBeDefined();
+    // Pending state must be cleared
+    expect(result.pendingOfflineEarnings).toBe(0);
+    expect(result.offlineBlocksProcessed).toBe(0);
+  });
+
+  it('claimOfflineEarnings respects halving boundary', () => {
+    const { claimOfflineEarnings } = require('../src/utils/gameLogic');
+    const state = makeState({
+      blocksMined: 209_500,
+      cryptoCoins: 0,
+      totalCryptoCoins: 0,
+      pendingOfflineEarnings: 100000,
+      offlineBlocksProcessed: 1000,
+    });
+    const result = claimOfflineEarnings(state, 100000);
+    expect(result.blocksMined).toBe(210_500);
+    // After crossing 210,000 boundary, reward should be 25
+    expect(result.currentReward).toBe(25);
+    expect(result.nextHalving).toBe(420_000);
+  });
+
+  it('claimOfflineEarnings does not exceed TOTAL_BLOCKS cap', () => {
+    const { claimOfflineEarnings } = require('../src/utils/gameLogic');
+    const state = makeState({
+      blocksMined: GENESIS_CONSTANTS.TOTAL_BLOCKS - 5,
+      cryptoCoins: 0,
+      totalCryptoCoins: 0,
+      pendingOfflineEarnings: 10000,
+      offlineBlocksProcessed: 100,
+    });
+    const result = claimOfflineEarnings(state, 10000);
+    expect(result.blocksMined).toBeLessThanOrEqual(GENESIS_CONSTANTS.TOTAL_BLOCKS);
+  });
+});

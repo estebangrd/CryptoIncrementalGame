@@ -395,6 +395,33 @@ export const updateOfflineProgress = (gameState: GameState): GameState => {
   };
 };
 
+/**
+ * Apply claimed offline earnings to game state, updating genesis stats
+ * (blocksMined, difficulty, currentReward, nextHalving) so offline blocks
+ * count toward genesis progression — CC must not appear out of thin air.
+ */
+export const claimOfflineEarnings = (gameState: GameState, claimAmount: number): GameState => {
+  const newBlocksMined = Math.min(
+    gameState.blocksMined + (gameState.offlineBlocksProcessed ?? 0),
+    GENESIS_CONSTANTS.TOTAL_BLOCKS,
+  );
+  const constrainedMiningSpeed = getConstrainedMiningSpeed(gameState);
+
+  return {
+    ...gameState,
+    cryptoCoins: gameState.cryptoCoins + claimAmount,
+    totalCryptoCoins: gameState.totalCryptoCoins + claimAmount,
+    blocksMined: newBlocksMined,
+    difficulty: calculateDifficulty(constrainedMiningSpeed),
+    currentReward: calculateCurrentReward(newBlocksMined),
+    nextHalving: calculateNextHalving(newBlocksMined),
+    pendingOfflineEarnings: 0,
+    offlineSecondsAway: 0,
+    offlineWasCapped: false,
+    offlineBlocksProcessed: 0,
+  };
+};
+
 export const formatNumber = (num: number): string => {
   if (num < 1000) return num.toFixed(1);
   if (num < 1000000) return (num / 1000).toFixed(1) + 'K';
