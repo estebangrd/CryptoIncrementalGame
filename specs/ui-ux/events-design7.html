@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Event Notifications — Design 7</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #070c0a;
+    --surface: #0d1510;
+    --border: #1a2e22;
+    --dim: #3a5a46;
+    --green: #00ff88;
+    --cyan: #00d4ff;
+    --yellow: #ffd600;
+    --red: #ff3b3b;
+    --white: #e8f5ee;
+  }
+
+  body {
+    background: var(--bg);
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--white);
+    min-height: 100vh;
+    padding: 24px 16px 60px;
+  }
+
+  h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: 13px;
+    letter-spacing: 4px;
+    color: var(--dim);
+    text-align: center;
+    margin-bottom: 32px;
+    text-transform: uppercase;
+  }
+
+  .phone-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+
+  /* ── PHONE ── */
+  .phone {
+    width: 320px;
+    background: #040a06;
+    border: 1.5px solid var(--border);
+    border-radius: 28px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 0 40px rgba(0,255,136,0.05), 0 20px 60px rgba(0,0,0,0.6);
+  }
+  .phone-notch {
+    width: 80px; height: 20px;
+    background: #040a06;
+    border: 1.5px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 14px 14px;
+    margin: 0 auto;
+    position: relative; z-index: 10;
+  }
+  .phone-screen {
+    padding: 0 0 16px;
+    background: #070c0a;
+    position: relative;
+    min-height: 460px;
+  }
+
+  /* ── DESIGN 7 — BROADCAST MINIMAL ── */
+  .notif {
+    width: 100%;
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.35s cubic-bezier(0.16,1,0.3,1);
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+  }
+  .notif.visible { max-height: 60px; }
+  .notif-inner {
+    display: flex;
+    align-items: stretch;
+    height: 52px;
+  }
+  .stripe { width: 5px; flex-shrink: 0; }
+  .notif.pos .stripe { background: var(--green); }
+  .notif.neg .stripe { background: var(--red); }
+
+  .alert-tag {
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 10px;
+    font-family: 'Orbitron', monospace;
+    font-size: 7px; font-weight: 900; letter-spacing: 2px;
+    writing-mode: vertical-rl; text-orientation: mixed;
+    transform: rotate(180deg);
+    flex-shrink: 0;
+  }
+  .notif.pos .alert-tag { background: #00ff8820; color: var(--green); }
+  .notif.neg .alert-tag { background: #ff3b3b20; color: var(--red); }
+
+  .content {
+    flex: 1;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 0 12px;
+    background: #0a0f0d;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .headline {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px; font-weight: 700; letter-spacing: 0.3px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .sub { font-size: 8px; letter-spacing: 2px; color: var(--dim); margin-top: 1px; }
+
+  .right {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 0 12px;
+    background: #0a0f0d;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    gap: 2px; flex-shrink: 0;
+  }
+  .delta { font-family: 'Orbitron', monospace; font-size: 15px; font-weight: 900; }
+  .notif.pos .delta { color: var(--green); }
+  .notif.neg .delta { color: var(--red); }
+  .live {
+    font-size: 7px; letter-spacing: 2px; padding: 1px 5px; border-radius: 2px;
+    animation: pulse-opacity 1s ease-in-out infinite;
+  }
+  .notif.pos .live { background: #00ff8830; color: var(--green); }
+  .notif.neg .live { background: #ff3b3b30; color: var(--red); }
+  @keyframes pulse-opacity { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* ── FAKE UI ── */
+  .fake-ui { padding: 16px 14px 0; }
+  .fake-cryptobar { text-align: center; padding: 18px 0 12px; }
+  .fake-lbl { font-size: 8px; letter-spacing: 3px; color: var(--dim); }
+  .fake-amt { font-family: 'Orbitron', monospace; font-size: 32px; font-weight: 900; color: var(--green); text-shadow: 0 0 20px rgba(0,255,136,0.4); }
+  .fake-rate { display: inline-block; margin-top: 6px; padding: 3px 10px; border: 1px solid var(--border); border-radius: 20px; font-size: 10px; color: var(--dim); }
+  .fake-tabs { display: flex; gap: 6px; margin: 10px 0; }
+  .fake-tab { flex: 1; padding: 7px 4px; border: 1px solid var(--border); border-radius: 6px; font-size: 8px; letter-spacing: 1px; color: var(--dim); text-align: center; }
+  .fake-tab.active { border-color: var(--green); color: var(--green); }
+  .fake-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px; }
+  .fake-card { background: #0d1510; border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
+  .fake-card-label { font-size: 7px; letter-spacing: 2px; color: var(--dim); margin-bottom: 4px; }
+  .fake-card-val { font-family: 'Orbitron', monospace; font-size: 14px; font-weight: 700; }
+  .fake-card-val.y { color: var(--yellow); }
+  .fake-card-val.c { color: var(--cyan); }
+  .fake-card-val.r { color: var(--red); }
+  .fake-card-sub { font-size: 7px; color: var(--dim); margin-top: 2px; }
+
+  /* ── CONTROLS ── */
+  .controls { width: 320px; }
+  .ctrl-title { font-size: 9px; letter-spacing: 3px; color: var(--dim); margin-bottom: 10px; }
+
+  .events-list { display: flex; flex-direction: column; gap: 6px; }
+  .event-btn {
+    width: 100%;
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid;
+    border-radius: 8px;
+    cursor: pointer;
+    background: transparent;
+    font-family: 'Share Tech Mono', monospace;
+    text-align: left;
+    transition: all 0.15s;
+  }
+  .event-btn.pos { border-color: #00ff8830; }
+  .event-btn.pos:hover { background: #00ff8808; border-color: #00ff8855; }
+  .event-btn.neg { border-color: #ff3b3b30; }
+  .event-btn.neg:hover { background: #ff3b3b08; border-color: #ff3b3b55; }
+
+  .ebtn-icon { font-size: 16px; flex-shrink: 0; }
+  .ebtn-body { flex: 1; }
+  .ebtn-name { font-size: 11px; letter-spacing: 0.5px; }
+  .event-btn.pos .ebtn-name { color: var(--white); }
+  .event-btn.neg .ebtn-name { color: var(--white); }
+  .ebtn-trigger { font-size: 8px; color: var(--dim); margin-top: 2px; }
+  .ebtn-right { text-align: right; flex-shrink: 0; }
+  .ebtn-delta { font-family: 'Orbitron', monospace; font-size: 13px; font-weight: 700; }
+  .event-btn.pos .ebtn-delta { color: var(--green); }
+  .event-btn.neg .ebtn-delta { color: var(--red); }
+  .ebtn-dur { font-size: 7px; letter-spacing: 1px; color: var(--dim); margin-top: 2px; }
+
+  .section-sep {
+    display: flex; align-items: center; gap: 8px;
+    margin: 4px 0;
+  }
+  .sep-line { flex: 1; height: 1px; background: var(--border); }
+  .sep-label { font-size: 7px; letter-spacing: 2px; color: var(--dim); }
+</style>
+</head>
+<body>
+
+<h1>Market Events — Design 7</h1>
+
+<div class="phone-wrap">
+
+  <!-- PHONE -->
+  <div class="phone">
+    <div class="phone-notch"></div>
+    <div class="phone-screen">
+
+      <!-- NOTIFICATION -->
+      <div class="notif" id="notif">
+        <div class="notif-inner">
+          <div class="stripe"></div>
+          <div class="alert-tag" id="nTag">MARKET</div>
+          <div class="content">
+            <div class="headline" id="nHeadline">Market Spike</div>
+            <div class="sub" id="nSub">PRICE +25% · 10M</div>
+          </div>
+          <div class="right">
+            <div class="delta" id="nDelta">+25%</div>
+            <div class="live">LIVE</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FAKE APP UI -->
+      <div class="fake-ui">
+        <div class="fake-cryptobar">
+          <div class="fake-lbl">CRYPTOCOINS</div>
+          <div class="fake-amt">8.9M</div>
+          <div class="fake-rate">● +-55.3 CC/s</div>
+        </div>
+        <div class="fake-tabs">
+          <div class="fake-tab active">⛏ Mining</div>
+          <div class="fake-tab">📈 Market</div>
+          <div class="fake-tab">💻 Hardware</div>
+          <div class="fake-tab">🔧 Upgrades</div>
+        </div>
+        <div style="font-size:7px;letter-spacing:3px;color:#3a5a46;margin:8px 0 6px">NODE STATUS</div>
+        <div class="fake-grid">
+          <div class="fake-card"><div class="fake-card-label">CASH BALANCE</div><div class="fake-card-val y">$1.4M</div><div class="fake-card-sub">Available</div></div>
+          <div class="fake-card"><div class="fake-card-label">TOTAL EARNED</div><div class="fake-card-val y">$4.5M</div><div class="fake-card-sub">All time</div></div>
+          <div class="fake-card"><div class="fake-card-label">HASH RATE</div><div class="fake-card-val c">429.0K</div><div class="fake-card-sub">H/s — Active</div></div>
+          <div class="fake-card"><div class="fake-card-label">BLOCKS MINED</div><div class="fake-card-val c">2.3M</div><div class="fake-card-sub">All time</div></div>
+          <div class="fake-card"><div class="fake-card-label">NET INCOME</div><div class="fake-card-val" style="color:#aaa">+-55.3</div><div class="fake-card-sub">CC/sec</div></div>
+          <div class="fake-card"><div class="fake-card-label">POWER</div><div class="fake-card-val r">9.5K</div><div class="fake-card-sub">kW/h</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- EVENTS LIST -->
+  <div class="controls">
+    <div class="ctrl-title">DISPARAR EVENTO</div>
+    <div class="events-list">
+
+      <div class="section-sep"><div class="sep-line"></div><div class="sep-label">POSITIVOS</div><div class="sep-line"></div></div>
+
+      <button class="event-btn pos" onclick="fire('CHAIN','Halving Anticipation','≤10,000 bloques para el halving','+25%','PERMANENT','pos')">
+        <div class="ebtn-icon">⛓</div>
+        <div class="ebtn-body">
+          <div class="ebtn-name">Halving Anticipation</div>
+          <div class="ebtn-trigger">Auto · ≤10,000 bloques para el halving</div>
+        </div>
+        <div class="ebtn-right">
+          <div class="ebtn-delta">+25%</div>
+          <div class="ebtn-dur">PERMANENT</div>
+        </div>
+      </button>
+
+      <button class="event-btn pos" onclick="fire('MARKET','Market Spike','Ad Bubble de Market reclamado','+25%','10 MIN','pos')">
+        <div class="ebtn-icon">📈</div>
+        <div class="ebtn-body">
+          <div class="ebtn-name">Market Spike</div>
+          <div class="ebtn-trigger">AD_MARKET_BOOST reclamado</div>
+        </div>
+        <div class="ebtn-right">
+          <div class="ebtn-delta">+25%</div>
+          <div class="ebtn-dur">10 MIN</div>
+        </div>
+      </button>
+
+      <button class="event-btn pos" onclick="fire('NET','AI Trading Active','IA llega a nivel autónomo','+15%','PERMANENT','pos')">
+        <div class="ebtn-icon">🤖</div>
+        <div class="ebtn-body">
+          <div class="ebtn-name">AI Autonomous</div>
+          <div class="ebtn-trigger">IA llega a nivel autónomo</div>
+        </div>
+        <div class="ebtn-right">
+          <div class="ebtn-delta">+15%</div>
+          <div class="ebtn-dur">PERMANENT</div>
+        </div>
+      </button>
+
+      <button class="event-btn pos" onclick="fire('MARKET','Media Hype','Random · 4% por minuto','+18%','5 MIN','pos')">
+        <div class="ebtn-icon">📣</div>
+        <div class="ebtn-body">
+          <div class="ebtn-name">Media Hype</div>
+          <div class="ebtn-trigger">Random · 4%/min · ≥5K bloques</div>
+        </div>
+        <div class="ebtn-right">
+          <div class="ebtn-delta">+18%</div>
+          <div class="ebtn-dur">5 MIN</div>
+        </div>
+      </button>
+
+      <div class="section-sep"><div class="sep-line"></div><div class="sep-label">NEGATIVOS</div><div class="sep-line"></div></div>
+
+      <button class="event-btn neg" onclick="fire('CHAIN','Halving Shock','Era cambia — post-halving correction','−25%','5 MIN','neg')">
+        <div class="ebtn-icon">⚡</div>
+        <div class="ebtn-body">
+          <div class="ebtn-name">Halving Shock</div>
+          <div class="ebtn-trigger">Auto · era cambia al cruzar el halving</div>
+        </div>
+        <div class="ebtn-right">
+          <div class="ebtn-delta">−25%</div>
+          <div class="ebtn-dur">5 MIN</div>
+        </div>
+      </button>
+
+      <button class="event-btn neg" onclick="fire('NET','Regional Blackout','Banner event · Local Protest','−9%','6 MIN','neg')">
+        <div class="ebtn-icon">🔌</div>
+        <div class="ebtn-body">
+          <div class="ebtn-name">Blackout Regional</div>
+          <div class="ebtn-trigger">Evento narrativo · Local Protest</div>
+        </div>
+        <div class="ebtn-right">
+          <div class="ebtn-delta">−9%</div>
+          <div class="ebtn-dur">6 MIN</div>
+        </div>
+      </button>
+
+      <button class="event-btn neg" onclick="fire('MARKET','Planetary Collapse','Recursos del planeta ≤ 20%','−40%','PERMANENT','neg')">
+        <div class="ebtn-icon">☢️</div>
+        <div class="ebtn-body">
+          <div class="ebtn-name">Planetary Collapse</div>
+          <div class="ebtn-trigger">Recursos del planeta ≤ 20%</div>
+        </div>
+        <div class="ebtn-right">
+          <div class="ebtn-delta">−40%</div>
+          <div class="ebtn-dur">PERMANENT</div>
+        </div>
+      </button>
+
+      <button class="event-btn neg" onclick="fire('MARKET','Whale Dump','Random · 4%/min · ≥5K bloques','−15%','4 MIN','neg')">
+        <div class="ebtn-icon">🐋</div>
+        <div class="ebtn-body">
+          <div class="ebtn-name">Whale Dump</div>
+          <div class="ebtn-trigger">Random · 4%/min · ≥5K bloques</div>
+        </div>
+        <div class="ebtn-right">
+          <div class="ebtn-delta">−15%</div>
+          <div class="ebtn-dur">4 MIN</div>
+        </div>
+      </button>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let hideTimer = null;
+
+  function fire(tag, headline, trigger, delta, dur, polarity) {
+    const el = document.getElementById('notif');
+    el.classList.remove('pos', 'neg', 'visible');
+    void el.offsetWidth;
+
+    document.getElementById('nTag').textContent = tag;
+    document.getElementById('nHeadline').textContent = headline;
+    document.getElementById('nSub').textContent = delta.replace('−','-') + ' PRECIO · ' + dur;
+    document.getElementById('nDelta').textContent = delta;
+
+    el.classList.add(polarity);
+    requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('visible')));
+
+    if (hideTimer) clearTimeout(hideTimer);
+    hideTimer = setTimeout(() => el.classList.remove('visible'), 5000);
+  }
+</script>
+</body>
+</html>

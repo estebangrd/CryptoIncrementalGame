@@ -840,6 +840,18 @@ export const MARKET_EVENT_CONFIG = {
   RANDOM_CHECK_INTERVAL_MS: 60_000, // check random events every 60s
 } as const;
 
+// UI-only metadata for market event broadcast toasts (Design 7)
+export const MARKET_EVENT_META: Record<string, { tag: string; icon: string; delta: string; durationLabel: string }> = {
+  halving_anticipation: { tag: 'CHAIN', icon: '⛓', delta: '+25%', durationLabel: 'PERMANENT' },
+  halving_shock:        { tag: 'CHAIN', icon: '⚡', delta: '−25%', durationLabel: '5 MIN' },
+  market_spike:         { tag: 'MARKET', icon: '📈', delta: '+25%', durationLabel: '10 MIN' },
+  blackout_regional:    { tag: 'NET', icon: '🔌', delta: '−9%', durationLabel: '6 MIN' },
+  ai_autonomous:        { tag: 'NET', icon: '🤖', delta: '+15%', durationLabel: 'PERMANENT' },
+  planetary_collapse_incoming: { tag: 'MARKET', icon: '☢️', delta: '−40%', durationLabel: 'PERMANENT' },
+  whale_dump:           { tag: 'MARKET', icon: '🐋', delta: '−15%', durationLabel: '4 MIN' },
+  media_hype:           { tag: 'MARKET', icon: '📣', delta: '+18%', durationLabel: '5 MIN' },
+};
+
 export const LOCAL_PROTEST_RATIONING = {
   ENERGY_REDUCTION: 0.20,         // 20% less energy capacity
   DURATION_MS: 30 * 60 * 1000,   // 30 min

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Sell Selector — Opción 4</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ng: #00ff88; --nc: #00e5ff; --ny: #ffd600; --nr: #ff3d5a;
+    --bg: #020810; --dim: rgba(255,255,255,0.4); --dim2: rgba(255,255,255,0.18);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;overflow:hidden;}
+  body{background:var(--bg);font-family:'Rajdhani',sans-serif;color:#fff;position:relative;}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,255,136,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,136,0.025) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+
+  .shell{position:relative;z-index:1;max-width:420px;margin:0 auto;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+
+  /* TOPBAR */
+  .topbar{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:12px 18px 10px;border-bottom:1px solid rgba(0,255,136,.1);background:rgba(2,8,16,.97);}
+  .logo{font-family:'Orbitron',monospace;font-size:11px;font-weight:900;letter-spacing:2px;color:var(--ng);}
+  .logo span{color:var(--nc);}
+  .balance{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dim);}
+
+  /* CONTENT */
+  .content{flex:1;overflow-y:auto;scrollbar-width:none;padding:14px 16px 32px;}
+  .content::-webkit-scrollbar{display:none;}
+
+  /* PRICE CARD */
+  .price-card{background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:14px;margin-bottom:12px;}
+  .price-big{font-family:'Orbitron',monospace;font-size:28px;font-weight:900;color:#fff;margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+  .price-change{display:inline-flex;align-items:center;gap:3px;background:rgba(255,61,90,.1);border:1px solid rgba(255,61,90,.22);border-radius:6px;padding:2px 8px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--nr);}
+  .chart-stub{height:60px;background:linear-gradient(180deg,rgba(255,61,90,.15) 0%,transparent 100%);border-radius:6px;position:relative;overflow:hidden;margin-top:8px;}
+  .chart-line{position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--nr),rgba(255,61,90,.3));}
+
+  /* SELL CARD */
+  .sell-card{background:rgba(0,255,136,.04);border:1px solid rgba(0,255,136,.18);border-radius:14px;padding:16px;position:relative;overflow:hidden;}
+  .sell-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--ng),var(--nc));}
+  .sell-title{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--ng);letter-spacing:2px;margin-bottom:14px;}
+
+  /* PCT DISPLAY */
+  .pct-display{text-align:center;margin-bottom:12px;}
+  .pct-number{font-family:'Orbitron',monospace;font-size:48px;font-weight:900;color:var(--ny);text-shadow:0 0 20px rgba(255,214,0,.4);line-height:1;}
+
+  /* SLIDER */
+  .range-input{
+    width:100%;-webkit-appearance:none;appearance:none;
+    height:6px;border-radius:3px;outline:none;cursor:pointer;
+    background:linear-gradient(90deg,var(--ng) 50%,rgba(255,255,255,.1) 50%);
+    margin-bottom:6px;
+  }
+  .range-input::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:26px;height:26px;border-radius:50%;
+    background:var(--ng);box-shadow:0 0 12px rgba(0,255,136,.6);
+    cursor:pointer;border:2px solid rgba(2,8,16,.8);
+  }
+  .range-input::-moz-range-thumb{
+    width:26px;height:26px;border-radius:50%;
+    background:var(--ng);box-shadow:0 0 12px rgba(0,255,136,.6);
+    cursor:pointer;border:2px solid rgba(2,8,16,.8);
+  }
+  .slider-ends{display:flex;justify-content:space-between;margin-bottom:12px;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dim2);}
+
+  /* QUICK BUTTONS */
+  .quick-row{display:flex;gap:6px;margin-bottom:12px;}
+  .q-btn{
+    flex:1;padding:9px 4px;border-radius:8px;
+    border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);
+    color:var(--dim);font-family:'Orbitron',monospace;font-size:11px;font-weight:700;
+    cursor:pointer;text-align:center;transition:all .15s;
+  }
+  .q-btn:active{background:rgba(0,255,136,.1);border-color:var(--ng);color:var(--ng);}
+  .q-btn.max{border-color:rgba(255,214,0,.2);color:var(--ny);}
+  .q-btn.max:active{background:rgba(255,214,0,.1);border-color:var(--ny);}
+
+  /* EARN BOX */
+  .earn-box{background:rgba(255,214,0,.06);border:1px solid rgba(255,214,0,.2);border-radius:10px;padding:10px 14px;text-align:center;margin-bottom:12px;}
+  .earn-amount{font-family:'Orbitron',monospace;font-size:20px;font-weight:900;color:var(--ny);text-shadow:0 0 14px rgba(255,214,0,.4);}
+  .earn-sub{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dim);margin-top:3px;letter-spacing:1px;}
+
+  /* SELL BUTTON */
+  .sell-btn{width:100%;padding:15px;border:none;border-radius:12px;background:linear-gradient(135deg,#ff6b2b,#ff3d5a);color:#fff;font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:3px;cursor:pointer;position:relative;overflow:hidden;}
+  .sell-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 30%,rgba(255,255,255,.08) 50%,transparent 70%);transform:translateX(-100%);animation:shimmer 2.5s infinite;}
+  @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+  .sell-btn:active{transform:scale(.97);}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="topbar">
+    <div class="logo">BLOCK<span>CHAIN</span> TYCOON</div>
+    <div class="balance">43.7M CC</div>
+  </div>
+
+  <div class="content">
+
+    <div class="price-card">
+      <div class="price-big">$1.08 <div class="price-change">▼ 0.22%</div></div>
+      <div class="chart-stub"><div class="chart-line"></div></div>
+    </div>
+
+    <div class="sell-card">
+      <div class="sell-title">💰 SELL COINS</div>
+
+      <div class="pct-display">
+        <div class="pct-number" id="pctNumber">50%</div>
+      </div>
+
+      <input type="range" class="range-input" id="slider" min="1" max="100" value="50"
+        oninput="updateSlider(this.value)">
+      <div class="slider-ends"><span>1%</span><span>100%</span></div>
+
+      <div class="quick-row">
+        <div class="q-btn" onclick="setSlider(25)">25%</div>
+        <div class="q-btn" onclick="setSlider(50)">50%</div>
+        <div class="q-btn" onclick="setSlider(75)">75%</div>
+        <div class="q-btn max" onclick="setSlider(100)">MAX</div>
+      </div>
+
+      <div class="earn-box">
+        <div class="earn-amount" id="earnAmount">$23.6M</div>
+        <div class="earn-sub">YOU'LL EARN · $1.08 PER CC</div>
+      </div>
+
+      <button class="sell-btn">⚡ EXECUTE SELL ORDER</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const TOTAL_CC = 43700000;
+const PRICE = 1.08;
+
+function fmt(val) {
+  return val >= 1000000 ? '$' + (val/1000000).toFixed(1) + 'M' : '$' + (val/1000).toFixed(1) + 'K';
+}
+
+function updateSlider(v) {
+  v = parseInt(v);
+  document.getElementById('pctNumber').textContent = v + '%';
+  document.getElementById('slider').style.background =
+    `linear-gradient(90deg,var(--ng) ${v}%,rgba(255,255,255,.1) ${v}%)`;
+  document.getElementById('earnAmount').textContent = fmt(TOTAL_CC * v / 100 * PRICE);
+}
+
+function setSlider(v) {
+  document.getElementById('slider').value = v;
+  updateSlider(v);
+}
+</script>
+</body>
+</html>

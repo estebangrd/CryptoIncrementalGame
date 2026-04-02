@@ -41,7 +41,7 @@ import {
 import { purchaseUpdatedListener, purchaseErrorListener } from 'react-native-iap';
 import { BOOSTER_CONFIG, STARTER_PACK_REWARDS, ENERGY_CONFIG, PACK_CONFIG, REGULATORY_EVENT_CONFIG, MARKET_OPPORTUNITY_CONFIG, LOCAL_PROTEST_CONFIG, ELECTRICITY_FEE_CONFIG, AD_BUBBLE_CONFIG, AI_CONFIG, MARKET_EVENT_CONFIG, LOCAL_PROTEST_RATIONING, BLOCK_CONFIG } from '../config/balanceConfig';
 import { buildEndgameStats, calculateTotalEndgameProductionMultiplier } from '../utils/endgameLogic';
-import Toast, { ToastInfo } from '../components/Toast';
+import Toast, { ToastInfo, MarketEventToastData } from '../components/Toast';
 import { IAP_PRODUCT_IDS } from '../config/iapConfig';
 import { PurchaseRecord } from '../types/game';
 import { checkAchievements, mergeAchievements } from '../utils/achievementLogic';
@@ -78,7 +78,7 @@ interface GameContextType {
   t: (key: string) => string;
   dispatch: React.Dispatch<GameAction>;
   setLanguage: (languageCode: string) => void;
-  showToast: (message: string, type?: ToastInfo['type']) => void;
+  showToast: (message: string, type?: ToastInfo['type'], marketEvent?: MarketEventToastData) => void;
 }
 
 export type GameAction =
@@ -1906,8 +1906,8 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const [currentLanguage, setCurrentLanguage] = React.useState('en');
   const [toastInfo, setToastInfo] = useState<ToastInfo | null>(null);
-  const showToast = useCallback((message: string, type: ToastInfo['type'] = 'info') => {
-    setToastInfo({ message, type });
+  const showToast = useCallback((message: string, type: ToastInfo['type'] = 'info', marketEvent?: MarketEventToastData) => {
+    setToastInfo({ message, type, marketEvent });
   }, []);
 
   const t = (key: string): string => {
