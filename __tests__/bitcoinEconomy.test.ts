@@ -512,3 +512,68 @@ describe('free offline earnings must update genesis stats', () => {
     expect(result.blocksMined).toBeLessThanOrEqual(GENESIS_CONSTANTS.TOTAL_BLOCKS);
   });
 });
+
+// ── creditCryptoCoins — generic CC-to-blocks for packs & achievements ───────
+
+describe('creditCryptoCoins advances blocksMined for any CC reward', () => {
+  const makeState = (overrides: any = {}): any => ({
+    hardware: [],
+    upgrades: [],
+    energy: { totalGeneratedMW: 0, totalRequiredMW: 0, sources: {} },
+    prestigeProductionMultiplier: 1,
+    prestigeMultiplier: 1,
+    adBoost: { isActive: false, expiresAt: null },
+    iapState: {
+      permanentMultiplierPurchased: false,
+      booster2x: { isActive: false, expiresAt: null },
+      booster5x: { isActive: false, expiresAt: null },
+      offlineMiner: { isActive: false, activatedAt: null, expiresAt: null },
+    },
+    ai: { level: 0 },
+    blocksMined: 0,
+    cryptoCoins: 0,
+    totalCryptoCoins: 0,
+    ...overrides,
+  });
+
+  it('credits CC and advances blocksMined proportionally', () => {
+    const { creditCryptoCoins } = require('../src/utils/gameLogic');
+    // At blocksMined=0, reward=50 CC/block. 500 CC = 10 blocks.
+    const state = makeState({ blocksMined: 0, cryptoCoins: 100, totalCryptoCoins: 100 });
+    const result = creditCryptoCoins(state, 500);
+    expect(result.cryptoCoins).toBe(600);
+    expect(result.totalCryptoCoins).toBe(600);
+    expect(result.blocksMined).toBe(10); // 500 / 50 = 10 blocks
+    expect(result.currentReward).toBe(50);
+    expect(result.nextHalving).toBe(210_000);
+  });
+
+  it('handles halving boundary correctly', () => {
+    const { creditCryptoCoins } = require('../src/utils/gameLogic');
+    // 5 blocks before halving at 50 CC/block, then next blocks at 25 CC/block.
+    // 5 blocks × 50 = 250 CC, remaining 250 CC / 25 = 10 blocks → 15 total blocks
+    const state = makeState({ blocksMined: 209_995 });
+    const result = creditCryptoCoins(state, 500);
+    expect(result.blocksMined).toBe(209_995 + 15); // 5 at 50 CC + 10 at 25 CC
+    expect(result.currentReward).toBe(25);
+  });
+
+  it('caps at TOTAL_BLOCKS', () => {
+    const { creditCryptoCoins } = require('../src/utils/gameLogic');
+    const state = makeState({ blocksMined: GENESIS_CONSTANTS.TOTAL_BLOCKS - 2 });
+    const result = creditCryptoCoins(state, 1_000_000);
+    expect(result.blocksMined).toBeLessThanOrEqual(GENESIS_CONSTANTS.TOTAL_BLOCKS);
+    // CC is still fully credited even if blocks are capped
+    expect(result.cryptoCoins).toBe(1_000_000);
+  });
+
+  it('updates difficulty and nextHalving', () => {
+    const { creditCryptoCoins } = require('../src/utils/gameLogic');
+    const state = makeState({ blocksMined: 0 });
+    const result = creditCryptoCoins(state, 10000);
+    expect(result.difficulty).toBeDefined();
+    expect(result.nextHalving).toBeDefined();
+    expect(result.currentReward).toBeDefined();
+    expect(result.blocksMined).toBe(200); // 10000 / 50 = 200
+  });
+});

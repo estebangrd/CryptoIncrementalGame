@@ -4,7 +4,7 @@ import { GameState, Cryptocurrency, PrestigeRun, RunStats, AILevel, EndingType, 
 import { hardwareProgression } from '../data/hardwareData';
 import { initialUpgrades } from '../data/gameData';
 import { cryptocurrencies } from '../data/cryptocurrencies';
-import { getInitialGameState, updateOfflineProgress, checkAndUpdateUnlocks, claimOfflineEarnings } from '../utils/gameLogic';
+import { getInitialGameState, updateOfflineProgress, checkAndUpdateUnlocks, claimOfflineEarnings, creditCryptoCoins } from '../utils/gameLogic';
 import { tickOU, generateInitialChartWindow, getInitialPriceEngineState, smoothEraTransition } from '../utils/priceEngine';
 import {
   canPrestige,
@@ -1080,17 +1080,16 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       const booster2xUpdate = shouldActivateBooster
         ? { booster2x: { isActive: true, activatedAt: now, expiresAt: now + boosterDurations[packType] } }
         : {};
+      const creditedState = creditCryptoCoins(state, ccReward);
       return {
-        ...state,
-        cryptoCoins: state.cryptoCoins + ccReward,
-        totalCryptoCoins: state.totalCryptoCoins + ccReward,
-        realMoney: state.realMoney + cashReward,
-        totalRealMoneyEarned: state.totalRealMoneyEarned + cashReward,
+        ...creditedState,
+        realMoney: creditedState.realMoney + cashReward,
+        totalRealMoneyEarned: creditedState.totalRealMoneyEarned + cashReward,
         iapState: {
-          ...state.iapState,
+          ...creditedState.iapState,
           ...booster2xUpdate,
-          starterPacksPurchased: { ...state.iapState.starterPacksPurchased, [packType]: true },
-          purchaseHistory: [...state.iapState.purchaseHistory, { ...record, delivered: true }],
+          starterPacksPurchased: { ...creditedState.iapState.starterPacksPurchased, [packType]: true },
+          purchaseHistory: [...creditedState.iapState.purchaseHistory, { ...record, delivered: true }],
           isPurchasing: false,
           packOfferExpiresAt: 0,
           packNextOfferAt: now + PACK_CONFIG.COOLDOWN_MS,
@@ -1363,11 +1362,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       if (!achievement?.reward) return state;
       const reward = achievement.reward;
       if (reward.type === 'coins' && reward.amount) {
-        return {
-          ...state,
-          cryptoCoins: state.cryptoCoins + reward.amount,
-          totalCryptoCoins: state.totalCryptoCoins + reward.amount,
-        };
+        return creditCryptoCoins(state, reward.amount);
       }
       if (reward.type === 'money' && reward.amount) {
         return {

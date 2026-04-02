@@ -422,6 +422,40 @@ export const claimOfflineEarnings = (gameState: GameState, claimAmount: number):
   };
 };
 
+/**
+ * Credit CC to the player and advance blocksMined by the equivalent number
+ * of blocks at current reward rate(s). Handles halving boundaries.
+ * Used by packs, achievements, and any instant CC reward.
+ */
+export const creditCryptoCoins = (gameState: GameState, ccAmount: number): GameState => {
+  let ccRemaining = ccAmount;
+  let currentBlocksMined = gameState.blocksMined;
+
+  while (ccRemaining > 0 && currentBlocksMined < GENESIS_CONSTANTS.TOTAL_BLOCKS) {
+    const reward = calculateCurrentReward(currentBlocksMined);
+    const nextHalving = calculateNextHalving(currentBlocksMined);
+    const blocksUntilHalving = nextHalving - currentBlocksMined;
+    const blocksUntilCap = GENESIS_CONSTANTS.TOTAL_BLOCKS - currentBlocksMined;
+    const blocksForCC = Math.ceil(ccRemaining / reward);
+    const blocksThisBatch = Math.min(blocksForCC, blocksUntilHalving, blocksUntilCap);
+
+    ccRemaining -= blocksThisBatch * reward;
+    currentBlocksMined += blocksThisBatch;
+  }
+
+  const constrainedMiningSpeed = getConstrainedMiningSpeed(gameState);
+
+  return {
+    ...gameState,
+    cryptoCoins: gameState.cryptoCoins + ccAmount,
+    totalCryptoCoins: gameState.totalCryptoCoins + ccAmount,
+    blocksMined: currentBlocksMined,
+    difficulty: calculateDifficulty(constrainedMiningSpeed),
+    currentReward: calculateCurrentReward(currentBlocksMined),
+    nextHalving: calculateNextHalving(currentBlocksMined),
+  };
+};
+
 export const formatNumber = (num: number): string => {
   if (num < 1000) return num.toFixed(1);
   if (num < 1000000) return (num / 1000).toFixed(1) + 'K';
