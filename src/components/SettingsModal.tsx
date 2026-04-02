@@ -202,10 +202,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose, onReset
                 const idx = marketToastIndexRef.current;
                 const evt = MARKET_TOAST_LIST[idx];
                 const toastType: ToastInfo['type'] = evt.multiplier >= 1 ? 'success' : 'warning';
-                showToast(t(evt.toastKey), toastType);
+                onClose();
+                setTimeout(() => showToast(t(evt.toastKey), toastType), 150);
                 marketToastIndexRef.current = (idx + 1) % MARKET_TOAST_LIST.length;
               }}>
-                <Text style={styles.actionButtonText}>🔔 Cycle Market Toasts ({MARKET_TOAST_LIST.length})</Text>
+                <Text style={styles.actionButtonText}>🔔 Next: {MARKET_TOAST_LIST[marketToastIndexRef.current]?.label} ({marketToastIndexRef.current + 1}/{MARKET_TOAST_LIST.length})</Text>
               </TouchableOpacity>
             </View>
 
