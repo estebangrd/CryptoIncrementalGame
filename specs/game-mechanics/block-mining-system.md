@@ -59,8 +59,8 @@ Este sistema es el corazón del loop de gameplay: minar bloques → ganar Crypto
 
 | ID | Nombre | Mult | Costo | Unlock | Total acumulado |
 |---|---|---|---|---|---|
-| `clickPower` | Click Power | ×5 | $500 | `type: 'always'` (siempre visible) | ×5 |
-| `clickMastery` | Hash Injection | ×3 | $10,000 | `type: 'hardware'` — 5× `basic_gpu` | ×15 |
+| `clickPower` | Click Power | ×5 | $5,000 | `type: 'always'` (siempre visible) | ×5 |
+| `clickMastery` | Hash Injection | ×3 | $100,000 | `type: 'hardware'` — 5× `basic_gpu` | ×15 |
 | `clickLegend` | Click Legend | ×2 | $2,000,000 | `type: 'hardware'` — 10× `asic_gen3` | ×30 |
 
 - Los upgrades se ocultan hasta que se cumple su `unlockCondition` (mismo sistema que todos los upgrades)

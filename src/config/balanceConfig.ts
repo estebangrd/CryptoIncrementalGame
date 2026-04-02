@@ -185,13 +185,13 @@ export const CRYPTO_CONFIG = {
 export const UPGRADE_CONFIG = {
   // Click Power - Aumenta CryptoCoins por click
   clickPower: {
-    cost: 500,                 // Costo en $ (dinero real)
+    cost: 5000,                // Costo en $ (dinero real)
     multiplier: 5,             // Multiplicador (5 = 5x coins por click)
   },
 
   // Hash Injection - 3x click (apilable con clickPower → total 15x)
   clickMastery: {
-    cost: 10000,
+    cost: 100000,
     multiplier: 3,
     unlockRequirement: {
       hardwareId: 'basic_gpu',

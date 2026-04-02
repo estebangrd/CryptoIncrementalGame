@@ -369,11 +369,6 @@ const AdBoosterBubbles: React.FC = () => {
             ]}
           />
 
-          {/* Android glow (no colored box-shadow on Android) */}
-          {Platform.OS === 'android' && (
-            <View style={[styles.androidGlow, { borderColor: theme.color }]} />
-          )}
-
           {/* Main bubble */}
           <TouchableOpacity
             style={[
@@ -470,9 +465,9 @@ const styles = StyleSheet.create({
   },
   pulseRing: {
     position: 'absolute',
-    width: 76,
-    height: 76,
-    borderRadius: 38,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     borderWidth: 2,
   },
   bubble: {
@@ -492,16 +487,6 @@ const styles = StyleSheet.create({
       },
       android: {},
     }),
-  },
-  // Android glow — ring behind bubble, only visible outside
-  androidGlow: {
-    position: 'absolute',
-    width: 66,
-    height: 66,
-    borderRadius: 33,
-    borderWidth: 1,
-    opacity: 0.4,
-    backgroundColor: 'transparent',
   },
   bubbleEnergy: {
     ...Platform.select({

@@ -247,7 +247,7 @@ const HardwareList: React.FC = () => {
                 <MetricCell
                   label="Power"
                   value={electricityCost > 0 ? `-${formatNumber(electricityCost)}` : '0'}
-                  unit="$/s"
+                  unit="kW/h"
                   delta={deltaElectricity > 0 ? `-${formatNumber(deltaElectricity)}` : '0'}
                   valueColor={colors.nr}
                   deltaType={deltaElectricity > 0 ? 'neg' : 'zero'}

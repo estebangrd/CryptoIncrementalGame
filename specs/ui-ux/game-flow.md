@@ -224,19 +224,19 @@ analytics().logEvent('first_sale', {
 3. Notificación: "🔓 Upgrades Unlocked! Boost your production with permanent upgrades"
 4. Usuario abre Upgrades screen:
    - Lista de upgrades disponibles
-   - Primer upgrade: "Click Power" (Cost: $500) — siempre visible
+   - Primer upgrade: "Click Power" (Cost: $5,000) — siempre visible
      - Effect: 5× coins per click
-     - Status: 🔒 Locked (necesita $500)
+     - Status: 🔒 Locked (necesita $5,000)
    - Upgrades posteriores ocultos hasta cumplir unlock:
-     - "Hash Injection" ($10K) — aparece con 5× basic_gpu → 3× click (total 15×)
+     - "Hash Injection" ($100K) — aparece con 5× basic_gpu → 3× click (total 15×)
      - "Click Legend" ($2M) — aparece con 10× asic_gen3 → 2× click (total 30×)
    - Upgrade visible pero no comprable aún
 5. Tutorial tooltip: "Upgrades give permanent bonuses. Keep earning $ to unlock them!"
-6. Usuario vende suficientes coins para ganar $500
+6. Usuario vende suficientes coins para ganar $5,000
 7. Regresa a Upgrades screen:
    - "Click Power" ahora muestra "BUY" button (enabled)
 8. Usuario compra upgrade:
-   - realMoney: $500 → $0
+   - realMoney: $5,000 → $0
    - Upgrade marca como "Purchased" ✅
    - Click power ahora: 5× CC per click
 9. Toast: "✅ Click Power upgraded! You now earn 5× CC per click"
@@ -253,7 +253,7 @@ analytics().logEvent('upgrades_unlocked', {
 });
 analytics().logEvent('first_upgrade_purchased', {
   upgrade_id: 'clickPower',
-  cost: 500,
+  cost: 5000,
 });
 ```
 

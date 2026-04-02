@@ -428,6 +428,7 @@ const GameScreen: React.FC = () => {
           text: t('ui.confirm'),
           style: 'destructive',
           onPress: async () => {
+            setShowSettings(false);
             await clearGameData();
             dispatch({ type: 'RESET_GAME' });
           },

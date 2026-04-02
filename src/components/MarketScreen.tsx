@@ -208,7 +208,7 @@ const MarketScreen: React.FC = () => {
                       {...panResponder.panHandlers}
                     >
                       <View style={[styles.sliderFill, { width: `${amountPercent}%` }]} />
-                      <View style={[styles.sliderThumb, { left: `${amountPercent}%`, marginLeft: -(amountPercent / 100) * 26 }]} />
+                      <View style={[styles.sliderThumb, { left: `${amountPercent}%`, marginLeft: -13 }]} />
                     </View>
                     <View style={styles.sliderLabels}>
                       <Text style={styles.sliderLabel}>1%</Text>
@@ -417,7 +417,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 3,
     position: 'relative',
-    marginBottom: 6,
+    marginBottom: 12,
+    marginLeft: 4,
+    marginRight: 7,
   },
   sliderFill: {
     height: '100%',
@@ -446,11 +448,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 12,
+    marginLeft: 3,
   },
   sliderLabel: {
     fontFamily: fonts.mono,
     fontSize: 9,
     color: colors.dim,
+    textAlign: 'center',
   },
 
   /* Quick buttons */
