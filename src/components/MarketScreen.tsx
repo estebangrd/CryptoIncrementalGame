@@ -29,7 +29,7 @@ const formatPriceUSD = (price: number): string => {
 
 const MarketScreen: React.FC = () => {
   const { gameState, dispatch, t } = useGame();
-  const [amountPercent, setAmountPercent] = useState(50);
+  const [amountPercent, setAmountPercent] = useState(100);
   const [sellConfirming, setSellConfirming] = useState(false);
   const [scrollEnabled, setScrollEnabled] = useState(true);
   const sellConfirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -208,12 +208,22 @@ const MarketScreen: React.FC = () => {
                       {...panResponder.panHandlers}
                     >
                       <View style={[styles.sliderFill, { width: `${amountPercent}%` }]} />
-                      <View style={[styles.sliderThumb, { left: `${amountPercent}%`, marginLeft: -(amountPercent / 100) * 18 }]} />
+                      <View style={[styles.sliderThumb, { left: `${amountPercent}%`, marginLeft: -(amountPercent / 100) * 26 }]} />
                     </View>
                     <View style={styles.sliderLabels}>
                       <Text style={styles.sliderLabel}>1%</Text>
                       <Text style={styles.sliderLabel}>100%</Text>
                     </View>
+                  </View>
+                  <View style={styles.quickRow}>
+                    {[25, 50, 75].map(v => (
+                      <TouchableOpacity key={v} style={styles.qBtn} onPress={() => setAmountPercent(v)} activeOpacity={0.7}>
+                        <Text style={styles.qBtnText}>{v}%</Text>
+                      </TouchableOpacity>
+                    ))}
+                    <TouchableOpacity style={[styles.qBtn, styles.qBtnMax]} onPress={() => setAmountPercent(100)} activeOpacity={0.7}>
+                      <Text style={[styles.qBtnText, styles.qBtnMaxText]}>MAX</Text>
+                    </TouchableOpacity>
                   </View>
                   <View style={styles.earnBox}>
                     <Text style={styles.earnAmount}>{formatUSD(sellPreviewMoney)}</Text>
@@ -390,23 +400,24 @@ const styles = StyleSheet.create({
   /* Slider */
   sliderPct: {
     fontFamily: fonts.orbitronBlack,
-    fontSize: 20,
+    fontSize: 48,
     color: colors.ny,
     textAlign: 'center',
-    marginBottom: 6,
+    marginBottom: 12,
     textShadowColor: 'rgba(255,214,0,0.4)',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 14,
+    textShadowRadius: 20,
+    lineHeight: 48,
   },
   sliderContainer: {
     marginBottom: 10,
   },
   sliderTrack: {
-    height: 5,
+    height: 6,
     backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 3,
     position: 'relative',
-    marginBottom: 14,
+    marginBottom: 6,
   },
   sliderFill: {
     height: '100%',
@@ -417,25 +428,57 @@ const styles = StyleSheet.create({
     top: 0,
   },
   sliderThumb: {
-    width: 18,
-    height: 18,
+    width: 26,
+    height: 26,
     backgroundColor: colors.ng,
-    borderRadius: 9,
+    borderRadius: 13,
     position: 'absolute',
-    top: -6,
+    top: -10,
+    borderWidth: 2,
+    borderColor: 'rgba(2,8,16,0.8)',
     shadowColor: colors.ng,
     shadowOffset: { width: 0, height: 0 },
-    shadowRadius: 8,
+    shadowRadius: 12,
+    shadowOpacity: 0.6,
     elevation: 4,
   },
   sliderLabels: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginBottom: 12,
   },
   sliderLabel: {
     fontFamily: fonts.mono,
     fontSize: 9,
     color: colors.dim,
+  },
+
+  /* Quick buttons */
+  quickRow: {
+    flexDirection: 'row',
+    gap: 6,
+    marginBottom: 12,
+  },
+  qBtn: {
+    flex: 1,
+    paddingVertical: 9,
+    paddingHorizontal: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    alignItems: 'center',
+  },
+  qBtnText: {
+    fontFamily: fonts.orbitron,
+    fontSize: 11,
+    color: colors.dim,
+  },
+  qBtnMax: {
+    borderColor: 'rgba(255,214,0,0.2)',
+  },
+  qBtnMaxText: {
+    color: colors.ny,
   },
 
   /* Earn box */
