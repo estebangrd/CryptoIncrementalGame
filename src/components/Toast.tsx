@@ -86,7 +86,7 @@ const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
     return (
       <Animated.View style={[
         bStyles.outer,
-        { paddingTop: insets.top + 10, transform: [{ translateY }], opacity },
+        { top: insets.top + 44, transform: [{ translateY }], opacity },
       ]}>
         <View style={bStyles.inner}>
           {/* Left color stripe */}
