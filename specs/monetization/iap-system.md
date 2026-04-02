@@ -584,7 +584,8 @@ interface Product {
 5. **Boosters NO stackean entre sí**: 5x reemplaza 2x, no se suman
 6. **Boosters SÍ stackean con otros multipliers**: permanent, prestige, ad boost
 7. **Starter Pack resources son instantáneos**: Se otorgan inmediatamente al comprar
-8. **No refunds en starter packs**: Recursos ya fueron usados, no se pueden revocar
+8. **Starter Pack CC rewards avanzan `blocksMined`**: Usan `creditCryptoCoins()` para convertir CC otorgados a bloques equivalentes según reward actual, respetando halvings y TOTAL_BLOCKS cap. Invariante: toda CC en el sistema tiene bloques minados correspondientes.
+9. **No refunds en starter packs**: Recursos ya fueron usados, no se pueden revocar
 9. **Restore Purchases solo restaura non-consumables**: Consumables no se restauran
 10. **Receipt validation obligatoria**: Toda compra debe validar receipt antes de otorgar
 11. **Pending transactions se procesan automáticamente**: Al iniciar app, finish pending

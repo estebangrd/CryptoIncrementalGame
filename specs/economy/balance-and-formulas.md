@@ -323,7 +323,9 @@ function estimateRunDuration(
 
 ### 6. Offline Progress
 
-El juego **no acredita ganancias mientras está en background**. La producción solo ocurre cuando el usuario está jugando activamente. Al volver al primer plano, `updateOfflineProgress` únicamente sincroniza `lastSaveTime` sin acreditar monedas.
+El juego calcula ganancias offline al volver al primer plano mediante `updateOfflineProgress()`. Si el jugador tiene IAP Offline Miner activo, se acreditan automáticamente; si no, se almacenan como `pendingOfflineEarnings` para reclamar vía modal (ad-gated). Al reclamar, `claimOfflineEarnings()` avanza `blocksMined` junto con las CC.
+
+**Invariante del génesis**: Toda CC que entra al sistema debe avanzar `blocksMined`. Esto aplica a: producción normal, offline earnings, packs IAP (`creditCryptoCoins()`), y achievement rewards (`creditCryptoCoins()`). No pueden existir CC sin bloques minados correspondientes.
 
 ## ROI (Return on Investment) por Hardware
 

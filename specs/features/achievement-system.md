@@ -147,7 +147,8 @@ interface AchievementReward {
 2. **Los logros persisten entre prestiges**: No se resetean al hacer prestige
 3. **Los logros secretos no muestran descripción** hasta que se desbloquean
 4. **Las recompensas se otorgan automáticamente** al desbloquear
-5. **Notificaciones de logros no bloquean el gameplay**: Son toast no-invasivos
+5. **Recompensas tipo `coins` avanzan `blocksMined`**: Usan `creditCryptoCoins()` para convertir CC a bloques equivalentes según reward actual, respetando halvings y el cap de TOTAL_BLOCKS. No pueden existir CC sin bloques correspondientes (invariante del génesis).
+6. **Notificaciones de logros no bloquean el gameplay**: Son toast no-invasivos
 6. **Progreso de logros se actualiza en tiempo real**: Sin necesidad de refresh
 7. **Logros se guardan con AsyncStorage**: Junto con el resto del GameState
 

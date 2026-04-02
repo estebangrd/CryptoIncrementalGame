@@ -664,6 +664,12 @@ interface IAPState {
 15. **Booster incluido**: Cada pack activa booster 2x producción por la duración del tier
 16. **Packs se pueden comprar múltiples veces**: Cada oferta es una nueva compra (no one-time)
 
+### Integridad del Génesis (invariante global)
+17. **Toda CC que entra al sistema debe avanzar `blocksMined`**: No pueden existir CryptoCoins sin bloques minados correspondientes
+18. **Pack CC rewards usan `creditCryptoCoins()`**: Convierte CC otorgados a bloques equivalentes según reward actual, respetando halvings
+19. **Offline Miner earnings usan `claimOfflineEarnings()`**: Avanza `blocksMined` por los `offlineBlocksProcessed` calculados durante la ausencia
+20. **Lucky Block no viola invariante**: Multiplica reward de bloques ya minados en `ADD_PRODUCTION`, no crea CC sin bloques
+
 ## UI/UX Requirements
 
 ### Booster Cards
