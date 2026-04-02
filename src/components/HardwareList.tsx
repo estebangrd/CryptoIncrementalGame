@@ -3,6 +3,7 @@ import {
   View,
   Text,
   TouchableOpacity,
+  Switch,
   StyleSheet,
 } from 'react-native';
 import { useGame } from '../contexts/GameContext';
@@ -15,6 +16,7 @@ import {
   getConstrainedMiningSpeed,
 } from '../utils/gameLogic';
 import { calculateDifficulty, calculateCurrentReward } from '../utils/blockLogic';
+import { ELECTRICITY_FEE_CONFIG } from '../config/balanceConfig';
 import { colors, fonts } from '../config/theme';
 
 // ── Section Header ──────────────────────────────────────────────────────────
@@ -130,40 +132,88 @@ const HardwareList: React.FC = () => {
           const cost = Math.floor(hardware.baseCost * Math.pow(hardware.costMultiplier, hardware.owned));
           const canAfford = gameState.realMoney >= cost;
           const hasUnits = hardware.owned > 0;
+          const isDisabled = hardware.isEnabled === false;
 
-          // Current totals
-          const hashRate = calculateHardwareProduction(hardware, gameState.upgrades);
-          const electricityCost = calculateHardwareElectricityCost(hardware);
-          const miningSpeed = calculateHardwareMiningSpeed(hardware, gameState.upgrades);
+          // Current totals (for display, compute as-if enabled so metrics always show)
+          const displayHw = { ...hardware, isEnabled: undefined };
+          const hashRate = calculateHardwareProduction(displayHw, gameState.upgrades);
+          const electricityCost = calculateHardwareElectricityCost(displayHw);
+          const miningSpeed = calculateHardwareMiningSpeed(displayHw, gameState.upgrades);
           // Global formula: CC/sec = (miningSpeed / difficulty) × globalBlockReward
           const difficulty = calculateDifficulty(getConstrainedMiningSpeed(gameState));
           const globalReward = calculateCurrentReward(gameState.blocksMined);
           const coinsPerSecond = (miningSpeed / difficulty) * globalReward;
 
+          // Per-tier fee in CC/s
+          const tierFeeCC = hardware.electricityCost * hardware.owned * ELECTRICITY_FEE_CONFIG.RATE_PERCENT / 100;
+          const isUnprofitable = hasUnits && tierFeeCC > coinsPerSecond && coinsPerSecond > 0;
+          const lossPerSec = tierFeeCC - coinsPerSecond;
+
           // +1 unit deltas
-          const unitHardware = { ...hardware, owned: 1 };
+          const unitHardware = { ...hardware, owned: 1, isEnabled: undefined };
           const deltaHashRate = calculateHardwareProduction(unitHardware, gameState.upgrades);
           const deltaMiningSpeed = calculateHardwareMiningSpeed(unitHardware, gameState.upgrades);
           const deltaCoinsPerSec = (deltaMiningSpeed / difficulty) * globalReward;
           const deltaElectricity = hardware.electricityCost;
 
           return (
-            <View key={hardware.id} style={[styles.card, hasUnits && styles.cardOwned]}>
+            <View key={hardware.id} style={[
+              styles.card,
+              hasUnits && !isDisabled && styles.cardOwned,
+              isDisabled && styles.cardDisabled,
+            ]}>
               {/* Top gradient accent */}
-              <View style={[styles.cardAccent, hasUnits ? styles.cardAccentOwned : styles.cardAccentBase]} />
+              <View style={[
+                styles.cardAccent,
+                isDisabled
+                  ? styles.cardAccentDisabled
+                  : hasUnits ? styles.cardAccentOwned : styles.cardAccentBase,
+              ]} />
+
+              {/* Unprofitable warning strip */}
+              {isUnprofitable && !isDisabled && (
+                <View style={styles.warningStrip}>
+                  <Text style={styles.warningText}>
+                    {`\u26A0 ${t('hardware.unprofitable')} \u2014 ${t('hardware.unprofitableLosing')} ${formatNumber(lossPerSec)} CC/s`}
+                  </Text>
+                </View>
+              )}
 
               {/* Header */}
               <View style={styles.cardHeader}>
-                <View style={[styles.iconWrap, hasUnits && styles.iconWrapOwned]}>
-                  <Text style={styles.icon}>{hardware.icon}</Text>
+                <View style={[
+                  styles.iconWrap,
+                  hasUnits && !isDisabled && styles.iconWrapOwned,
+                  isDisabled && styles.iconWrapDisabled,
+                ]}>
+                  <Text style={[styles.icon, isDisabled && styles.iconDisabled]}>{hardware.icon}</Text>
                 </View>
                 <View style={styles.titleGroup}>
-                  <Text style={styles.hwName}>{t(hardware.nameKey)}</Text>
+                  <Text style={[styles.hwName, isDisabled && styles.textDimmed]}>{t(hardware.nameKey)}</Text>
                   <Text style={styles.hwDesc}>{t(hardware.descriptionKey)}</Text>
                 </View>
-                <View style={[styles.ownedBadge, !hasUnits && styles.ownedBadgeDim]}>
-                  <Text style={[styles.ownedNum, !hasUnits && styles.ownedNumDim]}>{hardware.owned}</Text>
-                  <Text style={[styles.ownedLbl, !hasUnits && styles.ownedLblDim]}>OWNED</Text>
+                <View style={styles.ownedToggleCol}>
+                  <View style={[
+                    styles.ownedBadge,
+                    !hasUnits && styles.ownedBadgeDim,
+                    isDisabled && styles.ownedBadgeOff,
+                  ]}>
+                    <Text style={[styles.ownedNum, !hasUnits && styles.ownedNumDim, isDisabled && styles.ownedNumOff]}>
+                      {hardware.owned}
+                    </Text>
+                    <Text style={[styles.ownedLbl, !hasUnits && styles.ownedLblDim, isDisabled && styles.ownedLblOff]}>
+                      {isDisabled ? t('hardware.toggleOff') : 'OWNED'}
+                    </Text>
+                  </View>
+                  {hasUnits && (
+                    <Switch
+                      value={!isDisabled}
+                      onValueChange={() => dispatch({ type: 'TOGGLE_HARDWARE', payload: hardware.id })}
+                      trackColor={{ false: 'rgba(255,255,255,0.12)', true: 'rgba(0,255,136,0.35)' }}
+                      thumbColor={isDisabled ? '#666' : colors.ng}
+                      style={styles.toggle}
+                    />
+                  )}
                 </View>
               </View>
 
@@ -249,6 +299,10 @@ const styles = StyleSheet.create({
   cardOwned: {
     borderColor: 'rgba(0,255,136,0.20)',
   },
+  cardDisabled: {
+    borderColor: 'rgba(255,255,255,0.06)',
+    opacity: 0.55,
+  },
 
   // Gradient accent bar at top
   cardAccent: {
@@ -263,6 +317,30 @@ const styles = StyleSheet.create({
   cardAccentOwned: {
     backgroundColor: colors.ng,
     opacity: 0.5,
+  },
+  cardAccentDisabled: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    opacity: 0.5,
+  },
+
+  // Warning strip
+  warningStrip: {
+    backgroundColor: 'rgba(255,61,90,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,61,90,0.25)',
+    borderRadius: 6,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    marginBottom: 10,
+    marginTop: 2,
+  },
+  warningText: {
+    fontFamily: fonts.mono,
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#ff3d5a',
+    textAlign: 'center',
+    letterSpacing: 1,
   },
 
   // ── Header ──
@@ -288,8 +366,18 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,255,136,0.07)',
     borderColor: 'rgba(0,255,136,0.20)',
   },
+  iconWrapDisabled: {
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderColor: 'rgba(255,255,255,0.10)',
+  },
   icon: {
     fontSize: 22,
+  },
+  iconDisabled: {
+    opacity: 0.4,
+  },
+  textDimmed: {
+    opacity: 0.5,
   },
   titleGroup: {
     flex: 1,
@@ -341,6 +429,24 @@ const styles = StyleSheet.create({
   },
   ownedLblDim: {
     color: 'rgba(255,255,255,0.3)',
+  },
+  ownedBadgeOff: {
+    backgroundColor: 'rgba(255,61,90,0.10)',
+    borderColor: 'rgba(255,61,90,0.25)',
+  },
+  ownedNumOff: {
+    color: '#ff3d5a',
+  },
+  ownedLblOff: {
+    color: 'rgba(255,61,90,0.6)',
+  },
+  ownedToggleCol: {
+    alignItems: 'center',
+    gap: 6,
+    flexShrink: 0,
+  },
+  toggle: {
+    transform: [{ scale: 0.8 }],
   },
 
   // ── Metrics grid ──

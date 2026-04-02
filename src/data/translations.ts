@@ -207,6 +207,23 @@ export const translations: Translation = {
     pt: 'Uma megaestrutura planetária convertendo a energia do núcleo terrestre em poder computacional. As luzes das cidades estão se apagando.',
   },
 
+  // Hardware toggle / profitability
+  'hardware.toggleOff': {
+    en: 'OFF',
+    es: 'APAGADO',
+    pt: 'DESLIGADO',
+  },
+  'hardware.unprofitable': {
+    en: 'UNPROFITABLE',
+    es: 'NO RENTABLE',
+    pt: 'NÃO LUCRATIVO',
+  },
+  'hardware.unprofitableLosing': {
+    en: 'LOSING',
+    es: 'PERDIENDO',
+    pt: 'PERDENDO',
+  },
+
   // Upgrades
   'upgrade.clickPower': {
     en: 'Click Power',

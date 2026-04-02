@@ -8,11 +8,14 @@ import { initialUpgrades } from '../data/gameData';
 import { cryptocurrencies } from '../data/cryptocurrencies';
 import { ALL_ACHIEVEMENTS } from '../data/achievements';
 
+export const isHardwareEnabled = (hw: Hardware): boolean => hw.isEnabled !== false;
+
 export const calculateHardwareCost = (hardware: Hardware): number => {
   return Math.floor(hardware.baseCost * Math.pow(hardware.costMultiplier, hardware.owned));
 };
 
 export const calculateHardwareProduction = (hardware: Hardware, upgrades: Upgrade[]): number => {
+  if (!isHardwareEnabled(hardware)) return 0;
   let production = hardware.baseProduction * hardware.owned;
 
   // Apply upgrades that affect this hardware
@@ -39,6 +42,7 @@ export const calculateHardwareProduction = (hardware: Hardware, upgrades: Upgrad
 };
 
 export const calculateHardwareElectricityCost = (hardware: Hardware): number => {
+  if (!isHardwareEnabled(hardware)) return 0;
   return hardware.electricityCost * hardware.owned;
 };
 
@@ -47,6 +51,7 @@ export const calculateTotalElectricityCost = (hardware: Hardware[]): number => {
 };
 
 export const calculateHardwareMiningSpeed = (hardware: Hardware, upgrades: Upgrade[]): number => {
+  if (!isHardwareEnabled(hardware)) return 0;
   let speed = hardware.miningSpeed * hardware.owned;
 
   // Apply upgrades that affect this hardware
@@ -141,6 +146,7 @@ export const getConstrainedMiningSpeed = (gameState: GameState): number => {
   let constrainedMiningSpeed = 0;
   gameState.hardware.forEach(hardware => {
     if (hardware.id === 'manual_mining') return;
+    if (!isHardwareEnabled(hardware)) return;
 
     let effectiveOwned = hardware.owned;
     if (hardware.energyRequired > 0) {
@@ -181,6 +187,7 @@ export const calculateTotalHashRate = (gameState: GameState): number => {
     // manual_mining represents click-based mining; exclude from auto-production stats
     if (hardware.id === 'manual_mining') return;
     if (hardware.owned === 0) return;
+    if (!isHardwareEnabled(hardware)) return;
     const baseHashRate = hardware.baseProduction * 10;
     // Apply same per-hardware upgrade multipliers as calculateHardwareMiningSpeed
     let upgradeMultiplier = 1;

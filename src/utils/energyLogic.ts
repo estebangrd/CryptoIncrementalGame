@@ -52,7 +52,7 @@ export const calculateNonRenewableActiveMW = (sources: Record<string, EnergySour
 
 export const calculateTotalRequiredMW = (hardware: Hardware[]): number => {
   return hardware
-    .filter(h => h.energyRequired > 0 && h.owned > 0)
+    .filter(h => h.energyRequired > 0 && h.owned > 0 && h.isEnabled !== false)
     .reduce((sum, h) => sum + h.owned * h.energyRequired, 0);
 };
 
@@ -63,7 +63,7 @@ export const getActiveHardwareWithEnergyConstraint = (
   totalGenerated: number
 ): Array<Hardware & { activeUnits: number }> => {
   const energyHardware = hardware
-    .filter(h => h.energyRequired > 0 && h.owned > 0)
+    .filter(h => h.energyRequired > 0 && h.owned > 0 && h.isEnabled !== false)
     .sort((a, b) => b.level - a.level); // descending by tier
 
   let remainingEnergy = totalGenerated;

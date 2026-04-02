@@ -153,7 +153,8 @@ export type GameAction =
   | { type: 'APPLY_MARKET_EVENT'; payload: { eventId: MarketEventId } }
   | { type: 'CANCEL_MARKET_EVENT'; payload: MarketEventId }
   | { type: 'CLAIM_OFFLINE_EARNINGS'; payload: { amount: number } }
-  | { type: 'DISMISS_OFFLINE_EARNINGS' };
+  | { type: 'DISMISS_OFFLINE_EARNINGS' }
+  | { type: 'TOGGLE_HARDWARE'; payload: string };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
@@ -282,6 +283,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           return {
             ...fresh,              // fresh balance values (miningSpeed, costMultiplier, etc.)
             owned: hw.owned,       // preserve player progress
+            isEnabled: hw.isEnabled,  // preserve toggle state
           };
         }
         return hw;
@@ -722,6 +724,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       const resetHardware = state.hardware.map(hw => ({
         ...hw,
         owned: hw.id === 'manual_mining' ? 1 : 0,
+        isEnabled: undefined,
       }));
       const resetUpgrades = state.upgrades.map(upg => ({ ...upg, purchased: false }));
       const newHistory = [...(state.prestigeHistory || []), currentRun];
@@ -938,6 +941,15 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         return { ...recalcedMoneyHw, marketOpportunityEvent: marketOpp2, activeBannerEvent: 'market_opportunity' };
       }
       return recalcedMoneyHw;
+    case 'TOGGLE_HARDWARE': {
+      const toggleIdx = state.hardware.findIndex(h => h.id === action.payload);
+      if (toggleIdx === -1) return state;
+      const toggleHw = state.hardware[toggleIdx];
+      if (toggleHw.owned === 0) return state;
+      const toggledHardware = [...state.hardware];
+      toggledHardware[toggleIdx] = { ...toggleHw, isEnabled: toggleHw.isEnabled === false ? undefined : false };
+      return recalculateGameStats({ ...state, hardware: toggledHardware });
+    }
     case 'UPDATE_CRYPTO_PRICES':
       // Esta acción se manejará de forma asíncrona en el useEffect
       return state;
@@ -1564,6 +1576,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       const resetHardware = state.hardware.map(hw => ({
         ...hw,
         owned: hw.id === 'manual_mining' ? 1 : 0,
+        isEnabled: undefined,
       }));
       const resetUpgrades = state.upgrades.map(upg => ({ ...upg, purchased: false }));
       const prestigedState: GameState = {

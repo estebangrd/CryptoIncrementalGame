@@ -398,6 +398,7 @@ export interface Hardware {
   icon: string;
   currencyId: string; // Which cryptocurrency this hardware mines
   level: number; // Technology level (1-11)
+  isEnabled?: boolean; // undefined = enabled (backwards-compatible with old saves)
 }
 
 export interface Upgrade {

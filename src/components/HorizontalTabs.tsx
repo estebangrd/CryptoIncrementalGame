@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,9 @@ import PrestigeScreen from './PrestigeScreen';
 import EnergyScreen from './EnergyScreen';
 import ChronicleScreen from './ChronicleScreen';
 import { BlockStatus } from './BlockStatus';
+import { calculateHardwareMiningSpeed, getConstrainedMiningSpeed } from '../utils/gameLogic';
+import { calculateDifficulty, calculateCurrentReward } from '../utils/blockLogic';
+import { ELECTRICITY_FEE_CONFIG } from '../config/balanceConfig';
 import { colors, fonts } from '../config/theme';
 import { logEvent } from '../services/analytics';
 import { getCompositeMultiplier } from '../utils/marketEventLogic';
@@ -30,6 +33,20 @@ interface HorizontalTabsProps {
 const HorizontalTabs: React.FC<HorizontalTabsProps> = ({ onMineBlock, onClickBoostChange, t, bottomOffset = 0 }) => {
   const { gameState } = useGame();
   const [activeTab, setActiveTab] = useState<ActiveTab>('mining');
+
+  const hasUnprofitableHardware = useMemo(() => {
+    const difficulty = calculateDifficulty(getConstrainedMiningSpeed(gameState));
+    const globalReward = calculateCurrentReward(gameState.blocksMined);
+    return gameState.hardware.some(hw => {
+      if (hw.owned === 0 || hw.isEnabled === false || hw.id === 'manual_mining') return false;
+      const displayHw = { ...hw, isEnabled: undefined };
+      const miningSpeed = calculateHardwareMiningSpeed(displayHw, gameState.upgrades);
+      const coinsPerSec = (miningSpeed / difficulty) * globalReward;
+      const tierFeeCC = hw.electricityCost * hw.owned * ELECTRICITY_FEE_CONFIG.RATE_PERCENT / 100;
+      return tierFeeCC > coinsPerSec && coinsPerSec > 0;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameState.hardware, gameState.upgrades, gameState.blocksMined]);
 
   const tabs = [
     { id: 'mining' as ActiveTab, icon: '⛏', label: 'Mining', unlocked: true },
@@ -115,6 +132,9 @@ const HorizontalTabs: React.FC<HorizontalTabsProps> = ({ onMineBlock, onClickBoo
                     ? styles.tabDotGreen
                     : styles.tabDotRed
                 ]} />
+              )}
+              {tab.id === 'hardware' && hasUnprofitableHardware && (
+                <View style={[styles.tabDot, styles.tabDotRed]} />
               )}
             </TouchableOpacity>
           );
