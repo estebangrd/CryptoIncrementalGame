@@ -862,7 +862,13 @@ analytics().logEvent('starter_pack_purchased', {
 - Input: Offline Miner activo (50% earnings) + 5x booster activo
 - Expected: Offline earnings = producción normal × 5x booster × 0.5 offline multiplier
 
-**Edge Case 8: Pack stage transition**
+**Edge Case 8: False offline modal after watching rewarded ad (fixed)**
+- Input: User plays for 8 min, watches a rewarded ad (app goes to background briefly)
+- Bug: `lastSaveTime` in memory was stale (from app start), so `updateOfflineProgress` saw 8 min offline → false modal
+- Fix: `ADD_PRODUCTION` updates `lastSaveTime = Date.now()` every tick, keeping it current during active play
+- Expected: After ad, `lastSaveTime` is ~1s old → no offline modal
+
+**Edge Case 9: Pack stage transition**
 - Input: Usuario ve Small Pack offer, compra asic_gen3 durante la oferta
 - Expected: Small Pack sigue visible hasta que expire/se compre. Próxima oferta será Medium Pack.
 

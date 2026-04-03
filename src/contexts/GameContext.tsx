@@ -690,11 +690,12 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         }
 
         newState.blockAccumulator = accumulated - blocksToMine;
+        newState.lastSaveTime = now;
         return recalculateGameStats(newState);
       }
 
       // No blocks to mine yet — still accumulate fractional progress
-      return { ...state, blockAccumulator: accumulated };
+      return { ...state, blockAccumulator: accumulated, lastSaveTime: Date.now() };
     }
     case 'UPDATE_MARKET':
       return {
