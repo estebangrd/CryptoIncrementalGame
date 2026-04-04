@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import Svg, { Path, Defs, LinearGradient, Stop, Circle } from 'react-native-svg';
 import { colors, fonts } from '../config/theme';
+import { formatNumber } from '../utils/gameLogic';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -79,7 +80,7 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceHistory }) => {
         <Text style={styles.currentPrice}>{formatPrice(currentPrice)}</Text>
         <View style={[styles.badge, isPositive ? styles.badgeUp : styles.badgeDn]}>
           <Text style={[styles.badgeText, { color: accentColor }]}>
-            {isPositive ? '▲' : '▼'} {Math.abs(priceChange).toFixed(2)}%
+            {isPositive ? '▲' : '▼'} {formatNumber(Math.abs(priceChange))}%
           </Text>
         </View>
       </View>
