@@ -50,6 +50,29 @@ export const calculateTotalElectricityCost = (hardware: Hardware[]): number => {
   return hardware.reduce((total, h) => total + calculateHardwareElectricityCost(h), 0);
 };
 
+/**
+ * Energy-aware electricity cost: only charge for hardware that is actually mining.
+ * Hardware requiring MW but lacking energy pays 0 (not producing = not consuming).
+ */
+export const calculateConstrainedElectricityCost = (
+  hardware: Hardware[],
+  totalGeneratedMW: number,
+): number => {
+  const activeMap: Record<string, number> = {};
+  const energyResult = getActiveHardwareWithEnergyConstraint(hardware, totalGeneratedMW);
+  for (const hw of energyResult) {
+    activeMap[hw.id] = hw.activeUnits;
+  }
+
+  return hardware.reduce((total, h) => {
+    if (!isHardwareEnabled(h) || h.owned === 0) return total;
+    const effectiveOwned = h.energyRequired > 0
+      ? (activeMap[h.id] ?? 0)
+      : h.owned;
+    return total + h.electricityCost * effectiveOwned;
+  }, 0);
+};
+
 export const calculateHardwareMiningSpeed = (hardware: Hardware, upgrades: Upgrade[]): number => {
   if (!isHardwareEnabled(hardware)) return 0;
   let speed = hardware.miningSpeed * hardware.owned;
@@ -325,7 +348,9 @@ export const updateOfflineProgress = (gameState: GameState): GameState => {
     }
 
     const electricityWeight = gameState.totalElectricityCost ?? 0;
-    const ccFeeDrained = electricityWeight * ELECTRICITY_FEE_CONFIG.RATE_PERCENT / 100 * offlineSec;
+    const rawFee = electricityWeight * ELECTRICITY_FEE_CONFIG.RATE_PERCENT / 100 * offlineSec;
+    const maxFee = coinsEarned * ELECTRICITY_FEE_CONFIG.MAX_DRAIN_PERCENT / 100;
+    const ccFeeDrained = Math.min(rawFee, maxFee);
     const offlineMinerExpired = now >= offlineMiner.expiresAt!;
     const netCoins = Math.max(0, coinsEarned - ccFeeDrained);
 
@@ -385,7 +410,9 @@ export const updateOfflineProgress = (gameState: GameState): GameState => {
   }
 
   const electricityWeight = gameState.totalElectricityCost ?? 0;
-  const ccFeeDrained = electricityWeight * ELECTRICITY_FEE_CONFIG.RATE_PERCENT / 100 * cappedSec;
+  const rawFee = electricityWeight * ELECTRICITY_FEE_CONFIG.RATE_PERCENT / 100 * cappedSec;
+  const maxFee = coinsEarned * ELECTRICITY_FEE_CONFIG.MAX_DRAIN_PERCENT / 100;
+  const ccFeeDrained = Math.min(rawFee, maxFee);
   const netCoins = Math.max(0, coinsEarned - ccFeeDrained);
 
   if (netCoins <= 0) {

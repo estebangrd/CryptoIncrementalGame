@@ -21,7 +21,6 @@ import {
   canMineBlock
 } from '../utils/blockLogic';
 import {
-  calculateTotalElectricityCost,
   calculateConstrainedElectricityCost,
   calculateTotalProduction,
   calculateTotalHashRate,
@@ -523,10 +522,12 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         newState.cryptoCoins += coinsThisTick;
         newState.totalCryptoCoins += coinsThisTick;
 
-        // Electricity fee: deduct CC based on hardware weight × rate
+        // Electricity fee: deduct CC based on hardware weight × rate (capped at MAX_DRAIN_PERCENT)
         const electricityWeight = state.totalElectricityCost;
-        if (electricityWeight > 0) {
-          const ccFee = electricityWeight * ELECTRICITY_FEE_CONFIG.RATE_PERCENT / 100;
+        if (electricityWeight > 0 && coinsThisTick > 0) {
+          const rawCCFee = electricityWeight * ELECTRICITY_FEE_CONFIG.RATE_PERCENT / 100;
+          const maxCCFee = coinsThisTick * ELECTRICITY_FEE_CONFIG.MAX_DRAIN_PERCENT / 100;
+          const ccFee = Math.min(rawCCFee, maxCCFee);
           newState.cryptoCoins = Math.max(0, newState.cryptoCoins - ccFee);
         }
 
@@ -2011,9 +2012,8 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // and never torn down by dependency changes, preventing timing gaps.
   useEffect(() => {
     const interval = setInterval(() => {
-      if (gameStateRef.current.cryptoCoinsPerSecond > 0) {
-        dispatch({ type: 'ADD_PRODUCTION' });
-      }
+      // Always dispatch — the reducer handles zero/negative production safely
+      dispatch({ type: 'ADD_PRODUCTION' });
     }, 1000);
 
     return () => clearInterval(interval);
