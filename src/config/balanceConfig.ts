@@ -38,14 +38,13 @@ export const BLOCK_CONFIG = {
 // ============================================================================
 export const ELECTRICITY_FEE_CONFIG = {
   // Percentage of totalElectricityWeight deducted as CC per tick
-  RATE_PERCENT: 1.5,
-  // Electricity fee is currently disabled (multiplied by 0 in feePerSec formula).
-  // The fixed CC drain becomes unsustainable in late eras because block reward
-  // halves exponentially while electricity cost stays constant, creating an
-  // unwinnable death spiral around era 11+. Charging in $ instead of CC would
-  // be more realistic but adds complexity since players tend to spend all $
-  // immediately on hardware/upgrades. Keeping the config values intact for
-  // future rework.
+  // Disabled (0): fixed CC drain becomes unsustainable in late halving eras
+  // because block reward halves exponentially while electricity cost stays
+  // constant, creating an unwinnable death spiral around era 11+. Charging
+  // in $ instead of CC would be more realistic but adds complexity since
+  // players spend all $ immediately on hardware/upgrades. Set back to 1.5
+  // (original value) when a viable model is designed.
+  RATE_PERCENT: 0,
 };
 
 // ============================================================================
