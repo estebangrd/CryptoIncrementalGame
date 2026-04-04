@@ -79,7 +79,7 @@ export const HARDWARE_CONFIG = {
 
     // Nivel 2: Basic CPU
     basic_cpu: {
-      baseCost: 25,              // $ (real money)
+      baseCost: 32.5,            // $ (real money) — was 25, +30%
       baseProduction: 30,        // Hash/s (display only)
       blockReward: 0,            // Deprecated: reward is global per era
       miningSpeed: 0.3,          // Bloques/segundo
@@ -88,7 +88,7 @@ export const HARDWARE_CONFIG = {
 
     // Nivel 3: Advanced CPU
     advanced_cpu: {
-      baseCost: 150,
+      baseCost: 187.5,           // was 150, +25%
       baseProduction: 80,
       blockReward: 0,
       miningSpeed: 2.0,
@@ -97,7 +97,7 @@ export const HARDWARE_CONFIG = {
 
     // Nivel 4: Basic GPU
     basic_gpu: {
-      baseCost: 800,
+      baseCost: 960,             // was 800, +20%
       baseProduction: 250,
       blockReward: 0,
       miningSpeed: 12.5,

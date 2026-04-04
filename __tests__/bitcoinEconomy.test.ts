@@ -211,10 +211,10 @@ describe('calculateTotalProduction (Bitcoin-faithful)', () => {
 // ── Hardware Costs ───────────────────────────────────────────────────────────
 
 describe('hardware costs are in $ (real money)', () => {
-  it('basic_cpu baseCost is $25', () => {
+  it('basic_cpu baseCost is $32.50', () => {
     expect(BLOCK_CONFIG.ERA_BASE_PRICES[0]).toBe(0.08); // sanity check era 0 price
     const { baseCost } = require('../src/config/balanceConfig').HARDWARE_CONFIG.levels.basic_cpu;
-    expect(baseCost).toBe(25);
+    expect(baseCost).toBe(32.5);
   });
 
   it('all hardware blockReward is 0', () => {
