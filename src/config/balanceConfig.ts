@@ -39,6 +39,8 @@ export const BLOCK_CONFIG = {
 export const ELECTRICITY_FEE_CONFIG = {
   // Percentage of totalElectricityWeight deducted as CC per tick
   RATE_PERCENT: 1.5,
+  // Safety cap: electricity fee can never exceed this % of gross CC production
+  MAX_DRAIN_PERCENT: 30,
 };
 
 // ============================================================================
@@ -788,7 +790,8 @@ export const PRICE_ENGINE = {
 export const MARKET_EVENT_CONFIG = {
   halving_anticipation: {
     multiplier: 1.25,
-    blocksThreshold: 10_000,     // activate when ≤ 10K blocks to next halving
+    blocksThreshold: 10_000,     // minimum floor (used when mining is slow)
+    minWindowSeconds: 120,       // guarantee at least 2 min of anticipation window
     labelKey: 'marketEvent.halvingAnticipation',
     toastKey: 'marketEvent.toast.halvingAnticipation',
     // permanent until halving occurs (cancelled explicitly)

@@ -22,6 +22,7 @@ import {
 } from '../utils/blockLogic';
 import {
   calculateTotalElectricityCost,
+  calculateConstrainedElectricityCost,
   calculateTotalProduction,
   calculateTotalHashRate,
   getAllMultipliers,
@@ -186,11 +187,14 @@ const recalculateGameStats = (state: GameState): GameState => {
   // Calculate total hash rate from hardware
   let totalHashRate = calculateTotalHashRate(stateWithEnergy);
 
-  // Calculate total electricity weight (used for CC mining fee)
-  const totalElectricityCost = calculateTotalElectricityCost(stateWithEnergy.hardware);
+  // Calculate total electricity weight — energy-aware: only charge for hardware that can mine
+  const totalGeneratedMW = (stateWithEnergy.energy?.totalGeneratedMW ?? 0) + (stateWithEnergy.energyBonusMW ?? 0);
+  const totalElectricityCost = calculateConstrainedElectricityCost(stateWithEnergy.hardware, totalGeneratedMW);
 
-  // Net CC = gross production - CC mining fee
-  const feePerSec = totalElectricityCost * ELECTRICITY_FEE_CONFIG.RATE_PERCENT / 100;
+  // Net CC = gross production - CC mining fee (capped at MAX_DRAIN_PERCENT of gross)
+  const rawFee = totalElectricityCost * ELECTRICITY_FEE_CONFIG.RATE_PERCENT / 100;
+  const maxFee = totalProduction * ELECTRICITY_FEE_CONFIG.MAX_DRAIN_PERCENT / 100;
+  const feePerSec = totalProduction > 0 ? Math.min(rawFee, maxFee) : 0;
   let ccProduction = totalProduction - feePerSec;
 
   // Apply regulatory hash rate penalty if active
@@ -662,9 +666,15 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           newState.activeMarketEvents = addOrRefreshEvent(newState.activeMarketEvents, 'halving_shock', now);
         }
 
-        // c) Halving anticipation
+        // c) Halving anticipation — dynamic threshold scales with mining speed
+        //    to guarantee at least minWindowSeconds of anticipation window
+        const halvingCfg = MARKET_EVENT_CONFIG.halving_anticipation;
+        const dynamicThreshold = Math.max(
+          halvingCfg.blocksThreshold,
+          Math.ceil(effectiveBlocksPerSec * halvingCfg.minWindowSeconds),
+        );
         if (
-          getBlocksUntilHalving(newState.blocksMined) <= MARKET_EVENT_CONFIG.halving_anticipation.blocksThreshold &&
+          getBlocksUntilHalving(newState.blocksMined) <= dynamicThreshold &&
           !isEventActive(newState.activeMarketEvents, 'halving_anticipation') &&
           !isEventActive(newState.activeMarketEvents, 'halving_shock')
         ) {
