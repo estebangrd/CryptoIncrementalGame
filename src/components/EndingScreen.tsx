@@ -1610,19 +1610,20 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
                   start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                   style={goodStyles.bonusCard}
                 >
-                  <Svg width="100%" height={2} style={{ position: 'absolute', top: 0, left: 0, right: 0 }}>
-                    <Defs>
-                      <LinearGradient id="es_bonus_top" x1="0" y1="0" x2="1" y2="0">
-                        <Stop offset="0%" stopColor={colors.nc} stopOpacity="1" />
-                        <Stop offset="100%" stopColor={colors.ng} stopOpacity="1" />
-                      </LinearGradient>
-                    </Defs>
-                    <Rect x="0" y="0" width="100%" height="2" fill="url(#es_bonus_top)" />
-                  </Svg>
+                  <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2 }}>
+                    <Svg width="100%" height="100%">
+                      <Defs>
+                        <LinearGradient id="es_bonus_top" x1="0" y1="0" x2="1" y2="0">
+                          <Stop offset="0%" stopColor={colors.nc} stopOpacity="1" />
+                          <Stop offset="100%" stopColor={colors.ng} stopOpacity="1" />
+                        </LinearGradient>
+                      </Defs>
+                      <Rect x="0" y="0" width="100%" height="100%" fill="url(#es_bonus_top)" />
+                    </Svg>
+                  </View>
                   <Text style={goodStyles.bonusStar}>⭐</Text>
                   <View style={goodStyles.bonusTitleRow}>
                     <Text style={goodStyles.bonusTitleText}>{t('endgame.good.bonusTitle')}</Text>
-                    <View style={goodStyles.bonusTitleLine} />
                   </View>
                   <Text style={goodStyles.bonusRun}>Run #{prestigeRunNumber} · Accumulated rewards unlocked</Text>
                   {collapseProductionPct > 0 && (
@@ -1676,7 +1677,7 @@ const goodStyles = StyleSheet.create({
   logo: { fontFamily: fonts.orbitron, fontSize: 11, fontWeight: '900', letterSpacing: 2, color: colors.ng, textShadowColor: 'rgba(0,255,136,0.5)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 14 },
   runInfo: { fontFamily: fonts.mono, fontSize: 9, color: 'rgba(255,255,255,0.45)', letterSpacing: 2 },
   heroSection: { alignItems: 'center', paddingTop: 50, paddingBottom: 32, paddingHorizontal: 24 },
-  globeWrap: { marginBottom: 24 },
+  globeWrap: { marginBottom: 48 },
   victorySub: { fontFamily: fonts.mono, fontSize: 9, letterSpacing: 5, color: colors.nc, textTransform: 'uppercase', marginBottom: 20, opacity: 0.7 },
   quoteBox: { borderLeftWidth: 2, borderLeftColor: 'rgba(0,255,136,0.3)', backgroundColor: 'rgba(0,255,136,0.03)', borderTopRightRadius: 8, borderBottomRightRadius: 8, paddingHorizontal: 16, paddingVertical: 14, maxWidth: 320, marginTop: 16 },
   quoteText: { fontFamily: fonts.rajdhani, fontSize: 14, color: 'rgba(255,255,255,0.6)', lineHeight: 22, fontStyle: 'italic' },
