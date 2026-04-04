@@ -777,7 +777,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({ initialTab }) => {
           />
           <View style={st.bo_top}>
             <View style={[st.bo_icon, st.bo_iconPurple]}>
-              <Text style={st.bo_iconEmoji}>♾</Text>
+              <Text style={st.bo_iconEmoji}>👑</Text>
             </View>
             <View style={st.bo_meta}>
               <Text style={st.bo_name}>Permanent 2x Multiplier</Text>
