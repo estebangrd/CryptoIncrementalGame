@@ -348,9 +348,7 @@ export const updateOfflineProgress = (gameState: GameState): GameState => {
     }
 
     const electricityWeight = gameState.totalElectricityCost ?? 0;
-    const rawFee = electricityWeight * ELECTRICITY_FEE_CONFIG.RATE_PERCENT / 100 * offlineSec;
-    const maxFee = coinsEarned * ELECTRICITY_FEE_CONFIG.MAX_DRAIN_PERCENT / 100;
-    const ccFeeDrained = Math.min(rawFee, maxFee);
+    const ccFeeDrained = electricityWeight * ELECTRICITY_FEE_CONFIG.RATE_PERCENT / 100 * offlineSec;
     const offlineMinerExpired = now >= offlineMiner.expiresAt!;
     const netCoins = Math.max(0, coinsEarned - ccFeeDrained);
 
@@ -410,9 +408,7 @@ export const updateOfflineProgress = (gameState: GameState): GameState => {
   }
 
   const electricityWeight = gameState.totalElectricityCost ?? 0;
-  const rawFee = electricityWeight * ELECTRICITY_FEE_CONFIG.RATE_PERCENT / 100 * cappedSec;
-  const maxFee = coinsEarned * ELECTRICITY_FEE_CONFIG.MAX_DRAIN_PERCENT / 100;
-  const ccFeeDrained = Math.min(rawFee, maxFee);
+  const ccFeeDrained = electricityWeight * ELECTRICITY_FEE_CONFIG.RATE_PERCENT / 100 * cappedSec;
   const netCoins = Math.max(0, coinsEarned - ccFeeDrained);
 
   if (netCoins <= 0) {

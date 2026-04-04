@@ -38,9 +38,8 @@ export const BLOCK_CONFIG = {
 // ============================================================================
 export const ELECTRICITY_FEE_CONFIG = {
   // Percentage of totalElectricityWeight deducted as CC per tick
-  RATE_PERCENT: 1.5,
-  // Safety cap: electricity fee can never exceed this % of gross CC production
-  MAX_DRAIN_PERCENT: 30,
+  // Currently disabled (0) — electricity rework pending
+  RATE_PERCENT: 0,
 };
 
 // ============================================================================

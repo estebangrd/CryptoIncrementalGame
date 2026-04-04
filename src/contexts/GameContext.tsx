@@ -190,10 +190,8 @@ const recalculateGameStats = (state: GameState): GameState => {
   const totalGeneratedMW = (stateWithEnergy.energy?.totalGeneratedMW ?? 0) + (stateWithEnergy.energyBonusMW ?? 0);
   const totalElectricityCost = calculateConstrainedElectricityCost(stateWithEnergy.hardware, totalGeneratedMW);
 
-  // Net CC = gross production - CC mining fee (capped at MAX_DRAIN_PERCENT of gross)
-  const rawFee = totalElectricityCost * ELECTRICITY_FEE_CONFIG.RATE_PERCENT / 100;
-  const maxFee = totalProduction * ELECTRICITY_FEE_CONFIG.MAX_DRAIN_PERCENT / 100;
-  const feePerSec = totalProduction > 0 ? Math.min(rawFee, maxFee) : 0;
+  // Net CC = gross production - CC mining fee
+  const feePerSec = totalElectricityCost * ELECTRICITY_FEE_CONFIG.RATE_PERCENT / 100;
   let ccProduction = totalProduction - feePerSec;
 
   // Apply regulatory hash rate penalty if active
@@ -522,12 +520,10 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         newState.cryptoCoins += coinsThisTick;
         newState.totalCryptoCoins += coinsThisTick;
 
-        // Electricity fee: deduct CC based on hardware weight × rate (capped at MAX_DRAIN_PERCENT)
+        // Electricity fee: deduct CC based on hardware weight × rate
         const electricityWeight = state.totalElectricityCost;
-        if (electricityWeight > 0 && coinsThisTick > 0) {
-          const rawCCFee = electricityWeight * ELECTRICITY_FEE_CONFIG.RATE_PERCENT / 100;
-          const maxCCFee = coinsThisTick * ELECTRICITY_FEE_CONFIG.MAX_DRAIN_PERCENT / 100;
-          const ccFee = Math.min(rawCCFee, maxCCFee);
+        if (electricityWeight > 0) {
+          const ccFee = electricityWeight * ELECTRICITY_FEE_CONFIG.RATE_PERCENT / 100;
           newState.cryptoCoins = Math.max(0, newState.cryptoCoins - ccFee);
         }
 
@@ -2012,8 +2008,9 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // and never torn down by dependency changes, preventing timing gaps.
   useEffect(() => {
     const interval = setInterval(() => {
-      // Always dispatch — the reducer handles zero/negative production safely
-      dispatch({ type: 'ADD_PRODUCTION' });
+      if (gameStateRef.current.cryptoCoinsPerSecond > 0) {
+        dispatch({ type: 'ADD_PRODUCTION' });
+      }
     }, 1000);
 
     return () => clearInterval(interval);

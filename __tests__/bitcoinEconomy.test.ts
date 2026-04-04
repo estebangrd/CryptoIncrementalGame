@@ -371,14 +371,14 @@ describe('updateOfflineProgress (block-based)', () => {
     expect(result.currentReward).toBe(25);
   });
 
-  it('drains CC mining fee from cryptoCoins (not realMoney)', () => {
+  it('does not drain realMoney for electricity (CC fee only)', () => {
     const now = Date.now();
     const cpu = { id: 'basic_cpu', miningSpeed: 10, baseProduction: 10, blockReward: 0, owned: 1, energyRequired: 0 };
     const state = makeState({
       hardware: [cpu],
       cryptoCoins: 50000,
       realMoney: 10000,
-      totalElectricityCost: 100, // weight 100 → fee = 100 * 1.5/100 = 1.5 CC/sec
+      totalElectricityCost: 100,
       lastSaveTime: now - 3600 * 1000,
       iapState: {
         permanentMultiplierPurchased: false,
@@ -390,9 +390,8 @@ describe('updateOfflineProgress (block-based)', () => {
     const result = updateOfflineProgress(state);
     // realMoney should NOT be drained
     expect(result.realMoney).toBe(10000);
-    // CC earned should be net of fee (less than gross mined coins)
-    // totalCryptoCoins tracks gross, cryptoCoins has fee deducted
-    expect(result.cryptoCoins).toBeLessThan(50000 + result.totalCryptoCoins);
+    // CC should increase (offline miner active)
+    expect(result.cryptoCoins).toBeGreaterThanOrEqual(50000);
   });
 
   it('does not exceed TOTAL_BLOCKS cap', () => {
