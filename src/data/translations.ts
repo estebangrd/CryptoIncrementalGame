@@ -231,9 +231,9 @@ export const translations: Translation = {
     pt: 'Poder de Clique',
   },
   'upgrade.clickPower.description': {
-    en: 'Mine 5x CryptoCoins per click',
-    es: 'Mina 5x CryptoCoins por clic',
-    pt: 'Minera 5x CryptoCoins por clique',
+    en: 'Mine 2x CryptoCoins per click',
+    es: 'Mina 2x CryptoCoins por clic',
+    pt: 'Minera 2x CryptoCoins por clique',
   },
   'upgrade.clickMastery': {
     en: 'Hash Injection',
@@ -241,9 +241,9 @@ export const translations: Translation = {
     pt: 'Injeção de Hash',
   },
   'upgrade.clickMastery.description': {
-    en: 'Mine 15x CryptoCoins per click',
-    es: 'Mina 15x CryptoCoins por clic',
-    pt: 'Minera 15x CryptoCoins por clique',
+    en: 'Mine 4x CryptoCoins per click',
+    es: 'Mina 4x CryptoCoins por clic',
+    pt: 'Minera 4x CryptoCoins por clique',
   },
   'upgrade.clickLegend': {
     en: 'Click Legend',
@@ -251,9 +251,9 @@ export const translations: Translation = {
     pt: 'Lenda do Clique',
   },
   'upgrade.clickLegend.description': {
-    en: 'Mine 30x CryptoCoins per click',
-    es: 'Mina 30x CryptoCoins por clic',
-    pt: 'Minera 30x CryptoCoins por clique',
+    en: 'Mine 8x CryptoCoins per click',
+    es: 'Mina 8x CryptoCoins por clic',
+    pt: 'Minera 8x CryptoCoins por clique',
   },
   'upgrade.cpuEfficiency': {
     en: 'CPU Efficiency',
@@ -271,9 +271,9 @@ export const translations: Translation = {
     pt: 'Otimização de GPU',
   },
   'upgrade.gpuOptimization.description': {
-    en: 'Double GPU mining speed (Basic GPU and Advanced GPU)',
-    es: 'Duplica la velocidad de minería de GPU (GPU Básica y GPU Avanzada)',
-    pt: 'Dobra a velocidade de mineração de GPU (GPU Básica e GPU Avançada)',
+    en: 'Double GPU mining speed',
+    es: 'Duplica la velocidad de minería de GPU',
+    pt: 'Dobra a velocidade de mineração de GPU',
   },
   'upgrade.asicOptimization': {
     en: 'ASIC Optimization',
@@ -281,9 +281,9 @@ export const translations: Translation = {
     pt: 'Otimização de ASIC',
   },
   'upgrade.asicOptimization.description': {
-    en: 'Double ASIC mining speed (All ASIC generations)',
-    es: 'Duplica la velocidad de minería de ASIC (Todas las generaciones de ASIC)',
-    pt: 'Dobra a velocidade de mineração de ASIC (Todas as gerações de ASIC)',
+    en: 'Double ASIC mining speed',
+    es: 'Duplica la velocidad de minería de ASIC',
+    pt: 'Dobra a velocidade de mineração de ASIC',
   },
   'upgrade.miningFarmEfficiency': {
     en: 'Mining Farm Efficiency',
@@ -1775,9 +1775,9 @@ export const translations: Translation = {
     pt: 'Boost de Hash Rate',
   },
   'adBubble.hash.detail': {
-    en: 'Your hash rate goes up 20% — more blocks mined per second',
-    es: 'Tu hash rate sube un 20% — más bloques minados por segundo',
-    pt: 'Seu hash rate sobe 20% — mais blocos minerados por segundo',
+    en: 'Your hash rate goes up 35% — more blocks mined per second',
+    es: 'Tu hash rate sube un 35% — más bloques minados por segundo',
+    pt: 'Seu hash rate sobe 35% — mais blocos minerados por segundo',
   },
   'adBubble.hash.stackNote': {
     en: 'Stacks with your active boosters',
@@ -1785,9 +1785,9 @@ export const translations: Translation = {
     pt: 'Acumula com seus boosters ativos',
   },
   'adBubble.hash.toastText': {
-    en: '+20% Hash Rate activated · 5 min',
-    es: '+20% Hash Rate activado · 5 min',
-    pt: '+20% Hash Rate ativado · 5 min',
+    en: '+35% Hash Rate activated · 3 min',
+    es: '+35% Hash Rate activado · 3 min',
+    pt: '+35% Hash Rate ativado · 3 min',
   },
   'adBubble.market.name': {
     en: 'Market Price',
@@ -1810,9 +1810,9 @@ export const translations: Translation = {
     pt: 'Ideal para vender agora no Market',
   },
   'adBubble.market.toastText': {
-    en: '+25% CC price activated · 3 min',
-    es: '+25% precio de CC activado · 3 min',
-    pt: '+25% preço de CC ativado · 3 min',
+    en: '+25% CC price activated · 5 min',
+    es: '+25% precio de CC activado · 5 min',
+    pt: '+25% preço de CC ativado · 5 min',
   },
   'adBubble.energy.name': {
     en: 'Energy Recovery',
@@ -2102,9 +2102,9 @@ export const translations: Translation = {
     pt: 'Janela de oportunidade',
   },
   'marketOpportunity.description': {
-    en: 'Unusual market conditions generated a demand spike. CryptoCoin price rose 25%. The window lasts approximately 10 minutes — the market moves on its own.',
-    es: 'Condiciones inusuales de mercado generaron un spike de demanda. El precio de CryptoCoin subió un 25%. La ventana dura aproximadamente 10 minutos — el mercado se mueve solo.',
-    pt: 'Condições incomuns de mercado geraram um pico de demanda. O preço do CryptoCoin subiu 25%. A janela dura aproximadamente 10 minutos — o mercado se move sozinho.',
+    en: 'Unusual market conditions generated a demand spike. CryptoCoin price rose 25%. The window lasts approximately 5 minutes — the market moves on its own.',
+    es: 'Condiciones inusuales de mercado generaron un spike de demanda. El precio de CryptoCoin subió un 25%. La ventana dura aproximadamente 5 minutos — el mercado se mueve solo.',
+    pt: 'Condições incomuns de mercado geraram um pico de demanda. O preço do CryptoCoin subiu 25%. A janela dura aproximadamente 5 minutos — o mercado se move sozinho.',
   },
   'marketOpportunity.tagPrice': {
     en: '+25% current price',

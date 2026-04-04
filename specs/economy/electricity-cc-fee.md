@@ -136,6 +136,10 @@ BlockStatus "Electricity" stat card shows total power consumption (narratively t
 
 The CC fee is applied internally but **not displayed** — the electricity stat represents energy footprint for narrative purposes (non-renewable collapse).
 
+### Hardware Toggle (on/off Switch)
+
+Each hardware card in `HardwareList` has an on/off toggle that lets players disable unprofitable hardware to stop its electricity drain. **The toggle is only rendered when `ELECTRICITY_FEE_CONFIG.RATE_PERCENT > 0`** — when fees are disabled (RATE_PERCENT = 0), the toggle is hidden since there is no reason to turn off hardware.
+
 ## Pack Electricity Hours
 
 The `packCurrentElectricityHours` in `PURCHASE_STARTER_PACK` continues to add cash (`totalElectricityCost * hours * 3600`). With the new system, this becomes a straightforward cash bonus — the "electricity hours" label was always flavor text for a dollar amount.

@@ -132,7 +132,8 @@ const HardwareList: React.FC = () => {
           const cost = Math.floor(hardware.baseCost * Math.pow(hardware.costMultiplier, hardware.owned));
           const canAfford = gameState.realMoney >= cost;
           const hasUnits = hardware.owned > 0;
-          const isDisabled = hardware.isEnabled === false;
+          const feeActive = ELECTRICITY_FEE_CONFIG.RATE_PERCENT > 0;
+          const isDisabled = feeActive && hardware.isEnabled === false;
 
           // Current totals (for display, compute as-if enabled so metrics always show)
           const displayHw = { ...hardware, isEnabled: undefined };
@@ -205,7 +206,7 @@ const HardwareList: React.FC = () => {
                       {isDisabled ? t('hardware.toggleOff') : 'OWNED'}
                     </Text>
                   </View>
-                  {hasUnits && (
+                  {hasUnits && feeActive && (
                     <Switch
                       value={!isDisabled}
                       onValueChange={() => dispatch({ type: 'TOGGLE_HARDWARE', payload: hardware.id })}
