@@ -191,7 +191,8 @@ const recalculateGameStats = (state: GameState): GameState => {
   const totalElectricityCost = calculateConstrainedElectricityCost(stateWithEnergy.hardware, totalGeneratedMW);
 
   // Net CC = gross production - CC mining fee
-  const feePerSec = totalElectricityCost * ELECTRICITY_FEE_CONFIG.RATE_PERCENT / 100;
+  // Electricity fee disabled: fixed CC drain unsustainable in late halving eras (see balanceConfig)
+  const feePerSec = totalElectricityCost * ELECTRICITY_FEE_CONFIG.RATE_PERCENT / 100 * 0;
   let ccProduction = totalProduction - feePerSec;
 
   // Apply regulatory hash rate penalty if active
@@ -521,9 +522,10 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         newState.totalCryptoCoins += coinsThisTick;
 
         // Electricity fee: deduct CC based on hardware weight × rate
+        // Disabled: × 0 (see balanceConfig for rationale)
         const electricityWeight = state.totalElectricityCost;
         if (electricityWeight > 0) {
-          const ccFee = electricityWeight * ELECTRICITY_FEE_CONFIG.RATE_PERCENT / 100;
+          const ccFee = electricityWeight * ELECTRICITY_FEE_CONFIG.RATE_PERCENT / 100 * 0;
           newState.cryptoCoins = Math.max(0, newState.cryptoCoins - ccFee);
         }
 
