@@ -4,7 +4,7 @@
 - **Fase**: Phase 1 - Genesis (Active Reference Document)
 - **Estado**: Living Document - Updated Continuously
 - **Prioridad**: Critical (Game Balance Foundation)
-- **Última actualización**: 2026-03-27
+- **Última actualización**: 2026-04-04
 
 ## Descripción
 
@@ -36,17 +36,24 @@ export const BLOCK_CONFIG = {
   HALVING_INTERVAL: 210000,
   INITIAL_DIFFICULTY: 1,
   DIFFICULTY: {
-    AMPLITUDE: 0.8,
-    SCALE_BLOCKS: 200_000,
-    EXPONENT: 0.65,
+    AMPLITUDE: 0.35,
+    SCALE: 80,           // speed-based (totalMiningSpeed), not blocks-based
+    EXPONENT: 0.70,
   },
-  ERA_BASE_PRICES: [0.08, 0.50, 2.00, 5.00, 8.00, 8.00, 8.00],
+  // 20-entry array — $/block grows ~8-12% per era, plateaus mid-game
+  ERA_BASE_PRICES: [
+    0.05, 0.18, 0.55, 1.40, 3.50,
+    8.00, 18.00, 40.00, 90.00, 200.00,
+    450.00, 1000.00, 2300.00, 5500.00, 14000.00,
+    38000.00, 110000.00, 340000.00, 1100000.00, 4000000.00,
+  ],
 };
 
 // HARDWARE_CONFIG - Costos y producción de hardware
 export const HARDWARE_CONFIG = {
-  COST_MULTIPLIER: 1.35,
-  UNLOCK_REQUIREMENT: 5,
+  COST_MULTIPLIER: 1.35,  // legacy default
+  COST_MULTIPLIER_BY_ID: { basic_cpu: 1.40, ..., supercomputer: 1.20 },
+  UNLOCK_REQUIREMENT: 8,
   levels: { /* ... */ },
 };
 
@@ -143,15 +150,15 @@ function calculateHardwareCost(hardware: Hardware): number {
   );
 }
 
-// Con COST_MULTIPLIER = 1.35 y baseCost = 25 (basic_cpu):
+// Con COST_MULTIPLIER_BY_ID.basic_cpu = 1.40 y baseCost = 25:
 // 1ra unidad: 25
-// 2da unidad: 33 (35% más cara)
-// 5ta unidad: 83
-// 10ma unidad: 508
-// 20ma unidad: 10,307
+// 2da unidad: 35 (40% más cara)
+// 5ta unidad: 96
+// 8va unidad: 263 (unlock next tier)
+// 10ma unidad: 515
 ```
 
-**Explicación del Scaling**: Cada unidad cuesta 35% más que la anterior. Esto crea una curva exponencial agresiva donde comprar muchas unidades del mismo hardware se vuelve prohibitivamente caro, incentivando al jugador a diversificar y avanzar al siguiente tier.
+**Explicación del Scaling**: Cada unidad cuesta un % más que la anterior (per-tier: 1.20-1.40). Early tiers scale faster (1.40) to push progression forward, late tiers scale gently (1.20-1.25) to allow accumulation. Esto crea una curva exponencial donde comprar muchas unidades del mismo hardware se vuelve prohibitivamente caro, incentivando al jugador a diversificar y avanzar al siguiente tier.
 
 #### 2.2 Producción de Hardware (Base)
 ```typescript
@@ -257,9 +264,9 @@ function applyUpgradeMultiplier(
 
 // Ejemplo con click upgrades (multiplicativos):
 // Base click reward: currentReward CC
-// Con Click Power (×5): reward × 5
-// + Hash Injection (×3): reward × 5 × 3 = ×15
-// + Click Legend (×2): reward × 5 × 3 × 2 = ×30
+// Con Click Power (×2): reward × 2
+// + Click Mastery (×2): reward × 2 × 2 = ×4
+// + Click Legend (×2): reward × 2 × 2 × 2 = ×8
 ```
 
 #### 4.2 Stacking de Upgrades
@@ -363,26 +370,27 @@ function calculateHardwareROI(hardware: Hardware): {
 }
 ```
 
-### Tabla de Hardware (Valores Actuales)
+### Tabla de Hardware (Valores Actuales — Economy Rebalance v3)
 
-| Hardware | baseCost ($) | miningSpeed | Electricity Weight |
-|----------|:---:|:---:|:---:|
-| Basic CPU | $25 | 0.3 | 3 |
-| Advanced CPU | $150 | 0.8 | 10 |
-| Basic GPU | $800 | 2.5 | 40 |
-| Advanced GPU | $5,000 | 6 | 120 |
-| ASIC Gen 1 | $35,000 | 12 | 300 |
-| ASIC Gen 2 | $200,000 | 30 | 900 |
-| ASIC Gen 3 | $1,200,000 | 60 | 2,500 |
-| Mining Farm | $8,000,000 | 100 | 4,500 |
-| Quantum Miner | $50,000,000 | 200 | 15,000 |
-| Supercomputer | $500,000,000 | 600 | 50,000 |
+| Hardware | baseCost ($) | miningSpeed | costMultiplier | Electricity Weight |
+|----------|:---:|:---:|:---:|:---:|
+| Basic CPU | $25 | 0.3 | 1.40 | 3 |
+| Advanced CPU | $350 | 1.5 | 1.40 | 10 |
+| Basic GPU | $3,500 | 8 | 1.35 | 40 |
+| Advanced GPU | $22,000 | 55 | 1.35 | 120 |
+| ASIC Gen 1 | $350,000 | 350 | 1.30 | 300 |
+| ASIC Gen 2 | $2,250,000 | 2,400 | 1.30 | 900 |
+| ASIC Gen 3 | $18,000,000 | 16,000 | 1.28 | 2,500 |
+| Mining Farm | $120,000,000 | 100,000 | 1.25 | 4,500 |
+| Quantum Miner | $500,000,000 | 650,000 | 1.22 | 15,000 |
+| Supercomputer | $2,000,000,000 | 4,000,000 | 1.20 | 50,000 |
 
 **Notas**:
 - `blockReward` is deprecated — reward is global per era (see `bitcoin-faithful-economy.md`)
-- `electricityCost` is a CC fee weight used by `ELECTRICITY_FEE_CONFIG.RATE_PERCENT` (1.5%)
+- `electricityCost` is a CC fee weight; RATE_PERCENT is currently 0 (disabled, pending rework)
 - Hardware se compra con $ (real money), no con CryptoCoins
-- COST_MULTIPLIER: 1.35 — cada unidad adicional cuesta 35% más
+- COST_MULTIPLIER_BY_ID: per-tier multipliers (1.20-1.40) — early tiers scale faster
+- UNLOCK_REQUIREMENT: 8 units of previous tier to unlock next
 - ROI depends on the current era's base price for CC
 
 ### Estrategia Óptima (Early Game)
@@ -412,7 +420,7 @@ priceDeviation = mean-reverting OU process, range [-0.30, +0.40]
 **Parámetros OU**: theta=0.12, sigma=0.045, clamped [-0.30, +0.40]
 **Fluctuación por tick**: ~2.5% (vs 0.04% con el antiguo dataset BTC)
 **6 regímenes**: normal (40%), bull/bear (18% c/u), volatile (12%), spike/crash (6% c/u)
-**Precio base por era**: $0.08 → $0.50 → $2.00 → $5.00 → $8.00
+**Precio base por era**: $0.05 → $0.18 → $0.55 → ... → $4,000,000 (20 eras)
 **Fuente**: `balanceConfig.ts` → `PRICE_ENGINE`, `src/utils/priceEngine.ts`
 
 > La desviación mean-reverts a 0, por lo que ERA_BASE_PRICES[era] es el valor esperado para simulaciones de largo plazo.
@@ -421,46 +429,50 @@ priceDeviation = mean-reverting OU process, range [-0.30, +0.40]
 
 ## Progresión Temporal Esperada
 
-### Supuestos de la Simulación (Economy Rebalance v2 — 2026-03-27)
+### Supuestos de la Simulación (Economy Rebalance v3 — 2026-04-04)
 
-- **COST_MULTIPLIER**: 1.35 → 5 unidades cuestan `baseCost × 9.95`
-- **ERA_BASE_PRICES**: [0.08, 0.50, 2.00, 5.00, 8.00, 8.00, 8.00]
-- **Difficulty**: Power curve `1.0 + 0.8 × (blocks/200K)^0.65`
-- **Electricity fee**: 1.5% of weight per tick (CC fee, not $ drain)
+- **COST_MULTIPLIER_BY_ID**: per-tier (1.20-1.40); 8 unidades to unlock next tier
+- **ERA_BASE_PRICES**: 20-entry array [$0.05 → $4,000,000]
+- **Difficulty**: Speed-based power curve `1.0 + 0.35 × (totalMiningSpeed / 80)^0.70`
+- **Electricity fee**: Disabled (RATE_PERCENT = 0, pending rework)
 - **blockReward**: Global per era (50 → 25 → 12.5...), NOT per hardware
 - **Sin offline progress**; producción solo durante sesión activa
+- **Target**: ~12 hours active play to first prestige
 
 ### $/bloque por Era
 
 | Era | Block Reward | CC Price | $/bloque |
 |---|:---:|:---:|:---:|
-| 0 | 50 CC | $0.08 | $4.00 |
-| 1 | 25 CC | $0.50 | $12.50 |
-| 2 | 12.5 CC | $2.00 | $25.00 |
-| 3 | 6.25 CC | $5.00 | $31.25 (peak) |
-| 4 | 3.125 CC | $8.00 | $25.00 (decline) |
-| 5+ | halving | $8.00 | $12.50 → $6.25... |
+| 0 | 50 CC | $0.05 | $2.50 |
+| 1 | 25 CC | $0.18 | $4.50 |
+| 2 | 12.5 CC | $0.55 | $6.88 |
+| 3 | 6.25 CC | $1.40 | $8.75 |
+| 4 | 3.125 CC | $3.50 | $10.94 |
+| 5 | 1.5625 CC | $8.00 | $12.50 |
+| 6 | 0.78125 CC | $18.00 | $14.06 |
+| 7+ | halving | grows | ~$15-16 plateau then gradual climb |
 
-**Nota**: $/bloque alcanza su pico en Era 3 y luego declina. Esto crea presión económica real en late game e incentiva el prestige.
+**Nota**: $/bloque crece ~8-12% per era, plateaus in mid-game, then accelerates in late eras (14+). With 20 eras defined, the economy supports extended play across multiple prestiges.
 
 ### Hardware Investment por Era
 
-| Tier | 5 units cost ($) | Target Era |
+| Tier | 8 units cost ($) | Target Era |
 |---|:---:|---|
-| basic_cpu — advanced_gpu | ~$60K | Era 0 ($840K base available) |
-| asic_gen1 — asic_gen2 | ~$2.3M | Era 0-1 ($3.5M base available) |
-| asic_gen3 | ~$12M | Era 1-2 ($7.9M base available) |
-| mining_farm | ~$80M | Era 2-3 ($11.8M base available) |
-| quantum_miner | ~$498M | Multiple eras + prestige |
-| supercomputer | ~$5B | Post-prestige endgame |
+| basic_cpu — advanced_gpu | ~$350K | Era 0-1 |
+| asic_gen1 — asic_gen2 | ~$40M | Era 1-3 |
+| asic_gen3 | ~$200M | Era 3-5 |
+| mining_farm | ~$1B | Era 5-7 |
+| quantum_miner | ~$5B | Multiple eras + prestige |
+| supercomputer | ~$16B | Post-prestige endgame |
 
 ### Observaciones
 
-- Quantum Miner ($50M base) es difícilmente alcanzable en primera run sin market volatility favorable
-- Supercomputer ($500M base) está diseñado como meta de múltiples prestiges
-- La dificultad power curve frena significativamente el minado en late game (×3.28 at 1M blocks)
-- La electricidad CC fee (1.5%) consume ~10-35% del income en mid-late game
-- El first prestige debería ocurrir antes de poder comprar Quantum Miner
+- Quantum Miner ($500M base) es difícilmente alcanzable en primera run
+- Supercomputer ($2B base) está diseñado como meta de múltiples prestiges
+- Difficulty scales with totalMiningSpeed: higher hardware = steeper curve
+- Electricity fee is disabled (RATE_PERCENT = 0) pending rework
+- El first prestige debería ocurrir ~12 horas de juego activo
+- UNLOCK_REQUIREMENT = 8 (need 8 units of previous tier)
 
 ## Break-Even Analysis
 
@@ -611,14 +623,16 @@ interface BalanceMetrics {
 **Si el juego es muy lento**:
 1. Reducir `HARDWARE_CONFIG.levels.*.baseCost` ($ costs)
 2. Increase `ERA_BASE_PRICES` to give more $ per CC sold
-3. Reducir `HARDWARE_CONFIG.COST_MULTIPLIER` (actualmente 1.35)
+3. Reducir `COST_MULTIPLIER_BY_ID` values
 4. Reducir `BLOCK_CONFIG.DIFFICULTY.AMPLITUDE` o `EXPONENT`
+5. Reducir `UNLOCK_REQUIREMENT` (actualmente 8)
 
 **Si el juego es muy rápido**:
 1. Aumentar `HARDWARE_CONFIG.levels.*.baseCost`
 2. Reducir `ERA_BASE_PRICES`
-3. Aumentar `HARDWARE_CONFIG.COST_MULTIPLIER`
-4. Aumentar `ELECTRICITY_FEE_CONFIG.RATE_PERCENT` (actualmente 1.5)
+3. Aumentar `COST_MULTIPLIER_BY_ID` values
+4. Aumentar `BLOCK_CONFIG.DIFFICULTY.AMPLITUDE` o `EXPONENT`
+5. Aumentar `UNLOCK_REQUIREMENT` (actualmente 8)
 
 **Si el prestige es muy débil**:
 1. Aumentar `PRESTIGE_CONFIG.bonuses.productionBonus` (ej: 0.1 → 0.15)
@@ -762,6 +776,21 @@ analytics().logEvent('balance_metric', {
 - Balancing Incremental Games: https://www.reddit.com/r/incremental_games/wiki/design_balance
 
 ## Changelog de Balance
+
+### Version 4.0 (2026-04-04) — Economy Rebalance v3 (12h target)
+- Difficulty: blocks-based → speed-based (`1.0 + 0.35 × (totalMiningSpeed / 80)^0.70`)
+- ERA_BASE_PRICES: 7 entries → 20 entries [$0.05 → $4,000,000]
+- COST_MULTIPLIER: global 1.35 → per-tier COST_MULTIPLIER_BY_ID (1.20-1.40)
+- UNLOCK_REQUIREMENT: 5 → 8
+- ELECTRICITY_FEE_CONFIG.RATE_PERCENT: 1.5 → 0 (disabled, pending rework)
+- Hardware costs significantly increased (e.g., basic_gpu $800→$3,500, asic_gen1 $35K→$350K, supercomputer $500M→$2B)
+- Mining speeds significantly reduced for late-game tiers (e.g., supercomputer 600→4M, but with higher absolute values for mid-tiers)
+- Click upgrade chain: 5×3×2=30x → 2×2×2=8x
+- Upgrade costs rebalanced (cpuEfficiency $1.5K→$4K, asicOptimization $10M→$80M, etc.)
+- clickLegend: cost $10M→$500K, unlock from asic_gen3@10 to advanced_gpu@5
+- Ad bubble config updated (hash +35%/3min, market +25%/5min)
+- Starter pack rewards massively increased to match new economy scale
+- PACK_CONFIG dynamic ranges updated
 
 ### Version 3.0 (2026-03-27) — Economy Rebalance v2
 - COST_MULTIPLIER: 1.20 → 1.35

@@ -2,8 +2,8 @@
  * AdBoosterBubbles — Floating rewarded-ad bubble rotation system.
  *
  * One bubble at a time, randomly picked from an eligible pool:
- *   - Hash Rate (+20% mining speed, 5 min)
- *   - Market (+25% sell price, 3 min)
+ *   - Hash Rate (+35% mining speed, 3 min)
+ *   - Market (+25% sell price, 5 min)
  *   - Energy Restore (50% of MW deficit, instant)
  *
  * Cooldown escalates when the player ignores / dismisses bubbles.
@@ -44,7 +44,7 @@ interface BubbleTheme {
 const BUBBLE_THEMES: Record<BubbleType, BubbleTheme> = {
   hash: {
     icon: '🖥',
-    label: '+20%',
+    label: '+35%',
     color: colors.nc,
     borderColor: 'rgba(0,229,255,0.5)',
     bgGradient: 'rgba(0,229,255,0.12)',

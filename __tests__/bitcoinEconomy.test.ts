@@ -21,9 +21,9 @@ describe('calculateDifficulty (hash-rate-based power curve)', () => {
   });
 
   it('returns moderate difficulty at mining speed 100', () => {
-    // 1.0 + 0.25 * (100/100)^0.65 = 1.25
+    // 1.0 + 0.35 * (100/80)^0.70 ≈ 1.41
     const d = calculateDifficulty(100);
-    expect(d).toBeCloseTo(1.25, 1);
+    expect(d).toBeCloseTo(1.41, 1);
   });
 
   it('returns high difficulty at mining speed 1,000,000', () => {
@@ -79,32 +79,32 @@ describe('getEra', () => {
 // ── Base Price ───────────────────────────────────────────────────────────────
 
 describe('getBasePrice', () => {
-  it('returns $0.08 at era 0', () => {
-    expect(getBasePrice(0)).toBe(0.08);
+  it('returns $0.05 at era 0', () => {
+    expect(getBasePrice(0)).toBe(0.05);
   });
 
-  it('returns $0.50 at era 1', () => {
-    expect(getBasePrice(210_000)).toBe(0.50);
+  it('returns $0.18 at era 1', () => {
+    expect(getBasePrice(210_000)).toBe(0.18);
   });
 
-  it('returns $2.00 at era 2', () => {
-    expect(getBasePrice(420_000)).toBe(2.00);
+  it('returns $0.55 at era 2', () => {
+    expect(getBasePrice(420_000)).toBe(0.55);
   });
 
-  it('returns $5.00 at era 3', () => {
-    expect(getBasePrice(630_000)).toBe(5.00);
+  it('returns $1.40 at era 3', () => {
+    expect(getBasePrice(630_000)).toBe(1.40);
   });
 
-  it('returns $12.00 at era 4', () => {
-    expect(getBasePrice(840_000)).toBe(12.00);
+  it('returns $3.50 at era 4', () => {
+    expect(getBasePrice(840_000)).toBe(3.50);
   });
 
-  it('returns $28.00 at era 5', () => {
-    expect(getBasePrice(1_050_000)).toBe(28.00);
+  it('returns $8.00 at era 5', () => {
+    expect(getBasePrice(1_050_000)).toBe(8.00);
   });
 
-  it('caps at $800.00 for eras beyond the price array', () => {
-    expect(getBasePrice(2_100_000)).toBe(800.00);
+  it('caps at last price for eras beyond the price array', () => {
+    expect(getBasePrice(4_200_000)).toBe(4000000.00);
   });
 });
 
@@ -211,10 +211,10 @@ describe('calculateTotalProduction (Bitcoin-faithful)', () => {
 // ── Hardware Costs ───────────────────────────────────────────────────────────
 
 describe('hardware costs are in $ (real money)', () => {
-  it('basic_cpu baseCost is $32.50', () => {
-    expect(BLOCK_CONFIG.ERA_BASE_PRICES[0]).toBe(0.08); // sanity check era 0 price
+  it('basic_cpu baseCost is $25', () => {
+    expect(BLOCK_CONFIG.ERA_BASE_PRICES[0]).toBe(0.05); // sanity check era 0 price
     const { baseCost } = require('../src/config/balanceConfig').HARDWARE_CONFIG.levels.basic_cpu;
-    expect(baseCost).toBe(32.5);
+    expect(baseCost).toBe(25);
   });
 
   it('all hardware blockReward is 0', () => {

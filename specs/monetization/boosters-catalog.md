@@ -4,7 +4,7 @@
 - **Fase**: Phase 3 - Monetization
 - **Estado**: ✅ Implemented
 - **Prioridad**: High (Monetization)
-- **Última actualización**: 2026-03-28
+- **Última actualización**: 2026-04-04
 
 ## Descripción
 
@@ -17,15 +17,15 @@ El catálogo de Boosters y Starter Packs proporciona opciones de monetización o
 
 **Specialty Boosters (Consumables):**
 - Offline Miner ($1.99) - 8h de minado offline al 50% de producción; 30% chance de oferta extendida (12h)
-- Lucky Block ($0.99) - 5x recompensa por N bloques (200/1000/3000 según hashRate)
-- Market Pump ($0.99) - 2x precio de venta por 15 min; 30% chance de oferta extendida (20 min)
+- Lucky Block ($0.99) - 10x recompensa por N bloques (500/2500/10000 según hashRate)
+- Market Pump ($0.99) - 2x precio de venta por 30 min; 30% chance de oferta extendida (37 min)
 
 **Dynamic Packs (Timed Offers):**
 Los packs ya NO son one-time estáticos. Son **ofertas dinámicas** con valores dentro de un rango, que aparecen por 20 minutos con 8h de cooldown. La visibilidad depende del hardware que posee el jugador:
-- Small Pack ($0.99) - 3-5K CC + $40-80 + 1h 2x booster (hasta poseer asic_gen3)
-- Medium Pack ($2.99) - 20-40K CC + $5-10K + 2h 2x booster (asic_gen3 → quantum_miner)
-- Large Pack ($4.99) - 40-60K CC + $30-50K + 4h booster + 24-48h crédito eléctrico (quantum_miner → supercomputer)
-- Mega Pack ($9.99) - 100-200K CC + $200-400K + 24h booster + 72-120h crédito eléctrico (post-supercomputer)
+- Small Pack ($0.99) - 12-18K CC + $6-12K + 1h 2x booster (hasta poseer asic_gen3)
+- Medium Pack ($2.99) - 60-100K CC + $15-25M + 2h 2x booster (asic_gen3 → quantum_miner)
+- Large Pack ($4.99) - 150-250K CC + $250-450M + 4h booster + 24-48h crédito eléctrico (quantum_miner → supercomputer)
+- Mega Pack ($9.99) - 400-600K CC + $3-5B + 24h booster + 72-120h crédito eléctrico (post-supercomputer)
 
 Todos los boosters stackean multiplicativamente con prestige y rewarded ad boosts.
 
@@ -295,11 +295,11 @@ Todos los boosters stackean multiplicativamente con prestige y rewarded ad boost
 **Dado que** el usuario quiere recompensas extra por los próximos bloques minados
 **Cuando** compra Lucky Block ($0.99)
 **Entonces**
-- Otorga 5x recompensa por bloque (`rewardMultiplier: 5`) durante los próximos N bloques
+- Otorga 10x recompensa por bloque (`rewardMultiplier: 10`) durante los próximos N bloques
 - N depende del `totalHashRate` del jugador:
-  - hashRate < 5,000 → 200 bloques (`earlyBlocks`)
-  - 5,000 ≤ hashRate < 100,000 → 1,000 bloques (`midBlocks`)
-  - hashRate ≥ 100,000 → 3,000 bloques (`lateBlocks`)
+  - hashRate < 5,000 → 500 bloques (`earlyBlocks`)
+  - 5,000 ≤ hashRate < 100,000 → 2,500 bloques (`midBlocks`)
+  - hashRate ≥ 100,000 → 10,000 bloques (`lateBlocks`)
 - Aplicado en la acción `ADD_PRODUCTION` del reducer
 - UI muestra badge: "Lucky Block: X blocks remaining"
 - Configuración: `BOOSTER_CONFIG.LUCKY_BLOCK`
@@ -309,10 +309,10 @@ Todos los boosters stackean multiplicativamente con prestige y rewarded ad boost
 **Cuando** compra Market Pump ($0.99)
 **Entonces**
 - Al abrir tab Boosters:
-  - 30% de probabilidad de ver oferta extendida (20 min en vez de 15 min)
+  - 30% de probabilidad de ver oferta extendida (37 min en vez de 30 min)
   - Si extendida: badge "EXTENDED" visible
 - Al comprar:
-  - Precio de venta se multiplica por 2x (`priceMultiplier: 2.0`) durante `baseDurationMs` (15 min) o `extendedDurationMs` (20 min)
+  - Precio de venta se multiplica por 2x (`priceMultiplier: 2.0`) durante `baseDurationMs` (30 min) o `extendedDurationMs` (37 min)
   - Aplicado en la acción `SELL_COINS_FOR_MONEY` del reducer
   - UI muestra badge: "Market Pump: MM:SS remaining"
   - Timer es real-time
@@ -353,27 +353,27 @@ Todos los boosters stackean multiplicativamente con prestige y rewarded ad boost
 ### Caso de Uso 12: Contenido de cada Dynamic Pack
 
 **Small Pack (Starter Pack — $0.99):**
-- CC: 3,000 - 5,000 (randomizado)
-- Cash: $40 - $80 (randomizado)
+- CC: 12,000 - 18,000 (randomizado)
+- Cash: $6,000 - $12,000 (randomizado)
 - Booster: 2x producción × 1h (siempre incluido)
 - Visible hasta poseer `asic_gen3`
 
 **Medium Pack (Growth Pack — $2.99):**
-- CC: 20,000 - 40,000
-- Cash: $5,000 - $10,000
+- CC: 60,000 - 100,000
+- Cash: $15,000,000 - $25,000,000
 - Booster: 2x producción × 2h
 - Visible desde `asic_gen3` hasta poseer `quantum_miner`
 
 **Large Pack (Mining Empire — $4.99):**
-- CC: 40,000 - 60,000
-- Cash: $30,000 - $50,000
+- CC: 150,000 - 250,000
+- Cash: $250,000,000 - $450,000,000
 - Booster: 2x producción × 4h (cuando no hay electricidad)
 - **Crédito eléctrico**: 24-48h de energía gratis (si jugador tiene energía no-renovable activa)
 - Visible desde `quantum_miner` hasta poseer `supercomputer`
 
 **Mega Pack (Crypto Titan — $9.99):**
-- CC: 100,000 - 200,000
-- Cash: $200,000 - $400,000
+- CC: 400,000 - 600,000
+- Cash: $3,000,000,000 - $5,000,000,000
 - Booster: 2x producción × 24h (cuando no hay electricidad)
 - **Crédito eléctrico**: 72-120h de energía gratis (si jugador tiene energía no-renovable activa)
 - Visible desde poseer `supercomputer` en adelante
@@ -421,10 +421,10 @@ Todos los boosters stackean multiplicativamente con prestige y rewarded ad boost
   permanentMultiplier = 2.0x (permanent IAP)
   temporaryBooster = 5.0x (5x booster)
   adBoost = 2.0x (rewarded ad)
-  luckyBlock = 5x (por bloque, si activo)
+  luckyBlock = 10x (por bloque, si activo)
 
   finalProduction = 1000 × 2.0 × 2.0 × 5.0 × 2.0 = 40,000 CC/s
-  + Lucky Block: cada bloque minado otorga 5× recompensa
+  + Lucky Block: cada bloque minado otorga 10× recompensa
   + Market Pump: precio de venta 2× (si activo)
   + Offline Miner: 50% de producción mientras app cerrada (si activo)
   ```
@@ -432,8 +432,8 @@ Todos los boosters stackean multiplicativamente con prestige y rewarded ad boost
   - "2x Permanent" (arco iris)
   - "5x Boost: 18:30:00" (violeta)
   - "2x Ad: 2:15:00" (dorado)
-  - "Lucky Block: 450 blocks" (si activo)
-  - "Market Pump: 12:30" (si activo)
+  - "Lucky Block: 4500 blocks" (si activo)
+  - "Market Pump: 25:30" (si activo)
 
 ## Fórmulas y Cálculos
 
@@ -497,10 +497,10 @@ function calculatePackValue(pack: 'small' | 'medium' | 'large' | 'mega'): {
   return { coinsValue, moneyValue, totalValue, valuePerDollar };
 }
 
-// Small: 10K CC ($10) + $500 = $510 / $0.99 = 515x
-// Medium: 50K CC ($50) + $2.5K = $2,550 / $2.99 = 853x
-// Large: 150K CC ($150) + $10K = $10,150 / $4.99 = 2,034x
-// Mega: 500K CC ($500) + $50K = $50,500 / $9.99 = 5,055x
+// Small: 15K CC + $8K — helps buy early hardware (advanced_cpu, basic_gpu)
+// Medium: 80K CC + $20M — significant mid-game boost (ASIC tiers)
+// Large: 200K CC + $350M — enables Mining Farm purchase
+// Mega: 500K CC + $4B — enables Quantum Miner / Supercomputer range
 // → Mega Pack tiene MUCHO mejor value (incentiva big purchase)
 ```
 
@@ -536,17 +536,17 @@ export const BOOSTER_CONFIG = {
     earningsMultiplier: 0.5,                   // 50% of active production
   },
   LUCKY_BLOCK: {
-    rewardMultiplier: 5,                       // 5x block reward
-    earlyBlocks: 200,                          // blocks if hashRate < 5K
-    midBlocks: 1000,                           // blocks if 5K ≤ hashRate < 100K
-    lateBlocks: 3000,                          // blocks if hashRate ≥ 100K
+    rewardMultiplier: 10,                      // 10x block reward
+    earlyBlocks: 500,                          // blocks if hashRate < 5K
+    midBlocks: 2500,                           // blocks if 5K ≤ hashRate < 100K
+    lateBlocks: 10000,                         // blocks if hashRate ≥ 100K
     earlyHashThreshold: 5000,
     lateHashThreshold: 100000,
   },
   MARKET_PUMP: {
     priceMultiplier: 2.0,                      // 2x sell price
-    baseDurationMs: 15 * 60 * 1000,            // 15 min
-    extendedDurationMs: 20 * 60 * 1000,        // 20 min
+    baseDurationMs: 30 * 60 * 1000,            // 30 min
+    extendedDurationMs: 37 * 60 * 1000,        // 37 min
     extendedOfferChance: 0.30,                 // 30% chance on tab open
   },
 };
@@ -556,21 +556,21 @@ export const PACK_CONFIG = {
   COOLDOWN_MS: 8 * 60 * 60 * 1000,    // 8h between offers
 
   small: {
-    ccRange: [3_000, 5_000],
-    cashRange: [40, 80],
+    ccRange: [12_000, 18_000],
+    cashRange: [6_000, 12_000],
     boosterDurationMs: 1 * 60 * 60 * 1000,  // 1h 2x booster
     showUntilHardwareId: 'asic_gen3',
   },
   medium: {
-    ccRange: [20_000, 40_000],
-    cashRange: [5_000, 10_000],
+    ccRange: [60_000, 100_000],
+    cashRange: [15_000_000, 25_000_000],
     boosterDurationMs: 2 * 60 * 60 * 1000,  // 2h 2x booster
     showAfterHardwareId: 'asic_gen3',
     showUntilHardwareId: 'quantum_miner',
   },
   large: {
-    ccRange: [40_000, 60_000],
-    cashRange: [30_000, 50_000],
+    ccRange: [150_000, 250_000],
+    cashRange: [250_000_000, 450_000_000],
     boosterDurationMs: 4 * 60 * 60 * 1000,  // 4h booster
     showAfterHardwareId: 'quantum_miner',
     showUntilHardwareId: 'supercomputer',
@@ -578,8 +578,8 @@ export const PACK_CONFIG = {
     electricityHoursRange: [24, 48],
   },
   mega: {
-    ccRange: [100_000, 200_000],
-    cashRange: [200_000, 400_000],
+    ccRange: [400_000, 600_000],
+    cashRange: [3_000_000_000, 5_000_000_000],
     boosterDurationMs: 24 * 60 * 60 * 1000, // 24h booster
     showAfterHardwareId: 'supercomputer',
     includeElectricity: true,
@@ -651,8 +651,8 @@ interface IAPState {
 
 ### Specialty Boosters
 6. **Offline Miner**: Producción al 50% mientras app cerrada; duración 8h (o 12h si extended)
-7. **Lucky Block**: 5x reward por bloque durante N bloques; N escala con hashRate del jugador
-8. **Market Pump**: 2x precio de venta durante 15 min (o 20 min si extended)
+7. **Lucky Block**: 10x reward por bloque durante N bloques (500/2500/10000); N escala con hashRate del jugador
+8. **Market Pump**: 2x precio de venta durante 30 min (o 37 min si extended)
 9. **Extended offers**: 30% chance, se pre-rolla al abrir tab Boosters (via `pendingBoosterMetaRef`); no re-rolla por render
 10. **Specialty boosters son independientes**: Se pueden usar simultáneamente entre sí y con production boosters
 
@@ -847,8 +847,8 @@ analytics().logEvent('starter_pack_purchased', {
 - Expected: Booster PERSISTE después de prestige (es un boost temporal ganado)
 
 **Edge Case 4: Lucky Block con hashRate que cambia mid-boost**
-- Input: Compra Lucky Block con hashRate=4,000 (→200 blocks), luego compra hardware y hashRate sube a 6,000
-- Expected: Bloques restantes NO se recalculan. Los 200 bloques originales se mantienen.
+- Input: Compra Lucky Block con hashRate=4,000 (→500 blocks), luego compra hardware y hashRate sube a 6,000
+- Expected: Bloques restantes NO se recalculan. Los 500 bloques originales se mantienen.
 
 **Edge Case 5: Pack offer expira mientras usuario ve confirmation dialog**
 - Input: Usuario abre dialog de compra, timer llega a 0 antes de confirmar

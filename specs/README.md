@@ -40,8 +40,8 @@ Este directorio contiene todas las especificaciones técnicas exhaustivas (Level
 | [Opción B — Nuevos Tiers de Hardware](economy/option-b-hardware-tiers.md) | ✅ Implemented | Game Length | High | Mining Farm, Quantum Miner, Supercomputer (niveles 9-11) |
 | [Opción C — Electricidad como Constraint](economy/option-c-electricity-constraint.md) | ⚠️ Superseded | Game Length | High | Superseded by CC Mining Fee |
 | [Opción D — Dificultad Progresiva de Red](economy/option-d-progressive-difficulty.md) | 📋 Planned | Game Length | High | difficulty = 1 + (progress)^2, reduce effectiveMiningSpeed |
-| [Bitcoin-Faithful Economy](economy/bitcoin-faithful-economy.md) | ✅ Implemented | Phase 2 | Critical | Global block reward, era pricing, difficulty by blocks mined |
-| [Electricity → CC Mining Fee](economy/electricity-cc-fee.md) | ✅ Implemented | Economy Rebalance | Critical | Electricity drains CC (not $), 0.75% of weight per tick |
+| [Bitcoin-Faithful Economy](economy/bitcoin-faithful-economy.md) | ✅ Implemented | Phase 2 | Critical | Global block reward, 20-era pricing, speed-based difficulty |
+| [Electricity → CC Mining Fee](economy/electricity-cc-fee.md) | ⚠️ Disabled | Economy Rebalance | Critical | RATE_PERCENT = 0 (disabled, pending rework) |
 
 ### 🎨 UI/UX (Interfaz y Experiencia)
 
@@ -166,7 +166,7 @@ Todas las specs siguen el mismo formato exhaustivo (Level 3):
 ## 🎮 Filosofía del Juego
 
 ### Balance
-- Primera run: múltiples sesiones de juego activo (economy rebalance v2, 2026-03-27)
+- Primera run: ~12 horas de juego activo (economy rebalance v3, 2026-04-04)
 - Cada prestige acelera ~50% la siguiente run
 - Siempre hay un "próximo objetivo" visible
 - Algo nuevo se desbloquea cada 15-60 minutos (early game)
@@ -254,6 +254,6 @@ Para preguntas sobre estas specs, consulta:
 
 ---
 
-**Última actualización**: 2026-04-01
+**Última actualización**: 2026-04-04
 **Versión del proyecto**: 0.0.1 (Phase 1-7)
 **Próxima fase**: Post-narrativa (Daily Missions, Market Events, Polish)

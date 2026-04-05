@@ -479,11 +479,12 @@ interface AdEvent {
 1. **Banner Ads son removibles con IAP**: Comprar "Remove Ads" ($0.99) oculta banners
 2. **Interstitial Ads son removibles con IAP**: Comprar "Remove Ads" también los remueve
 3. **Rewarded Ads NO son removibles**: Siempre disponibles porque otorgan beneficio
-4. **Rewarded Ad boost NO stackea**: Ver otro ad reemplaza el boost, no lo suma
-5. **Cooldown de rewarded ad es 5 minutos**: Después de ver un ad, debe esperar 5 min
-6. **Boost de rewarded ad dura 4 horas**: 2x production por 4 horas exactas
-6b. **Offer window de 20 segundos**: El bubble aparece 20s y desaparece si no se toca
-6c. **Intervalo entre ofertas: 3 minutos**: El bubble reaparece cada 3 min (solo si disponible)
+4. **Rewarded Ad boosts**: 3-type rotation system (hash/market/energy), each with different effects and durations
+5. **Cooldown after watching**: 6-8 min (random); after miss: 7-9 min base with +2 min escalation per consecutive miss (cap 15-20 min)
+6. **Hash Boost**: +35% mining speed for 3 min (shop IAP = 2x permanent)
+6b. **Market Boost**: +25% sell price for 5 min, aligned with `market_spike` event
+6c. **Energy Restore**: 50% of current MW deficit recovered
+6d. **Bubble visibility**: hash 30s, market 25s, energy 25s (auto-expire if not tapped)
 7. **Interstitial cooldown es 6 horas**: Max 1 cada 6 horas, solo en app open
 8. **No interstitial en primera sesión**: Mala UX mostrar ad inmediatamente
 9. **Graceful degradation**: Si ad falla, continuar gameplay sin bloquear
@@ -501,43 +502,64 @@ interface AdEvent {
 - [ ] En pantallas con scroll: banner sticky (no scrollea)
 - [ ] Si Remove Ads comprado: banner invisible (no reserve espacio)
 
-### Rewarded Ad Button — Floating Bubble
-- **Estilo**: Bubble compacto redondeado (72×72px, borderRadius 36), superpuesto sobre la pantalla (`position: absolute`)
+### Rewarded Ad Button — Floating Bubble (Rotation System)
+- **Estilo**: Bubble compacto redondeado, superpuesto sobre la pantalla (`position: absolute`)
 - **Posición**: Borde derecho (right: 12px), ~35% desde el top de la pantalla
 - **Animación de entrada**: Spring slide desde la derecha + fade in
 - **Animación de salida**: Slide hacia la derecha + fade out
 
-#### Offer Window (lógica de aparición)
-- El bubble NO está siempre visible; aparece de forma periódica:
-  - `OFFER_INTERVAL_MS = 3 * 60 * 1000` (3 minutos entre ofertas)
-  - `OFFER_WINDOW_MS = 20_000` (visible 20 segundos)
-- Primera oferta: 3 minutos después de montar el componente
-- El bubble se auto-descarta tras 20 segundos si el usuario no interactúa
-- Si hay boost activo o cooldown activo: el bubble NO aparece
+#### Rotation Pool (3 bubble types)
+El sistema rota entre 3 tipos de bubbles, cada uno con efecto diferente:
+
+| Type | Effect | Duration | Visibility | Label |
+|------|--------|----------|------------|-------|
+| **hash** | +35% mining speed | 3 min | 30s | "+35%" |
+| **market** | +25% sell price | 5 min | 25s | "+25%" |
+| **energy** | 50% MW deficit recovery | instant | 25s | "⚡" |
+
+- **Pool eligibility**: `hash` requires ≥5 total hardware units; `energy` requires planetResources < 90%
+- **Random selection**: One bubble type is randomly chosen from eligible pool per cycle
+
+#### Cooldowns (single rotation system)
+- **After watching**: 6-8 min cooldown (random uniform)
+- **After miss** (bubble expires untouched or dismissed): 7-9 min base; +2 min escalation per consecutive miss
+- **Miss escalation cap**: 15-20 min
+- **After watch**: miss counter resets to 0
 
 #### Contenido del bubble
-- Ícono 📺 (28px)
-- Label "2x GRATIS" (9px, verde)
+- Ícono varies by type (hash: ⛏, market: 📈, energy: ⚡)
+- Label shows boost amount (+35%, +25%, or ⚡)
 - Badge de countdown en esquina top-left: segundos restantes de la ventana
 - Botón ✕ pequeño debajo del bubble para descartar manualmente
 
-#### Estados
-- **Offer visible**: Bubble verde con glow (`borderColor: #00ff88`, `shadowColor: #00ff88`)
-- **Boost activo**: Badge pill dorado en esquina superior derecha (`⚡ 2x · H:MM:SS`), sin bubble
-- **Cooldown / fuera de ventana**: Componente retorna null (no renderiza nada)
-
 #### Al tocar el bubble
 - Si available: mostrar rewarded ad inmediatamente
-- Si boost ya activo: mostrar dialog de confirmación antes de reemplazar
-- Tras ver el ad exitosamente: cerrar bubble e iniciar cooldown
+- Tras ver el ad exitosamente: apply boost, cerrar bubble, iniciar watch cooldown
+- Miss counter resets
+
+#### Config en balanceConfig.ts
+
+```typescript
+AD_BUBBLE_CONFIG = {
+  HASH_BOOST: { multiplier: 1.35, durationMs: 3 * 60 * 1000 },
+  MARKET_BOOST: { multiplier: 1.25, durationMs: 5 * 60 * 1000 },
+  ENERGY_RESTORE: { recoveryPercent: 0.50 },
+  BUBBLE_VISIBLE_SEC: { hash: 30, market: 25, energy: 25 },
+  COOLDOWN_AFTER_WATCH_MIN_MS: 6 * 60 * 1000,
+  COOLDOWN_AFTER_WATCH_MAX_MS: 8 * 60 * 1000,
+  COOLDOWN_AFTER_MISS_MIN_MS:  7 * 60 * 1000,
+  COOLDOWN_AFTER_MISS_MAX_MS:  9 * 60 * 1000,
+  MISS_ESCALATION_MS:          2 * 60 * 1000,
+  MISS_ESCALATION_CAP_MIN_MS:  15 * 60 * 1000,
+  MISS_ESCALATION_CAP_MAX_MS:  20 * 60 * 1000,
+  HASH_MIN_HARDWARE_UNITS: 5,
+  ENERGY_PLANET_THRESHOLD: 90,
+}
+```
 
 ### Boost Active Indicator
-- [ ] Badge pill en esquina superior derecha: "⚡ 2x · H:MM:SS"
-- [ ] Color: Dorado/amarillo (`#FFD700`)
-- [ ] Posición: `position: absolute`, `top: insets.top + 50`, `right: 16`
-- [ ] Sin animación (estático, siempre visible mientras boost corra)
-  - "Your production is doubled!"
-  - Botón: "Watch another ad (will reset timer)"
+- [ ] Toast notification on boost activation showing type and duration
+- [ ] IAPBoosterBadges component shows active ad boosts alongside IAP boosts
 
 ### Interstitial Ad Display
 - [ ] Fullscreen overlay
@@ -1302,17 +1324,18 @@ describe('Ad System E2E', () => {
 });
 ```
 
-### Acceptance Tests — Rewarded Ad Bubble (implemented 2026-03-07)
+### Acceptance Tests — Rewarded Ad Bubble Rotation (updated 2026-04-04)
 
-#### Offer Window
+#### Offer Window / Rotation
 - [ ] El bubble NO aparece al montar el componente inmediatamente
-- [ ] El bubble aparece después de exactamente 3 minutos sin haber visto un ad
-- [ ] El bubble es visible durante 20 segundos y luego desaparece solo
+- [ ] El bubble aparece after cooldown expires (6-8 min after watch, 7-9 min after miss)
+- [ ] Hash bubble is visible for 30 seconds, market for 25s, energy for 25s
 - [ ] El badge de countdown en el bubble muestra los segundos restantes y decrementa cada segundo
-- [ ] Si el usuario toca ✕, el bubble desaparece y el timer de 3 minutos reinicia desde ese momento
-- [ ] Si el usuario toca el bubble y ve el ad, el bubble desaparece y se inicia el cooldown
-- [ ] Durante cooldown activo (< 5 min desde último ad): el bubble NO aparece aunque hayan pasado 3 min
-- [ ] Con boost activo: el bubble NO aparece
+- [ ] Si el usuario toca ✕, el bubble desaparece y miss cooldown inicia (7-9 min + escalation)
+- [ ] Si el usuario toca el bubble y ve el ad, el bubble desaparece y watch cooldown inicia (6-8 min)
+- [ ] Consecutive misses escalate cooldown by +2 min each (cap 15-20 min)
+- [ ] Watching an ad resets miss counter to 0
+- [ ] Bubble type is randomly chosen from eligible pool (hash requires ≥5 hardware, energy requires planetResources < 90%)
 
 #### Visual / Posición
 - [ ] El bubble tiene forma circular (72×72px, borderRadius 36)

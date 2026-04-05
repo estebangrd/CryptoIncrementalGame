@@ -12,8 +12,8 @@ El sistema de In-App Purchases (IAP) proporciona monetización secundaria para B
 
 El sistema implementa tres tipos de productos:
 1. **Non-Consumable**: Remove Ads ($0.99) - compra única, permanente
-2. **Consumable**: Boosters de producción - pueden comprarse múltiples veces
-3. **One-Time**: Starter Packs - solo se pueden comprar una vez cada uno
+2. **Consumable**: Boosters de producción (2x, 5x, Permanent, Offline Miner, Lucky Block, Market Pump) - pueden comprarse múltiples veces
+3. **Dynamic Packs**: Starter Packs - ofertas dinámicas con valores randomizados, timed (20 min) con 8h cooldown. Ver `boosters-catalog.md` para detalles completos.
 
 La integración utiliza `react-native-iap` para soportar tanto iOS (StoreKit 2) como Android (Google Play Billing Library v5), con receipt validation, restore purchases, y manejo robusto de errores.
 
@@ -177,18 +177,17 @@ La integración utiliza `react-native-iap` para soportar tanto iOS (StoreKit 2) 
 - Mostrar confirmation dialog:
   - "Small Starter Pack"
   - "You will receive:"
-  - "• 10,000 CryptoCoins"
-  - "• $500 Real Money"
+  - "• 15,000 CryptoCoins"
+  - "• $8,000 Real Money"
   - "Price: $0.99"
-  - "⚠️ Can only be purchased once"
+  - **Nota**: Packs ahora son ofertas dinámicas con valores randomizados dentro de rangos (ver `boosters-catalog.md`). Los valores estáticos en `STARTER_PACK_REWARDS` son fallback.
 - Si selecciona Purchase:
   - Procesar compra
   - Al completar:
-    - Otorgar recursos:
-      - `cryptoCoins += 10000`
-      - `realMoney += 500`
-    - Marcar pack como comprado: `starterPacksPurchased.small = true`
-    - Mostrar notificación: "Received 10K CC + $500!"
+    - Otorgar recursos (uses dynamic `packCurrentCC`/`packCurrentCash` with static fallback):
+      - `cryptoCoins += packCurrentCC` (or 15000 fallback)
+      - `realMoney += packCurrentCash` (or 8000 fallback)
+    - Mostrar notificación with granted amounts
     - Finalizar transacción
     - Log evento: `iap_starter_pack_purchased`
 - Producto queda marcado como "Purchased", no se puede volver a comprar
@@ -475,23 +474,24 @@ export const IAP_CONFIG = {
     permanent: 2.0,
   },
 
-  // Starter pack rewards
+  // Starter pack rewards (static fallback — dynamic values from PACK_CONFIG ranges)
+  // See STARTER_PACK_REWARDS and PACK_CONFIG in balanceConfig.ts
   starterPackRewards: {
     small: {
-      cryptoCoins: 10000,
-      realMoney: 500,
+      cryptoCoins: 15000,
+      realMoney: 8000,
     },
     medium: {
-      cryptoCoins: 50000,
-      realMoney: 2500,
+      cryptoCoins: 80000,
+      realMoney: 20000000,
     },
     large: {
-      cryptoCoins: 150000,
-      realMoney: 10000,
+      cryptoCoins: 200000,
+      realMoney: 350000000,
     },
     mega: {
       cryptoCoins: 500000,
-      realMoney: 50000,
+      realMoney: 4000000000,
     },
   },
 
