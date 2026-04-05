@@ -12,6 +12,9 @@
 import React from 'react';
 import ReactTestRenderer from 'react-test-renderer';
 
+// Use fake timers to prevent setInterval leaks
+jest.useFakeTimers();
+
 // Mock react-native-svg before importing the component
 jest.mock('react-native-svg', () => {
   const { View } = require('react-native');
@@ -25,6 +28,12 @@ jest.mock('react-native-svg', () => {
     Rect: View,
   };
 });
+
+// Stub Animated.loop to avoid infinite animation loops that cause act() timeouts
+const { Animated } = require('react-native');
+const origLoop = Animated.loop;
+beforeAll(() => { Animated.loop = jest.fn(() => ({ start: jest.fn(), stop: jest.fn() })); });
+afterAll(() => { Animated.loop = origLoop; });
 
 import { BlockStatus } from '../src/components/BlockStatus';
 
