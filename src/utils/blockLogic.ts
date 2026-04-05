@@ -11,13 +11,8 @@ export const GENESIS_CONSTANTS = {
 };
 
 // Calculate current block reward based on halvings
-// Cap halvings at the number of designed eras so reward doesn't underflow
 export const calculateCurrentReward = (blocksMined: number): number => {
-  const maxHalvings = BLOCK_CONFIG.ERA_BASE_PRICES.length - 1;
-  const halvings = Math.min(
-    Math.floor(blocksMined / GENESIS_CONSTANTS.HALVING_INTERVAL),
-    maxHalvings,
-  );
+  const halvings = Math.floor(blocksMined / GENESIS_CONSTANTS.HALVING_INTERVAL);
   return GENESIS_CONSTANTS.INITIAL_REWARD / Math.pow(2, halvings);
 };
 

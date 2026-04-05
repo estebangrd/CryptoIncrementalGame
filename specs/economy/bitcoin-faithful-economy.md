@@ -49,12 +49,6 @@ Minar bloques → ganar CC → vender CC en market por $ → comprar hardware co
 
 **Total CC**: 20,835,937.5 (≈21M)
 
-### Halving Cap (era 19)
-
-El halving de block reward está limitado a `ERA_BASE_PRICES.length - 1` (19 halvings). Más allá de era 19, el reward se mantiene constante en `50 / 2^19 ≈ 9.54e-5 CC/bloque`. Esto evita que el reward se haga infinitesimalmente pequeño y deje CC/s en 0.0, lo cual softlockea al jugador.
-
-**Consistencia**: `getBasePrice` ya limita el era index al último precio ($4M). `calculateCurrentReward` ahora aplica el mismo cap a los halvings.
-
 ---
 
 ## Fórmula de Dificultad

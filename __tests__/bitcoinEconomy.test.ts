@@ -126,15 +126,6 @@ describe('calculateCurrentReward (global)', () => {
   it('returns 6.25 at block 630,000', () => {
     expect(calculateCurrentReward(630_000)).toBe(6.25);
   });
-
-  it('caps halvings at ERA_BASE_PRICES.length - 1 so reward never underflows', () => {
-    const maxEra = BLOCK_CONFIG.ERA_BASE_PRICES.length - 1; // 19
-    const rewardAtLastEra = calculateCurrentReward(maxEra * 210_000);
-    // Beyond the last designed era, reward should NOT keep halving
-    const rewardFarBeyond = calculateCurrentReward(9_000_000); // era 42
-    expect(rewardFarBeyond).toBe(rewardAtLastEra);
-    expect(rewardFarBeyond).toBeGreaterThan(1e-10); // must be meaningful, not underflowed
-  });
 });
 
 // ── Total CC Supply ──────────────────────────────────────────────────────────
