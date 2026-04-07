@@ -102,15 +102,21 @@ El precio base de CC sube con cada era, simulando la apreciación histórica de 
 
 **20 eras definidas**: ERA_BASE_PRICES tiene 20 entradas [$0.05 → $4,000,000]. El $/bloque crece ~8-12% por era, plateaus in mid-game, and accelerates from era 14+ to support endgame hardware purchases across multiple prestiges.
 
+**Beyond era 19**: Price doubles each era (BTC-faithful appreciation). `getBasePrice` extrapolates: `lastPrice × 2^(era - 19)`. This keeps $/block roughly constant as block reward halves, preventing a 0.0 CC/s softlock at high eras.
+
 **Nota**: A diferencia de la v2 donde $/bloque peaked y declined, la v3 mantiene un crecimiento gradual controlado. Esto permite comprar hardware cada vez más caro sin que el income se estanque.
 
 ### Implementación del precio base
 
 ```typescript
-// Precio base escala con la era actual (20-entry array)
+// Precio base escala con la era actual (20-entry array, extrapolates beyond)
 function getBasePrice(blocksMined: number): number {
   const era = Math.floor(blocksMined / 210_000);
-  return BLOCK_CONFIG.ERA_BASE_PRICES[Math.min(era, BLOCK_CONFIG.ERA_BASE_PRICES.length - 1)];
+  const prices = BLOCK_CONFIG.ERA_BASE_PRICES;
+  if (era < prices.length) return prices[era];
+  // BTC-faithful: price doubles per era beyond defined prices
+  const extraEras = era - (prices.length - 1);
+  return prices[prices.length - 1] * Math.pow(2, extraEras);
 }
 // ERA_BASE_PRICES = [0.05, 0.18, 0.55, 1.40, 3.50, 8.00, 18.00, 40.00, 90.00, 200.00,
 //                    450.00, 1000.00, 2300.00, 5500.00, 14000.00, 38000.00, 110000.00,

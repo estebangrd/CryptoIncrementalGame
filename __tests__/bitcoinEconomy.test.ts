@@ -103,8 +103,18 @@ describe('getBasePrice', () => {
     expect(getBasePrice(1_050_000)).toBe(8.00);
   });
 
-  it('caps at last price for eras beyond the price array', () => {
-    expect(getBasePrice(4_200_000)).toBe(4000000.00);
+  it('extrapolates price beyond defined eras (doubles per era)', () => {
+    // Era 20 = 2x last defined price ($4M)
+    expect(getBasePrice(20 * 210_000)).toBe(8_000_000);
+    // Era 21 = 4x last defined price
+    expect(getBasePrice(21 * 210_000)).toBe(16_000_000);
+  });
+
+  it('era 42 price is much greater than $4M', () => {
+    const price = getBasePrice(42 * 210_000);
+    expect(price).toBeGreaterThan(4_000_000);
+    // 2^(42-19) = 2^23 = 8,388,608 → $4M × 8M+ ≈ $33.5T
+    expect(price).toBeGreaterThan(1e12);
   });
 });
 

@@ -489,6 +489,7 @@ export const creditCryptoCoins = (gameState: GameState, ccAmount: number): GameS
 export const formatNumber = (num: number): string => {
   const abs = Math.abs(num);
   const sign = num < 0 ? '-' : '';
+  if (abs > 0 && abs < 0.05) return sign + '<0.1';
   if (abs < 1000) return num.toFixed(1);
   if (abs < 1000000) return sign + (abs / 1000).toFixed(1) + 'K';
   if (abs < 1000000000) return sign + (abs / 1000000).toFixed(1) + 'M';

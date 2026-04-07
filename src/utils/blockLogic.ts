@@ -59,7 +59,10 @@ export const getEra = (blocksMined: number): number => {
 export const getBasePrice = (blocksMined: number): number => {
   const era = getEra(blocksMined);
   const prices = BLOCK_CONFIG.ERA_BASE_PRICES;
-  return prices[Math.min(era, prices.length - 1)];
+  if (era < prices.length) return prices[era];
+  // BTC-faithful: price doubles per era beyond defined prices
+  const extraEras = era - (prices.length - 1);
+  return prices[prices.length - 1] * Math.pow(2, extraEras);
 };
 
 // Calculate block mining time based on difficulty and hash rate
