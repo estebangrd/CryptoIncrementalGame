@@ -13,6 +13,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGame } from '../contexts/GameContext';
 import { formatNumber, formatSignedNumber } from '../utils/gameLogic';
+import { getBasePrice } from '../utils/blockLogic';
 import { clearGameData } from '../utils/storage';
 import HorizontalTabs from './HorizontalTabs';
 import SettingsModal from './SettingsModal';
@@ -255,6 +256,14 @@ const GameScreen: React.FC = () => {
   const prevAchievementsRef = useRef(gameState.achievements);
   const firstHydratedRef = useRef(true);
   const prevMarketEventsRef = useRef(gameState.activeMarketEvents ?? []);
+
+  // Latest CC market price for offline-earnings USD equivalent display.
+  // Falls back to era base price if no market history exists yet.
+  const offlineCoinPriceUSD = (() => {
+    const history = gameState.priceHistory?.cryptocoin?.prices;
+    const latest = history && history.length > 0 ? history[history.length - 1] : 0;
+    return latest > 0 ? latest : getBasePrice(gameState.blocksMined);
+  })();
 
   // Toast on new market events
   useEffect(() => {
@@ -593,6 +602,7 @@ const GameScreen: React.FC = () => {
         wasCapped={gameState.offlineWasCapped}
         blocksProcessed={gameState.offlineBlocksProcessed}
         removeAdsPurchased={gameState.iapState.removeAdsPurchased}
+        currentCoinPriceUSD={offlineCoinPriceUSD}
         t={t}
         onClaim={(amount) => dispatch({ type: 'CLAIM_OFFLINE_EARNINGS', payload: { amount } })}
         onDismiss={() => dispatch({ type: 'DISMISS_OFFLINE_EARNINGS' })}

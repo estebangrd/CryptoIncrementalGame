@@ -9,7 +9,7 @@ import {
   Easing,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { formatNumber } from '../utils/gameLogic';
+import { formatNumber, formatUSD } from '../utils/gameLogic';
 import { showRewardedAd, isRewardedAdReady } from '../services/AdMobService';
 import { OFFLINE_SCREEN_CONFIG } from '../config/balanceConfig';
 import { colors, fonts } from '../config/theme';
@@ -21,6 +21,7 @@ interface OfflineEarningsModalProps {
   wasCapped: boolean;
   blocksProcessed: number;
   removeAdsPurchased: boolean;
+  currentCoinPriceUSD: number;
   t: (key: string) => string;
   onClaim: (amount: number) => void;
   onDismiss: () => void;
@@ -51,6 +52,7 @@ const OfflineEarningsModal: React.FC<OfflineEarningsModalProps> = ({
   wasCapped,
   blocksProcessed,
   removeAdsPurchased,
+  currentCoinPriceUSD,
   t,
   onClaim,
   onDismiss,
@@ -193,6 +195,11 @@ const OfflineEarningsModal: React.FC<OfflineEarningsModalProps> = ({
               <Text style={styles.ecAmount}>{displayedAmount}</Text>
               <Text style={styles.ecUnit}>CC</Text>
             </View>
+            {currentCoinPriceUSD > 0 && pendingEarnings > 0 && (
+              <Text style={styles.ecUsdValue}>
+                ≈ {formatUSD(pendingEarnings * currentCoinPriceUSD)}
+              </Text>
+            )}
             {wasCapped && (
               <View style={styles.capNote}>
                 <Text style={styles.capNoteText}>⚠ {t('offline.capWarning')}</Text>
@@ -386,6 +393,16 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: 'rgba(0,255,136,0.65)',
     letterSpacing: 3,
+  },
+  ecUsdValue: {
+    fontFamily: fonts.orbitron,
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.85)',
+    letterSpacing: 1.5,
+    marginTop: 8,
+    textShadowColor: 'rgba(0,229,255,0.35)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 12,
   },
   capNote: {
     flexDirection: 'row',

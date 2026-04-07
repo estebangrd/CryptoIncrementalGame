@@ -489,12 +489,34 @@ export const creditCryptoCoins = (gameState: GameState, ccAmount: number): GameS
 export const formatNumber = (num: number): string => {
   const abs = Math.abs(num);
   const sign = num < 0 ? '-' : '';
-  if (abs > 0 && abs < 0.05) return sign + '<0.1';
+  if (abs === 0) return '0.0';
+  if (abs < 1) {
+    // Adaptive precision: keep 2 significant digits so tiny values stay legible
+    // (e.g., 0.023, 0.00056) instead of collapsing to "0.0".
+    return sign + Number(abs.toPrecision(2)).toString();
+  }
   if (abs < 1000) return num.toFixed(1);
   if (abs < 1000000) return sign + (abs / 1000).toFixed(1) + 'K';
   if (abs < 1000000000) return sign + (abs / 1000000).toFixed(1) + 'M';
   if (abs < 1000000000000) return sign + (abs / 1000000000).toFixed(1) + 'B';
   return sign + (abs / 1000000000000).toFixed(1) + 'T';
+};
+
+/**
+ * Format a USD value compactly with $ prefix and magnitude suffix.
+ * Used for displaying purchasing power equivalents (e.g., offline earnings).
+ */
+export const formatUSD = (num: number): string => {
+  const abs = Math.abs(num);
+  const sign = num < 0 ? '-' : '';
+  if (abs < 0.01) return '$0.00';
+  if (abs < 1000) return sign + '$' + abs.toFixed(2);
+  if (abs < 1_000_000) return sign + '$' + (abs / 1_000).toFixed(2) + 'K';
+  if (abs < 1_000_000_000) return sign + '$' + (abs / 1_000_000).toFixed(2) + 'M';
+  if (abs < 1_000_000_000_000) return sign + '$' + (abs / 1_000_000_000).toFixed(2) + 'B';
+  if (abs < 1e15) return sign + '$' + (abs / 1e12).toFixed(2) + 'T';
+  if (abs < 1e18) return sign + '$' + (abs / 1e15).toFixed(2) + 'Q';
+  return sign + '$' + abs.toExponential(2);
 };
 
 export const formatSignedNumber = (num: number): string => {
