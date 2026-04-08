@@ -12,10 +12,21 @@
 import { formatUSD } from '../src/utils/gameLogic';
 
 describe('formatUSD — USD price formatter', () => {
-  it('shows 4 decimal places for prices between $1 and $100', () => {
+  it('shows up to 4 decimal places for prices between $1 and $100', () => {
     // OU price process produces values like 1.0857 — must show all 4 decimals
     expect(formatUSD(1.0857)).toBe('$1.0857');
     expect(formatUSD(1.0863)).toBe('$1.0863');
+  });
+
+  it('trims trailing zeros to 2 decimals for round prices in $1-$100', () => {
+    // Hardware costs like $25 must NOT render as $25.0000 (finance convention
+    // keeps the cents but drops meaningless trailing zeros).
+    expect(formatUSD(25)).toBe('$25.00');
+    expect(formatUSD(99)).toBe('$99.00');
+    expect(formatUSD(1.5)).toBe('$1.50');
+    expect(formatUSD(1.05)).toBe('$1.05');
+    // Mixed precision: preserves 3rd/4th decimal when meaningful
+    expect(formatUSD(1.085)).toBe('$1.085');
   });
 
   it('distinguishes adjacent minute prices in the $1-$100 band', () => {

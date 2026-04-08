@@ -584,10 +584,12 @@ export const formatCC = formatNumber;
  * Ranges:
  * - 0 or non-finite            → "$0"  (no decimals — finance convention)
  * - (0, 1e-4)                  → exponential, e.g. "$1.23e-5"
- * - [1e-4, 0.01)               → 6 decimals, e.g. "$0.001234"
- * - [0.01, 100)                → 4 decimals, e.g. "$1.0857"
+ * - [1e-4, 0.01)               → up to 6 decimals, e.g. "$0.000123"
+ * - [0.01, 100)                → up to 4 decimals, trim trailing zeros beyond
+ *                                the cents, e.g. "$25.00", "$1.0857"
  *                                (fine precision so minute-by-minute market
- *                                 price changes stay visible in the chart)
+ *                                 price changes stay visible in the chart,
+ *                                 but round hardware prices don't show zeros)
  * - [100, 1000)                → 2 decimals, e.g. "$123.45"
  * - [1K, 1M, 1B, 1T, 1Q)       → suffix with 2 decimals, e.g. "$1.23M"
  * - ≥ 1e18                     → scientific notation, e.g. "$1.23e+18"
@@ -599,8 +601,8 @@ export const formatUSD = (num: number): string => {
   const abs = Math.abs(num);
   const sign = num < 0 ? '-' : '';
   if (abs < 1e-4) return sign + '$' + abs.toExponential(2);
-  if (abs < 0.01) return sign + '$' + abs.toFixed(6);
-  if (abs < 100) return sign + '$' + abs.toFixed(4);
+  if (abs < 0.01) return sign + '$' + trimUSDDecimals(abs.toFixed(6));
+  if (abs < 100) return sign + '$' + trimUSDDecimals(abs.toFixed(4));
   if (abs < 1000) return sign + '$' + abs.toFixed(2);
   if (abs < 1e6) return sign + '$' + (abs / 1e3).toFixed(2) + 'K';
   if (abs < 1e9) return sign + '$' + (abs / 1e6).toFixed(2) + 'M';
@@ -608,6 +610,19 @@ export const formatUSD = (num: number): string => {
   if (abs < 1e15) return sign + '$' + (abs / 1e12).toFixed(2) + 'T';
   if (abs < 1e18) return sign + '$' + (abs / 1e15).toFixed(2) + 'Q';
   return sign + '$' + abs.toExponential(2);
+};
+
+/**
+ * Trim trailing zeros in a decimal string while preserving at least 2 decimals
+ * (cent precision — finance convention). Used by `formatUSD` so round amounts
+ * like "25.0000" render as "25.00" while sub-cent prices like "1.0857" keep
+ * their extra precision.
+ */
+const trimUSDDecimals = (fixed: string): string => {
+  const m = fixed.match(/^(-?\d+\.\d{2})(\d*)$/);
+  if (!m) return fixed;
+  const extra = m[2].replace(/0+$/, '');
+  return m[1] + extra;
 };
 
 export const formatSignedNumber = (num: number): string => {
