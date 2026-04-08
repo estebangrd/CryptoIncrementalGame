@@ -73,9 +73,9 @@ describe('formatUSD — USD price formatter', () => {
     expect(out).toMatch(/e\+/);
   });
 
-  it('handles zero and non-finite inputs safely', () => {
-    expect(formatUSD(0)).toBe('$0.00');
-    expect(formatUSD(NaN)).toBe('$0.00');
-    expect(formatUSD(Infinity)).toBe('$0.00');
+  it('handles zero and non-finite inputs as plain "$0" (finance convention)', () => {
+    expect(formatUSD(0)).toBe('$0');
+    expect(formatUSD(NaN)).toBe('$0');
+    expect(formatUSD(Infinity)).toBe('$0');
   });
 });

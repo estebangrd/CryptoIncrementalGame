@@ -544,7 +544,7 @@ export const calculateRewardFromDuration = (
  * (hash rate, blocks mined, percentages). No currency prefix.
  *
  * Ranges:
- * - 0                         → "0.0"
+ * - 0 or non-finite           → "0"   (no decimals — finance convention)
  * - (0, 1)                    → 2 significant digits, e.g. "0.023", "0.00056"
  * - [1, 1000)                 → 1 decimal, e.g. "123.4"
  * - [1K, 1M, 1B, 1T, 1Q)      → suffix with 1 decimal, e.g. "1.2K", "45.8M"
@@ -553,10 +553,10 @@ export const calculateRewardFromDuration = (
  * Use this for anything that is NOT a USD $ amount. For USD use `formatUSD`.
  */
 export const formatNumber = (num: number): string => {
-  if (!isFinite(num)) return '0.0';
+  if (!isFinite(num)) return '0';
   const abs = Math.abs(num);
   const sign = num < 0 ? '-' : '';
-  if (abs === 0) return '0.0';
+  if (abs === 0) return '0';
   if (abs < 1) {
     // Adaptive precision: keep 2 significant digits so tiny values stay legible
     // (e.g., 0.023, 0.00056) instead of collapsing to "0.0".
@@ -582,7 +582,7 @@ export const formatCC = formatNumber;
  * prefix so callers never need to prepend it themselves.
  *
  * Ranges:
- * - 0 or non-finite            → "$0.00"
+ * - 0 or non-finite            → "$0"  (no decimals — finance convention)
  * - (0, 1e-4)                  → exponential, e.g. "$1.23e-5"
  * - [1e-4, 0.01)               → 6 decimals, e.g. "$0.001234"
  * - [0.01, 100)                → 4 decimals, e.g. "$1.0857"
@@ -595,7 +595,7 @@ export const formatCC = formatNumber;
  * Use this for ANY USD value in the UI (prices, balances, costs, earnings).
  */
 export const formatUSD = (num: number): string => {
-  if (!isFinite(num) || num === 0) return '$0.00';
+  if (!isFinite(num) || num === 0) return '$0';
   const abs = Math.abs(num);
   const sign = num < 0 ? '-' : '';
   if (abs < 1e-4) return sign + '$' + abs.toExponential(2);

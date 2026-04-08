@@ -25,8 +25,8 @@ describe('formatNumber with negative values', () => {
     expect(formatNumber(1500)).toBe('1.5K');
   });
 
-  it('returns 0.0 for zero', () => {
-    expect(formatNumber(0)).toBe('0.0');
+  it('returns "0" for zero (no decimals — finance convention)', () => {
+    expect(formatNumber(0)).toBe('0');
   });
 });
 
@@ -39,8 +39,8 @@ describe('formatSignedNumber for net income display', () => {
     expect(formatSignedNumber(-55.3)).toBe('-55.3');
   });
 
-  it('shows 0.0 for zero', () => {
-    expect(formatSignedNumber(0)).toBe('0.0');
+  it('shows "0" for zero (no decimals — finance convention)', () => {
+    expect(formatSignedNumber(0)).toBe('0');
   });
 
   it('handles large positive values with suffix', () => {
