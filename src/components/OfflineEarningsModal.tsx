@@ -99,7 +99,9 @@ const OfflineEarningsModal: React.FC<OfflineEarningsModalProps> = ({
 
     const pct = OFFLINE_SCREEN_CONFIG.REWARD_MIN_PCT +
       Math.floor(Math.random() * (OFFLINE_SCREEN_CONFIG.REWARD_MAX_PCT - OFFLINE_SCREEN_CONFIG.REWARD_MIN_PCT + 1));
-    const claimAmount = Math.round(pendingEarnings * pct / 100);
+    // Do not round: in late-game, pendingEarnings can be fractional (e.g. 1e-10)
+    // and Math.round would truncate every claim to 0. CC supports fractional values.
+    const claimAmount = pendingEarnings * pct / 100;
 
     const grantReward = () => {
       onClaim(claimAmount);
