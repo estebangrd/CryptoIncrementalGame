@@ -404,11 +404,7 @@ const GameScreen: React.FC = () => {
 
   const hasPermanentOffers =
     !gameState.iapState.removeAdsPurchased ||
-    !gameState.iapState.permanentMultiplierPurchased ||
-    !gameState.iapState.starterPacksPurchased.small ||
-    !gameState.iapState.starterPacksPurchased.medium ||
-    !gameState.iapState.starterPacksPurchased.large ||
-    !gameState.iapState.starterPacksPurchased.mega;
+    !gameState.iapState.permanentMultiplierPurchased;
 
   const isGameOver = gameState.collapseTriggered || gameState.goodEndingTriggered;
   const showDisconnect = !!(

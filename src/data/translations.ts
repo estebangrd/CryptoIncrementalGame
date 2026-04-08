@@ -1620,16 +1620,6 @@ export const translations: Translation = {
     es: 'Oferta activa',
     pt: 'Oferta ativa',
   },
-  'shop.packs.allOwned.title': {
-    en: 'All acquired',
-    es: 'Todo adquirido',
-    pt: 'Tudo adquirido',
-  },
-  'shop.packs.allOwned.sub': {
-    en: "You're a Crypto Titan. No more packs available.",
-    es: 'Eres un Crypto Titan. No hay más packs disponibles.',
-    pt: 'Você é um Crypto Titan. Não há mais packs disponíveis.',
-  },
   'shop.packs.exclusive': {
     en: 'EXCLUSIVE',
     es: 'EXCLUSIVO',
@@ -1666,9 +1656,14 @@ export const translations: Translation = {
     pt: 'Próxima oferta disponível em',
   },
   'shop.packs.sessionOffer': {
-    en: 'On game open · Session offer',
-    es: 'Al abrir el juego · Oferta de sesión',
-    pt: 'Ao abrir o jogo · Oferta de sessão',
+    en: 'New offer rolls automatically',
+    es: 'Nueva oferta automática',
+    pt: 'Nova oferta automática',
+  },
+  'shop.packs.nextOfferHeader': {
+    en: 'NEXT OFFER',
+    es: 'PRÓXIMA OFERTA',
+    pt: 'PRÓXIMA OFERTA',
   },
   'shop.packs.noMoreOffers': {
     en: 'No more offers',
@@ -1685,40 +1680,20 @@ export const translations: Translation = {
     es: 'Oferta de Milestone',
     pt: 'Oferta de Marco',
   },
-  'shop.packs.small.unlockNote': {
-    en: '🔒 Unlocked upon completing Growth Pack',
-    es: '🔒 Desbloqueada al completar Growth Pack',
-    pt: '🔒 Desbloqueado ao completar Growth Pack',
-  },
   'shop.packs.medium.eyebrow': {
     en: 'Seasonal Offer',
     es: 'Oferta de Temporada',
     pt: 'Oferta de Temporada',
-  },
-  'shop.packs.medium.unlockNote': {
-    en: '🔒 Unlocked upon completing Mining Empire',
-    es: '🔒 Desbloqueada al completar Mining Empire',
-    pt: '🔒 Desbloqueado ao completar Mining Empire',
   },
   'shop.packs.large.eyebrow': {
     en: 'Premium Offer',
     es: 'Oferta Premium',
     pt: 'Oferta Premium',
   },
-  'shop.packs.large.unlockNote': {
-    en: '🔒 Unlocked upon completing Crypto Titan',
-    es: '🔒 Desbloqueada al completar Crypto Titan',
-    pt: '🔒 Desbloqueado ao completar Crypto Titan',
-  },
   'shop.packs.mega.eyebrow': {
     en: 'Elite Offer',
     es: 'Oferta Élite',
     pt: 'Oferta Élite',
-  },
-  'shop.packs.mega.unlockNote': {
-    en: '🔒 Last pack available',
-    es: '🔒 Último pack disponible',
-    pt: '🔒 Último pack disponível',
   },
 
   // ── Booster Notch / Drawer ──

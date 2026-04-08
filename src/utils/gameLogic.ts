@@ -1,5 +1,5 @@
 import { GameState, Hardware, Upgrade, IAPState, AdState, AdBoostState, AdHashBoostState, AdMarketBoostState } from '../types/game';
-import { GENESIS_CONSTANTS, calculateDifficulty, calculateCurrentReward, calculateNextHalving } from './blockLogic';
+import { GENESIS_CONSTANTS, calculateDifficulty, calculateCurrentReward, calculateNextHalving, getBasePrice } from './blockLogic';
 import { generateInitialChartWindow, getInitialPriceEngineState } from './priceEngine';
 import { getInitialEnergyState, getActiveHardwareWithEnergyConstraint } from './energyLogic';
 import { getAIProductionMultiplier, getInitialAIState } from './aiLogic';
@@ -484,6 +484,59 @@ export const creditCryptoCoins = (gameState: GameState, ccAmount: number): GameS
     currentReward: calculateCurrentReward(currentBlocksMined),
     nextHalving: calculateNextHalving(currentBlocksMined),
   };
+};
+
+/**
+ * Returns the current CryptoCoin market price (USD per CC), falling back
+ * to the era base price when no market history is available.
+ */
+export const getCurrentCoinPrice = (gameState: GameState): number => {
+  const history = gameState.priceHistory?.cryptocoin?.prices;
+  const latest = history && history.length > 0 ? history[history.length - 1] : 0;
+  return latest > 0 ? latest : getBasePrice(gameState.blocksMined ?? 0);
+};
+
+/**
+ * Computes a CC + cash reward scaled by `durationMinutes` of current
+ * production, using $/s as the stable metric across halving eras. Falls
+ * back to `floorUSD` in early game when production is still microscopic.
+ *
+ * The CC component is derived by converting the target USD value back to
+ * CC at the current coin price, ensuring monotonicity: as the player
+ * progresses the $ value either grows (from production) or stays at
+ * `floorUSD`, but never explodes from a fixed CC floor × an era-inflated
+ * coin price.
+ *
+ * `cashSplit` (0..1) controls how the target USD is distributed between
+ * the CC grant (scaled by coinPrice) and the direct cash grant. Default
+ * 0.5 — half in CC, half in cash — so packs deliver both currencies.
+ */
+export const calculateRewardFromDuration = (
+  gameState: GameState,
+  durationMinutes: number,
+  floorUSD: number,
+  cashSplit: number = 0.5,
+): { cc: number; cash: number; targetUSD: number } => {
+  const durationSec = Math.max(0, durationMinutes) * 60;
+  const ccPerSec = Math.max(0, calculateTotalProduction(gameState));
+  const coinPrice = Math.max(0, getCurrentCoinPrice(gameState));
+  const dollarsPerSec = ccPerSec * coinPrice;
+
+  // $/s × duration gives the production-equivalent $ value; fall back to
+  // floorUSD in early game (or if production/price are momentarily zero).
+  const productionUSD = dollarsPerSec * durationSec;
+  const targetUSD = Math.max(floorUSD, productionUSD);
+
+  const clampedSplit = Math.min(1, Math.max(0, cashSplit));
+  const ccUSDPortion = targetUSD * (1 - clampedSplit);
+  const cashUSDPortion = targetUSD * clampedSplit;
+
+  // Convert CC portion back to CC count. Guard against zero price (very
+  // early game before OU engine has emitted a price) by using era base.
+  const effectivePrice = coinPrice > 0 ? coinPrice : getBasePrice(gameState.blocksMined ?? 0);
+  const cc = effectivePrice > 0 ? ccUSDPortion / effectivePrice : 0;
+
+  return { cc, cash: cashUSDPortion, targetUSD };
 };
 
 /**

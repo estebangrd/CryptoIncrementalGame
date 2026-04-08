@@ -295,14 +295,14 @@ Todos los boosters stackean multiplicativamente con prestige y rewarded ad boost
 **Dado que** el usuario quiere recompensas extra por los próximos bloques minados
 **Cuando** compra Lucky Block ($0.99)
 **Entonces**
-- Otorga 10x recompensa por bloque (`rewardMultiplier: 10`) durante los próximos N bloques
-- N depende del `totalHashRate` del jugador:
-  - hashRate < 5,000 → 500 bloques (`earlyBlocks`)
-  - 5,000 ≤ hashRate < 100,000 → 2,500 bloques (`midBlocks`)
-  - hashRate ≥ 100,000 → 10,000 bloques (`lateBlocks`)
+- Otorga 5x recompensa por bloque (`rewardMultiplier: 5`) durante los próximos N bloques
+- N se calcula al momento de la compra como **15 minutos de producción**:
+  - `N = round(boostedMiningSpeed × 900)` donde `boostedMiningSpeed = constrainedMiningSpeed × allMultipliers`
+  - Mínimo `minBlocks` (50) para jugadores brand-new sin hardware
+  - Escala automáticamente con la progresión: ~900 bloques early-game, millones late-game
 - Aplicado en la acción `ADD_PRODUCTION` del reducer
-- UI muestra badge: "Lucky Block: X blocks remaining"
-- Configuración: `BOOSTER_CONFIG.LUCKY_BLOCK`
+- UI muestra badge: "Lucky Block: X blocks remaining" (X puede ser un número grande, formateado con `formatNumber`)
+- Configuración: `BOOSTER_CONFIG.LUCKY_BLOCK.durationMinutes` (15) y `minBlocks` (50)
 
 ### Caso de Uso 10d: Comprar Market Pump
 **Dado que** el usuario quiere vender CryptoCoins a mejor precio
@@ -348,7 +348,9 @@ Todos los boosters stackean multiplicativamente con prestige y rewarded ad boost
   - CC y Cash se randomizan dentro de los rangos configurados
   - Timer = 20 minutos (`OFFER_DURATION_MS`)
 - Si oferta expiró:
-  - Pack no visible o muestra "Next offer in HH:MM" (cooldown 8h)
+  - Card permanece visible mostrando el nombre del pack del tier actual + panel "NEXT OFFER IN HH:MM:SS" (cooldown 4h)
+  - El botón "Buy" NO se renderiza durante el cooldown
+  - Cuando el cooldown llega a 0, una nueva oferta se rolea automáticamente sin necesidad de cerrar/abrir el tab
 
 ### Caso de Uso 12: Contenido de cada Dynamic Pack
 
@@ -388,7 +390,7 @@ Todos los boosters stackean multiplicativamente con prestige y rewarded ad boost
   - Activar booster 2x producción por la duración del tier (`boosterDurationMs`)
   - Si pack incluye electricidad Y jugador tiene non-renewable activa: otorgar crédito eléctrico (`packCurrentElectricityHours`)
   - Mostrar success dialog con recursos otorgados
-  - La oferta desaparece, cooldown de 8h inicia
+  - La oferta desaparece, cooldown de 4h inicia
 - Acción del reducer: `PURCHASE_STARTER_PACK` usa valores dinámicos de `packCurrentCC`/`packCurrentCash` con fallback estático
 
 ### Caso de Uso 14: Créditos de Electricidad en Packs
@@ -406,7 +408,7 @@ Todos los boosters stackean multiplicativamente con prestige y rewarded ad boost
 **Cuando** el timer de 20 minutos llega a 0
 **Entonces**
 - Oferta desaparece
-- Cooldown de 8h inicia (`COOLDOWN_MS`)
+- Cooldown de 4h inicia (`COOLDOWN_MS`)
 - Próxima oferta genera nuevos valores randorizados dentro de los rangos
 - Estado: `packNextOfferAt = Date.now() + COOLDOWN_MS`
 
@@ -536,12 +538,9 @@ export const BOOSTER_CONFIG = {
     earningsMultiplier: 0.5,                   // 50% of active production
   },
   LUCKY_BLOCK: {
-    rewardMultiplier: 10,                      // 10x block reward
-    earlyBlocks: 500,                          // blocks if hashRate < 5K
-    midBlocks: 2500,                           // blocks if 5K ≤ hashRate < 100K
-    lateBlocks: 10000,                         // blocks if hashRate ≥ 100K
-    earlyHashThreshold: 5000,
-    lateHashThreshold: 100000,
+    rewardMultiplier: 5,                       // 5x block reward
+    durationMinutes: 15,                       // blocks = boostedSpeed × 900s
+    minBlocks: 50,                             // floor for brand-new players
   },
   MARKET_PUMP: {
     priceMultiplier: 2.0,                      // 2x sell price
@@ -553,24 +552,29 @@ export const BOOSTER_CONFIG = {
 
 export const PACK_CONFIG = {
   OFFER_DURATION_MS: 20 * 60 * 1000,  // 20 min active window
-  COOLDOWN_MS: 8 * 60 * 60 * 1000,    // 8h between offers
+  COOLDOWN_MS: 4 * 60 * 60 * 1000,    // 4h between offers
 
+  // Reward model: each pack delivers the CC+cash equivalent of
+  // `durationMinutes` of current production, split 50/50 between CC and
+  // cash value. `floorUSD` is the early-game fallback when production is
+  // still tiny. Scales by $/s (stable across Bitcoin-faithful halvings)
+  // so values remain meaningful at every stage without exploding late game.
   small: {
-    ccRange: [12_000, 18_000],
-    cashRange: [6_000, 12_000],
+    durationMinutes: 5,
+    floorUSD: 5_000,
     boosterDurationMs: 1 * 60 * 60 * 1000,  // 1h 2x booster
     showUntilHardwareId: 'asic_gen3',
   },
   medium: {
-    ccRange: [60_000, 100_000],
-    cashRange: [15_000_000, 25_000_000],
+    durationMinutes: 10,
+    floorUSD: 50_000,
     boosterDurationMs: 2 * 60 * 60 * 1000,  // 2h 2x booster
     showAfterHardwareId: 'asic_gen3',
     showUntilHardwareId: 'quantum_miner',
   },
   large: {
-    ccRange: [150_000, 250_000],
-    cashRange: [250_000_000, 450_000_000],
+    durationMinutes: 20,
+    floorUSD: 500_000,
     boosterDurationMs: 4 * 60 * 60 * 1000,  // 4h booster
     showAfterHardwareId: 'quantum_miner',
     showUntilHardwareId: 'supercomputer',
@@ -578,8 +582,8 @@ export const PACK_CONFIG = {
     electricityHoursRange: [24, 48],
   },
   mega: {
-    ccRange: [400_000, 600_000],
-    cashRange: [3_000_000_000, 5_000_000_000],
+    durationMinutes: 40,
+    floorUSD: 5_000_000,
     boosterDurationMs: 24 * 60 * 60 * 1000, // 24h booster
     showAfterHardwareId: 'supercomputer',
     includeElectricity: true,
@@ -657,7 +661,7 @@ interface IAPState {
 10. **Specialty boosters son independientes**: Se pueden usar simultáneamente entre sí y con production boosters
 
 ### Dynamic Packs
-11. **Packs son ofertas dinámicas con timer**: 20 min de duración, 8h cooldown entre ofertas
+11. **Packs son ofertas dinámicas con timer**: 20 min de duración, 4h cooldown entre ofertas
 12. **Valores randomizados por oferta**: CC y Cash dentro de rangos configurados; cada nueva oferta genera nuevos valores
 13. **Visibilidad por stage**: Solo se muestra el pack correspondiente al hardware que el jugador posee
 14. **Crédito eléctrico condicional**: Solo en Large/Mega packs, y solo si el jugador tiene energía no-renovable activa
@@ -795,11 +799,17 @@ describe('Starter Packs', () => {
     expect(state.iapState.starterPacksPurchased.medium).toBe(true);
   });
 
-  it('should not allow purchasing same pack twice', () => {
+  it('should allow re-purchasing after cooldown', () => {
+    // Packs are recurrent: previous purchases never gate future offers.
+    const now = Date.now();
     const state = {
-      iapState: { starterPacksPurchased: { small: true } },
+      iapState: {
+        starterPacksPurchased: { small: true },
+        packOfferExpiresAt: now + 60_000, // active offer
+        packNextOfferAt: 0,
+      },
     };
-    expect(canPurchaseStarterPack('small', state)).toBe(false);
+    expect(canPurchaseStarterPack('small', state)).toBe(true);
   });
 });
 ```
@@ -852,7 +862,9 @@ analytics().logEvent('starter_pack_purchased', {
 
 **Edge Case 5: Pack offer expira mientras usuario ve confirmation dialog**
 - Input: Usuario abre dialog de compra, timer llega a 0 antes de confirmar
-- Expected: Compra falla gracefully, mostrar "Offer expired"
+- Expected:
+  - Cuando la oferta expira, la card se reemplaza por la versión "teaser" sin botón Buy, así que normalmente la compra ni siquiera puede iniciarse.
+  - Si por race condition se llega a despachar `PURCHASE_STARTER_PACK` con la oferta expirada (`packOfferExpiresAt === 0` o `Date.now() >= packOfferExpiresAt`), el reducer rechaza la acción y retorna el estado sin cambios. La UI debe mostrar "Offer expired".
 
 **Edge Case 6: Market Pump + venta de coins**
 - Input: Market Pump activo (2x precio), precio base = $100

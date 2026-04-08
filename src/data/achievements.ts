@@ -15,7 +15,7 @@ export const ALL_ACHIEVEMENTS: Achievement[] = [
     hidden: false,
     progress: 0,
     target: 1,
-    reward: { type: 'coins', amount: 50 },
+    reward: { type: 'duration', durationMinutes: 1, floorUSD: 5 },
   },
   {
     id: 'century',
@@ -30,7 +30,7 @@ export const ALL_ACHIEVEMENTS: Achievement[] = [
     hidden: false,
     progress: 0,
     target: 100,
-    reward: { type: 'coins', amount: 500 },
+    reward: { type: 'duration', durationMinutes: 2, floorUSD: 50 },
   },
   {
     id: 'millennium',
@@ -45,7 +45,7 @@ export const ALL_ACHIEVEMENTS: Achievement[] = [
     hidden: false,
     progress: 0,
     target: 1000,
-    reward: { type: 'money', amount: 100 },
+    reward: { type: 'duration', durationMinutes: 2, floorUSD: 100 },
   },
   {
     id: 'epic_miner',
@@ -60,7 +60,7 @@ export const ALL_ACHIEVEMENTS: Achievement[] = [
     hidden: false,
     progress: 0,
     target: 100000,
-    reward: { type: 'money', amount: 10000 },
+    reward: { type: 'duration', durationMinutes: 7, floorUSD: 10000 },
   },
   {
     id: 'halving_survivor',
@@ -87,7 +87,7 @@ export const ALL_ACHIEVEMENTS: Achievement[] = [
     rarity: 'common',
     unlocked: false,
     hidden: false,
-    reward: { type: 'coins', amount: 100 },
+    reward: { type: 'duration', durationMinutes: 1, floorUSD: 10 },
   },
   {
     id: 'upgrader',
@@ -102,7 +102,7 @@ export const ALL_ACHIEVEMENTS: Achievement[] = [
     hidden: false,
     progress: 0,
     target: 10,
-    reward: { type: 'coins', amount: 500 },
+    reward: { type: 'duration', durationMinutes: 2, floorUSD: 50 },
   },
   {
     id: 'hardware_collector',
@@ -115,7 +115,7 @@ export const ALL_ACHIEVEMENTS: Achievement[] = [
     rarity: 'epic',
     unlocked: false,
     hidden: false,
-    reward: { type: 'money', amount: 1000 },
+    reward: { type: 'duration', durationMinutes: 6, floorUSD: 1000 },
   },
   {
     id: 'asic_master',
@@ -144,7 +144,7 @@ export const ALL_ACHIEVEMENTS: Achievement[] = [
     rarity: 'common',
     unlocked: false,
     hidden: false,
-    reward: { type: 'coins', amount: 200 },
+    reward: { type: 'duration', durationMinutes: 1, floorUSD: 20 },
   },
   {
     id: 'millionaire',
@@ -187,7 +187,7 @@ export const ALL_ACHIEVEMENTS: Achievement[] = [
     rarity: 'rare',
     unlocked: false,
     hidden: false,
-    reward: { type: 'coins', amount: 10000 },
+    reward: { type: 'duration', durationMinutes: 15, floorUSD: 5000 },
   },
   {
     id: 'veteran',

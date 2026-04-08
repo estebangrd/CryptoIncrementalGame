@@ -26,6 +26,7 @@ import {
   calculateTotalHashRate,
   getAllMultipliers,
   getConstrainedMiningSpeed,
+  calculateRewardFromDuration,
 } from '../utils/gameLogic';
 import { saveGameState, loadGameState, saveLanguage, loadLanguage } from '../utils/storage';
 import { translations } from '../data/translations';
@@ -1075,7 +1076,10 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
 
     case 'PURCHASE_STARTER_PACK': {
       const { packType, record } = action.payload;
-      if (state.iapState.starterPacksPurchased[packType]) return state;
+      // Reject purchase if no active offer (Edge Case 5: expired offers cannot be bought).
+      if (state.iapState.packOfferExpiresAt === 0 || Date.now() >= state.iapState.packOfferExpiresAt) {
+        return state;
+      }
       // Use dynamic offer rewards if available, otherwise fall back to static
       const staticRewards = STARTER_PACK_REWARDS[packType];
       const ccReward = state.iapState.packCurrentCC > 0
@@ -1129,13 +1133,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       if (productIds.includes(IAP_PRODUCT_IDS.PERMANENT_MULTIPLIER)) {
         newIapState = { ...newIapState, permanentMultiplierPurchased: true };
       }
-      const packs = ['small', 'medium', 'large', 'mega'] as const;
-      const packIds = [IAP_PRODUCT_IDS.STARTER_SMALL, IAP_PRODUCT_IDS.STARTER_MEDIUM, IAP_PRODUCT_IDS.STARTER_LARGE, IAP_PRODUCT_IDS.STARTER_MEGA];
-      packs.forEach((pack, i) => {
-        if (productIds.includes(packIds[i])) {
-          newIapState = { ...newIapState, starterPacksPurchased: { ...newIapState.starterPacksPurchased, [pack]: true } };
-        }
-      });
+      // Starter packs are consumables — they are not restored.
       const needsRecalc = newIapState.permanentMultiplierPurchased && !state.iapState.permanentMultiplierPurchased;
       return needsRecalc ? recalculateGameStats({ ...state, iapState: newIapState }) : { ...state, iapState: newIapState };
     }
@@ -1381,6 +1379,21 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       const achievement = state.achievements.find(a => a.id === action.payload);
       if (!achievement?.reward) return state;
       const reward = achievement.reward;
+      if (reward.type === 'duration' && reward.durationMinutes != null) {
+        const { cc, cash } = calculateRewardFromDuration(
+          state,
+          reward.durationMinutes,
+          reward.floorUSD ?? 0,
+          0.5,
+        );
+        const credited = cc > 0 ? creditCryptoCoins(state, cc) : state;
+        return {
+          ...credited,
+          realMoney: credited.realMoney + cash,
+          totalRealMoneyEarned: credited.totalRealMoneyEarned + cash,
+        };
+      }
+      // Legacy fixed-amount rewards (kept for backwards compat).
       if (reward.type === 'coins' && reward.amount) {
         return creditCryptoCoins(state, reward.amount);
       }
@@ -2074,13 +2087,16 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       dispatch({ type: 'PURCHASE_OFFLINE_MINER', payload: { record, durationMs } });
       pendingBoosterMetaRef.current = {};
     } else if (productId === IAP_PRODUCT_IDS.LUCKY_BLOCK) {
-      const hashRate = gameStateRef.current.totalHashRate ?? 0;
-      let blocks = BOOSTER_CONFIG.LUCKY_BLOCK.earlyBlocks;
-      if (hashRate >= BOOSTER_CONFIG.LUCKY_BLOCK.lateHashThreshold) {
-        blocks = BOOSTER_CONFIG.LUCKY_BLOCK.lateBlocks;
-      } else if (hashRate >= BOOSTER_CONFIG.LUCKY_BLOCK.earlyHashThreshold) {
-        blocks = BOOSTER_CONFIG.LUCKY_BLOCK.midBlocks;
-      }
+      // Blocks to boost = constrainedMiningSpeed × all multipliers × 15 min,
+      // so the booster is worth "15 minutes of production at 5× reward"
+      // regardless of the era. Falls back to minBlocks for brand new players.
+      const gs = gameStateRef.current;
+      const boostedSpeed = getConstrainedMiningSpeed(gs) * getAllMultipliers(gs);
+      const durationSec = BOOSTER_CONFIG.LUCKY_BLOCK.durationMinutes * 60;
+      const blocks = Math.max(
+        BOOSTER_CONFIG.LUCKY_BLOCK.minBlocks,
+        Math.round(boostedSpeed * durationSec),
+      );
       dispatch({ type: 'PURCHASE_LUCKY_BLOCK', payload: { record, blocks } });
     } else if (productId === IAP_PRODUCT_IDS.MARKET_PUMP) {
       const durationMs = pendingBoosterMetaRef.current?.marketPumpDurationMs ?? BOOSTER_CONFIG.MARKET_PUMP.baseDurationMs;

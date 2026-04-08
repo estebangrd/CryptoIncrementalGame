@@ -152,10 +152,16 @@ export interface AdMarketBoostState {
 }
 
 export interface AchievementReward {
-  type: 'coins' | 'money' | 'multiplier' | 'cosmetic';
+  // 'duration' rewards grant `durationMinutes` of current production (CC +
+  // cash split 50/50) with a USD floor for early-game meaningfulness.
+  // Legacy types 'coins'/'money' grant a fixed amount and are deprecated.
+  type: 'coins' | 'money' | 'multiplier' | 'cosmetic' | 'duration';
   amount?: number;
   multiplier?: number;
   duration?: number;
+  // Duration-based reward fields (used when type === 'duration').
+  durationMinutes?: number;
+  floorUSD?: number;
 }
 
 export interface Achievement {

@@ -110,7 +110,8 @@ const AchievementToast: React.FC<AchievementToastProps> = ({ achievement, displa
 
   const themeColor = getThemeColor(achievement);
   const rewardText = achievement.reward
-    ? achievement.reward.type === 'coins' ? `+${formatNumber(achievement.reward.amount ?? 0)} CryptoCoins`
+    ? achievement.reward.type === 'duration' ? `+${achievement.reward.durationMinutes ?? 0} min of production`
+    : achievement.reward.type === 'coins' ? `+${formatNumber(achievement.reward.amount ?? 0)} CryptoCoins`
     : achievement.reward.type === 'money' ? `+${formatUSD(achievement.reward.amount ?? 0)}`
     : achievement.reward.type === 'multiplier' ? `${achievement.reward.multiplier}x production boost!`
     : ''

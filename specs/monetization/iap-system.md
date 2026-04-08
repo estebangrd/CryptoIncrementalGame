@@ -250,7 +250,7 @@ La integración utiliza `react-native-iap` para soportar tanto iOS (StoreKit 2) 
 - Para cada compra encontrada:
   - Si es Remove Ads: `removeAdsPurchased = true`
   - Si es Permanent Multiplier: `permanentMultiplierPurchased = true`
-  - Si es Starter Pack: `starterPacksPurchased.X = true`
+  - Los Starter Packs son consumables: NO se restauran. El flag `starterPacksPurchased.X` solo registra "alguna vez fue comprado" para analytics y no se usa como gating.
 - Actualizar UI para reflejar productos restaurados
 - Mostrar success:
   - "Purchases restored successfully"
@@ -390,13 +390,17 @@ function calculateActiveBooster(gameState: GameState): number {
 }
 ```
 
-### Verificación de One-Time Purchase
+### Verificación de Oferta Activa (Dynamic Packs son recurrentes)
 ```typescript
 function canPurchaseStarterPack(
-  packId: 'small' | 'medium' | 'large' | 'mega',
+  _packId: 'small' | 'medium' | 'large' | 'mega',
   gameState: GameState
 ): boolean {
-  return !gameState.iapState.starterPacksPurchased[packId];
+  // Los Starter Packs son ofertas dinámicas y consumables — se pueden comprar
+  // múltiples veces. La compra solo se permite mientras hay oferta activa.
+  const now = Date.now();
+  return gameState.iapState.packOfferExpiresAt > 0
+    && now < gameState.iapState.packOfferExpiresAt;
 }
 ```
 
@@ -1176,18 +1180,36 @@ case 'ADD_PURCHASE_TO_HISTORY':
 ```typescript
 describe('IAP System', () => {
   describe('canPurchaseStarterPack', () => {
-    it('should return true if not purchased', () => {
+    it('should return true while an offer is active', () => {
+      const now = Date.now();
       const state = {
-        iapState: { starterPacksPurchased: { small: false } },
+        iapState: {
+          starterPacksPurchased: { small: false },
+          packOfferExpiresAt: now + 60_000,
+        },
       };
       expect(canPurchaseStarterPack('small', state)).toBe(true);
     });
 
-    it('should return false if already purchased', () => {
+    it('should return false when there is no active offer (expired)', () => {
       const state = {
-        iapState: { starterPacksPurchased: { small: true } },
+        iapState: {
+          starterPacksPurchased: { small: false },
+          packOfferExpiresAt: 0,
+        },
       };
       expect(canPurchaseStarterPack('small', state)).toBe(false);
+    });
+
+    it('should still allow re-purchase even if previously purchased (recurrent)', () => {
+      const now = Date.now();
+      const state = {
+        iapState: {
+          starterPacksPurchased: { small: true },
+          packOfferExpiresAt: now + 60_000,
+        },
+      };
+      expect(canPurchaseStarterPack('small', state)).toBe(true);
     });
   });
 

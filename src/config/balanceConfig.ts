@@ -612,11 +612,13 @@ export const BOOSTER_CONFIG = {
   },
   LUCKY_BLOCK: {
     rewardMultiplier: 5,
-    earlyBlocks: 200,
-    midBlocks: 1000,
-    lateBlocks: 3000,
-    earlyHashThreshold: 5000,
-    lateHashThreshold: 100000,
+    // Blocks to boost = miningSpeed × durationSec (computed at purchase).
+    // Scales automatically with player progression — one activation early
+    // game is ~a few hundred blocks, late game is millions.
+    durationMinutes: 15,
+    // Minimum blocks to boost, in case a player buys before installing any
+    // hardware (mining speed is 0 and nothing would happen otherwise).
+    minBlocks: 50,
   },
   MARKET_PUMP: {
     priceMultiplier: 2.0,
@@ -683,24 +685,33 @@ export const FLASH_SALE_CONFIG = {
 // ============================================================================
 export const PACK_CONFIG = {
   OFFER_DURATION_MS: 20 * 60 * 1000,  // 20 min active window
-  COOLDOWN_MS: 8 * 60 * 60 * 1000,    // 8h between offers
+  COOLDOWN_MS: 4 * 60 * 60 * 1000,    // 4h between offers
 
+  // Reward model: each pack delivers the CC+cash equivalent of
+  // `durationMinutes` of production, split 50/50 between CC and cash
+  // value. `floorUSD` is the early-game fallback when production is
+  // still tiny. Scales by $/s (stable across Bitcoin-faithful halvings)
+  // to avoid the late-era floor explosion caused by fixed-CC × era-price.
+  //
+  // Total game duration is ~10–12h, so the sum of all 4 packs at
+  // production pace is ~1h 15m (10% of the game) — meaningful but not
+  // disruptive.
   small: {
-    ccRange: [12_000, 18_000] as [number, number],
-    cashRange: [6_000, 12_000] as [number, number],
+    durationMinutes: 5,
+    floorUSD: 5_000,
     boosterDurationMs: 1 * 60 * 60 * 1000,  // 1h 2x production booster (always included)
     showUntilHardwareId: 'asic_gen3',
   },
   medium: {
-    ccRange: [60_000, 100_000] as [number, number],
-    cashRange: [15_000_000, 25_000_000] as [number, number],
+    durationMinutes: 10,
+    floorUSD: 50_000,
     boosterDurationMs: 2 * 60 * 60 * 1000,  // 2h 2x production booster (always included)
     showAfterHardwareId: 'asic_gen3',
     showUntilHardwareId: 'quantum_miner',
   },
   large: {
-    ccRange: [150_000, 250_000] as [number, number],
-    cashRange: [250_000_000, 450_000_000] as [number, number],
+    durationMinutes: 20,
+    floorUSD: 500_000,
     boosterDurationMs: 4 * 60 * 60 * 1000,  // 4h booster (when no electricity credits)
     showAfterHardwareId: 'quantum_miner',
     showUntilHardwareId: 'supercomputer',
@@ -708,8 +719,8 @@ export const PACK_CONFIG = {
     electricityHoursRange: [24, 48] as [number, number],
   },
   mega: {
-    ccRange: [400_000, 600_000] as [number, number],
-    cashRange: [3_000_000_000, 5_000_000_000] as [number, number],
+    durationMinutes: 40,
+    floorUSD: 5_000_000,
     boosterDurationMs: 24 * 60 * 60 * 1000, // 24h booster (when no electricity credits)
     showAfterHardwareId: 'supercomputer',
     includeElectricity: true,
