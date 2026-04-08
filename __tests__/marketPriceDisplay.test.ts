@@ -9,7 +9,7 @@
  * 3. Sub-dollar and sub-cent prices preserve enough precision to be readable.
  */
 
-import { formatUSD } from '../src/utils/gameLogic';
+import { formatUSD, formatUSDCompact } from '../src/utils/gameLogic';
 
 describe('formatUSD — USD price formatter', () => {
   it('shows up to 4 decimal places for prices between $1 and $100', () => {
@@ -88,5 +88,42 @@ describe('formatUSD — USD price formatter', () => {
     expect(formatUSD(0)).toBe('$0');
     expect(formatUSD(NaN)).toBe('$0');
     expect(formatUSD(Infinity)).toBe('$0');
+  });
+});
+
+describe('formatUSDCompact — dense stat card formatter', () => {
+  it('renders integer dollar amounts without decimals', () => {
+    // BlockStatus Cash Balance / Total Earned stat cards — cent precision
+    // adds noise in a compact dashboard display.
+    expect(formatUSDCompact(25)).toBe('$25');
+    expect(formatUSDCompact(100)).toBe('$100');
+    expect(formatUSDCompact(999)).toBe('$999');
+  });
+
+  it('shows up to 1 decimal for fractional amounts', () => {
+    expect(formatUSDCompact(25.5)).toBe('$25.5');
+    expect(formatUSDCompact(999.9)).toBe('$999.9');
+  });
+
+  it('trims trailing zero in suffix ranges', () => {
+    expect(formatUSDCompact(1000)).toBe('$1K');
+    expect(formatUSDCompact(1e6)).toBe('$1M');
+    expect(formatUSDCompact(3e9)).toBe('$3B');
+  });
+
+  it('keeps 1 decimal in suffix ranges when meaningful', () => {
+    expect(formatUSDCompact(1234)).toBe('$1.2K');
+    expect(formatUSDCompact(45.8e6)).toBe('$45.8M');
+  });
+
+  it('preserves sub-dollar precision up to 2 decimals trimmed', () => {
+    expect(formatUSDCompact(0.86)).toBe('$0.86');
+    expect(formatUSDCompact(0.5)).toBe('$0.5');
+  });
+
+  it('handles zero and non-finite inputs as "$0"', () => {
+    expect(formatUSDCompact(0)).toBe('$0');
+    expect(formatUSDCompact(NaN)).toBe('$0');
+    expect(formatUSDCompact(Infinity)).toBe('$0');
   });
 });

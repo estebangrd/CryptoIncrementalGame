@@ -546,8 +546,10 @@ export const calculateRewardFromDuration = (
  * Ranges:
  * - 0 or non-finite           → "0"   (no decimals — finance convention)
  * - (0, 1)                    → 2 significant digits, e.g. "0.023", "0.00056"
- * - [1, 1000)                 → 1 decimal, e.g. "123.4"
- * - [1K, 1M, 1B, 1T, 1Q)      → suffix with 1 decimal, e.g. "1.2K", "45.8M"
+ * - [1, 1000)                 → up to 1 decimal, trimmed when round:
+ *                               "276", "123.4" (never "276.0")
+ * - [1K, 1M, 1B, 1T, 1Q)      → suffix with up to 1 decimal, trimmed when
+ *                               round: "1.5K", "2K", "45.8M" (never "2.0K")
  * - ≥ 1e18                    → scientific notation, e.g. "1.23e+18"
  *
  * Use this for anything that is NOT a USD $ amount. For USD use `formatUSD`.
@@ -562,13 +564,29 @@ export const formatNumber = (num: number): string => {
     // (e.g., 0.023, 0.00056) instead of collapsing to "0.0".
     return sign + Number(abs.toPrecision(2)).toString();
   }
-  if (abs < 1000) return sign + abs.toFixed(1);
-  if (abs < 1e6) return sign + (abs / 1e3).toFixed(1) + 'K';
-  if (abs < 1e9) return sign + (abs / 1e6).toFixed(1) + 'M';
-  if (abs < 1e12) return sign + (abs / 1e9).toFixed(1) + 'B';
-  if (abs < 1e15) return sign + (abs / 1e12).toFixed(1) + 'T';
-  if (abs < 1e18) return sign + (abs / 1e15).toFixed(1) + 'Q';
+  if (abs < 1000) return sign + trimTrailingDecimalZeros(abs.toFixed(1));
+  if (abs < 1e6) return sign + trimTrailingDecimalZeros((abs / 1e3).toFixed(1)) + 'K';
+  if (abs < 1e9) return sign + trimTrailingDecimalZeros((abs / 1e6).toFixed(1)) + 'M';
+  if (abs < 1e12) return sign + trimTrailingDecimalZeros((abs / 1e9).toFixed(1)) + 'B';
+  if (abs < 1e15) return sign + trimTrailingDecimalZeros((abs / 1e12).toFixed(1)) + 'T';
+  if (abs < 1e18) return sign + trimTrailingDecimalZeros((abs / 1e15).toFixed(1)) + 'Q';
   return sign + abs.toExponential(2);
+};
+
+/**
+ * Trim trailing zero decimals from a fixed-decimal string while keeping any
+ * meaningful fractional part. Examples:
+ *   "276.0"  → "276"
+ *   "276.5"  → "276.5"
+ *   "2.00"   → "2"
+ *   "1.50"   → "1.5"
+ *   "1.05"   → "1.05"
+ * Safe on integer strings ("10" stays "10") because it short-circuits when
+ * there is no decimal point.
+ */
+const trimTrailingDecimalZeros = (s: string): string => {
+  if (!s.includes('.')) return s;
+  return s.replace(/\.?0+$/, '').replace(/\.$/, '');
 };
 
 /**
@@ -623,6 +641,37 @@ const trimUSDDecimals = (fixed: string): string => {
   if (!m) return fixed;
   const extra = m[2].replace(/0+$/, '');
   return m[1] + extra;
+};
+
+/**
+ * Compact USD formatter for dense stat cards where cent precision adds noise.
+ * Uses at most 1 decimal and trims trailing zeros.
+ *
+ * Ranges:
+ * - 0 or non-finite            → "$0"
+ * - (0, 1e-4)                  → exponential, e.g. "$1.23e-5"
+ * - [1e-4, 1)                  → up to 2 decimals trimmed, e.g. "$0.86"
+ * - [1, 1000)                  → up to 1 decimal trimmed, e.g. "$25", "$25.5"
+ * - [1K, 1M, 1B, 1T, 1Q)       → suffix with up to 1 decimal trimmed,
+ *                                e.g. "$1.2K", "$3M", "$45.8M"
+ * - ≥ 1e18                     → scientific notation
+ *
+ * Use for stat cards, dashboards, and dense UIs. For transactional displays
+ * (store, market, balances) prefer `formatUSD` which keeps cent precision.
+ */
+export const formatUSDCompact = (num: number): string => {
+  if (!isFinite(num) || num === 0) return '$0';
+  const abs = Math.abs(num);
+  const sign = num < 0 ? '-' : '';
+  if (abs < 1e-4) return sign + '$' + abs.toExponential(2);
+  if (abs < 1) return sign + '$' + trimTrailingDecimalZeros(abs.toFixed(2));
+  if (abs < 1000) return sign + '$' + trimTrailingDecimalZeros(abs.toFixed(1));
+  if (abs < 1e6) return sign + '$' + trimTrailingDecimalZeros((abs / 1e3).toFixed(1)) + 'K';
+  if (abs < 1e9) return sign + '$' + trimTrailingDecimalZeros((abs / 1e6).toFixed(1)) + 'M';
+  if (abs < 1e12) return sign + '$' + trimTrailingDecimalZeros((abs / 1e9).toFixed(1)) + 'B';
+  if (abs < 1e15) return sign + '$' + trimTrailingDecimalZeros((abs / 1e12).toFixed(1)) + 'T';
+  if (abs < 1e18) return sign + '$' + trimTrailingDecimalZeros((abs / 1e15).toFixed(1)) + 'Q';
+  return sign + '$' + abs.toExponential(2);
 };
 
 export const formatSignedNumber = (num: number): string => {

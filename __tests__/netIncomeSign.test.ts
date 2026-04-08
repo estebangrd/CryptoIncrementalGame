@@ -28,6 +28,26 @@ describe('formatNumber with negative values', () => {
   it('returns "0" for zero (no decimals — finance convention)', () => {
     expect(formatNumber(0)).toBe('0');
   });
+
+  it('trims trailing ".0" for integer values', () => {
+    // Block counters, hash rates, and other integer-by-nature values should
+    // not show a meaningless ".0" suffix.
+    expect(formatNumber(276)).toBe('276');
+    expect(formatNumber(1)).toBe('1');
+    expect(formatNumber(999)).toBe('999');
+  });
+
+  it('trims trailing ".0" in K/M/B/T/Q suffix ranges', () => {
+    expect(formatNumber(2000)).toBe('2K');
+    expect(formatNumber(1_000_000)).toBe('1M');
+    expect(formatNumber(3_000_000_000)).toBe('3B');
+  });
+
+  it('keeps meaningful fractional decimals', () => {
+    expect(formatNumber(276.5)).toBe('276.5');
+    expect(formatNumber(2500)).toBe('2.5K');
+    expect(formatNumber(3_500_000)).toBe('3.5M');
+  });
 });
 
 describe('formatSignedNumber for net income display', () => {
