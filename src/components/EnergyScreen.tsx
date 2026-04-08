@@ -131,7 +131,7 @@ const EnergyScreen: React.FC = () => {
           <View style={styles.panelRow}>
             <Text style={styles.label}>{t('energy.planetResources')}:</Text>
             <Text style={[styles.value, { color: gameState.planetResources > 50 ? '#ffaa00' : '#ff4444' }]}>
-              {gameState.planetResources.toFixed(2)}%
+              {gameState.planetResources === 0 ? '0' : gameState.planetResources.toFixed(2)}%
             </Text>
           </View>
         )}
