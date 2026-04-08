@@ -11,20 +11,9 @@ import LinearGradient from 'react-native-linear-gradient';
 
 import { useGame } from '../contexts/GameContext';
 import { colors, fonts } from '../config/theme';
-import { formatNumber } from '../utils/gameLogic';
+import { formatUSD } from '../utils/gameLogic';
 import { getCompositeMultiplier } from '../utils/marketEventLogic';
 import PriceChart from './PriceChart';
-
-const formatUSD = (amount: number): string => `$${formatNumber(amount)}`;
-
-// Precise price formatter — matches PriceChart display (2 decimals for small values)
-const formatPriceUSD = (price: number): string => {
-  if (price >= 1000) return `$${(price / 1000).toFixed(1)}k`;
-  if (price >= 100) return `$${price.toFixed(0)}`;
-  if (price >= 1) return `$${price.toFixed(2)}`;
-  if (price >= 0.01) return `$${price.toFixed(4)}`;
-  return `$${price.toFixed(6)}`;
-};
 
 
 const MarketScreen: React.FC = () => {
@@ -228,7 +217,7 @@ const MarketScreen: React.FC = () => {
                   <View style={styles.earnBox}>
                     <Text style={styles.earnAmount}>{formatUSD(sellPreviewMoney)}</Text>
                     <Text style={styles.earnSub}>
-                      YOU'LL EARN · PRICE {formatPriceUSD(getCryptoCoin()?.currentValue ?? 0)} PER CC
+                      YOU'LL EARN · PRICE {formatUSD(getCryptoCoin()?.currentValue ?? 0)} PER CC
                     </Text>
                   </View>
                   {sellConfirming ? (

@@ -15,17 +15,12 @@ import {
   calculateRenewableGeneratedMW,
   getEnergySourceCurrentCost,
 } from '../utils/energyLogic';
+import { formatUSD } from '../utils/gameLogic';
 import { ENERGY_CONFIG } from '../config/balanceConfig';
 
 const formatMW = (mw: number): string => {
   if (mw >= 1000) return `${(mw / 1000).toFixed(1)}GW`;
   return `${mw.toFixed(0)}MW`;
-};
-
-const formatMoney = (amount: number): string => {
-  if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`;
-  if (amount >= 1000) return `$${(amount / 1000).toFixed(1)}K`;
-  return `$${amount.toFixed(0)}`;
 };
 
 const EnergyScreen: React.FC = () => {
@@ -79,7 +74,7 @@ const EnergyScreen: React.FC = () => {
           <Text style={styles.sourceStats}>
             ×{source.quantity}  {formatMW(source.quantity * source.mwPerUnit)}
           </Text>
-          <Text style={styles.sourceCost}>{formatMoney(getEnergySourceCurrentCost(source))}/unit</Text>
+          <Text style={styles.sourceCost}>{formatUSD(getEnergySourceCurrentCost(source))}/unit</Text>
         </View>
         <View style={styles.sourceActions}>
           <TouchableOpacity
@@ -191,7 +186,7 @@ const EnergyScreen: React.FC = () => {
                       ? `🔒 ${t('energy.upgrade.requiresPrevious')}`
                       : !renewableFull
                       ? `${t('energy.upgrade.fillCapFirst')} (${renewableCapPct}%)`
-                      : formatMoney(upgrade.cost)}
+                      : formatUSD(upgrade.cost)}
                   </Text>
                 )}
               </View>

@@ -9,6 +9,7 @@ import {
 import { useGame } from '../contexts/GameContext';
 import {
   formatNumber,
+  formatUSD,
   calculateHardwareProduction,
   calculateHardwareElectricityCost,
   calculateHardwareMiningSpeed,
@@ -260,7 +261,7 @@ const HardwareList: React.FC = () => {
                 <View style={styles.costRow}>
                   <Text style={styles.costLabel}>PURCHASE COST</Text>
                   <Text style={[styles.costValue, !canAfford && styles.costValueRed]}>
-                    ${formatNumber(cost)}
+                    {formatUSD(cost)}
                   </Text>
                 </View>
                 <TouchableOpacity

@@ -8,7 +8,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useGame } from '../contexts/GameContext';
-import { formatNumber, canAffordUpgrade, isUpgradeUnlocked } from '../utils/gameLogic';
+import { formatUSD, canAffordUpgrade, isUpgradeUnlocked } from '../utils/gameLogic';
 import { isAIUnlocked, canPurchaseAILevel } from '../utils/aiLogic';
 import { AI_CONFIG } from '../config/balanceConfig';
 import { colors, fonts } from '../config/theme';
@@ -106,7 +106,7 @@ const AISection: React.FC = () => {
             <View style={styles.aiCardStats}>
               <Text style={styles.aiCardBonus}>+{pctBonus}% {t('ai.production.bonus').replace('+{{pct}}% ', '')}</Text>
               <Text style={[styles.aiCardCost, !canAfford && !isPurchased && styles.cannotAfford]}>
-                ${formatNumber(config.cost)}
+                {formatUSD(config.cost)}
               </Text>
             </View>
 
@@ -240,7 +240,7 @@ const UpgradeList: React.FC = () => {
                     !canAfford && !isPurchased && styles.cannotAfford,
                     isPurchased && styles.ownedCost,
                   ]}>
-                    {`$${formatNumber(upgrade.cost)}`}
+                    {formatUSD(upgrade.cost)}
                   </Text>
                 </View>
 

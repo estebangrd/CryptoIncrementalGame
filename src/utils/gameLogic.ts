@@ -486,7 +486,21 @@ export const creditCryptoCoins = (gameState: GameState, ccAmount: number): GameS
   };
 };
 
+/**
+ * Canonical compact formatter for CryptoCoin amounts and generic counts
+ * (hash rate, blocks mined, percentages). No currency prefix.
+ *
+ * Ranges:
+ * - 0                         → "0.0"
+ * - (0, 1)                    → 2 significant digits, e.g. "0.023", "0.00056"
+ * - [1, 1000)                 → 1 decimal, e.g. "123.4"
+ * - [1K, 1M, 1B, 1T, 1Q)      → suffix with 1 decimal, e.g. "1.2K", "45.8M"
+ * - ≥ 1e18                    → scientific notation, e.g. "1.23e+18"
+ *
+ * Use this for anything that is NOT a USD $ amount. For USD use `formatUSD`.
+ */
 export const formatNumber = (num: number): string => {
+  if (!isFinite(num)) return '0.0';
   const abs = Math.abs(num);
   const sign = num < 0 ? '-' : '';
   if (abs === 0) return '0.0';
@@ -495,25 +509,49 @@ export const formatNumber = (num: number): string => {
     // (e.g., 0.023, 0.00056) instead of collapsing to "0.0".
     return sign + Number(abs.toPrecision(2)).toString();
   }
-  if (abs < 1000) return num.toFixed(1);
-  if (abs < 1000000) return sign + (abs / 1000).toFixed(1) + 'K';
-  if (abs < 1000000000) return sign + (abs / 1000000).toFixed(1) + 'M';
-  if (abs < 1000000000000) return sign + (abs / 1000000000).toFixed(1) + 'B';
-  return sign + (abs / 1000000000000).toFixed(1) + 'T';
+  if (abs < 1000) return sign + abs.toFixed(1);
+  if (abs < 1e6) return sign + (abs / 1e3).toFixed(1) + 'K';
+  if (abs < 1e9) return sign + (abs / 1e6).toFixed(1) + 'M';
+  if (abs < 1e12) return sign + (abs / 1e9).toFixed(1) + 'B';
+  if (abs < 1e15) return sign + (abs / 1e12).toFixed(1) + 'T';
+  if (abs < 1e18) return sign + (abs / 1e15).toFixed(1) + 'Q';
+  return sign + abs.toExponential(2);
 };
 
 /**
- * Format a USD value compactly with $ prefix and magnitude suffix.
- * Used for displaying purchasing power equivalents (e.g., offline earnings).
+ * Alias of `formatNumber` for semantic clarity when formatting CryptoCoin
+ * amounts. Prefer `formatCC` for CC values in the UI so intent is obvious.
+ */
+export const formatCC = formatNumber;
+
+/**
+ * Canonical compact formatter for USD money amounts. Always emits the `$`
+ * prefix so callers never need to prepend it themselves.
+ *
+ * Ranges:
+ * - 0 or non-finite            → "$0.00"
+ * - (0, 1e-4)                  → exponential, e.g. "$1.23e-5"
+ * - [1e-4, 0.01)               → 6 decimals, e.g. "$0.001234"
+ * - [0.01, 100)                → 4 decimals, e.g. "$1.0857"
+ *                                (fine precision so minute-by-minute market
+ *                                 price changes stay visible in the chart)
+ * - [100, 1000)                → 2 decimals, e.g. "$123.45"
+ * - [1K, 1M, 1B, 1T, 1Q)       → suffix with 2 decimals, e.g. "$1.23M"
+ * - ≥ 1e18                     → scientific notation, e.g. "$1.23e+18"
+ *
+ * Use this for ANY USD value in the UI (prices, balances, costs, earnings).
  */
 export const formatUSD = (num: number): string => {
+  if (!isFinite(num) || num === 0) return '$0.00';
   const abs = Math.abs(num);
   const sign = num < 0 ? '-' : '';
-  if (abs < 0.01) return '$0.00';
+  if (abs < 1e-4) return sign + '$' + abs.toExponential(2);
+  if (abs < 0.01) return sign + '$' + abs.toFixed(6);
+  if (abs < 100) return sign + '$' + abs.toFixed(4);
   if (abs < 1000) return sign + '$' + abs.toFixed(2);
-  if (abs < 1_000_000) return sign + '$' + (abs / 1_000).toFixed(2) + 'K';
-  if (abs < 1_000_000_000) return sign + '$' + (abs / 1_000_000).toFixed(2) + 'M';
-  if (abs < 1_000_000_000_000) return sign + '$' + (abs / 1_000_000_000).toFixed(2) + 'B';
+  if (abs < 1e6) return sign + '$' + (abs / 1e3).toFixed(2) + 'K';
+  if (abs < 1e9) return sign + '$' + (abs / 1e6).toFixed(2) + 'M';
+  if (abs < 1e12) return sign + '$' + (abs / 1e9).toFixed(2) + 'B';
   if (abs < 1e15) return sign + '$' + (abs / 1e12).toFixed(2) + 'T';
   if (abs < 1e18) return sign + '$' + (abs / 1e15).toFixed(2) + 'Q';
   return sign + '$' + abs.toExponential(2);

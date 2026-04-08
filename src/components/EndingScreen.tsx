@@ -23,7 +23,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGame } from '../contexts/GameContext';
 import { EndingType, EndgameStats } from '../types/game';
 import { calculateEndingBonus, calculateRenewableDiscount } from '../utils/endgameLogic';
-import { formatNumber } from '../utils/gameLogic';
+import { formatNumber, formatUSD } from '../utils/gameLogic';
 import { colors, fonts } from '../config/theme';
 
 const { width: SW, height: SH } = Dimensions.get('window');
@@ -1362,7 +1362,7 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
                   <View style={goodStyles.cardGrid}>
                     <HCNodeStat icon="⛏" label="Blocks Mined" value={formatNumber(stats.blocksMined)} sub="Incomplete" variant="burn" delay={200} />
                     <HCNodeStat icon="◈" label="CC Earned" value={formatNumber(stats.totalCryptoCoinsEarned)} sub="CryptoCoins" variant="ash" delay={350} />
-                    <HCNodeStat icon="💰" label="Money Accumulated" value={`$${formatNumber(stats.totalMoneyEarned)}`} sub="Total Cash" variant="ash" delay={500} />
+                    <HCNodeStat icon="💰" label="Money Accumulated" value={formatUSD(stats.totalMoneyEarned)} sub="Total Cash" variant="ash" delay={500} />
                     <HCNodeStat icon="⏱" label="Run Duration" value={formatDuration(stats.runDurationMs)} sub="Real time" variant="burn" delay={650} smallValue />
                   </View>
                   <HumanCollapseResourcesBar pct={stats.planetResourcesAtEnd} delay={650} />
@@ -1476,7 +1476,7 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
                   <View style={goodStyles.cardGrid}>
                     <NodeStat icon="⛏" label="Blocks Mined" value={formatNumber(stats.blocksMined)} sub="+∞ by AI" variant="red" delay={200} />
                     <NodeStat icon="◈" label="CC Earned" value={formatNumber(stats.totalCryptoCoinsEarned)} sub="CryptoCoins" variant="purple" delay={350} />
-                    <NodeStat icon="💰" label="Money Accumulated" value={`$${formatNumber(stats.totalMoneyEarned)}`} sub="Total Cash" variant="purple" delay={500} />
+                    <NodeStat icon="💰" label="Money Accumulated" value={formatUSD(stats.totalMoneyEarned)} sub="Total Cash" variant="purple" delay={500} />
                     <NodeStat icon="⏱" label="Run Duration" value={formatDuration(stats.runDurationMs)} sub="Real time" variant="red" delay={650} smallValue />
                   </View>
                   <CollapseResourcesBar pct={stats.planetResourcesAtEnd} delay={650} />
@@ -1594,7 +1594,7 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
                 <View style={goodStyles.cardGrid}>
                   <NodeStat icon="⛏" label="Blocks Mined" value={`${formatNumber(stats.blocksMined)} ✓`} sub="100% Complete" variant="green" delay={200} checkBadge />
                   <NodeStat icon="◈" label="CC Earned" value={formatNumber(stats.totalCryptoCoinsEarned)} sub="CryptoCoins" variant="cyan" delay={350} />
-                  <NodeStat icon="💰" label="Money Accumulated" value={`$${formatNumber(stats.totalMoneyEarned)}`} sub="Total Cash" variant="yellow" delay={500} />
+                  <NodeStat icon="💰" label="Money Accumulated" value={formatUSD(stats.totalMoneyEarned)} sub="Total Cash" variant="yellow" delay={500} />
                   <NodeStat icon="⏱" label="Run Duration" value={formatDuration(stats.runDurationMs)} sub="Real time" delay={650} smallValue />
                 </View>
                 <AILevelCard level={stats.aiLevelReached} delay={800} />

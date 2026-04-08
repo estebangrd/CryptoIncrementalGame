@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useGame } from '../contexts/GameContext';
 import { canPrestige } from '../utils/prestigeLogic';
-import { formatNumber } from '../utils/gameLogic';
+import { formatNumber, formatUSD } from '../utils/gameLogic';
 import { PRESTIGE_CONFIG } from '../config/balanceConfig';
 import { ALL_BADGES } from '../data/badges';
 import { PrestigeRun } from '../types/game';
@@ -105,7 +105,7 @@ const PrestigeScreen: React.FC = () => {
       <View style={[styles.card, styles.loseCard]}>
         <Text style={styles.loseTitle}>{t('prestige.willLose')}</Text>
         <Text style={styles.loseItem}>- All CryptoCoins ({formatNumber(gameState.cryptoCoins)})</Text>
-        <Text style={styles.loseItem}>- All Real Money (${formatNumber(gameState.realMoney)})</Text>
+        <Text style={styles.loseItem}>- All Real Money ({formatUSD(gameState.realMoney)})</Text>
         <Text style={styles.loseItem}>- All Hardware (except Manual Mining)</Text>
         <Text style={styles.loseItem}>- All Upgrades</Text>
         <Text style={styles.loseItem}>- Unlocked tabs (reset)</Text>
@@ -149,7 +149,7 @@ const PrestigeScreen: React.FC = () => {
         </View>
         <View style={styles.statRow}>
           <Text style={styles.statLabel}>Money Earned</Text>
-          <Text style={styles.statValue}>${formatNumber(gameState.totalRealMoneyEarned)}</Text>
+          <Text style={styles.statValue}>{formatUSD(gameState.totalRealMoneyEarned)}</Text>
         </View>
         <View style={styles.statRow}>
           <Text style={styles.statLabel}>Hardware Owned</Text>
@@ -185,7 +185,7 @@ const PrestigeScreen: React.FC = () => {
             </View>
             <View style={styles.statRow}>
               <Text style={styles.statLabel}>Money Earned</Text>
-              <Text style={styles.statValue}>${formatNumber(run.totalMoneyEarned)}</Text>
+              <Text style={styles.statValue}>{formatUSD(run.totalMoneyEarned)}</Text>
             </View>
           </View>
         ))
@@ -268,7 +268,7 @@ const PrestigeScreen: React.FC = () => {
 
             <View style={styles.modalLoseList}>
               <Text style={styles.modalLoseItem}>All CryptoCoins: {formatNumber(gameState.cryptoCoins)}</Text>
-              <Text style={styles.modalLoseItem}>All Real Money: ${formatNumber(gameState.realMoney)}</Text>
+              <Text style={styles.modalLoseItem}>All Real Money: {formatUSD(gameState.realMoney)}</Text>
               <Text style={styles.modalLoseItem}>All Hardware and Upgrades</Text>
             </View>
 

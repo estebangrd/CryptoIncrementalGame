@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { useGame } from '../contexts/GameContext';
 import { getAchievementCompletionPercent } from '../utils/achievementLogic';
-import { formatNumber } from '../utils/gameLogic';
+import { formatNumber, formatUSD } from '../utils/gameLogic';
 import { Achievement } from '../types/game';
 
 type FilterCategory = 'all' | 'mining' | 'hardware' | 'economy' | 'prestige' | 'secret';
@@ -71,7 +71,7 @@ const AchievementCard: React.FC<{ achievement: Achievement }> = ({ achievement }
         {achievement.unlocked && achievement.reward && (
           <Text style={styles.reward}>
             {achievement.reward.type === 'coins' ? `+${formatNumber(achievement.reward.amount ?? 0)} CC` :
-             achievement.reward.type === 'money' ? `+$${formatNumber(achievement.reward.amount ?? 0)}` :
+             achievement.reward.type === 'money' ? `+${formatUSD(achievement.reward.amount ?? 0)}` :
              achievement.reward.type === 'multiplier' ? `${achievement.reward.multiplier}x boost` : ''}
           </Text>
         )}

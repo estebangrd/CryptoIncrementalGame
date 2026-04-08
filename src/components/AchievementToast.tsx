@@ -3,6 +3,7 @@ import { View, Text, Animated, StyleSheet, TouchableOpacity, Easing } from 'reac
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import { Achievement } from '../types/game';
+import { formatNumber, formatUSD } from '../utils/gameLogic';
 import { colors, fonts } from '../config/theme';
 
 interface AchievementToastProps {
@@ -109,8 +110,8 @@ const AchievementToast: React.FC<AchievementToastProps> = ({ achievement, displa
 
   const themeColor = getThemeColor(achievement);
   const rewardText = achievement.reward
-    ? achievement.reward.type === 'coins' ? `+${achievement.reward.amount} CryptoCoins`
-    : achievement.reward.type === 'money' ? `+$${achievement.reward.amount}`
+    ? achievement.reward.type === 'coins' ? `+${formatNumber(achievement.reward.amount ?? 0)} CryptoCoins`
+    : achievement.reward.type === 'money' ? `+${formatUSD(achievement.reward.amount ?? 0)}`
     : achievement.reward.type === 'multiplier' ? `${achievement.reward.multiplier}x production boost!`
     : ''
     : '';

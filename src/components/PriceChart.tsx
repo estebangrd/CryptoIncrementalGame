@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import Svg, { Path, Defs, LinearGradient, Stop, Circle } from 'react-native-svg';
 import { colors, fonts } from '../config/theme';
-import { formatNumber } from '../utils/gameLogic';
+import { formatNumber, formatUSD } from '../utils/gameLogic';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -12,14 +12,6 @@ const PADDING = { top: 8, bottom: 8, left: 0, right: 0 };
 interface PriceChartProps {
   priceHistory: number[];
 }
-
-export const formatPrice = (price: number): string => {
-  if (price >= 1000) return `$${(price / 1000).toFixed(1)}k`;
-  if (price >= 100) return `$${price.toFixed(0)}`;
-  if (price >= 1) return `$${price.toFixed(4)}`;
-  if (price >= 0.01) return `$${price.toFixed(4)}`;
-  return `$${price.toFixed(6)}`;
-};
 
 const PriceChart: React.FC<PriceChartProps> = ({ priceHistory }) => {
   const [chartWidth, setChartWidth] = useState(300);
@@ -77,7 +69,7 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceHistory }) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.currentPrice}>{formatPrice(currentPrice)}</Text>
+        <Text style={styles.currentPrice}>{formatUSD(currentPrice)}</Text>
         <View style={[styles.badge, isPositive ? styles.badgeUp : styles.badgeDn]}>
           <Text style={[styles.badgeText, { color: accentColor }]}>
             {isPositive ? '▲' : '▼'} {formatNumber(Math.abs(priceChange))}%

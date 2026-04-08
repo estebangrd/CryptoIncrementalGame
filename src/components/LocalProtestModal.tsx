@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useGame } from '../contexts/GameContext';
+import { formatUSD } from '../utils/gameLogic';
 import { fonts } from '../config/theme';
 import { LocalProtestEvent } from '../types/game';
 
@@ -116,7 +117,7 @@ const LocalProtestModal: React.FC<Props> = ({ event }) => {
                 activeOpacity={0.75}
               >
                 <Text style={styles.btnText}>{t('localProtest.choiceCompensation')}</Text>
-                <Text style={styles.btnSub}>${Math.round(gameState.realMoney * 0.15).toLocaleString()}</Text>
+                <Text style={styles.btnSub}>{formatUSD(Math.round(gameState.realMoney * 0.15))}</Text>
               </TouchableOpacity>
             </View>
           </View>
