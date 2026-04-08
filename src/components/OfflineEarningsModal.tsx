@@ -377,6 +377,8 @@ const styles = StyleSheet.create({
   ecAmountRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
+    justifyContent: 'center',
+    alignSelf: 'stretch',
     gap: 8,
   },
   ecAmount: {
@@ -392,14 +394,14 @@ const styles = StyleSheet.create({
     fontFamily: fonts.mono,
     fontSize: 15,
     color: 'rgba(0,255,136,0.65)',
-    letterSpacing: 3,
   },
   ecUsdValue: {
     fontFamily: fonts.orbitron,
     fontSize: 16,
     color: 'rgba(255,255,255,0.85)',
-    letterSpacing: 1.5,
     marginTop: 8,
+    textAlign: 'center',
+    alignSelf: 'stretch',
     textShadowColor: 'rgba(0,229,255,0.35)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 12,
