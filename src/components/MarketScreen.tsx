@@ -205,14 +205,21 @@ const MarketScreen: React.FC = () => {
                     </View>
                   </View>
                   <View style={styles.quickRow}>
-                    {[25, 50, 75].map(v => (
-                      <TouchableOpacity key={v} style={styles.qBtn} onPress={() => setAmountPercent(v)} activeOpacity={0.7}>
-                        <Text style={styles.qBtnText}>{v}%</Text>
-                      </TouchableOpacity>
-                    ))}
-                    <TouchableOpacity style={[styles.qBtn, styles.qBtnMax]} onPress={() => setAmountPercent(100)} activeOpacity={0.7}>
-                      <Text style={[styles.qBtnText, styles.qBtnMaxText]}>MAX</Text>
-                    </TouchableOpacity>
+                    {[25, 50, 75, 100].map(v => {
+                      const isActive = amountPercent === v;
+                      return (
+                        <TouchableOpacity
+                          key={v}
+                          style={[styles.qBtn, isActive && styles.qBtnActive]}
+                          onPress={() => setAmountPercent(v)}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={[styles.qBtnText, isActive && styles.qBtnActiveText]}>
+                            {v === 100 ? 'MAX' : `${v}%`}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
                   </View>
                   <View style={styles.earnBox}>
                     <Text style={styles.earnAmount}>{formatUSD(sellPreviewMoney)}</Text>
@@ -467,10 +474,11 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: colors.dim,
   },
-  qBtnMax: {
-    borderColor: 'rgba(255,214,0,0.2)',
+  qBtnActive: {
+    borderColor: 'rgba(255,214,0,0.4)',
+    backgroundColor: 'rgba(255,214,0,0.08)',
   },
-  qBtnMaxText: {
+  qBtnActiveText: {
     color: colors.ny,
   },
 
