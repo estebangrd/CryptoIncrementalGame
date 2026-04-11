@@ -156,6 +156,7 @@ export type GameAction =
   | { type: 'CLAIM_OFFLINE_EARNINGS'; payload: { amount: number } }
   | { type: 'DISMISS_OFFLINE_EARNINGS' }
   | { type: 'DISMISS_PREMIUM_OFFLINE' }
+  | { type: 'SET_PREMIUM_OFFLINE_DEBUG'; payload: import('../types/game').PendingPremiumOfflineData }
   | { type: 'TOGGLE_HARDWARE'; payload: string };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -1883,6 +1884,9 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     }
     case 'DISMISS_PREMIUM_OFFLINE': {
       return { ...state, pendingPremiumOffline: null };
+    }
+    case 'SET_PREMIUM_OFFLINE_DEBUG': {
+      return { ...state, pendingPremiumOffline: action.payload };
     }
 
     default:

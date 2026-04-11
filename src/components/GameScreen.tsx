@@ -546,6 +546,20 @@ const GameScreen: React.FC = () => {
         onTestHumanCollapse={() => { setShowSettings(false); setDebugHumanCollapse(true); }}
         onTestAchievementToast={handleTestAchievementToast}
         onTestEarningsToast={handleTestEarningsToast}
+        onTestPremiumOffline={() => {
+          setShowSettings(false);
+          const now = Date.now();
+          dispatch({ type: 'SET_PREMIUM_OFFLINE_DEBUG', payload: {
+            grossCoins: 914400,
+            feeCoins: 67200,
+            netCoins: 847200,
+            secondsAway: 8040,
+            blocksProcessed: 13400,
+            boosterExpiresAt: now + 5 * 3600 * 1000,
+            boosterActivatedAt: now - 3 * 3600 * 1000,
+            boosterExpired: false,
+          }});
+        }}
       />
 
       <AdBanner onHeightChange={setAdBannerHeight} />
