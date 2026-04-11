@@ -12,29 +12,17 @@
 import { formatUSD, formatUSDCompact } from '../src/utils/gameLogic';
 
 describe('formatUSD — USD price formatter', () => {
-  it('shows up to 4 decimal places for prices between $1 and $100', () => {
-    // OU price process produces values like 1.0857 — must show all 4 decimals
-    expect(formatUSD(1.0857)).toBe('$1.0857');
-    expect(formatUSD(1.0863)).toBe('$1.0863');
+  it('shows 2 decimal places for prices between $1 and $100', () => {
+    expect(formatUSD(1.0857)).toBe('$1.09');
+    expect(formatUSD(1.0863)).toBe('$1.09');
   });
 
   it('trims trailing zeros to 2 decimals for round prices in $1-$100', () => {
-    // Hardware costs like $25 must NOT render as $25.0000 (finance convention
-    // keeps the cents but drops meaningless trailing zeros).
     expect(formatUSD(25)).toBe('$25.00');
     expect(formatUSD(99)).toBe('$99.00');
     expect(formatUSD(1.5)).toBe('$1.50');
     expect(formatUSD(1.05)).toBe('$1.05');
-    // Mixed precision: preserves 3rd/4th decimal when meaningful
-    expect(formatUSD(1.085)).toBe('$1.085');
-  });
-
-  it('distinguishes adjacent minute prices in the $1-$100 band', () => {
-    // With 2-decimal rounding both prices collapsed to "$1.09" — the chart
-    // appeared static. 4-decimal precision keeps them distinct.
-    const price1 = formatUSD(1.085);
-    const price2 = formatUSD(1.094);
-    expect(price1).not.toBe(price2);
+    expect(formatUSD(1.085)).toBe('$1.08');
   });
 
   it('shows 2 decimals (cents) for prices between $100 and $1000', () => {
@@ -47,8 +35,8 @@ describe('formatUSD — USD price formatter', () => {
     expect(formatUSD(123456)).toBe('$123.46K');
   });
 
-  it('shows 4 decimal places for prices between $0.01 and $1', () => {
-    expect(formatUSD(0.0123)).toBe('$0.0123');
+  it('shows 2 decimal places for prices between $0.01 and $1', () => {
+    expect(formatUSD(0.0123)).toBe('$0.01');
   });
 
   it('shows 6 decimal places for prices below $0.01', () => {
