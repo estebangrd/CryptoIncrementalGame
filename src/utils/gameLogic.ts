@@ -620,7 +620,7 @@ export const formatUSD = (num: number): string => {
   const sign = num < 0 ? '-' : '';
   if (abs < 1e-4) return sign + '$' + abs.toExponential(2);
   if (abs < 0.01) return sign + '$' + trimUSDDecimals(abs.toFixed(6));
-  if (abs < 100) return sign + '$' + trimUSDDecimals(abs.toFixed(4));
+  if (abs < 10) return sign + '$' + trimUSDDecimals(abs.toFixed(4));
   if (abs < 1000) return sign + '$' + abs.toFixed(2);
   if (abs < 1e6) return sign + '$' + (abs / 1e3).toFixed(2) + 'K';
   if (abs < 1e9) return sign + '$' + (abs / 1e6).toFixed(2) + 'M';
