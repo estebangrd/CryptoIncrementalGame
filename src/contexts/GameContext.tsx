@@ -1972,16 +1972,17 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     loadSavedGame();
   }, []);
 
-  // Save game state with debounce (only after hydration to avoid overwriting saved data).
-  // 2-second debounce ensures Fast Refresh / Metro reload never loses more than 2s of progress.
+  // Save game state every 5 seconds (only after hydration to avoid overwriting saved data).
+  // Uses gameStateRef to keep a stable interval that doesn't reset on every state change.
   useEffect(() => {
     if (!gameState.isHydrated) return;
-    const debounceTimer = setTimeout(() => {
-      saveGameState(gameState);
-    }, 2000);
+    const saveInterval = setInterval(() => {
+      saveGameState(gameStateRef.current);
+    }, 5000);
 
-    return () => clearTimeout(debounceTimer);
-  }, [gameState]);
+    return () => clearInterval(saveInterval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameState.isHydrated]);
 
   // Save game state when app goes to background (only after hydration)
   useEffect(() => {
