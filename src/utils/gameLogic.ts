@@ -314,14 +314,14 @@ export const updateOfflineProgress = (gameState: GameState): GameState => {
   const offlineMiner = gameState.iapState?.offlineMiner;
   const hasActiveOfflineMiner = offlineMiner?.isActive && offlineMiner.expiresAt;
 
-  // ── IAP Offline Miner path (existing logic — auto-credit at 50%) ──
+  // ── IAP Offline Miner path (auto-credit at 50% + premium modal) ──
   if (hasActiveOfflineMiner) {
     const offlineEnd = Math.min(now, offlineMiner.expiresAt!);
     const offlineMs = Math.max(0, offlineEnd - lastSave);
     const offlineSec = offlineMs / 1000;
 
     if (offlineSec <= 0) {
-      return { ...gameState, lastSaveTime: now };
+      return { ...gameState, lastSaveTime: now, pendingPremiumOffline: null };
     }
 
     const constrainedMiningSpeed = getConstrainedMiningSpeed(gameState);
@@ -352,6 +352,9 @@ export const updateOfflineProgress = (gameState: GameState): GameState => {
     const offlineMinerExpired = now >= offlineMiner.expiresAt!;
     const netCoins = Math.max(0, coinsEarned - ccFeeDrained);
 
+    // Build premium modal data (skip for short absences or zero earnings)
+    const showPremiumModal = offlineSec >= OFFLINE_SCREEN_CONFIG.PREMIUM_MIN_OFFLINE_SECONDS && netCoins > 0;
+
     return {
       ...gameState,
       cryptoCoins: Math.max(0, gameState.cryptoCoins + netCoins),
@@ -361,6 +364,16 @@ export const updateOfflineProgress = (gameState: GameState): GameState => {
       currentReward: calculateCurrentReward(currentBlocksMined),
       nextHalving: calculateNextHalving(currentBlocksMined),
       lastSaveTime: now,
+      pendingPremiumOffline: showPremiumModal ? {
+        grossCoins: coinsEarned,
+        feeCoins: ccFeeDrained,
+        netCoins,
+        secondsAway: offlineSec,
+        blocksProcessed: totalBlocks,
+        boosterExpiresAt: offlineMiner.expiresAt!,
+        boosterActivatedAt: offlineMiner.activatedAt ?? offlineMiner.expiresAt! - BOOSTER_CONFIG.OFFLINE_MINER.baseDurationMs,
+        boosterExpired: offlineMinerExpired,
+      } : null,
       iapState: gameState.iapState ? {
         ...gameState.iapState,
         offlineMiner: offlineMinerExpired
@@ -856,6 +869,7 @@ export const getInitialGameState = (): GameState => {
     offlineSecondsAway: 0,
     offlineWasCapped: false,
     offlineBlocksProcessed: 0,
+    pendingPremiumOffline: null,
     // IAP & Ad state
     iapState: {
       removeAdsPurchased: false,

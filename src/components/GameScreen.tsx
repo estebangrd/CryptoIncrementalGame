@@ -30,6 +30,7 @@ import LocalProtestModal from './LocalProtestModal';
 import DisconnectModal from './DisconnectModal';
 import EndingScreen from './EndingScreen';
 import OfflineEarningsModal from './OfflineEarningsModal';
+import OfflineEarningsPremiumModal from './OfflineEarningsPremiumModal';
 import ShopScreen from './ShopScreen';
 import { getNewlyUnlockedAchievements } from '../utils/achievementLogic';
 import { getPendingNarrativeEvent } from '../utils/narrativeLogic';
@@ -604,6 +605,13 @@ const GameScreen: React.FC = () => {
         onDismiss={() => dispatch({ type: 'DISMISS_OFFLINE_EARNINGS' })}
         showToast={showToast}
         onShowEarningsToast={handleShowEarningsToast}
+      />
+
+      <OfflineEarningsPremiumModal
+        visible={gameState.pendingPremiumOffline != null}
+        data={gameState.pendingPremiumOffline}
+        t={t}
+        onDismiss={() => dispatch({ type: 'DISMISS_PREMIUM_OFFLINE' })}
       />
 
       <EndingScreen

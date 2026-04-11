@@ -155,6 +155,7 @@ export type GameAction =
   | { type: 'CANCEL_MARKET_EVENT'; payload: MarketEventId }
   | { type: 'CLAIM_OFFLINE_EARNINGS'; payload: { amount: number } }
   | { type: 'DISMISS_OFFLINE_EARNINGS' }
+  | { type: 'DISMISS_PREMIUM_OFFLINE' }
   | { type: 'TOGGLE_HARDWARE'; payload: string };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -403,6 +404,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         offlineSecondsAway: 0,
         offlineWasCapped: false,
         offlineBlocksProcessed: 0,
+        pendingPremiumOffline: null,
         // Price engine migration (OU replaces BTC dataset)
         priceDeviation: action.payload.priceDeviation ?? 0,
         priceRegime: action.payload.priceRegime ?? 'normal',
@@ -799,6 +801,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         offlineSecondsAway: 0,
         offlineWasCapped: false,
         offlineBlocksProcessed: 0,
+        pendingPremiumOffline: null,
         regulatoryPressureEvent: null,
         marketOpportunityEvent: null,
         localProtestEvent: null,
@@ -1644,6 +1647,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         offlineSecondsAway: 0,
         offlineWasCapped: false,
         offlineBlocksProcessed: 0,
+        pendingPremiumOffline: null,
         regulatoryPressureEvent: null,
         marketOpportunityEvent: null,
         localProtestEvent: null,
@@ -1876,6 +1880,9 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         offlineWasCapped: false,
         offlineBlocksProcessed: 0,
       };
+    }
+    case 'DISMISS_PREMIUM_OFFLINE': {
+      return { ...state, pendingPremiumOffline: null };
     }
 
     default:

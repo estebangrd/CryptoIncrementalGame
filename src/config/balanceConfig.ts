@@ -736,6 +736,7 @@ export const OFFLINE_SCREEN_CONFIG = {
   MAX_OFFLINE_SECONDS: 3600,    // 1h cap on production
   REWARD_MIN_PCT: 80,           // minimum % on ad watch
   REWARD_MAX_PCT: 100,          // maximum %
+  PREMIUM_MIN_OFFLINE_SECONDS: 60, // 1 min minimum to show IAP premium modal
 } as const;
 
 // ============================================================================

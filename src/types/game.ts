@@ -79,6 +79,17 @@ export interface OfflineMinerState {
   expiresAt: number | null;
 }
 
+export interface PendingPremiumOfflineData {
+  grossCoins: number;
+  feeCoins: number;
+  netCoins: number;
+  secondsAway: number;
+  blocksProcessed: number;
+  boosterExpiresAt: number;
+  boosterActivatedAt: number;
+  boosterExpired: boolean;
+}
+
 export interface LuckyBlockState {
   isActive: boolean;
   blocksRemaining: number;
@@ -376,6 +387,7 @@ export interface GameState {
   offlineSecondsAway: number;       // actual time away for display
   offlineWasCapped: boolean;        // true if production was capped at 1h
   offlineBlocksProcessed: number;   // estimated blocks for narrative log
+  pendingPremiumOffline: PendingPremiumOfflineData | null;
   // Banner Events (Phase 6 — interactive narrative)
   regulatoryPressureEvent: RegulatoryPressureEvent | null;
   marketOpportunityEvent: MarketOpportunityEvent | null;

@@ -1926,6 +1926,88 @@ export const translations: Translation = {
     pt: 'RECLAMAR',
   },
 
+  // ── Premium Offline Earnings (IAP Offline Miner) ───────────────────────────
+  'offlinePremium.iapActive': {
+    en: 'IAP ACTIVE',
+    es: 'IAP ACTIVO',
+    pt: 'IAP ATIVO',
+  },
+  'offlinePremium.title': {
+    en: 'Offline Miner',
+    es: 'Offline Miner',
+    pt: 'Offline Miner',
+  },
+  'offlinePremium.timeRemaining': {
+    en: 'TIME REMAINING',
+    es: 'TIEMPO RESTANTE',
+    pt: 'TEMPO RESTANTE',
+  },
+  'offlinePremium.expired': {
+    en: 'EXPIRED',
+    es: 'EXPIRADO',
+    pt: 'EXPIRADO',
+  },
+  'offlinePremium.timeAway': {
+    en: 'TIME AWAY',
+    es: 'TIEMPO FUERA',
+    pt: 'TEMPO FORA',
+  },
+  'offlinePremium.logSource': {
+    en: 'OFFLINE MINER · Activity log',
+    es: 'OFFLINE MINER · Log de actividad',
+    pt: 'OFFLINE MINER · Log de atividade',
+  },
+  'offlinePremium.logLine1': {
+    en: 'Offline Miner active. Speed: <gold>50% of production</gold>.',
+    es: 'Offline Miner activo. Velocidad: <gold>50% de producción</gold>.',
+    pt: 'Offline Miner ativo. Velocidade: <gold>50% da produção</gold>.',
+  },
+  'offlinePremium.logLine2': {
+    en: 'Blocks processed: <acc>{blocks}</acc>. Gross CC generated.',
+    es: 'Bloques procesados: <acc>{blocks}</acc>. CC brutos generados.',
+    pt: 'Blocos processados: <acc>{blocks}</acc>. CC brutos gerados.',
+  },
+  'offlinePremium.logLine3': {
+    en: 'Electricity fee applied: <neg>−{fee} CC</neg>.',
+    es: 'Fee de electricidad aplicado: <neg>−{fee} CC</neg>.',
+    pt: 'Taxa de eletricidade aplicada: <neg>−{fee} CC</neg>.',
+  },
+  'offlinePremium.logLine4': {
+    en: 'Net credited to balance: <acc>+{net} CC</acc>.',
+    es: 'Neto acreditado a balance: <acc>+{net} CC</acc>.',
+    pt: 'Líquido creditado ao saldo: <acc>+{net} CC</acc>.',
+  },
+  'offlinePremium.breakdownLabel': {
+    en: 'PRODUCTION BREAKDOWN',
+    es: 'DESGLOSE DE PRODUCCIÓN',
+    pt: 'DETALHAMENTO DA PRODUÇÃO',
+  },
+  'offlinePremium.grossLabel': {
+    en: '⛏ GROSS CC MINED',
+    es: '⛏ CC MINADOS BRUTOS',
+    pt: '⛏ CC MINERADOS BRUTOS',
+  },
+  'offlinePremium.feeLabel': {
+    en: '⚡ ELECTRICITY FEE',
+    es: '⚡ FEE DE ELECTRICIDAD',
+    pt: '⚡ TAXA DE ELETRICIDADE',
+  },
+  'offlinePremium.netLabel': {
+    en: 'NET CREDITED',
+    es: 'NETO ACREDITADO',
+    pt: 'LÍQUIDO CREDITADO',
+  },
+  'offlinePremium.autoCredited': {
+    en: 'Automatically credited to your balance',
+    es: 'Acreditado automáticamente a tu balance',
+    pt: 'Creditado automaticamente ao seu saldo',
+  },
+  'offlinePremium.continueButton': {
+    en: '⛏ CONTINUE MINING',
+    es: '⛏ CONTINUAR MINANDO',
+    pt: '⛏ CONTINUAR MINERANDO',
+  },
+
   // ── Market Events (price unification) ──────────────────────────────────────
   'marketEvent.halvingAnticipation': {
     en: 'Halving incoming',
