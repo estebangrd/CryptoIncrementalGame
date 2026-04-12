@@ -562,7 +562,9 @@ const GameScreen: React.FC = () => {
         }}
       />
 
-      <AdBanner onHeightChange={setAdBannerHeight} />
+      {!(gameState.collapseTriggered || gameState.goodEndingTriggered || debugGoodEnding || debugAICollapse || debugHumanCollapse) && (
+        <AdBanner onHeightChange={setAdBannerHeight} />
+      )}
 
       <AchievementToast
         achievement={toastQueue[0] ?? null}

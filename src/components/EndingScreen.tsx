@@ -19,7 +19,6 @@ import {
 } from 'react-native';
 import Svg, { Defs, LinearGradient, Stop, Rect, Text as SvgText } from 'react-native-svg';
 import RNLinearGradient from 'react-native-linear-gradient';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGame } from '../contexts/GameContext';
 import { EndingType, EndgameStats } from '../types/game';
 import { calculateEndingBonus, calculateRenewableDiscount } from '../utils/endgameLogic';
@@ -619,8 +618,9 @@ const CollapseLogCard: React.FC<{ aiLevel: number }> = ({ aiLevel }) => {
       <Svg width="100%" height={2} style={{ position: 'absolute', top: 0, left: 0, right: 0 }}>
         <Defs>
           <LinearGradient id="logCardTop" x1="0" y1="0" x2="1" y2="0">
-            <Stop offset="0%" stopColor="#c4002f" stopOpacity="1" />
-            <Stop offset="100%" stopColor="#ff3d5a" stopOpacity="1" />
+            <Stop offset="0%" stopColor="#ff3d5a" stopOpacity="0" />
+            <Stop offset="50%" stopColor="#ff3d5a" stopOpacity="0.55" />
+            <Stop offset="100%" stopColor="#ff3d5a" stopOpacity="0" />
           </LinearGradient>
         </Defs>
         <Rect x="0" y="0" width="100%" height="2" fill="url(#logCardTop)" />
@@ -666,8 +666,9 @@ const CollapseResourcesBar: React.FC<{ pct: number; delay?: number }> = ({ pct, 
       <Svg width="100%" height={2} style={{ position: 'absolute', top: 0, left: 0, right: 0 }}>
         <Defs>
           <LinearGradient id="resCardTop" x1="0" y1="0" x2="1" y2="0">
-            <Stop offset="0%" stopColor="#c4002f" stopOpacity="1" />
-            <Stop offset="100%" stopColor="#ff3d5a" stopOpacity="1" />
+            <Stop offset="0%" stopColor="#ff3d5a" stopOpacity="0" />
+            <Stop offset="50%" stopColor="#ff3d5a" stopOpacity="0.55" />
+            <Stop offset="100%" stopColor="#ff3d5a" stopOpacity="0" />
           </LinearGradient>
         </Defs>
         <Rect x="0" y="0" width="100%" height="2" fill="url(#resCardTop)" />
@@ -882,7 +883,7 @@ const clStyles = StyleSheet.create({
     borderWidth: 1, borderColor: '#ff3d5a',
     backgroundColor: 'rgba(255,61,90,0.06)',
     alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#ff3d5a', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.14, shadowRadius: 20, elevation: 6,
+    shadowColor: '#ff3d5a', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.14, shadowRadius: 20,
   },
   planetBtnText: { fontFamily: fonts.orbitron, fontSize: 13, letterSpacing: 3, color: '#ff3d5a', textTransform: 'uppercase' },
 });
@@ -1003,8 +1004,9 @@ const HumanCollapseResourcesBar: React.FC<{ pct: number; delay?: number }> = ({ 
       <Svg width="100%" height={2} style={{ position: 'absolute', top: 0, left: 0, right: 0 }}>
         <Defs>
           <LinearGradient id="hcResTop" x1="0" y1="0" x2="1" y2="0">
-            <Stop offset="0%" stopColor="#c94400" stopOpacity="1" />
-            <Stop offset="100%" stopColor="#ff6b1a" stopOpacity="1" />
+            <Stop offset="0%" stopColor="#ff6b1a" stopOpacity="0" />
+            <Stop offset="50%" stopColor="#ff6b1a" stopOpacity="0.55" />
+            <Stop offset="100%" stopColor="#ff6b1a" stopOpacity="0" />
           </LinearGradient>
         </Defs>
         <Rect x="0" y="0" width="100%" height="2" fill="url(#hcResTop)" />
@@ -1255,7 +1257,7 @@ const hcStyles = StyleSheet.create({
     borderWidth: 1, borderColor: '#ff6b1a',
     backgroundColor: 'rgba(200,70,0,0.08)',
     alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#ff6b1a', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.15, shadowRadius: 20, elevation: 6,
+    shadowColor: '#ff6b1a', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.15, shadowRadius: 20,
   },
   planetBtnText: { fontFamily: fonts.orbitron, fontSize: 13, letterSpacing: 3, color: '#ff6b1a', textTransform: 'uppercase' },
   // Smoke layer
@@ -1271,7 +1273,6 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
   visible, endingType, stats, collapseCount, goodEndingCount, onPrestige, onClose,
 }) => {
   const { t } = useGame();
-  const insets = useSafeAreaInsets();
   const isCollapse = endingType === 'collapse' || endingType === 'human_collapse';
   const isHumanCollapse = endingType === 'human_collapse';
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -1330,12 +1331,12 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
 
           <Animated.View style={{ flex: 1, opacity: fadeAnim }} pointerEvents="box-none">
             <ScrollView
-              contentContainerStyle={{ flexGrow: 1, paddingBottom: 30 }}
+              contentContainerStyle={{ flexGrow: 1, paddingBottom: 8 }}
               showsVerticalScrollIndicator={false}
               stickyHeaderIndices={[0]}
             >
               {/* Topbar — sticky */}
-              <View style={[hcStyles.topbar, { paddingTop: Math.max(14, insets.top) }]}>
+              <View style={hcStyles.topbar}>
                 <Text style={hcStyles.logo}>
                   BLOCK<Text style={{ color: '#c94400' }}>CHAIN</Text> TYCOON
                 </Text>
@@ -1360,8 +1361,8 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
                 <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
                   <SectionLabel label="TU LEGADO" accent="#ff6b1a" />
                   <View style={goodStyles.cardGrid}>
-                    <HCNodeStat icon="⛏" label="Blocks Mined" value={formatNumber(stats.blocksMined)} sub="Incomplete" variant="burn" delay={200} />
-                    <HCNodeStat icon="◈" label="CC Earned" value={formatNumber(stats.totalCryptoCoinsEarned)} sub="CryptoCoins" variant="ash" delay={350} />
+                    <HCNodeStat icon="🏦" label="Blocks Mined" value={formatNumber(stats.blocksMined)} sub="Incomplete" variant="burn" delay={200} />
+                    <HCNodeStat icon="🪙" label="CC Earned" value={formatNumber(stats.totalCryptoCoinsEarned)} sub="CryptoCoins" variant="ash" delay={350} />
                     <HCNodeStat icon="💰" label="Money Accumulated" value={formatUSD(stats.totalMoneyEarned)} sub="Total Cash" variant="ash" delay={500} />
                     <HCNodeStat icon="⏱" label="Run Duration" value={formatDuration(stats.runDurationMs)} sub="Real time" variant="burn" delay={650} smallValue />
                   </View>
@@ -1377,8 +1378,9 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
                     <Svg width="100%" height={2} style={{ position: 'absolute', top: 0, left: 0, right: 0 }}>
                       <Defs>
                         <LinearGradient id="hcBonusTop" x1="0" y1="0" x2="1" y2="0">
-                          <Stop offset="0%" stopColor="#c94400" stopOpacity="1" />
-                          <Stop offset="100%" stopColor="#ff6b1a" stopOpacity="1" />
+                          <Stop offset="0%" stopColor="#ff6b1a" stopOpacity="0" />
+                          <Stop offset="50%" stopColor="#ff6b1a" stopOpacity="0.55" />
+                          <Stop offset="100%" stopColor="#ff6b1a" stopOpacity="0" />
                         </LinearGradient>
                       </Defs>
                       <Rect x="0" y="0" width="100%" height="2" fill="url(#hcBonusTop)" />
@@ -1402,9 +1404,6 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
                     <Text style={hcStyles.planetBtnText}>🚀  {t('endgame.humanCollapse.button')}</Text>
                   </TouchableOpacity>
                 </Animated.View>
-                <TouchableOpacity style={goodStyles.shareBtn} activeOpacity={0.8}>
-                  <Text style={goodStyles.shareBtnText}>↗  SHARE YOUR LEGACY</Text>
-                </TouchableOpacity>
               </View>
 
               {/* Debug back button */}
@@ -1417,7 +1416,7 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
                 </TouchableOpacity>
               )}
 
-              <View style={{ height: 32 }} />
+              <View style={{ height: 8 }} />
             </ScrollView>
           </Animated.View>
         </View>
@@ -1447,12 +1446,12 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
 
           <Animated.View style={{ flex: 1, opacity: fadeAnim }} pointerEvents="box-none">
             <ScrollView
-              contentContainerStyle={{ flexGrow: 1, paddingBottom: 30 }}
+              contentContainerStyle={{ flexGrow: 1, paddingBottom: 8 }}
               showsVerticalScrollIndicator={false}
               stickyHeaderIndices={[0]}
             >
               {/* Topbar — sticky */}
-              <View style={[clStyles.topbar, { paddingTop: Math.max(14, insets.top) }]}>
+              <View style={clStyles.topbar}>
                 <Text style={clStyles.logo}>
                   BLOCK<Text style={{ color: 'rgba(255,61,90,0.6)' }}>CHAIN</Text> TYCOON
                 </Text>
@@ -1474,8 +1473,8 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
                 <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
                   <SectionLabel label="YOUR LEGACY" accent="#ff3d5a" />
                   <View style={goodStyles.cardGrid}>
-                    <NodeStat icon="⛏" label="Blocks Mined" value={formatNumber(stats.blocksMined)} sub="+∞ by AI" variant="red" delay={200} />
-                    <NodeStat icon="◈" label="CC Earned" value={formatNumber(stats.totalCryptoCoinsEarned)} sub="CryptoCoins" variant="purple" delay={350} />
+                    <NodeStat icon="🏦" label="Blocks Mined" value={formatNumber(stats.blocksMined)} sub="+∞ by AI" variant="red" delay={200} />
+                    <NodeStat icon="🪙" label="CC Earned" value={formatNumber(stats.totalCryptoCoinsEarned)} sub="CryptoCoins" variant="purple" delay={350} />
                     <NodeStat icon="💰" label="Money Accumulated" value={formatUSD(stats.totalMoneyEarned)} sub="Total Cash" variant="purple" delay={500} />
                     <NodeStat icon="⏱" label="Run Duration" value={formatDuration(stats.runDurationMs)} sub="Real time" variant="red" delay={650} smallValue />
                   </View>
@@ -1491,8 +1490,9 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
                     <Svg width="100%" height={2} style={{ position: 'absolute', top: 0, left: 0, right: 0 }}>
                       <Defs>
                         <LinearGradient id="bonusCardTop" x1="0" y1="0" x2="1" y2="0">
-                          <Stop offset="0%" stopColor="#c4002f" stopOpacity="1" />
-                          <Stop offset="100%" stopColor="#a040ff" stopOpacity="1" />
+                          <Stop offset="0%" stopColor="#a040ff" stopOpacity="0" />
+                          <Stop offset="50%" stopColor="#a040ff" stopOpacity="0.55" />
+                          <Stop offset="100%" stopColor="#a040ff" stopOpacity="0" />
                         </LinearGradient>
                       </Defs>
                       <Rect x="0" y="0" width="100%" height="2" fill="url(#bonusCardTop)" />
@@ -1516,9 +1516,6 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
                     <Text style={clStyles.planetBtnText}>🚀  {t('endgame.collapse.button')}</Text>
                   </TouchableOpacity>
                 </Animated.View>
-                <TouchableOpacity style={goodStyles.shareBtn} activeOpacity={0.8}>
-                  <Text style={goodStyles.shareBtnText}>↗  SHARE YOUR LEGACY</Text>
-                </TouchableOpacity>
               </View>
 
               {/* Debug back button */}
@@ -1531,7 +1528,7 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
                 </TouchableOpacity>
               )}
 
-              <View style={{ height: 32 }} />
+              <View style={{ height: 8 }} />
             </ScrollView>
           </Animated.View>
         </View>
@@ -1592,8 +1589,8 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
               <View style={goodStyles.section}>
                 <SectionLabel label="YOUR LEGACY" />
                 <View style={goodStyles.cardGrid}>
-                  <NodeStat icon="⛏" label="Blocks Mined" value={`${formatNumber(stats.blocksMined)} ✓`} sub="100% Complete" variant="green" delay={200} checkBadge />
-                  <NodeStat icon="◈" label="CC Earned" value={formatNumber(stats.totalCryptoCoinsEarned)} sub="CryptoCoins" variant="cyan" delay={350} />
+                  <NodeStat icon="🏦" label="Blocks Mined" value={`${formatNumber(stats.blocksMined)} ✓`} sub="100% Complete" variant="green" delay={200} checkBadge />
+                  <NodeStat icon="🪙" label="CC Earned" value={formatNumber(stats.totalCryptoCoinsEarned)} sub="CryptoCoins" variant="cyan" delay={350} />
                   <NodeStat icon="💰" label="Money Accumulated" value={formatUSD(stats.totalMoneyEarned)} sub="Total Cash" variant="yellow" delay={500} />
                   <NodeStat icon="⏱" label="Run Duration" value={formatDuration(stats.runDurationMs)} sub="Real time" delay={650} smallValue />
                 </View>
@@ -1646,9 +1643,6 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
                   <Text style={goodStyles.startBtnText}>↺  {t('endgame.good.button')}</Text>
                 </TouchableOpacity>
               </Animated.View>
-              <TouchableOpacity style={goodStyles.shareBtn} activeOpacity={0.8}>
-                <Text style={goodStyles.shareBtnText}>↗  SHARE YOUR LEGACY</Text>
-              </TouchableOpacity>
             </View>
 
             {/* Debug back button */}
@@ -1661,7 +1655,7 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
               </TouchableOpacity>
             )}
 
-            <View style={{ height: 32 }} />
+            <View style={{ height: 8 }} />
           </ScrollView>
         </Animated.View>
       </View>
@@ -1672,7 +1666,7 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
 // ── Good ending styles ─────────────────────────────────────────────
 const goodStyles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg, overflow: 'hidden' },
-  scrollContent: { flexGrow: 1, paddingBottom: 30 },
+  scrollContent: { flexGrow: 1, paddingBottom: 8 },
   topbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 18, paddingTop: 14, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(0,255,136,0.08)', backgroundColor: 'rgba(2,8,16,0.95)' },
   logo: { fontFamily: fonts.orbitron, fontSize: 11, fontWeight: '900', letterSpacing: 2, color: colors.ng, textShadowColor: 'rgba(0,255,136,0.5)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 14 },
   runInfo: { fontFamily: fonts.mono, fontSize: 9, color: 'rgba(255,255,255,0.45)', letterSpacing: 2 },
@@ -1692,11 +1686,9 @@ const goodStyles = StyleSheet.create({
   bonusLine: { fontFamily: fonts.rajdhani, fontSize: 13, color: colors.ng, fontWeight: '600', marginBottom: 4 },
   bonusQuoteBox: { backgroundColor: 'rgba(0,229,255,0.04)', borderWidth: 1, borderColor: 'rgba(0,229,255,0.1)', borderRadius: 8, padding: 12 },
   bonusQuote: { fontFamily: fonts.rajdhani, fontSize: 13, color: 'rgba(255,255,255,0.65)', lineHeight: 21, fontStyle: 'italic' },
-  actions: { paddingHorizontal: 16, paddingBottom: 16, paddingTop: 8, gap: 8 },
-  startBtn: { padding: 18, borderRadius: 14, borderWidth: 1, borderColor: colors.ng, backgroundColor: 'rgba(0,255,136,0.08)', alignItems: 'center', justifyContent: 'center', shadowColor: colors.ng, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.15, shadowRadius: 24, elevation: 6 },
+  actions: { paddingHorizontal: 16, paddingBottom: 0, paddingTop: 8, gap: 8 },
+  startBtn: { padding: 18, borderRadius: 14, borderWidth: 1, borderColor: colors.ng, backgroundColor: 'rgba(0,255,136,0.08)', alignItems: 'center', justifyContent: 'center', shadowColor: colors.ng, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.15, shadowRadius: 24 },
   startBtnText: { fontFamily: fonts.orbitron, fontSize: 14, fontWeight: '700', letterSpacing: 4, color: colors.ng, textTransform: 'uppercase' },
-  shareBtn: { padding: 14, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)', backgroundColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
-  shareBtnText: { fontFamily: fonts.orbitron, fontSize: 11, fontWeight: '700', letterSpacing: 3, color: 'rgba(255,255,255,0.45)' },
 });
 
 export default EndingScreen;
