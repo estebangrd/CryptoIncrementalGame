@@ -361,7 +361,7 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
         <View style={styles.phaseStats}>
           <View style={styles.phaseStat}>
             <Text style={styles.phaseStatLabel}>Reward</Text>
-            <Text style={[styles.phaseStatValue, { color: colors.ny }]}>{Math.max(1, Math.floor(blockInfo.currentReward))} CC</Text>
+            <Text style={[styles.phaseStatValue, { color: colors.ny }]}>{formatNumber(blockInfo.currentReward)} CC</Text>
           </View>
           <View style={styles.phaseStat}>
             <Text style={styles.phaseStatLabel}>Halving At</Text>

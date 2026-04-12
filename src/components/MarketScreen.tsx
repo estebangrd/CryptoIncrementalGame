@@ -51,9 +51,9 @@ const MarketScreen: React.FC = () => {
   const handleSellPress = () => {
     const cc = getCryptoCoin();
     if (!cc) return;
-    const amount = Math.floor((gameState.cryptoCoins * amountPercent) / 100);
-    if (amount <= 0 || amount > gameState.cryptoCoins) return;
+    const amount = (gameState.cryptoCoins * amountPercent) / 100;
     const price = cc.currentValue;
+    if (amount <= 0 || amount > gameState.cryptoCoins) return;
     if (price <= 0 || !isFinite(price)) return;
 
     setSellConfirming(true);
@@ -63,7 +63,7 @@ const MarketScreen: React.FC = () => {
   const handleSellConfirm = () => {
     const cc = getCryptoCoin();
     if (!cc) { clearSellConfirm(); return; }
-    const amount = Math.floor((gameState.cryptoCoins * amountPercent) / 100);
+    const amount = (gameState.cryptoCoins * amountPercent) / 100;
     const price = cc.currentValue;
     if (amount <= 0 || price <= 0 || !isFinite(price)) { clearSellConfirm(); return; }
 
@@ -74,7 +74,7 @@ const MarketScreen: React.FC = () => {
   const sellPreviewMoney = (() => {
     const cc = getCryptoCoin();
     if (!cc) return 0;
-    const amount = Math.floor((gameState.cryptoCoins * amountPercent) / 100);
+    const amount = (gameState.cryptoCoins * amountPercent) / 100;
     return amount * cc.currentValue;
   })();
 

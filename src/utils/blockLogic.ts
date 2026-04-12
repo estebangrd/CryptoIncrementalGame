@@ -90,7 +90,7 @@ export const mineBlock = (gameState: GameState): GameState => {
   const newGameState = { ...gameState };
   const baseReward = calculateCurrentReward(gameState.blocksMined);
   const clickMultiplier = getClickMultiplier(gameState);
-  const reward = Math.max(1, Math.floor(baseReward * clickMultiplier));
+  const reward = baseReward * clickMultiplier;
 
   // Mine the block
   newGameState.blocksMined += 1;

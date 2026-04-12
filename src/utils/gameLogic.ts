@@ -572,9 +572,13 @@ export const formatNumber = (num: number): string => {
   const abs = Math.abs(num);
   const sign = num < 0 ? '-' : '';
   if (abs === 0) return '0';
+  if (abs < 0.001) {
+    // Scientific notation for very small values (e.g., 1.5e-6 instead of 0.0000015)
+    return sign + abs.toExponential(1);
+  }
   if (abs < 1) {
     // Adaptive precision: keep 2 significant digits so tiny values stay legible
-    // (e.g., 0.023, 0.00056) instead of collapsing to "0.0".
+    // (e.g., 0.023, 0.56) instead of collapsing to "0.0".
     return sign + Number(abs.toPrecision(2)).toString();
   }
   if (abs < 1000) return sign + trimTrailingDecimalZeros(abs.toFixed(1));
