@@ -22,7 +22,7 @@ import RNLinearGradient from 'react-native-linear-gradient';
 import { useGame } from '../contexts/GameContext';
 import { EndingType, EndgameStats } from '../types/game';
 import { calculateEndingBonus, calculateRenewableDiscount } from '../utils/endgameLogic';
-import { formatNumber, formatUSD } from '../utils/gameLogic';
+import { formatNumber, formatUSDCompact } from '../utils/gameLogic';
 import { colors, fonts } from '../config/theme';
 
 const { width: SW, height: SH } = Dimensions.get('window');
@@ -328,7 +328,7 @@ const AILevelCard: React.FC<{ level: number; delay?: number }> = ({ level, delay
     ]).start();
   }, [slideAnim, delay]);
   const ty = slideAnim.interpolate({ inputRange: [0, 1], outputRange: [16, 0] });
-  const MAX_LEVEL = 5;
+  const MAX_LEVEL = 3;
   return (
     <Animated.View style={[nsStyles.card, nsStyles.cardCyan, nsStyles.wide, { opacity: slideAnim, transform: [{ translateY: ty }] }]}>
       <Svg width="100%" height={2} style={nsStyles.topBorder}>
@@ -703,7 +703,7 @@ const CollapseAILevelCard: React.FC<{ level: number; delay?: number }> = ({ leve
     ]).start();
   }, [slideAnim, delay]);
   const ty = slideAnim.interpolate({ inputRange: [0, 1], outputRange: [16, 0] });
-  const MAX_LEVEL = 5;
+  const MAX_LEVEL = 3;
   return (
     <Animated.View style={[clStyles.aiCard, { opacity: slideAnim, transform: [{ translateY: ty }] }]}>
       <Svg width="100%" height={2} style={{ position: 'absolute', top: 0, left: 0, right: 0 }}>
@@ -1363,7 +1363,7 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
                   <View style={goodStyles.cardGrid}>
                     <HCNodeStat icon="🏦" label="Blocks Mined" value={formatNumber(stats.blocksMined)} sub="Incomplete" variant="burn" delay={200} />
                     <HCNodeStat icon="🪙" label="CC Earned" value={formatNumber(stats.totalCryptoCoinsEarned)} sub="CryptoCoins" variant="ash" delay={350} />
-                    <HCNodeStat icon="💰" label="Money Accumulated" value={formatUSD(stats.totalMoneyEarned)} sub="Total Cash" variant="ash" delay={500} />
+                    <HCNodeStat icon="💰" label="Money Accumulated" value={formatUSDCompact(stats.totalMoneyEarned)} sub="Total Cash" variant="ash" delay={500} />
                     <HCNodeStat icon="⏱" label="Run Duration" value={formatDuration(stats.runDurationMs)} sub="Real time" variant="burn" delay={650} smallValue />
                   </View>
                   <HumanCollapseResourcesBar pct={stats.planetResourcesAtEnd} delay={650} />
@@ -1475,7 +1475,7 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
                   <View style={goodStyles.cardGrid}>
                     <NodeStat icon="🏦" label="Blocks Mined" value={formatNumber(stats.blocksMined)} sub="+∞ by AI" variant="red" delay={200} />
                     <NodeStat icon="🪙" label="CC Earned" value={formatNumber(stats.totalCryptoCoinsEarned)} sub="CryptoCoins" variant="purple" delay={350} />
-                    <NodeStat icon="💰" label="Money Accumulated" value={formatUSD(stats.totalMoneyEarned)} sub="Total Cash" variant="purple" delay={500} />
+                    <NodeStat icon="💰" label="Money Accumulated" value={formatUSDCompact(stats.totalMoneyEarned)} sub="Total Cash" variant="purple" delay={500} />
                     <NodeStat icon="⏱" label="Run Duration" value={formatDuration(stats.runDurationMs)} sub="Real time" variant="red" delay={650} smallValue />
                   </View>
                   <CollapseResourcesBar pct={stats.planetResourcesAtEnd} delay={650} />
@@ -1591,7 +1591,7 @@ const EndingScreen: React.FC<EndingScreenProps> = ({
                 <View style={goodStyles.cardGrid}>
                   <NodeStat icon="🏦" label="Blocks Mined" value={`${formatNumber(stats.blocksMined)} ✓`} sub="100% Complete" variant="green" delay={200} checkBadge />
                   <NodeStat icon="🪙" label="CC Earned" value={formatNumber(stats.totalCryptoCoinsEarned)} sub="CryptoCoins" variant="cyan" delay={350} />
-                  <NodeStat icon="💰" label="Money Accumulated" value={formatUSD(stats.totalMoneyEarned)} sub="Total Cash" variant="yellow" delay={500} />
+                  <NodeStat icon="💰" label="Money Accumulated" value={formatUSDCompact(stats.totalMoneyEarned)} sub="Total Cash" variant="yellow" delay={500} />
                   <NodeStat icon="⏱" label="Run Duration" value={formatDuration(stats.runDurationMs)} sub="Real time" delay={650} smallValue />
                 </View>
                 <AILevelCard level={stats.aiLevelReached} delay={800} />

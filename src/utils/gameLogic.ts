@@ -586,7 +586,11 @@ export const formatNumber = (num: number): string => {
   if (abs < 1e9) return sign + trimTrailingDecimalZeros((abs / 1e6).toFixed(1)) + 'M';
   if (abs < 1e12) return sign + trimTrailingDecimalZeros((abs / 1e9).toFixed(1)) + 'B';
   if (abs < 1e15) return sign + trimTrailingDecimalZeros((abs / 1e12).toFixed(1)) + 'T';
-  if (abs < 1e18) return sign + trimTrailingDecimalZeros((abs / 1e15).toFixed(1)) + 'Q';
+  if (abs < 1e18) return sign + trimTrailingDecimalZeros((abs / 1e15).toFixed(1)) + 'Qa';
+  if (abs < 1e21) return sign + trimTrailingDecimalZeros((abs / 1e18).toFixed(1)) + 'Qi';
+  if (abs < 1e24) return sign + trimTrailingDecimalZeros((abs / 1e21).toFixed(1)) + 'Sx';
+  if (abs < 1e27) return sign + trimTrailingDecimalZeros((abs / 1e24).toFixed(1)) + 'Sp';
+  if (abs < 1e30) return sign + trimTrailingDecimalZeros((abs / 1e27).toFixed(1)) + 'Oc';
   return sign + abs.toExponential(2);
 };
 
@@ -687,7 +691,11 @@ export const formatUSDCompact = (num: number): string => {
   if (abs < 1e9) return sign + '$' + trimTrailingDecimalZeros((abs / 1e6).toFixed(1)) + 'M';
   if (abs < 1e12) return sign + '$' + trimTrailingDecimalZeros((abs / 1e9).toFixed(1)) + 'B';
   if (abs < 1e15) return sign + '$' + trimTrailingDecimalZeros((abs / 1e12).toFixed(1)) + 'T';
-  if (abs < 1e18) return sign + '$' + trimTrailingDecimalZeros((abs / 1e15).toFixed(1)) + 'Q';
+  if (abs < 1e18) return sign + '$' + trimTrailingDecimalZeros((abs / 1e15).toFixed(1)) + 'Qa';
+  if (abs < 1e21) return sign + '$' + trimTrailingDecimalZeros((abs / 1e18).toFixed(1)) + 'Qi';
+  if (abs < 1e24) return sign + '$' + trimTrailingDecimalZeros((abs / 1e21).toFixed(1)) + 'Sx';
+  if (abs < 1e27) return sign + '$' + trimTrailingDecimalZeros((abs / 1e24).toFixed(1)) + 'Sp';
+  if (abs < 1e30) return sign + '$' + trimTrailingDecimalZeros((abs / 1e27).toFixed(1)) + 'Oc';
   return sign + '$' + abs.toExponential(2);
 };
 
