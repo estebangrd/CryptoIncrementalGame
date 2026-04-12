@@ -480,6 +480,19 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       // If collapse or good ending already triggered, stop all production
       if (state.collapseTriggered || state.goodEndingTriggered) return state;
 
+      // Catch good ending for saves where blocksMined already reached 21M
+      // but goodEndingTriggered was never set (e.g., app reload at cap)
+      if (
+        state.blocksMined >= 21_000_000 &&
+        (state.planetResources ?? 100) > 0
+      ) {
+        return {
+          ...state,
+          goodEndingTriggered: true,
+          lastEndgameStats: buildEndgameStats(state, 'good_ending'),
+        };
+      }
+
       // Multipliers boost mining speed (more blocks/sec), NOT CC output
       const allMult = getAllMultipliers(state);
       const constrainedMiningSpeed = getConstrainedMiningSpeed(state);
