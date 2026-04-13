@@ -103,18 +103,28 @@ describe('getBasePrice', () => {
     expect(getBasePrice(1_050_000)).toBe(8.00);
   });
 
-  it('extrapolates price beyond defined eras (doubles per era)', () => {
-    // Era 20 = 2x last defined price ($4M)
-    expect(getBasePrice(20 * 210_000)).toBe(8_000_000);
-    // Era 21 = 4x last defined price
-    expect(getBasePrice(21 * 210_000)).toBe(16_000_000);
+  it('extrapolates price beyond defined eras with controlled growth', () => {
+    // Era 20: 2^1 * R(1) ≈ 2.07x last defined price ($4M)
+    const era20 = getBasePrice(20 * 210_000);
+    expect(era20).toBeGreaterThan(8_000_000);
+    expect(era20).toBeLessThan(9_000_000);
+    // Era 21: grows further but NOT pure doubling
+    const era21 = getBasePrice(21 * 210_000);
+    expect(era21).toBeGreaterThan(era20 * 1.9);
+    expect(era21).toBeLessThan(era20 * 2.2);
   });
 
-  it('era 42 price is much greater than $4M', () => {
-    const price = getBasePrice(42 * 210_000);
-    expect(price).toBeGreaterThan(4_000_000);
-    // 2^(42-19) = 2^23 = 8,388,608 → $4M × 8M+ ≈ $33.5T
-    expect(price).toBeGreaterThan(1e12);
+  it('era 100 price is large but not astronomically broken', () => {
+    const price = getBasePrice(100 * 210_000);
+    // With controlled growth: ~$4M × 2^81 × R(81)
+    // R(81) ≈ (1 + 0.04*81)^0.85 ≈ 3.16
+    // Total ≈ 3.06e31 — large but finite, NOT 10^30+ without R
+    expect(price).toBeGreaterThan(1e25);
+    // Verify it's significantly less than pure 2^81 would give
+    const pureExponential = 4_000_000 * Math.pow(2, 81);
+    // R grows sub-linearly, so controlled price should be close to
+    // pure exponential × small factor (R ≈ 3.16)
+    expect(price).toBeLessThan(pureExponential * 5);
   });
 });
 

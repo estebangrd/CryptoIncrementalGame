@@ -1,5 +1,5 @@
 import { GameState, Hardware, Upgrade, IAPState, AdState, AdBoostState, AdHashBoostState, AdMarketBoostState } from '../types/game';
-import { GENESIS_CONSTANTS, calculateDifficulty, calculateCurrentReward, calculateNextHalving, getBasePrice } from './blockLogic';
+import { GENESIS_CONSTANTS, calculateDifficulty, calculateCurrentReward, calculateNextHalving, getBasePrice, getEra } from './blockLogic';
 import { generateInitialChartWindow, getInitialPriceEngineState } from './priceEngine';
 import { getInitialEnergyState, getActiveHardwareWithEnergyConstraint } from './energyLogic';
 import { getAIProductionMultiplier, getInitialAIState } from './aiLogic';
@@ -403,7 +403,13 @@ export const updateOfflineProgress = (gameState: GameState): GameState => {
 
   const difficulty = calculateDifficulty(constrainedMiningSpeed);
   const blocksPerSec = speed / difficulty;
-  const totalBlocks = Math.floor(blocksPerSec * cappedSec);
+  const rawTotalBlocks = Math.floor(blocksPerSec * cappedSec);
+
+  // Cap offline block advancement to MAX_OFFLINE_ERA_ADVANCE eras
+  const startEra = getEra(gameState.blocksMined);
+  const maxEra = startEra + OFFLINE_SCREEN_CONFIG.MAX_OFFLINE_ERA_ADVANCE;
+  const maxBlocksByEra = (maxEra + 1) * GENESIS_CONSTANTS.HALVING_INTERVAL - gameState.blocksMined;
+  const totalBlocks = Math.min(rawTotalBlocks, maxBlocksByEra);
 
   let coinsEarned = 0;
   let blocksRemaining = totalBlocks;
@@ -641,6 +647,7 @@ export const formatUSD = (num: number): string => {
   const sign = num < 0 ? '-' : '';
   if (abs < 1e-4) return sign + '$' + abs.toExponential(2);
   if (abs < 0.01) return sign + '$' + trimUSDDecimals(abs.toFixed(6));
+  if (abs < 0.10) return sign + '$' + trimUSDDecimals(abs.toFixed(4));
   if (abs < 10) return sign + '$' + trimUSDDecimals(abs.toFixed(2));
   if (abs < 1000) return sign + '$' + abs.toFixed(2);
   if (abs < 1e6) return sign + '$' + (abs / 1e3).toFixed(2) + 'K';
@@ -930,6 +937,7 @@ export const getInitialGameState = (): GameState => {
     // Market events
     activeMarketEvents: [],
     lastRandomEventCheck: Date.now(),
+    lastPriceTickEra: 0,
     rationingPenaltyUntil: 0,
   } as GameState;
 };

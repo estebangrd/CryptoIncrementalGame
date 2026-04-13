@@ -734,6 +734,7 @@ export const PACK_CONFIG = {
 export const OFFLINE_SCREEN_CONFIG = {
   MIN_OFFLINE_SECONDS: 300,     // 5 min minimum to show modal
   MAX_OFFLINE_SECONDS: 3600,    // 1h cap on production
+  MAX_OFFLINE_ERA_ADVANCE: 2,   // max eras the player can advance while offline
   REWARD_MIN_PCT: 80,           // minimum % on ad watch
   REWARD_MAX_PCT: 100,          // maximum %
   PREMIUM_MIN_OFFLINE_SECONDS: 60, // 1 min minimum to show IAP premium modal
@@ -778,12 +779,12 @@ export const LOCAL_PROTEST_CONFIG = {
 export const PRICE_ENGINE = {
   // OU process parameters
   THETA: 0.12,          // mean-reversion speed (higher = snaps back faster)
-  SIGMA: 0.045,         // base volatility per tick
+  SIGMA: 0.055,         // base volatility per tick
   CLAMP_MIN: -0.30,     // min deviation from era base price (−30%)
   CLAMP_MAX: 0.40,      // max deviation from era base price (+40%)
 
   // Chart window size (number of price points displayed)
-  CHART_WINDOW: 30,
+  CHART_WINDOW: 120,
 
   // Market regimes: each overrides theta/sigma/drift for its duration
   REGIMES: {
