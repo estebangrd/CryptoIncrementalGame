@@ -3,6 +3,7 @@ import { GENESIS_CONSTANTS, calculateDifficulty, calculateCurrentReward, calcula
 import { generateInitialChartWindow, getInitialPriceEngineState } from './priceEngine';
 import { getInitialEnergyState, getActiveHardwareWithEnergyConstraint } from './energyLogic';
 import { getAIProductionMultiplier, getInitialAIState } from './aiLogic';
+import { getBadgeProductionMultiplier } from './prestigeLogic';
 import { hardwareProgression } from '../data/hardwareData';
 import { initialUpgrades } from '../data/gameData';
 import { cryptocurrencies } from '../data/cryptocurrencies';
@@ -148,7 +149,9 @@ export const getAllMultipliers = (gameState: GameState): number => {
     }
   }
 
-  return prestigeMultiplier * adBoostMultiplier * permanentMultiplier * iapBoosterMultiplier * aiMultiplier * adHashMultiplier;
+  const badgeProductionMultiplier = getBadgeProductionMultiplier(gameState.unlockedBadges || []);
+
+  return prestigeMultiplier * badgeProductionMultiplier * adBoostMultiplier * permanentMultiplier * iapBoosterMultiplier * aiMultiplier * adHashMultiplier;
 };
 
 /**

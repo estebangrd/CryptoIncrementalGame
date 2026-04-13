@@ -61,6 +61,20 @@ export const checkBadgeUnlocks = (gameState: GameState): string[] => {
   return unlockedBadges;
 };
 
+/** Multiplicative bonus from unlocked badges with production rewards */
+export const getBadgeProductionMultiplier = (unlockedBadges: string[]): number => {
+  return ALL_BADGES
+    .filter(b => unlockedBadges.includes(b.id) && b.reward.type === 'production')
+    .reduce((acc, b) => acc * b.reward.value, 1);
+};
+
+/** Multiplicative bonus from unlocked badges with click rewards */
+export const getBadgeClickMultiplier = (unlockedBadges: string[]): number => {
+  return ALL_BADGES
+    .filter(b => unlockedBadges.includes(b.id) && b.reward.type === 'click')
+    .reduce((acc, b) => acc * b.reward.value, 1);
+};
+
 // Keep for backwards compat (old screens might call this)
 export const getPrestigeBonus = (prestigeLevel: number): string => {
   const productionPct = Math.round(prestigeLevel * PRESTIGE_CONFIG.bonuses.productionBonus * 100);

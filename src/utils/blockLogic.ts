@@ -1,5 +1,6 @@
 import { GameState } from '../types/game';
 import { BLOCK_CONFIG } from '../config/balanceConfig';
+import { getBadgeClickMultiplier } from './prestigeLogic';
 
 // Phase 1: Genesis - Block system constants
 export const GENESIS_CONSTANTS = {
@@ -78,11 +79,14 @@ export const canMineBlock = (gameState: GameState): boolean => {
   return gameState.blocksMined < GENESIS_CONSTANTS.TOTAL_BLOCKS;
 };
 
-// Calculate click multiplier from purchased upgrades
+// Calculate click multiplier from purchased upgrades + prestige bonus
 const getClickMultiplier = (gameState: GameState): number => {
-  return gameState.upgrades
+  const upgradeMultiplier = gameState.upgrades
     .filter(u => u.purchased && u.effect.type === 'clickPower')
     .reduce((acc, u) => acc * u.effect.value, 1);
+  const prestigeClickMultiplier = gameState.prestigeClickMultiplier ?? 1;
+  const badgeClickMult = getBadgeClickMultiplier(gameState.unlockedBadges || []);
+  return upgradeMultiplier * prestigeClickMultiplier * badgeClickMult;
 };
 
 // Mine a block and return updated game state
