@@ -1,13 +1,36 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
-import Svg, { Path, Defs, LinearGradient, Stop, Circle } from 'react-native-svg';
+import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
+import Svg, { Path, Defs, LinearGradient, Stop, Circle, Line as SvgLine, Text as SvgText } from 'react-native-svg';
 import { colors, fonts } from '../config/theme';
 import { formatNumber, formatUSD } from '../utils/gameLogic';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 const CHART_HEIGHT = 90;
-const PADDING = { top: 8, bottom: 8, left: 0, right: 0 };
+const Y_LABEL_WIDTH = 44;
+const PADDING = { top: 8, bottom: 8, left: 0, right: Y_LABEL_WIDTH };
+
+/** Compact price formatter for chart Y-axis labels.
+ *  Avoids exponential notation — always shows readable decimals. */
+const formatAxisPrice = (price: number): string => {
+  if (!isFinite(price) || price === 0) return '$0';
+  const abs = Math.abs(price);
+  const sign = price < 0 ? '-' : '';
+  if (abs >= 1e6) return sign + '$' + (abs / 1e6).toFixed(1) + 'M';
+  if (abs >= 1e3) return sign + '$' + (abs / 1e3).toFixed(1) + 'K';
+  if (abs >= 1) return sign + '$' + abs.toFixed(2);
+  // Sub-dollar: show enough decimals to reach 2 significant figures
+  const decimals = Math.min(8, Math.max(2, Math.ceil(-Math.log10(abs)) + 2));
+  return sign + '$' + abs.toFixed(decimals);
+};
+
+type TimeRange = '5m' | '15m' | '30m';
+
+const RANGE_CONFIG: Record<TimeRange, { points: number; labels: [string, string, string] }> = {
+  '5m':  { points: 20,  labels: ['5m ago', '2m ago', 'Now'] },
+  '15m': { points: 60,  labels: ['15m ago', '7m ago', 'Now'] },
+  '30m': { points: 120, labels: ['30m ago', '15m ago', 'Now'] },
+};
 
 interface PriceChartProps {
   priceHistory: number[];
@@ -15,6 +38,7 @@ interface PriceChartProps {
 
 const PriceChart: React.FC<PriceChartProps> = ({ priceHistory }) => {
   const [chartWidth, setChartWidth] = useState(300);
+  const [timeRange, setTimeRange] = useState<TimeRange>('30m');
   const pulseAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -36,28 +60,34 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceHistory }) => {
     );
   }
 
-  const maxPrice = Math.max(...priceHistory);
-  const minPrice = Math.min(...priceHistory);
+  // Slice history based on selected time range
+  const { points: rangePoints, labels: xLabels } = RANGE_CONFIG[timeRange];
+  const visibleHistory = priceHistory.length <= rangePoints
+    ? priceHistory
+    : priceHistory.slice(-rangePoints);
+
+  const maxPrice = Math.max(...visibleHistory);
+  const minPrice = Math.min(...visibleHistory);
   const priceRange = maxPrice - minPrice || maxPrice * 0.01;
 
   const innerW = chartWidth - PADDING.left - PADDING.right;
   const innerH = CHART_HEIGHT - PADDING.top - PADDING.bottom;
 
-  const toX = (i: number) => PADDING.left + (i / (priceHistory.length - 1)) * innerW;
+  const toX = (i: number) => PADDING.left + (i / (visibleHistory.length - 1)) * innerW;
   const toY = (p: number) => PADDING.top + (1 - (p - minPrice) / priceRange) * innerH;
 
-  const linePath = priceHistory
+  const linePath = visibleHistory
     .map((p, i) => `${i === 0 ? 'M' : 'L'}${toX(i).toFixed(2)},${toY(p).toFixed(2)}`)
     .join(' ');
 
-  const lastX = toX(priceHistory.length - 1);
-  const lastY = toY(priceHistory[priceHistory.length - 1]);
+  const lastX = toX(visibleHistory.length - 1);
+  const lastY = toY(visibleHistory[visibleHistory.length - 1]);
   const firstX = toX(0).toFixed(2);
   const bottomY = (PADDING.top + innerH).toFixed(2);
   const areaPath = `${linePath} L${lastX.toFixed(2)},${bottomY} L${firstX},${bottomY} Z`;
 
-  const currentPrice = priceHistory[priceHistory.length - 1];
-  const firstPrice = priceHistory[0];
+  const currentPrice = visibleHistory[visibleHistory.length - 1];
+  const firstPrice = visibleHistory[0];
   const priceChange = ((currentPrice - firstPrice) / firstPrice) * 100;
   const isPositive = priceChange >= 0;
   const accentColor = isPositive ? colors.ng : colors.nr;
@@ -65,6 +95,11 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceHistory }) => {
 
   const pulseR = pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [3.5, 8] });
   const pulseOpacity = pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [0.55, 0] });
+
+  // Y-axis reference lines
+  const yLabelX = PADDING.left + innerW + 4;
+  const showMid = priceRange > maxPrice * 0.005; // show middle line if range > 0.5%
+  const midPrice = (maxPrice + minPrice) / 2;
 
   return (
     <View style={styles.container}>
@@ -88,6 +123,60 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceHistory }) => {
               <Stop offset="100%" stopColor={accentColor} stopOpacity="0.02" />
             </LinearGradient>
           </Defs>
+
+          {/* Y-axis reference lines */}
+          <SvgLine
+            x1={PADDING.left} y1={toY(maxPrice)}
+            x2={PADDING.left + innerW} y2={toY(maxPrice)}
+            stroke="rgba(255,255,255,0.06)"
+            strokeWidth={0.5}
+            strokeDasharray="3,3"
+          />
+          <SvgLine
+            x1={PADDING.left} y1={toY(minPrice)}
+            x2={PADDING.left + innerW} y2={toY(minPrice)}
+            stroke="rgba(255,255,255,0.06)"
+            strokeWidth={0.5}
+            strokeDasharray="3,3"
+          />
+          {showMid && (
+            <SvgLine
+              x1={PADDING.left} y1={toY(midPrice)}
+              x2={PADDING.left + innerW} y2={toY(midPrice)}
+              stroke="rgba(255,255,255,0.04)"
+              strokeWidth={0.5}
+              strokeDasharray="2,4"
+            />
+          )}
+
+          {/* Y-axis labels */}
+          <SvgText
+            x={yLabelX} y={toY(maxPrice) + 3}
+            fill="rgba(255,255,255,0.35)"
+            fontSize={9}
+            fontFamily={fonts.mono}
+          >
+            {formatAxisPrice(maxPrice)}
+          </SvgText>
+          <SvgText
+            x={yLabelX} y={toY(minPrice) + 3}
+            fill="rgba(255,255,255,0.35)"
+            fontSize={9}
+            fontFamily={fonts.mono}
+          >
+            {formatAxisPrice(minPrice)}
+          </SvgText>
+          {showMid && (
+            <SvgText
+              x={yLabelX} y={toY(midPrice) + 3}
+              fill="rgba(255,255,255,0.25)"
+              fontSize={9}
+              fontFamily={fonts.mono}
+            >
+              {formatAxisPrice(midPrice)}
+            </SvgText>
+          )}
+
           <Path d={areaPath} fill={`url(#${gradientId})`} />
           <Path
             d={linePath}
@@ -110,10 +199,26 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceHistory }) => {
         </Svg>
       </View>
 
+      {/* Time range selector chips */}
+      <View style={styles.rangeRow}>
+        {(['5m', '15m', '30m'] as TimeRange[]).map((r) => (
+          <TouchableOpacity
+            key={r}
+            style={[styles.rangeChip, timeRange === r && styles.rangeChipActive]}
+            onPress={() => setTimeRange(r)}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.rangeChipText, timeRange === r && styles.rangeChipTextActive]}>
+              {r.toUpperCase()}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
       <View style={styles.xAxis}>
-        <Text style={styles.xLabel}>30m ago</Text>
-        <Text style={styles.xLabel}>15m ago</Text>
-        <Text style={styles.xLabel}>Now</Text>
+        {xLabels.map((label, i) => (
+          <Text key={i} style={styles.xLabel}>{label}</Text>
+        ))}
       </View>
     </View>
   );
@@ -163,14 +268,42 @@ const styles = StyleSheet.create({
   chartWrap: {
     width: '100%',
   },
+  rangeRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 6,
+    marginBottom: 2,
+  },
+  rangeChip: {
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  rangeChipActive: {
+    borderColor: colors.ng,
+    backgroundColor: 'rgba(0,255,136,0.1)',
+  },
+  rangeChipText: {
+    fontFamily: fonts.mono,
+    fontSize: 10,
+    letterSpacing: 1,
+    color: 'rgba(255,255,255,0.35)',
+  },
+  rangeChipTextActive: {
+    color: colors.ng,
+  },
   xAxis: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 4,
+    paddingRight: Y_LABEL_WIDTH,
   },
   xLabel: {
     fontFamily: fonts.mono,
-    fontSize: 8,
+    fontSize: 10,
     color: colors.dim,
     letterSpacing: 1,
   },
