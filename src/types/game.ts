@@ -396,6 +396,7 @@ export interface GameState {
   // Market events (price unification)
   activeMarketEvents: ActiveMarketEvent[];
   lastRandomEventCheck: number;
+  lastPriceTickEra: number;
   rationingPenaltyUntil: number;
 }
 

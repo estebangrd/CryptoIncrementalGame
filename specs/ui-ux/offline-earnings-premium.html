@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Offline Miner — Premium</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ng: #00ff88; --nc: #00e5ff; --ny: #ffd600; --nr: #ff3d5a; --np: #a040ff;
+    --bg: #020810; --dim: rgba(255,255,255,0.4); --dim2: rgba(255,255,255,0.18);
+    /* premium accent — warm gold for IAP */
+    --gold: #ffd600;
+    --gold-dim: rgba(255,214,0,0.55);
+    --gold-glow: rgba(255,214,0,0.15);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;overflow:hidden;}
+  body{background:var(--bg);font-family:'Rajdhani',sans-serif;color:#fff;position:relative;}
+  body::before{
+    content:'';position:fixed;inset:0;
+    background-image:linear-gradient(rgba(255,214,0,0.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,214,0,0.018) 1px,transparent 1px);
+    background-size:40px 40px;pointer-events:none;z-index:0;
+  }
+  body::after{
+    content:'';position:fixed;inset:0;
+    background:radial-gradient(ellipse at 50% 0%,rgba(255,214,0,0.05) 0%,transparent 55%);
+    pointer-events:none;z-index:0;
+  }
+  .scanline{position:fixed;top:0;left:0;right:0;height:1px;background:rgba(255,214,0,.04);animation:scan 8s linear infinite;pointer-events:none;z-index:200;}
+  @keyframes scan{0%{top:0}100%{top:100vh}}
+  @keyframes fadeOut{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-8px)}}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+  .shell{
+    position:relative;z-index:1;
+    max-width:420px;margin:0 auto;
+    height:100vh;display:flex;flex-direction:column;
+    overflow:hidden;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar{
+    flex-shrink:0;display:flex;align-items:center;justify-content:space-between;
+    padding:14px 18px 10px;
+    border-bottom:1px solid rgba(255,214,0,.12);
+    background:rgba(2,8,16,.97);
+  }
+  .logo{font-family:'Orbitron',monospace;font-size:12px;font-weight:900;letter-spacing:2.5px;color:var(--ng);text-shadow:0 0 14px rgba(0,255,136,.5);}
+  .logo span{color:var(--nc);}
+  .run-info{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:2px;}
+
+  /* ── MAIN ── */
+  .main{
+    flex:1;overflow-y:auto;scrollbar-width:none;
+    padding:24px 18px 32px;
+    display:flex;flex-direction:column;gap:14px;
+  }
+  .main::-webkit-scrollbar{display:none;}
+
+  /* ── MINER STATUS HEADER ── */
+  .miner-header{
+    background:linear-gradient(135deg,rgba(255,214,0,.07),rgba(255,214,0,.03));
+    border:1px solid rgba(255,214,0,.28);
+    border-radius:14px;
+    padding:16px 18px;
+    position:relative;overflow:hidden;
+  }
+  .miner-header::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,transparent,var(--gold),transparent);
+    opacity:.6;
+  }
+  .mh-top{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .mh-icon{
+    width:38px;height:38px;border-radius:10px;
+    background:rgba(255,214,0,.1);border:1px solid rgba(255,214,0,.3);
+    display:flex;align-items:center;justify-content:center;font-size:20px;
+    flex-shrink:0;
+  }
+  .mh-text{}
+  .mh-badge{
+    font-family:'Share Tech Mono',monospace;font-size:7px;letter-spacing:3px;
+    color:var(--gold-dim);margin-bottom:3px;
+  }
+  .mh-title{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:var(--gold);}
+
+  /* booster remaining bar */
+  .booster-bar-wrap{display:flex;flex-direction:column;gap:5px;}
+  .booster-bar-labels{display:flex;justify-content:space-between;align-items:center;}
+  .bbl-left{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--dim);}
+  .bbl-right{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;color:var(--gold);}
+  .booster-bar{height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;}
+  .booster-fill{
+    height:100%;border-radius:3px;
+    background:linear-gradient(90deg,rgba(255,214,0,.5),var(--gold));
+    box-shadow:0 0 8px rgba(255,214,0,.3);
+    transition:width 1s ease;
+  }
+
+  /* ── TIME AWAY ── */
+  .time-away{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    padding:10px 14px;
+    background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);
+    border-radius:10px;
+  }
+  .ta-icon{font-size:16px;}
+  .ta-text{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--dim);letter-spacing:2px;}
+  .ta-time{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;color:#fff;}
+
+  /* ── NARRATIVE LOG ── */
+  .narrative-card{
+    background:rgba(0,0,0,.35);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:12px;padding:14px 16px;
+    position:relative;
+  }
+  .narrative-card::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,transparent,rgba(255,214,0,.4),transparent);opacity:.5;
+  }
+  .log-header{display:flex;align-items:center;gap:6px;margin-bottom:10px;}
+  .log-dot{width:5px;height:5px;border-radius:50%;background:var(--gold);box-shadow:0 0 5px var(--gold);animation:blink 1s step-end infinite;}
+  .log-source{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:2px;color:rgba(255,214,0,.5);text-transform:uppercase;}
+  .log-lines{display:flex;flex-direction:column;gap:5px;}
+  .log-line{font-family:'Share Tech Mono',monospace;font-size:10px;line-height:1.6;color:rgba(255,255,255,.5);}
+  .log-line .ts{color:rgba(255,214,0,.28);margin-right:8px;}
+  .log-line .acc{color:var(--ng);}
+  .log-line .neg{color:var(--nr);}
+  .log-line .gold{color:var(--gold);}
+
+  /* ── EARNINGS BREAKDOWN ── */
+  .breakdown-card{
+    background:linear-gradient(135deg,rgba(0,255,136,.05),rgba(0,229,255,.03));
+    border:1px solid rgba(0,255,136,.18);
+    border-radius:16px;padding:18px;
+    position:relative;overflow:hidden;
+  }
+  .breakdown-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--ng),var(--nc));}
+
+  .bc-label{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:4px;color:var(--dim);text-transform:uppercase;margin-bottom:14px;}
+
+  .bc-rows{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+  .bc-row{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(0,0,0,.2);border-radius:8px;}
+  .bc-row-label{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--dim);}
+  .bc-row-val{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;}
+  .bc-row-val.pos{color:var(--ng);}
+  .bc-row-val.neg{color:var(--nr);}
+
+  .bc-divider{height:1px;background:rgba(255,255,255,.06);margin:2px 0;}
+
+  .bc-net-row{display:flex;justify-content:space-between;align-items:center;padding:10px 10px 2px;}
+  .bc-net-label{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:rgba(0,255,136,.6);}
+  .bc-net-val{
+    font-family:'Orbitron',monospace;font-size:24px;font-weight:900;
+    color:var(--ng);text-shadow:0 0 20px rgba(0,255,136,.4);
+    animation:countUp .8s ease-out forwards;
+  }
+  @keyframes countUp{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:translateY(0)}}
+  .bc-net-unit{font-family:'Share Tech Mono',monospace;font-size:11px;color:rgba(0,255,136,.5);letter-spacing:2px;margin-left:4px;}
+
+  /* auto-credited badge */
+  .auto-badge{
+    display:flex;align-items:center;gap:6px;margin-top:10px;
+    padding:7px 12px;
+    background:rgba(255,214,0,.05);border:1px solid rgba(255,214,0,.18);
+    border-radius:8px;
+    font-family:'Share Tech Mono',monospace;font-size:9px;color:rgba(255,214,0,.6);letter-spacing:1px;
+  }
+
+  /* ── CONTINUE BTN ── */
+  .continue-btn{
+    width:100%;padding:16px;border-radius:12px;border:none;
+    background:linear-gradient(135deg,rgba(255,214,0,.12),rgba(255,214,0,.06));
+    border:1px solid rgba(255,214,0,.45);
+    color:var(--gold);font-family:'Orbitron',monospace;
+    font-size:13px;font-weight:700;letter-spacing:3px;
+    cursor:pointer;position:relative;overflow:hidden;
+    box-shadow:0 0 20px rgba(255,214,0,.1);
+    display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .continue-btn::before{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(135deg,transparent 30%,rgba(255,214,0,.07) 50%,transparent 70%);
+    transform:translateX(-100%);animation:shimmer 2.5s infinite;
+  }
+  @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+  .continue-btn:active{transform:scale(.97);}
+</style>
+</head>
+<body>
+
+<div class="scanline"></div>
+
+<div class="shell">
+
+  <div class="topbar">
+    <div class="logo">BLOCK<span>CHAIN</span> TYCOON</div>
+    <div class="run-info">RUN #2 · GENESIS</div>
+  </div>
+
+  <div class="main">
+
+    <!-- Miner status -->
+    <div class="miner-header">
+      <div class="mh-top">
+        <div class="mh-icon">⚡</div>
+        <div class="mh-text">
+          <div class="mh-badge">IAP ACTIVO</div>
+          <div class="mh-title">Offline Miner</div>
+        </div>
+      </div>
+      <div class="booster-bar-wrap">
+        <div class="booster-bar-labels">
+          <div class="bbl-left">TIEMPO RESTANTE</div>
+          <div class="bbl-right" id="boosterRemaining">~5h 46m</div>
+        </div>
+        <div class="booster-bar">
+          <div class="booster-fill" id="boosterFill" style="width:72%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Time away -->
+    <div class="time-away">
+      <div class="ta-icon">⏱</div>
+      <div class="ta-text">TIEMPO FUERA</div>
+      <div class="ta-time" id="timeAway">2h 14m</div>
+    </div>
+
+    <!-- Narrative log -->
+    <div class="narrative-card">
+      <div class="log-header">
+        <div class="log-dot"></div>
+        <div class="log-source">OFFLINE MINER · Log de actividad</div>
+      </div>
+      <div class="log-lines" id="logLines"></div>
+    </div>
+
+    <!-- Earnings breakdown -->
+    <div class="breakdown-card">
+      <div class="bc-label">Desglose de producción</div>
+      <div class="bc-rows">
+        <div class="bc-row">
+          <div class="bc-row-label">⛏ CC MINADOS BRUTOS</div>
+          <div class="bc-row-val pos" id="grossVal">+914.4K CC</div>
+        </div>
+        <div class="bc-row">
+          <div class="bc-row-label">⚡ FEE DE ELECTRICIDAD</div>
+          <div class="bc-row-val neg" id="feeVal">−67.2K CC</div>
+        </div>
+      </div>
+      <div class="bc-divider"></div>
+      <div class="bc-net-row">
+        <div class="bc-net-label">NETO ACREDITADO</div>
+        <div>
+          <span class="bc-net-val" id="netVal">847.2K</span>
+          <span class="bc-net-unit">CC</span>
+        </div>
+      </div>
+      <div class="auto-badge">
+        ✓ &nbsp;Acreditado automáticamente a tu balance
+      </div>
+    </div>
+
+    <!-- Continue -->
+    <button class="continue-btn" onclick="closeScreen()">
+      ⛏ CONTINUAR MINANDO
+    </button>
+
+  </div>
+</div>
+
+<script>
+  // ── CONFIG (estos valores vendrían del game state) ──
+  const offlineSec   = 8040;       // 2h 14m
+  const grossCoins   = 914400;
+  const feeCoins     = 67200;
+  const netCoins     = grossCoins - feeCoins;   // 847200
+  const boosterTotalSec   = 28800;  // 8h
+  const boosterUsedSec    = offlineSec;
+  const boosterRemainSec  = boosterTotalSec - boosterUsedSec;
+
+  // ── FORMAT ──
+  const fmt = n => {
+    if(n >= 1000000) return (n/1000000).toFixed(2)+'M';
+    if(n >= 1000)    return (n/1000).toFixed(1)+'K';
+    return n.toString();
+  };
+  const fmtTime = s => {
+    const h = Math.floor(s/3600);
+    const m = Math.floor((s%3600)/60);
+    return h > 0 ? `${h}h ${m}m` : `${m}m`;
+  };
+
+  // ── BOOSTER BAR ──
+  const remainPct = (boosterRemainSec / boosterTotalSec) * 100;
+  document.getElementById('boosterFill').style.width = remainPct + '%';
+  document.getElementById('boosterRemaining').textContent = '~' + fmtTime(boosterRemainSec);
+  document.getElementById('timeAway').textContent = fmtTime(offlineSec);
+
+  // ── LOG LINES ──
+  const logs = [
+    {ts:'[02:14:00]', text:'Offline Miner activo. Velocidad: <span class="gold">50% de producción</span>.'},
+    {ts:'[02:14:01]', text:'Bloques procesados: <span class="acc">13,400</span>. CC brutos generados.'},
+    {ts:'[02:14:02]', text:'Fee de electricidad aplicado: <span class="neg">−' + fmt(feeCoins) + ' CC</span>.'},
+    {ts:'[02:14:03]', text:'Neto acreditado a balance: <span class="acc">+' + fmt(netCoins) + ' CC</span>.'},
+  ];
+  document.getElementById('logLines').innerHTML = logs.map(l =>
+    `<div class="log-line"><span class="ts">${l.ts}</span>${l.text}</div>`
+  ).join('');
+
+  // ── VALORES DEL DESGLOSE ──
+  document.getElementById('grossVal').textContent = '+' + fmt(grossCoins) + ' CC';
+  document.getElementById('feeVal').textContent   = '−' + fmt(feeCoins)  + ' CC';
+
+  // ── COUNT UP NETO ──
+  const target = netCoins / 1000;
+  const dur = 900, t0 = performance.now();
+  function countUp(now) {
+    const p = Math.min((now - t0) / dur, 1);
+    const ease = 1 - Math.pow(1 - p, 3);
+    document.getElementById('netVal').textContent = (target * ease).toFixed(1) + 'K';
+    if(p < 1) requestAnimationFrame(countUp);
+  }
+  requestAnimationFrame(countUp);
+
+  function closeScreen() {
+    document.querySelector('.shell').style.animation = 'fadeOut .3s ease-out forwards';
+    setTimeout(() => document.querySelector('.shell').style.display = 'none', 300);
+  }
+</script>
+</body>
+</html>

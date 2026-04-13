@@ -35,8 +35,15 @@ describe('formatUSD — USD price formatter', () => {
     expect(formatUSD(123456)).toBe('$123.46K');
   });
 
-  it('shows 2 decimal places for prices between $0.01 and $1', () => {
-    expect(formatUSD(0.0123)).toBe('$0.01');
+  it('shows 4 decimal places for prices between $0.01 and $0.10', () => {
+    expect(formatUSD(0.0123)).toBe('$0.0123');
+    expect(formatUSD(0.0700)).toBe('$0.07');
+    expect(formatUSD(0.0553)).toBe('$0.0553');
+  });
+
+  it('shows 2 decimal places for prices between $0.10 and $1', () => {
+    expect(formatUSD(0.50)).toBe('$0.50');
+    expect(formatUSD(0.99)).toBe('$0.99');
   });
 
   it('shows 6 decimal places for prices below $0.01', () => {

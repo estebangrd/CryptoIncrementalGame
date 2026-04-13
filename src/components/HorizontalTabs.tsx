@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -33,6 +33,15 @@ interface HorizontalTabsProps {
 const HorizontalTabs: React.FC<HorizontalTabsProps> = ({ onMineBlock, onClickBoostChange, t, bottomOffset = 0 }) => {
   const { gameState } = useGame();
   const [activeTab, setActiveTab] = useState<ActiveTab>('mining');
+
+  // Reset to mining tab after prestige/ending restart
+  const prevPrestigeLevel = useRef(gameState.prestigeLevel);
+  useEffect(() => {
+    if (gameState.prestigeLevel !== prevPrestigeLevel.current) {
+      setActiveTab('mining');
+      prevPrestigeLevel.current = gameState.prestigeLevel;
+    }
+  }, [gameState.prestigeLevel]);
 
   const hasUnprofitableHardware = useMemo(() => {
     const difficulty = calculateDifficulty(getConstrainedMiningSpeed(gameState));

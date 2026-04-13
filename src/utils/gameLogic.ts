@@ -398,7 +398,7 @@ export const updateOfflineProgress = (gameState: GameState): GameState => {
 
   const constrainedMiningSpeed = getConstrainedMiningSpeed(gameState);
   const allMult = getAllMultipliers(gameState);
-  const speed = constrainedMiningSpeed * allMult;
+  const speed = constrainedMiningSpeed * allMult * BALANCE_CONFIG.OFFLINE_EARNINGS_MULTIPLIER;
 
   if (speed <= 0) {
     return { ...gameState, lastSaveTime: now };
