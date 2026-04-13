@@ -40,7 +40,7 @@ import {
   registerDevPurchaseCallback,
 } from '../services/IAPService';
 import { purchaseUpdatedListener, purchaseErrorListener } from 'react-native-iap';
-import { BOOSTER_CONFIG, STARTER_PACK_REWARDS, ENERGY_CONFIG, PACK_CONFIG, REGULATORY_EVENT_CONFIG, MARKET_OPPORTUNITY_CONFIG, LOCAL_PROTEST_CONFIG, ELECTRICITY_FEE_CONFIG, AD_BUBBLE_CONFIG, AI_CONFIG, MARKET_EVENT_CONFIG, LOCAL_PROTEST_RATIONING, BLOCK_CONFIG } from '../config/balanceConfig';
+import { BOOSTER_CONFIG, STARTER_PACK_REWARDS, ENERGY_CONFIG, PACK_CONFIG, REGULATORY_EVENT_CONFIG, MARKET_OPPORTUNITY_CONFIG, LOCAL_PROTEST_CONFIG, ELECTRICITY_FEE_CONFIG, AD_BUBBLE_CONFIG, AI_CONFIG, MARKET_EVENT_CONFIG, LOCAL_PROTEST_RATIONING, BLOCK_CONFIG, PRICE_ENGINE } from '../config/balanceConfig';
 import { buildEndgameStats, calculateTotalEndgameProductionMultiplier } from '../utils/endgameLogic';
 import Toast, { ToastInfo, MarketEventToastData } from '../components/Toast';
 import { IAP_PRODUCT_IDS } from '../config/iapConfig';
@@ -393,6 +393,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         // Market events migration
         activeMarketEvents: filterExpiredEvents(action.payload.activeMarketEvents ?? [], Date.now()),
         lastRandomEventCheck: action.payload.lastRandomEventCheck ?? Date.now(),
+        lastPriceTickEra: action.payload.lastPriceTickEra ?? Math.floor((action.payload.blocksMined ?? 0) / BLOCK_CONFIG.HALVING_INTERVAL),
         rationingPenaltyUntil: action.payload.rationingPenaltyUntil ?? 0,
         collapseTriggered: action.payload.collapseTriggered ?? false,
         goodEndingTriggered: action.payload.goodEndingTriggered ?? false,
@@ -471,6 +472,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         activeBannerEvent: null,
         activeMarketEvents: [],
         lastRandomEventCheck: Date.now(),
+        lastPriceTickEra: 0,
         rationingPenaltyUntil: 0,
       };
       return recalculateGameStats(resetState);
@@ -503,6 +505,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       const blocksToMine = Math.floor(accumulated);
 
       if (blocksToMine > 0 && canMineBlock(state)) {
+        const now = Date.now();
         let newState = { ...state };
 
         // Mine blocks — CC earned is purely blocks × reward (no multiplier on CC)
@@ -664,51 +667,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           newState.activeBannerEvent = null;
         }
 
-        // ── Market events tick ──────────────────────────────────────────
-        const now = Date.now();
-
-        // a) Filter expired market events
-        newState.activeMarketEvents = filterExpiredEvents(newState.activeMarketEvents ?? [], now);
-
-        // b) Halving transition detection
-        const HALVING_INTERVAL = BLOCK_CONFIG.HALVING_INTERVAL;
-        const prevEra = Math.floor(state.blocksMined / HALVING_INTERVAL);
-        const newEra = Math.floor(newState.blocksMined / HALVING_INTERVAL);
-        if (newEra > prevEra) {
-          // Halving just happened
-          newState.activeMarketEvents = removeEvent(newState.activeMarketEvents, 'halving_anticipation');
-          newState.activeMarketEvents = addOrRefreshEvent(newState.activeMarketEvents, 'halving_shock', now);
-        }
-
-        // c) Halving anticipation — dynamic threshold scales with mining speed
-        //    to guarantee at least minWindowSeconds of anticipation window
-        const halvingCfg = MARKET_EVENT_CONFIG.halving_anticipation;
-        const dynamicThreshold = Math.max(
-          halvingCfg.blocksThreshold,
-          Math.ceil(effectiveBlocksPerSec * halvingCfg.minWindowSeconds),
-        );
-        if (
-          getBlocksUntilHalving(newState.blocksMined) <= dynamicThreshold &&
-          !isEventActive(newState.activeMarketEvents, 'halving_anticipation') &&
-          !isEventActive(newState.activeMarketEvents, 'halving_shock')
-        ) {
-          newState.activeMarketEvents = addOrRefreshEvent(newState.activeMarketEvents, 'halving_anticipation', now);
-        }
-
-        // f) Random events (whale_dump, media_hype) — gated: 5k blocks OR 10 sells
-        const lastCheck = newState.lastRandomEventCheck ?? 0;
-        const randomEventsUnlocked = newState.blocksMined >= 5000 || (newState.totalSellCount || 0) >= 10;
-        if (randomEventsUnlocked && now - lastCheck >= MARKET_EVENT_CONFIG.RANDOM_CHECK_INTERVAL_MS) {
-          newState.lastRandomEventCheck = now;
-          if (Math.random() < MARKET_EVENT_CONFIG.whale_dump.probability) {
-            newState.activeMarketEvents = addOrRefreshEvent(newState.activeMarketEvents, 'whale_dump', now);
-          }
-          if (Math.random() < MARKET_EVENT_CONFIG.media_hype.probability) {
-            newState.activeMarketEvents = addOrRefreshEvent(newState.activeMarketEvents, 'media_hype', now);
-          }
-        }
-
-        // g) Auto-expire rationing penalty
+        // Auto-expire rationing penalty
         if (newState.rationingPenaltyUntil > 0 && now >= newState.rationingPenaltyUntil) {
           newState.rationingPenaltyUntil = 0;
         }
@@ -822,6 +781,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         activeBannerEvent: null,
         activeMarketEvents: [],
         lastRandomEventCheck: Date.now(),
+        lastPriceTickEra: 0,
         rationingPenaltyUntil: 0,
       };
       return recalculateGameStats(prestigedState);
@@ -834,7 +794,56 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       return state;
     }
     case 'ADVANCE_PRICE_INDEX': {
-      // OU tick: generate next price from mean-reverting process
+      const now = Date.now();
+
+      // ── Market events tick (synchronized with price) ────────────────
+
+      // a) Filter expired market events
+      let events = filterExpiredEvents(state.activeMarketEvents ?? [], now);
+
+      // b) Halving transition detection — compare stored era with current
+      const HALVING_INTERVAL = BLOCK_CONFIG.HALVING_INTERVAL;
+      const currentEra = Math.floor(state.blocksMined / HALVING_INTERVAL);
+      const lastEra = state.lastPriceTickEra ?? currentEra;
+      if (currentEra > lastEra) {
+        events = removeEvent(events, 'halving_anticipation');
+        events = addOrRefreshEvent(events, 'halving_shock', now);
+      }
+
+      // c) Halving anticipation — dynamic threshold scales with mining speed
+      const halvingCfg = MARKET_EVENT_CONFIG.halving_anticipation;
+      const constrainedSpeed = getConstrainedMiningSpeed(state);
+      const priceMult = getAllMultipliers(state);
+      const boosted = constrainedSpeed * priceMult;
+      const diff = calculateDifficulty(constrainedSpeed);
+      const blocksPerSec = diff > 0 ? boosted / diff : 0;
+      const dynamicThreshold = Math.max(
+        halvingCfg.blocksThreshold,
+        Math.ceil(blocksPerSec * halvingCfg.minWindowSeconds),
+      );
+      if (
+        getBlocksUntilHalving(state.blocksMined) <= dynamicThreshold &&
+        !isEventActive(events, 'halving_anticipation') &&
+        !isEventActive(events, 'halving_shock')
+      ) {
+        events = addOrRefreshEvent(events, 'halving_anticipation', now);
+      }
+
+      // d) Random events (whale_dump, media_hype) — gated: 5k blocks OR 10 sells
+      let newLastRandomCheck = state.lastRandomEventCheck ?? 0;
+      const randomUnlocked = state.blocksMined >= 5000 || (state.totalSellCount || 0) >= 10;
+      if (randomUnlocked && now - newLastRandomCheck >= MARKET_EVENT_CONFIG.RANDOM_CHECK_INTERVAL_MS) {
+        newLastRandomCheck = now;
+        if (Math.random() < MARKET_EVENT_CONFIG.whale_dump.probability) {
+          events = addOrRefreshEvent(events, 'whale_dump', now);
+        }
+        if (Math.random() < MARKET_EVENT_CONFIG.media_hype.probability) {
+          events = addOrRefreshEvent(events, 'media_hype', now);
+        }
+      }
+
+      // ── OU tick: generate next price from mean-reverting process ─────
+
       const engineState = {
         priceDeviation: state.priceDeviation ?? 0,
         priceRegime: state.priceRegime ?? 'normal',
@@ -845,30 +854,33 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       // Era transition smoothing: if era changed, recalc deviation
       const prevPrices = state.priceHistory?.['cryptocoin']?.prices ?? [];
       const lastPrice = prevPrices.length > 0 ? prevPrices[prevPrices.length - 1] : ouResult.price;
-      const eraChanged = prevPrices.length > 0 && getBasePrice(state.blocksMined) !== getBasePrice(Math.max(0, state.blocksMined - 1));
       let finalState = ouResult.state;
       let finalPrice = ouResult.price;
-      if (eraChanged) {
+      if (currentEra > lastEra && prevPrices.length > 0) {
         const newDev = smoothEraTransition(lastPrice, state.blocksMined);
         finalState = { ...finalState, priceDeviation: newDev };
         finalPrice = getBasePrice(state.blocksMined) * (1 + newDev);
       }
 
       // Apply market event composite multiplier to the visible price
-      finalPrice *= getCompositeMultiplier(state.activeMarketEvents ?? []);
+      finalPrice *= getCompositeMultiplier(events);
 
-      const newWindow = [...prevPrices, finalPrice].slice(-30);
+      const chartWindow = PRICE_ENGINE.CHART_WINDOW;
+      const newWindow = [...prevPrices, finalPrice].slice(-chartWindow);
       return {
         ...state,
         priceDeviation: finalState.priceDeviation,
         priceRegime: finalState.priceRegime,
         priceRegimeTicksLeft: finalState.priceRegimeTicksLeft,
+        activeMarketEvents: events,
+        lastPriceTickEra: currentEra,
+        lastRandomEventCheck: newLastRandomCheck,
         cryptocurrencies: state.cryptocurrencies.map(c =>
           c.id === 'cryptocoin' ? { ...c, currentValue: finalPrice } : c
         ),
         priceHistory: {
           ...state.priceHistory,
-          cryptocoin: { prices: newWindow, lastUpdate: Date.now() },
+          cryptocoin: { prices: newWindow, lastUpdate: now },
         },
       };
     }
@@ -1668,6 +1680,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         activeBannerEvent: null,
         activeMarketEvents: [],
         lastRandomEventCheck: Date.now(),
+        lastPriceTickEra: 0,
         rationingPenaltyUntil: 0,
       };
       return recalculateGameStats(prestigedState);
@@ -2064,11 +2077,11 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return () => clearInterval(interval);
   }, []);
 
-  // Advance LTC price index every minute
+  // Advance price index every 15 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       dispatch({ type: 'ADVANCE_PRICE_INDEX' });
-    }, 60000);
+    }, 15000);
     return () => clearInterval(interval);
   }, []);
 
