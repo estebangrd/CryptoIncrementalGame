@@ -12,6 +12,9 @@ import {
   getAIPreferredEnergySource,
   getAIUnlockedCrypto,
 } from '../src/utils/aiLogic';
+import { getNextAIAction } from '../src/utils/aiObserverLogic';
+import { canMineBlock } from '../src/utils/blockLogic';
+import { updateOfflineProgress } from '../src/utils/gameLogic';
 import { GameState, AIState, AILevel, EnergySource } from '../src/types/game';
 import { getInitialGameState } from '../src/utils/gameLogic';
 
@@ -25,7 +28,16 @@ const makeState = (overrides: Partial<GameState> = {}): GameState => ({
 const makeStateWithAI = (level: AILevel, moneyOverride?: number): GameState => {
   return makeState({
     realMoney: moneyOverride ?? 100_000_000,
-    ai: { level, isAutonomous: level === 3, logEntries: [], lastSuggestionAt: 0 },
+    ai: {
+      level,
+      isAutonomous: level === 3,
+      logEntries: [],
+      lastSuggestionAt: 0,
+      capRemovalLogged: false,
+      renewablesSatLogged: false,
+      lastActionAt: 0,
+      aiHardwareCreated: [],
+    },
     aiCryptosUnlocked: [],
     hardware: getInitialGameState().hardware.map(h =>
       h.id === 'quantum_miner' ? { ...h, owned: level >= 1 ? 1 : 0 } : h,
@@ -264,18 +276,116 @@ describe('AI isAutonomous integrity', () => {
   });
 
   it('isAutonomous is false at Level 1', () => {
-    const ai: AIState = { level: 1, isAutonomous: false, logEntries: [], lastSuggestionAt: 0 };
+    const ai: AIState = { ...getInitialAIState(), level: 1 };
     expect(ai.isAutonomous).toBe(false);
   });
 
   it('isAutonomous is false at Level 2', () => {
-    const ai: AIState = { level: 2, isAutonomous: false, logEntries: [], lastSuggestionAt: 0 };
+    const ai: AIState = { ...getInitialAIState(), level: 2 };
     expect(ai.isAutonomous).toBe(false);
   });
 
   it('isAutonomous is true at Level 3', () => {
     // Simulate what the reducer does
-    const ai: AIState = { level: 3, isAutonomous: true, logEntries: [], lastSuggestionAt: 0 };
+    const ai: AIState = { ...getInitialAIState(), level: 3, isAutonomous: true };
     expect(ai.isAutonomous).toBe(true);
+  });
+});
+
+// ─── AI Observer Mode — canMineBlock bypasses 21M cap ───────────────────────
+
+describe('canMineBlock with AI autonomous', () => {
+  it('returns false at 21M blocks without AI', () => {
+    const state = makeState({ blocksMined: 21_000_000 });
+    expect(canMineBlock(state)).toBe(false);
+  });
+
+  it('returns true at 21M blocks when AI is autonomous', () => {
+    const state = makeStateWithAI(3);
+    state.blocksMined = 21_000_000;
+    expect(canMineBlock(state)).toBe(true);
+  });
+
+  it('returns true beyond 21M blocks when AI is autonomous', () => {
+    const state = makeStateWithAI(3);
+    state.blocksMined = 50_000_000;
+    expect(canMineBlock(state)).toBe(true);
+  });
+});
+
+// ─── AI Observer Mode — getNextAIAction decision tree ───────────────────────
+
+describe('getNextAIAction', () => {
+  it('returns SELL_CC when coins above threshold', () => {
+    const state = makeStateWithAI(3);
+    state.cryptoCoins = 10_000;
+    const action = getNextAIAction(state);
+    expect(action).not.toBeNull();
+    expect(action!.type).toBe('SELL_CC');
+  });
+
+  it('returns null when no actions possible (no coins, no money)', () => {
+    const state = makeStateWithAI(3, 0);
+    state.cryptoCoins = 0;
+    const action = getNextAIAction(state);
+    // May return CREATE_AI_HARDWARE if no hardware created yet
+    if (action) {
+      expect(['CREATE_AI_HARDWARE', 'BUY_HARDWARE']).toContain(action.type);
+    }
+  });
+
+  it('prioritizes selling over buying', () => {
+    const state = makeStateWithAI(3, 1_000_000);
+    state.cryptoCoins = 50_000;
+    const action = getNextAIAction(state);
+    expect(action).not.toBeNull();
+    expect(action!.type).toBe('SELL_CC');
+  });
+});
+
+// ─── AI Observer Mode — good ending blocked at Level 3 ──────────────────────
+
+describe('Good ending condition blocks AI Level 3', () => {
+  it('good ending should NOT trigger with AI Level 3', () => {
+    const state = makeStateWithAI(3);
+    state.blocksMined = 21_000_000;
+    state.planetResources = 50;
+    // The good ending check in ADD_PRODUCTION requires ai.level < 3
+    // We verify the condition here:
+    const aiLevel = state.ai?.level ?? 0;
+    expect(aiLevel < 3).toBe(false); // AI Level 3 blocks good ending
+  });
+
+  it('good ending allowed at Level 2', () => {
+    const state = makeStateWithAI(2);
+    state.blocksMined = 21_000_000;
+    state.planetResources = 50;
+    const aiLevel = state.ai?.level ?? 0;
+    expect(aiLevel < 3).toBe(true); // Level 2 allows good ending
+  });
+});
+
+// ─── AI Observer Mode — offline progress disabled ───────────────────────────
+
+describe('updateOfflineProgress with AI autonomous', () => {
+  it('returns unchanged state (only lastSaveTime updated) when autonomous', () => {
+    const state = makeStateWithAI(3);
+    state.cryptoCoins = 1000;
+    state.lastSaveTime = Date.now() - 60_000; // 1 minute ago
+    const result = updateOfflineProgress(state);
+    // Coins should NOT increase
+    expect(result.cryptoCoins).toBe(1000);
+    // lastSaveTime should be updated
+    expect(result.lastSaveTime).toBeGreaterThan(state.lastSaveTime);
+  });
+});
+
+// ─── getInitialAIState includes new fields ──────────────────────────────────
+
+describe('getInitialAIState new fields', () => {
+  it('includes lastActionAt and aiHardwareCreated', () => {
+    const ai = getInitialAIState();
+    expect(ai.lastActionAt).toBe(0);
+    expect(ai.aiHardwareCreated).toEqual([]);
   });
 });

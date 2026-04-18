@@ -63,7 +63,7 @@ const AISection: React.FC = () => {
           {ai.logEntries.length === 0 ? (
             <Text style={styles.logEmpty}>{t('ai.log.empty')}</Text>
           ) : (
-            ai.logEntries.slice(0, 5).map((entry, i) => (
+            ai.logEntries.slice(0, ai.isAutonomous ? 15 : 5).map((entry, i) => (
               <Text key={i} style={[styles.logEntry, styles[`logEntry_${entry.type}`] as object]}>
                 {new Date(entry.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 {'  '}{entry.message}
@@ -189,6 +189,7 @@ const secStyles = StyleSheet.create({
 // ── UpgradeList ─────────────────────────────────────────────────────
 const UpgradeList: React.FC = () => {
   const { gameState, dispatch, t } = useGame();
+  const isAIAutonomous = gameState.ai?.isAutonomous ?? false;
 
   const handleBuyUpgrade = (upgradeId: string) => {
     if (canAffordUpgrade(gameState, upgradeId)) {
@@ -250,13 +251,13 @@ const UpgradeList: React.FC = () => {
                   </View>
                 ) : (
                   <TouchableOpacity
-                    style={[styles.buyButton, !canAfford && styles.buyButtonDisabled]}
+                    style={[styles.buyButton, (!canAfford || isAIAutonomous) && styles.buyButtonDisabled]}
                     onPress={() => handleBuyUpgrade(upgrade.id)}
-                    disabled={!canAfford}
+                    disabled={!canAfford || isAIAutonomous}
                     activeOpacity={0.7}
                   >
-                    <Text style={[styles.buyButtonText, !canAfford && styles.buyButtonTextDim]}>
-                      ACQUIRE
+                    <Text style={[styles.buyButtonText, (!canAfford || isAIAutonomous) && styles.buyButtonTextDim]}>
+                      {isAIAutonomous ? '🤖 AI CONTROLLED' : 'ACQUIRE'}
                     </Text>
                   </TouchableOpacity>
                 )}

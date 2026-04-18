@@ -312,6 +312,12 @@ export const buyUpgrade = (gameState: GameState, upgradeId: string): GameState =
 
 export const updateOfflineProgress = (gameState: GameState): GameState => {
   const now = Date.now();
+
+  // No offline progress during AI Level 3 — AI only operates while player watches
+  if (gameState.ai?.isAutonomous) {
+    return { ...gameState, lastSaveTime: now };
+  }
+
   const lastSave = gameState.lastSaveTime ?? now;
 
   const offlineMiner = gameState.iapState?.offlineMiner;
@@ -400,11 +406,23 @@ export const updateOfflineProgress = (gameState: GameState): GameState => {
   const allMult = getAllMultipliers(gameState);
   const speed = constrainedMiningSpeed * allMult * BALANCE_CONFIG.OFFLINE_EARNINGS_MULTIPLIER;
 
+  const difficulty = calculateDifficulty(constrainedMiningSpeed);
+
+  // ── DEBUG: Free offline earnings calculation ──
+  const hwSummary = gameState.hardware
+    .filter(h => h.owned > 0 && h.id !== 'manual_mining')
+    .map(h => `${h.id}×${h.owned}`)
+    .join(', ');
+  console.log(`DEBUG OFFLINE FREE: away=${rawOfflineSec.toFixed(0)}s capped=${cappedSec.toFixed(0)}s`);
+  console.log(`DEBUG OFFLINE FREE: hardware=[${hwSummary}]`);
+  console.log(`DEBUG OFFLINE FREE: miningSpeed=${constrainedMiningSpeed.toFixed(2)} allMult=${allMult.toFixed(2)} offlineMult=${BALANCE_CONFIG.OFFLINE_EARNINGS_MULTIPLIER} → speed=${speed.toFixed(2)}`);
+  console.log(`DEBUG OFFLINE FREE: difficulty=${difficulty.toFixed(4)} blocksPerSec=${(speed / difficulty).toFixed(2)}`);
+
   if (speed <= 0) {
+    console.log('DEBUG OFFLINE FREE: speed=0, no earnings');
     return { ...gameState, lastSaveTime: now };
   }
 
-  const difficulty = calculateDifficulty(constrainedMiningSpeed);
   const blocksPerSec = speed / difficulty;
   const rawTotalBlocks = Math.floor(blocksPerSec * cappedSec);
 
@@ -413,6 +431,8 @@ export const updateOfflineProgress = (gameState: GameState): GameState => {
   const maxEra = startEra + OFFLINE_SCREEN_CONFIG.MAX_OFFLINE_ERA_ADVANCE;
   const maxBlocksByEra = (maxEra + 1) * GENESIS_CONSTANTS.HALVING_INTERVAL - gameState.blocksMined;
   const totalBlocks = Math.min(rawTotalBlocks, maxBlocksByEra);
+
+  console.log(`DEBUG OFFLINE FREE: rawBlocks=${rawTotalBlocks} eraCap=${maxBlocksByEra} (era ${startEra}→${maxEra}) → totalBlocks=${totalBlocks}`);
 
   let coinsEarned = 0;
   let blocksRemaining = totalBlocks;
@@ -432,6 +452,8 @@ export const updateOfflineProgress = (gameState: GameState): GameState => {
   const electricityWeight = gameState.totalElectricityCost ?? 0;
   const ccFeeDrained = electricityWeight * ELECTRICITY_FEE_CONFIG.RATE_PERCENT / 100 * cappedSec;
   const netCoins = Math.max(0, coinsEarned - ccFeeDrained);
+
+  console.log(`DEBUG OFFLINE FREE: coinsEarned=${coinsEarned.toFixed(0)} fee=${ccFeeDrained.toFixed(0)} net=${netCoins.toFixed(0)} blocks=${totalBlocks}`);
 
   if (netCoins <= 0) {
     return { ...gameState, lastSaveTime: now };
@@ -876,6 +898,7 @@ export const getInitialGameState = (): GameState => {
     // AI system (Phase 5)
     ai: getInitialAIState(),
     aiCryptosUnlocked: [],
+    aiTickerMessage: '',
     // Narrative Events system (Phase 6)
     narrativeEvents: [],
     planetResourcesVisible: false,

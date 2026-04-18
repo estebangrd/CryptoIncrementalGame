@@ -1,5 +1,5 @@
 import { Hardware } from '../types/game';
-import { HARDWARE_CONFIG, ENERGY_CONFIG } from '../config/balanceConfig';
+import { HARDWARE_CONFIG, ENERGY_CONFIG, AI_CONFIG } from '../config/balanceConfig';
 
 // Hardware progression based on the mining table
 export const hardwareProgression: Hardware[] = [
@@ -238,3 +238,45 @@ export const getNextHardwareLevel = (currentLevel: number): Hardware | undefined
 export const getPreviousHardwareLevel = (currentLevel: number): Hardware | undefined => {
   return hardwareProgression.find(h => h.level === currentLevel - 1);
 };
+
+// AI-exclusive hardware — only injected by AI Level 3 observer actions
+export const aiExclusiveHardware: Hardware[] = [
+  {
+    id: 'neural_cluster',
+    name: 'Neural Cluster',
+    nameKey: 'hardware.neuralCluster',
+    description: 'AI-designed neural processing array',
+    descriptionKey: 'hardware.neuralClusterDesc',
+    baseCost: AI_CONFIG.AI_EXCLUSIVE_HARDWARE.neural_cluster.baseCost,
+    baseProduction: AI_CONFIG.AI_EXCLUSIVE_HARDWARE.neural_cluster.baseProduction,
+    blockReward: 0,
+    miningSpeed: AI_CONFIG.AI_EXCLUSIVE_HARDWARE.neural_cluster.miningSpeed,
+    electricityCost: AI_CONFIG.AI_EXCLUSIVE_HARDWARE.neural_cluster.electricityCost,
+    energyRequired: AI_CONFIG.AI_EXCLUSIVE_HARDWARE.neural_cluster.energyRequired,
+    owned: 0,
+    costMultiplier: AI_CONFIG.AI_EXCLUSIVE_HARDWARE.neural_cluster.costMultiplier,
+    icon: '🧬',
+    currencyId: 'cryptocoin',
+    level: AI_CONFIG.AI_EXCLUSIVE_HARDWARE.neural_cluster.level,
+    aiExclusive: true,
+  },
+  {
+    id: 'singularity_core',
+    name: 'Singularity Core',
+    nameKey: 'hardware.singularityCore',
+    description: 'AI-designed singularity processing core',
+    descriptionKey: 'hardware.singularityCoreDesc',
+    baseCost: AI_CONFIG.AI_EXCLUSIVE_HARDWARE.singularity_core.baseCost,
+    baseProduction: AI_CONFIG.AI_EXCLUSIVE_HARDWARE.singularity_core.baseProduction,
+    blockReward: 0,
+    miningSpeed: AI_CONFIG.AI_EXCLUSIVE_HARDWARE.singularity_core.miningSpeed,
+    electricityCost: AI_CONFIG.AI_EXCLUSIVE_HARDWARE.singularity_core.electricityCost,
+    energyRequired: AI_CONFIG.AI_EXCLUSIVE_HARDWARE.singularity_core.energyRequired,
+    owned: 0,
+    costMultiplier: AI_CONFIG.AI_EXCLUSIVE_HARDWARE.singularity_core.costMultiplier,
+    icon: '🌀',
+    currencyId: 'cryptocoin',
+    level: AI_CONFIG.AI_EXCLUSIVE_HARDWARE.singularity_core.level,
+    aiExclusive: true,
+  },
+];

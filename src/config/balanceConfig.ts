@@ -529,6 +529,32 @@ export const AI_CONFIG = {
       volatility: 0.50,
     },
   },
+  OBSERVER_MODE: {
+    ACTION_INTERVAL_MS: 4_000,
+    SELL_CC_THRESHOLD: 1_000,
+    SELL_PERCENT: 0.50,
+  },
+
+  AI_EXCLUSIVE_HARDWARE: {
+    neural_cluster: {
+      baseCost: 10_000_000_000,
+      baseProduction: 5_000_000,
+      miningSpeed: 25_000_000,
+      electricityCost: 200_000,
+      energyRequired: 50_000,
+      costMultiplier: 1.18,
+      level: 12,
+    },
+    singularity_core: {
+      baseCost: 100_000_000_000,
+      baseProduction: 50_000_000,
+      miningSpeed: 250_000_000,
+      electricityCost: 1_000_000,
+      energyRequired: 200_000,
+      costMultiplier: 1.15,
+      level: 13,
+    },
+  },
 } as const;
 
 // ============================================================================

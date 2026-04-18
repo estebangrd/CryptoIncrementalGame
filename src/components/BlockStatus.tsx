@@ -262,7 +262,8 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
 
   const displayHashRate = blockInfo.totalHashRate + clickBoost;
   const hasClickBoost = clickBoost > 0;
-  const isComplete = blockInfo.blocksMined >= blockInfo.totalBlocks;
+  const isAIAutonomous = gameState.ai?.isAutonomous ?? false;
+  const isComplete = !isAIAutonomous && blockInfo.blocksMined >= blockInfo.totalBlocks;
   const progressPct = blockInfo.phaseProgress;
 
   const hasElectricity = (gameState.totalElectricityCost ?? 0) > 0;
@@ -351,7 +352,7 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
           <View style={styles.phaseCountGroup}>
             <Text style={styles.phaseCountSub}>
               <Text style={styles.phaseCountValue}>{formatNumber(blockInfo.blocksMined)}</Text>
-              {' / '}{formatNumber(blockInfo.totalBlocks)} blocks
+              {' / '}{isAIAutonomous ? '∞' : formatNumber(blockInfo.totalBlocks)} blocks
             </Text>
           </View>
         </View>
@@ -373,9 +374,9 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
       {/* Mine Button */}
       <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
         <TouchableOpacity
-          style={[styles.mineButton, isComplete && styles.mineButtonDone]}
+          style={[styles.mineButton, (isComplete || isAIAutonomous) && styles.mineButtonDone]}
           onPress={handleMineClick}
-          disabled={isComplete}
+          disabled={isComplete || isAIAutonomous}
           activeOpacity={0.85}
         >
           <Animated.View
@@ -395,8 +396,8 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
             </Svg>
           </Animated.View>
           <Animated.Text style={[styles.mineHammer, { transform: [{ rotate: hammerAnim.interpolate({ inputRange: [-10, 10], outputRange: ['-10deg', '10deg'] }) }] }]}>⛏</Animated.Text>
-          <Text style={[styles.mineButtonText, isComplete && styles.mineButtonTextDone]}>
-            {isComplete ? 'Phase Complete' : 'Mine Block'}
+          <Text style={[styles.mineButtonText, (isComplete || isAIAutonomous) && styles.mineButtonTextDone]}>
+            {isAIAutonomous ? '🤖 AI Mining Active' : isComplete ? 'Phase Complete' : 'Mine Block'}
           </Text>
         </TouchableOpacity>
       </Animated.View>

@@ -473,7 +473,7 @@ const GameScreen: React.FC = () => {
               <Text style={styles.adFreeBadgeText}>✓ Ad Free</Text>
             </Animated.View>
           )}
-          {hasPermanentOffers && (
+          {hasPermanentOffers && !(gameState.ai?.isAutonomous) && (
             <TouchableOpacity style={styles.iconBtn} onPress={() => { setShowShop(true); logEvent('shop_opened', {}); }}>
               <Text style={styles.iconBtnText}>💎</Text>
             </TouchableOpacity>
@@ -499,8 +499,10 @@ const GameScreen: React.FC = () => {
             </Text>
           </View>
         </View>
-        <BoosterNotch onOpenShop={() => { setShopInitialTab('boosters'); setShowShop(true); logEvent('shop_opened', {}); }} />
-        <AdBoosterBubbles />
+        {!(gameState.ai?.isAutonomous) && (
+          <BoosterNotch onOpenShop={() => { setShopInitialTab('boosters'); setShowShop(true); logEvent('shop_opened', {}); }} />
+        )}
+        {!(gameState.ai?.isAutonomous) && <AdBoosterBubbles />}
       </View>
 
       {/* ── Planet Resources Meter ── */}
@@ -523,6 +525,13 @@ const GameScreen: React.FC = () => {
           </View>
         </Animated.View>
       )}
+
+      {/* ── AI Activity Ticker (observer mode) ── */}
+      {gameState.ai?.isAutonomous && gameState.aiTickerMessage ? (
+        <View style={styles.aiTicker}>
+          <Text style={styles.aiTickerText}>🤖 {gameState.aiTickerMessage}</Text>
+        </View>
+      ) : null}
 
       {/* ── Hash Stream ── */}
       <HashStream blocksMined={gameState.blocksMined} />
@@ -609,7 +618,7 @@ const GameScreen: React.FC = () => {
       />
 
       <OfflineEarningsModal
-        visible={gameState.pendingOfflineEarnings > 0}
+        visible={gameState.pendingOfflineEarnings > 0 && !gameState.ai?.isAutonomous}
         pendingEarnings={gameState.pendingOfflineEarnings}
         secondsAway={gameState.offlineSecondsAway}
         wasCapped={gameState.offlineWasCapped}
@@ -624,7 +633,7 @@ const GameScreen: React.FC = () => {
       />
 
       <OfflineEarningsPremiumModal
-        visible={gameState.pendingPremiumOffline != null}
+        visible={gameState.pendingPremiumOffline != null && !gameState.ai?.isAutonomous}
         data={gameState.pendingPremiumOffline}
         t={t}
         onDismiss={() => dispatch({ type: 'DISMISS_PREMIUM_OFFLINE' })}
@@ -808,6 +817,22 @@ const styles = StyleSheet.create({
   planetMeterBarFill: {
     height: '100%',
     borderRadius: 2,
+  },
+  // ── AI Ticker ──
+  aiTicker: {
+    marginHorizontal: 14,
+    marginBottom: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    backgroundColor: 'rgba(156,39,176,0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(156,39,176,0.35)',
+    borderRadius: 6,
+  },
+  aiTickerText: {
+    fontFamily: fonts.mono,
+    fontSize: 10,
+    color: '#ce93d8',
   },
   // ── Hash Stream ──
   hashStream: {

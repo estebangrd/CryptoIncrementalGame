@@ -18,6 +18,7 @@ import PriceChart from './PriceChart';
 
 const MarketScreen: React.FC = () => {
   const { gameState, dispatch, t } = useGame();
+  const isAIAutonomous = gameState.ai?.isAutonomous ?? false;
   const [amountPercent, setAmountPercent] = useState(100);
   const [sellConfirming, setSellConfirming] = useState(false);
   const [scrollEnabled, setScrollEnabled] = useState(true);
@@ -187,8 +188,8 @@ const MarketScreen: React.FC = () => {
                 )}
 
                 {/* Sell section */}
-                <View style={styles.sellCard}>
-                  <Text style={styles.sellTitle}>💰 SELL COINS</Text>
+                <View style={[styles.sellCard, isAIAutonomous && { opacity: 0.5 }]}>
+                  <Text style={styles.sellTitle}>{isAIAutonomous ? '🤖 AI controls all trading' : '💰 SELL COINS'}</Text>
                   <Text style={styles.sliderPct}>{amountPercent}%</Text>
                   <View style={styles.sliderContainer}>
                     <View
@@ -227,7 +228,7 @@ const MarketScreen: React.FC = () => {
                       YOU'LL EARN · PRICE {formatUSD(getCryptoCoin()?.currentValue ?? 0)} PER CC
                     </Text>
                   </View>
-                  {sellConfirming ? (
+                  {isAIAutonomous ? null : sellConfirming ? (
                     <View style={styles.confirmRow}>
                       <TouchableOpacity style={styles.cancelButton} onPress={clearSellConfirm}>
                         <Text style={styles.cancelButtonText}>✕ Cancel</Text>
@@ -239,7 +240,7 @@ const MarketScreen: React.FC = () => {
                       </TouchableOpacity>
                     </View>
                   ) : (
-                    <TouchableOpacity onPress={handleSellPress} activeOpacity={0.82}>
+                    <TouchableOpacity onPress={handleSellPress} activeOpacity={0.82} disabled={isAIAutonomous}>
                       <LinearGradient
                         colors={['#ff6b2b', '#ff3d5a']}
                         start={{ x: 0, y: 0 }}

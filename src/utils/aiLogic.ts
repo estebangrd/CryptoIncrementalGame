@@ -13,6 +13,8 @@ export const getInitialAIState = (): AIState => ({
   lastSuggestionAt: 0,
   capRemovalLogged: false,
   renewablesSatLogged: false,
+  lastActionAt: 0,
+  aiHardwareCreated: [],
 });
 
 export const getAIProductionMultiplier = (level: AILevel): number => {

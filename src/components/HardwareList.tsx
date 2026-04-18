@@ -113,6 +113,7 @@ const m = StyleSheet.create({
 // ── HardwareList ─────────────────────────────────────────────────────────────
 const HardwareList: React.FC = () => {
   const { gameState, dispatch, t } = useGame();
+  const isAIAutonomous = gameState.ai?.isAutonomous ?? false;
 
   const handleBuyHardware = (hardwareId: string) => {
     const hardware = gameState.hardware.find(h => h.id === hardwareId);
@@ -207,7 +208,7 @@ const HardwareList: React.FC = () => {
                       {isDisabled ? t('hardware.toggleOff') : 'OWNED'}
                     </Text>
                   </View>
-                  {hasUnits && feeActive && (
+                  {hasUnits && feeActive && !isAIAutonomous && (
                     <Switch
                       value={!isDisabled}
                       onValueChange={() => dispatch({ type: 'TOGGLE_HARDWARE', payload: hardware.id })}
@@ -265,15 +266,45 @@ const HardwareList: React.FC = () => {
                   </Text>
                 </View>
                 <TouchableOpacity
-                  style={[styles.buyBtn, !canAfford && styles.buyBtnDisabled]}
+                  style={[styles.buyBtn, (!canAfford || isAIAutonomous) && styles.buyBtnDisabled]}
                   onPress={() => handleBuyHardware(hardware.id)}
-                  disabled={!canAfford}
+                  disabled={!canAfford || isAIAutonomous}
                   activeOpacity={0.75}
                 >
-                  <Text style={[styles.buyBtnText, !canAfford && styles.buyBtnTextDim]}>
-                    {canAfford ? '⬡ BUY UNIT' : '⊘ INSUFFICIENT FUNDS'}
+                  <Text style={[styles.buyBtnText, (!canAfford || isAIAutonomous) && styles.buyBtnTextDim]}>
+                    {isAIAutonomous ? '🤖 AI CONTROLLED' : canAfford ? '⬡ BUY UNIT' : '⊘ INSUFFICIENT FUNDS'}
                   </Text>
                 </TouchableOpacity>
+              </View>
+            </View>
+          );
+        })}
+
+      {/* AI-exclusive hardware (observer mode) */}
+      {isAIAutonomous && gameState.hardware
+        .filter(h => h.aiExclusive && h.owned > 0)
+        .map((hardware) => {
+          const hashRate = calculateHardwareProduction(hardware, gameState.upgrades);
+          const miningSpeed = calculateHardwareMiningSpeed(hardware, gameState.upgrades);
+          return (
+            <View key={hardware.id} style={[styles.card, styles.cardOwned]}>
+              <View style={[styles.cardAccent, { backgroundColor: '#9c27b0' }]} />
+              <View style={styles.header}>
+                <View style={styles.titleRow}>
+                  <Text style={styles.icon}>{hardware.icon}</Text>
+                  <View style={styles.titleCol}>
+                    <Text style={styles.name}>{t(hardware.nameKey) || hardware.name}</Text>
+                    <Text style={[styles.tierBadge, { color: '#ce93d8' }]}>🤖 AI-DESIGNED</Text>
+                  </View>
+                </View>
+                <View style={styles.ownedBadge}>
+                  <Text style={styles.ownedNum}>{hardware.owned}</Text>
+                  <Text style={styles.ownedLbl}>OWNED</Text>
+                </View>
+              </View>
+              <View style={styles.metricsGrid}>
+                <MetricCell noBorder label="Hash Rate" value={formatNumber(hashRate)} unit="H/s" delta="" valueColor="#ce93d8" deltaType="zero" />
+                <MetricCell label="Mine Spd" value={formatNumber(miningSpeed)} unit="blk/s" delta="" valueColor="#ce93d8" deltaType="zero" />
               </View>
             </View>
           );

@@ -48,6 +48,8 @@ export interface AIState {
   lastSuggestionAt: number;    // timestamp
   capRemovalLogged: boolean;   // LOG 14:23 — cap 21M removed
   renewablesSatLogged: boolean; // LOG 31:07 — renewables saturated
+  lastActionAt: number;        // timestamp of last observer action
+  aiHardwareCreated: string[]; // IDs of AI-exclusive hardware injected
 }
 
 export interface PrestigeRequirement {
@@ -372,6 +374,7 @@ export interface GameState {
   // AI system (Phase 5)
   ai: AIState;
   aiCryptosUnlocked: string[]; // e.g. ['neural_coin', 'quantum_bit']
+  aiTickerMessage: string;     // last AI observer action message
   // Narrative Events system (Phase 6)
   narrativeEvents: NarrativeEvent[];
   planetResourcesVisible: boolean; // false until first non-renewable activated
@@ -418,6 +421,7 @@ export interface Hardware {
   currencyId: string; // Which cryptocurrency this hardware mines
   level: number; // Technology level (1-11)
   isEnabled?: boolean; // undefined = enabled (backwards-compatible with old saves)
+  aiExclusive?: boolean; // true = AI-designed hardware, not available to player
 }
 
 export interface Upgrade {

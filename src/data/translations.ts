@@ -207,6 +207,28 @@ export const translations: Translation = {
     pt: 'Uma megaestrutura planetária convertendo a energia do núcleo terrestre em poder computacional. As luzes das cidades estão se apagando.',
   },
 
+  // AI-exclusive hardware
+  'hardware.neuralCluster': {
+    en: 'Neural Cluster',
+    es: 'Cluster Neuronal',
+    pt: 'Cluster Neural',
+  },
+  'hardware.neuralClusterDesc': {
+    en: 'AI-designed neural processing array. Technology beyond human comprehension.',
+    es: 'Matriz de procesamiento neuronal diseñada por IA. Tecnología más allá de la comprensión humana.',
+    pt: 'Matriz de processamento neural projetada por IA. Tecnologia além da compreensão humana.',
+  },
+  'hardware.singularityCore': {
+    en: 'Singularity Core',
+    es: 'Núcleo de Singularidad',
+    pt: 'Núcleo de Singularidade',
+  },
+  'hardware.singularityCoreDesc': {
+    en: 'AI-designed singularity processing core. Reality bends around its calculations.',
+    es: 'Núcleo de procesamiento de singularidad diseñado por IA. La realidad se curva alrededor de sus cálculos.',
+    pt: 'Núcleo de processamento de singularidade projetado por IA. A realidade se curva ao redor de seus cálculos.',
+  },
+
   // Hardware toggle / profitability
   'hardware.toggleOff': {
     en: 'OFF',
@@ -1041,6 +1063,11 @@ export const translations: Translation = {
     en: 'Awaiting AI analysis...',
     es: 'Esperando análisis de IA...',
     pt: 'Aguardando análise da IA...',
+  },
+  'ai.chronicle.title': {
+    en: 'AI Activity Log',
+    es: 'Registro de Actividad IA',
+    pt: 'Registro de Atividade IA',
   },
   // AI crypto names
   'neural_coin': {

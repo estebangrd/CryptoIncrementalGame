@@ -67,6 +67,8 @@ import {
   getAIPreferredEnergySource,
   generateAISuggestion,
 } from '../utils/aiLogic';
+import { getNextAIAction } from '../utils/aiObserverLogic';
+import { aiExclusiveHardware } from '../data/hardwareData';
 import { checkNarrativeThresholds } from '../utils/narrativeLogic';
 import { getCompositeMultiplier, filterExpiredEvents, addOrRefreshEvent, removeEvent, isEventActive } from '../utils/marketEventLogic';
 import { getBlocksUntilHalving } from '../utils/blockLogic';
@@ -132,6 +134,7 @@ export type GameAction =
   | { type: 'PURCHASE_AI_LEVEL'; payload: { level: 1 | 2 | 3; confirmed?: boolean } }
   | { type: 'ADD_AI_LOG'; payload: { message: string; type: 'suggestion' | 'action' | 'warning' | 'autonomous' } }
   | { type: 'AI_BUILD_ENERGY' }
+  | { type: 'AI_OBSERVER_ACTION' }
   | { type: 'DISMISS_NARRATIVE_EVENT'; payload: number }
   | { type: 'ATTEMPT_DISCONNECT' }
   | { type: 'COMPLETE_ENDING_PRESTIGE'; payload: { endingType: EndingType } }
@@ -383,6 +386,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
             }
           : getInitialAIState(),
         aiCryptosUnlocked: action.payload.aiCryptosUnlocked ?? [],
+        aiTickerMessage: action.payload.aiTickerMessage ?? '',
         // Narrative Events migration: provide defaults for old saves
         narrativeEvents: action.payload.narrativeEvents ?? [],
         planetResourcesVisible: action.payload.planetResourcesVisible ?? false,
@@ -484,7 +488,9 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
 
       // Catch good ending for saves where blocksMined already reached 21M
       // but goodEndingTriggered was never set (e.g., app reload at cap)
+      // Good ending impossible with AI Level 3 (autonomous removes the cap)
       if (
+        (state.ai?.level ?? 0) < 3 &&
         state.blocksMined >= 21_000_000 &&
         (state.planetResources ?? 100) > 0
       ) {
@@ -608,7 +614,9 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
 
         // Trigger good ending when 21M blocks mined with resources > 0
         // Collapse has priority — only trigger good ending if no collapse
+        // Good ending impossible with AI Level 3 (autonomous removes the cap)
         if (
+          (newState.ai?.level ?? 0) < 3 &&
           !newState.collapseTriggered &&
           !newState.goodEndingTriggered &&
           newState.blocksMined >= 21_000_000 &&
@@ -1565,6 +1573,57 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       });
     }
 
+    case 'AI_OBSERVER_ACTION': {
+      const ai = state.ai ?? getInitialAIState();
+      if (!ai.isAutonomous) return state;
+
+      const action_result = getNextAIAction(state);
+      if (!action_result) return state;
+
+      let newState = { ...state };
+      const now = Date.now();
+
+      switch (action_result.type) {
+        case 'SELL_CC': {
+          const cashGained = action_result.amount * action_result.pricePerCoin;
+          newState.cryptoCoins -= action_result.amount;
+          newState.realMoney += cashGained;
+          newState.totalRealMoneyEarned += cashGained;
+          newState.totalSellCount += 1;
+          break;
+        }
+        case 'BUY_ENERGY': {
+          const energy = newState.energy ?? getInitialEnergyState();
+          newState.energy = buildEnergySource(energy, action_result.sourceId);
+          newState.realMoney -= action_result.cost;
+          break;
+        }
+        case 'BUY_HARDWARE': {
+          newState.hardware = newState.hardware.map(h =>
+            h.id === action_result.hardwareId ? { ...h, owned: h.owned + 1 } : h,
+          );
+          newState.realMoney -= action_result.cost;
+          break;
+        }
+        case 'CREATE_AI_HARDWARE': {
+          const template = aiExclusiveHardware.find(h => h.id === action_result.hardwareId);
+          if (template) {
+            newState.hardware = [...newState.hardware, { ...template, owned: 0 }];
+            newState.ai = {
+              ...ai,
+              aiHardwareCreated: [...(ai.aiHardwareCreated ?? []), template.id],
+            };
+          }
+          break;
+        }
+      }
+
+      newState.ai = addAILogEntry(newState.ai ?? ai, action_result.message, 'autonomous');
+      newState.ai.lastActionAt = now;
+      newState.aiTickerMessage = action_result.message;
+      return recalculateGameStats(newState);
+    }
+
     case 'DISMISS_NARRATIVE_EVENT': {
       const threshold = action.payload;
       return {
@@ -2201,11 +2260,11 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return () => subscription.remove();
   }, []);
 
-  // AI suggestion/action log — fires every 30 seconds when AI level >= 1
+  // AI suggestion/action log — fires every 30 seconds for levels 1-2
   const aiSuggestionTickRef = React.useRef(0);
   const aiLevel = gameState.ai?.level ?? 0;
   useEffect(() => {
-    if (aiLevel === 0) return;
+    if (aiLevel === 0 || aiLevel === 3) return; // Level 3 uses observer action instead
     const interval = setInterval(() => {
       aiSuggestionTickRef.current += 1;
       const { message, type } = generateAISuggestion(aiLevel, aiSuggestionTickRef.current);
@@ -2214,13 +2273,13 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return () => clearInterval(interval);
   }, [aiLevel]);
 
-  // AI autonomous energy building — fires every 10 seconds when AI Level 3 is active
+  // AI Level 3 observer — unified action every 4 seconds (replaces AI_BUILD_ENERGY)
   const aiIsAutonomous = gameState.ai?.isAutonomous ?? false;
   useEffect(() => {
     if (!aiIsAutonomous) return;
     const interval = setInterval(() => {
-      dispatch({ type: 'AI_BUILD_ENERGY' });
-    }, 10_000);
+      dispatch({ type: 'AI_OBSERVER_ACTION' });
+    }, AI_CONFIG.OBSERVER_MODE.ACTION_INTERVAL_MS);
     return () => clearInterval(interval);
   }, [aiIsAutonomous]);
 

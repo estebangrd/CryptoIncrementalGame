@@ -64,7 +64,7 @@ const ChronicleScreen: React.FC = () => {
     <ScrollView style={styles.container} showsVerticalScrollIndicator={true}>
       <Text style={styles.screenTitle}>{t('narrative.chronicle.title')}</Text>
 
-      {events.length === 0 ? (
+      {events.length === 0 && !gameState.ai?.isAutonomous ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>{t('narrative.chronicle.empty')}</Text>
         </View>
@@ -72,6 +72,22 @@ const ChronicleScreen: React.FC = () => {
         events.map((event) => (
           <ChronicleEntry key={event.threshold} event={event} />
         ))
+      )}
+
+      {/* AI Activity Log — shown when Level 3 autonomous is active */}
+      {gameState.ai?.isAutonomous && (
+        <>
+          <Text style={styles.aiLogTitle}>{t('ai.chronicle.title')}</Text>
+          {(gameState.ai.logEntries ?? []).slice(0, 20).map((entry, i) => (
+            <View key={`ai-${i}`} style={[styles.entry, { borderLeftColor: '#9c27b0' }]}>
+              <View style={styles.entryHeader}>
+                <Text style={[styles.entryThreshold, { color: '#ce93d8' }]}>🤖 AI</Text>
+                <Text style={styles.entryTime}>{formatRelativeTime(entry.timestamp)}</Text>
+              </View>
+              <Text style={[styles.entryBody, { fontStyle: 'normal' }]}>{entry.message}</Text>
+            </View>
+          ))}
+        </>
       )}
     </ScrollView>
   );
@@ -132,6 +148,14 @@ const styles = StyleSheet.create({
     color: '#aaa',
     lineHeight: 17,
     fontStyle: 'italic',
+  },
+  aiLogTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#ce93d8',
+    paddingTop: 20,
+    paddingBottom: 10,
+    textAlign: 'center',
   },
 });
 

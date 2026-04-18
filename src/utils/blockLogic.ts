@@ -76,6 +76,8 @@ export const calculateBlockTime = (difficulty: number, hashRate: number): number
 
 // Check if a block can be mined
 export const canMineBlock = (gameState: GameState): boolean => {
+  // AI Level 3 autonomous removes the 21M cap — mines infinitely
+  if (gameState.ai?.isAutonomous) return true;
   return gameState.blocksMined < GENESIS_CONSTANTS.TOTAL_BLOCKS;
 };
 
@@ -129,10 +131,11 @@ export const getPhaseProgress = (gameState: GameState): number => {
 
 // Format block information for display
 export const formatBlockInfo = (gameState: GameState) => {
+  const isAutonomous = gameState.ai?.isAutonomous;
   return {
     blocksMined: gameState.blocksMined,
-    totalBlocks: GENESIS_CONSTANTS.TOTAL_BLOCKS,
-    blocksRemaining: GENESIS_CONSTANTS.TOTAL_BLOCKS - gameState.blocksMined,
+    totalBlocks: isAutonomous ? Infinity : GENESIS_CONSTANTS.TOTAL_BLOCKS,
+    blocksRemaining: isAutonomous ? Infinity : GENESIS_CONSTANTS.TOTAL_BLOCKS - gameState.blocksMined,
     currentReward: gameState.currentReward,
     nextHalving: gameState.nextHalving,
     blocksUntilHalving: getBlocksUntilHalving(gameState.blocksMined),
@@ -140,6 +143,6 @@ export const formatBlockInfo = (gameState: GameState) => {
     difficulty: gameState.difficulty,
     totalHashRate: gameState.totalHashRate,
     blockTime: calculateBlockTime(gameState.difficulty, gameState.totalHashRate),
-    phaseProgress: getPhaseProgress(gameState),
+    phaseProgress: isAutonomous ? 100 : getPhaseProgress(gameState),
   };
 };
