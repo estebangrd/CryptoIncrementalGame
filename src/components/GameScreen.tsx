@@ -191,13 +191,16 @@ const Particle: React.FC<{ left: string; duration: number; delay: number; color:
 };
 
 // ── HashStream ─────────────────────────────────────────────────────
-const HashStream: React.FC<{ blocksMined: number }> = ({ blocksMined }) => {
+const HashStream: React.FC<{ blocksMined: number; aiTickerMessage?: string }> = ({ blocksMined, aiTickerMessage }) => {
   const scrollAnim = useRef(new Animated.Value(SCREEN_WIDTH)).current;
   const hashText = useRef(buildHashLine(blocksMined));
 
   useEffect(() => {
-    hashText.current = buildHashLine(blocksMined);
-  }, [blocksMined]);
+    // When AI is autonomous and has a ticker message, show that instead of hash line
+    hashText.current = aiTickerMessage
+      ? `🤖 ${aiTickerMessage}`
+      : buildHashLine(blocksMined);
+  }, [blocksMined, aiTickerMessage]);
 
   useEffect(() => {
     const start = () => {
@@ -209,7 +212,9 @@ const HashStream: React.FC<{ blocksMined: number }> = ({ blocksMined }) => {
         useNativeDriver: true,
       }).start(({ finished }) => {
         if (finished) {
-          hashText.current = buildHashLine(blocksMined);
+          hashText.current = aiTickerMessage
+            ? `🤖 ${aiTickerMessage}`
+            : buildHashLine(blocksMined);
           start();
         }
       });
@@ -219,10 +224,10 @@ const HashStream: React.FC<{ blocksMined: number }> = ({ blocksMined }) => {
   }, []);
 
   return (
-    <View style={styles.hashStream} pointerEvents="none">
+    <View style={[styles.hashStream, aiTickerMessage ? styles.hashStreamAI : undefined]} pointerEvents="none">
       <Text style={styles.hashStreamLive}>LIVE</Text>
       <Animated.Text
-        style={[styles.hashStreamText, { transform: [{ translateX: scrollAnim }] }]}
+        style={[styles.hashStreamText, aiTickerMessage ? styles.hashStreamTextAI : undefined, { transform: [{ translateX: scrollAnim }] }]}
         numberOfLines={1}
       >
         {hashText.current}
@@ -526,15 +531,11 @@ const GameScreen: React.FC = () => {
         </Animated.View>
       )}
 
-      {/* ── AI Activity Ticker (observer mode) ── */}
-      {gameState.ai?.isAutonomous && gameState.aiTickerMessage ? (
-        <View style={styles.aiTicker}>
-          <Text style={styles.aiTickerText}>🤖 {gameState.aiTickerMessage}</Text>
-        </View>
-      ) : null}
-
-      {/* ── Hash Stream ── */}
-      <HashStream blocksMined={gameState.blocksMined} />
+      {/* ── Hash Stream (doubles as AI ticker in observer mode) ── */}
+      <HashStream
+        blocksMined={gameState.blocksMined}
+        aiTickerMessage={gameState.ai?.isAutonomous ? gameState.aiTickerMessage : undefined}
+      />
 
       {/* ── HorizontalTabs (fills remaining space) ── */}
       <HorizontalTabs
@@ -818,22 +819,6 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 2,
   },
-  // ── AI Ticker ──
-  aiTicker: {
-    marginHorizontal: 14,
-    marginBottom: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    backgroundColor: 'rgba(156,39,176,0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(156,39,176,0.35)',
-    borderRadius: 6,
-  },
-  aiTickerText: {
-    fontFamily: fonts.mono,
-    fontSize: 10,
-    color: '#ce93d8',
-  },
   // ── Hash Stream ──
   hashStream: {
     flexDirection: 'row',
@@ -862,6 +847,13 @@ const styles = StyleSheet.create({
     fontSize: 9,
     color: 'rgba(0,255,136,0.35)',
     letterSpacing: 1,
+  },
+  hashStreamAI: {
+    borderColor: 'rgba(156,39,176,0.35)',
+    backgroundColor: 'rgba(156,39,176,0.08)',
+  },
+  hashStreamTextAI: {
+    color: '#ce93d8',
   },
   // ── Background FX ──
   scanline: {
