@@ -4,7 +4,7 @@
 - **Fase**: Phase 4 — La Crisis Energética (narrativa)
 - **Estado**: Implemented
 - **Prioridad**: High
-- **Última actualización**: 2026-03-28
+- **Última actualización**: 2026-04-18
 - **Depende de**: Hardware tiers 9-11 implementados (Opción B)
 
 ---
@@ -89,7 +89,23 @@ El sistema tiene tres momentos narrativos distintos:
 | Hydroelectric Dam | 1,500 MW | $5,000,000 | 1.2× | 💧 |
 | Geothermal Plant | 2,500 MW | $25,000,000 | 1.2× | 🌋 |
 
-*El cap de 8,000 MW permite operar cómodamente Mining Farms y algunos Quantum Miners, pero no 5× Supercomputer sin no-renovables. Los costos escalan 1.2× por unidad comprada (exponencial).*
+*El cap base de 8,000 MW permite operar cómodamente Mining Farms y algunos Quantum Miners, pero no 5× Supercomputer sin no-renovables. Los costos escalan 1.2× por unidad comprada (exponencial).*
+
+#### Renewable Upgrades (cap expansion)
+
+El cap de renovables se puede expandir secuencialmente comprando upgrades:
+
+| Upgrade | Cap Increase | New Cap | Cost ($) | Requires | Icon |
+|---------|:---:|:---:|:---:|---|:---:|
+| Grid Expansion | +4,000 MW | 12,000 MW | $5,000,000 | — | 🔌 |
+| Wind Network | +6,000 MW | 18,000 MW | $20,000,000 | Grid Expansion | 🌐 |
+| Smart Grid | +12,000 MW | 30,000 MW | $100,000,000 | Wind Network | ⚡ |
+
+*Con las tres upgrades, el cap renovable final es 30,000 MW — suficiente para operar 10 Quantum Miners (20,000 MW) sin no-renovables. Esto es el camino "limpio" del juego, pero requiere $125M de inversión total.*
+
+**Configuración**: `ENERGY_CONFIG.RENEWABLE_UPGRADES` en `balanceConfig.ts`.
+
+**Good Ending discount**: Cada prestige run con good ending otorga 30% de descuento en upgrades renovables (cap 80%). Ver `GOOD_ENDING_RENEWABLE_DISCOUNT_PER_RUN` y `GOOD_ENDING_RENEWABLE_DISCOUNT_CAP` en `balanceConfig.ts`.
 
 #### No-renovables (sin cap, depletan Recursos del Planeta)
 | Fuente | MW generados | Costo base ($) | Cost Multiplier | Depleción (% planeta/MW/s) | Ícono |
@@ -243,6 +259,12 @@ export const ENERGY_CONFIG = {
     quantum_miner: 2_000,
     supercomputer: 10_000,
   },
+
+  RENEWABLE_UPGRADES: [
+    { id: 'grid_expansion', capIncreaseMW: 4_000, cost: 5_000_000, requiresUpgrade: null, icon: '🔌' },
+    { id: 'wind_network', capIncreaseMW: 6_000, cost: 20_000_000, requiresUpgrade: 'grid_expansion', icon: '🌐' },
+    { id: 'smart_grid', capIncreaseMW: 12_000, cost: 100_000_000, requiresUpgrade: 'wind_network', icon: '⚡' },
+  ],
 };
 ```
 
@@ -271,7 +293,7 @@ export interface EnergyState {
   totalGeneratedMW: number;       // calculado
   totalRequiredMW: number;        // calculado
   nonRenewableActiveMW: number;   // calculado, para depleción del planeta
-  aiControlled: boolean;          // true cuando IA Nivel 3 está activa
+  aiControlled: boolean;          // Exists in type but AI control is primarily tracked via state.ai.isAutonomous
 }
 
 // En GameState, agregar:

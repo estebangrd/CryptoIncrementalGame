@@ -2,22 +2,26 @@
 
 ## Estado
 - **Fase**: Phase 7 — El Colapso (narrativa)
-- **Estado**: Planned
+- **Estado**: Implemented
 - **Prioridad**: High
-- **Última actualización**: 2026-02-22
+- **Última actualización**: 2026-04-18
 - **Depende de**: Narrative Events implementado, Prestige System implementado
 
 ---
 
 ## Descripción
 
-El juego tiene dos endings posibles, ambos son una forma de prestige:
+El juego tiene tres endings posibles, todos son una forma de prestige:
 
 **Ending normal — El Colapso**: Los Recursos del Planeta llegan a 0%. La civilización colapsa. El jugador ve una pantalla de estadísticas finales con tono apocalíptico. Un grupo de supervivientes escapa a un nuevo planeta llevando los multiplicadores de legado del jugador. Prestige con todos los bonos acumulados.
 
 **Ending alternativo — El Minero Responsable**: El jugador completa el blockchain (21 millones de bloques) con Recursos del Planeta > 0%. La humanidad sobrevive. Prestige con un bonus diferente: "Sustainable Mining", ligeramente más débil en producción pura pero con descuento permanente en energía renovable.
 
-Ambos endings activan un prestige. Solo difieren en la narrativa, los textos, y el tipo de bonus de legado.
+**Ending tercer tipo — Colapso Humano**: El jugador agota los recursos del planeta sin ayuda de la IA. Solo accesible via debug button — no se activa durante gameplay normal. Mecánicamente equivalente al Colapso pero con narrativa diferente (sin mención a la IA).
+
+> **Nota de implementacion**: `human_collapse` es un EndingType registrado en `src/types/game.ts` y soportado por `EndingScreen.tsx`, pero solo se puede activar a traves del debug menu en Settings. No existe un trigger automatico en el gameplay. `EndingType` es `'collapse' | 'human_collapse' | 'good_ending' | null`.
+
+Los tres endings activan un prestige. Solo difieren en la narrativa, los textos, y el tipo de bonus de legado.
 
 ---
 
@@ -188,7 +192,11 @@ const goodEndingPrestigeBonus = {
 
 // El jugador que alterna estrategias acumula ambos tipos de bonus
 // (productionMultiplier acumula separadamente por tipo de ending)
+// En COMPLETE_ENDING_PRESTIGE los bonos se multiplican juntos:
+//   totalEndgameMultiplier = collapseBonus * goodEndingBonus
 ```
+
+> **Nota de implementacion**: En `COMPLETE_ENDING_PRESTIGE`, los contadores `collapseCount` y `goodEndingCount` se incrementan ANTES de calcular el bonus. Esto significa que el bonus ya incluye la run actual. Por ejemplo, en el primer collapse, `newCollapseCount = 1` y el bonus sera `1 + (0.15 * 1) = 1.15`. Tanto `collapse` como `human_collapse` incrementan `collapseCount`. La logica esta en `src/utils/endgameLogic.ts` (`calculateEndingBonus` y `calculateTotalEndgameProductionMultiplier`).
 
 ---
 
@@ -211,12 +219,12 @@ export const ENDGAME_CONFIG = {
     'blocksMined',
     'totalCryptoCoinsEarned',
     'totalMoneyEarned',
-    'totalEnergyConsumedTW',
     'planetResourcesDestroyed',
     'aiLevelReached',
     'runDurationMinutes',
   ],
 };
+
 ```
 
 ---
@@ -226,13 +234,12 @@ export const ENDGAME_CONFIG = {
 ```typescript
 // src/types/game.ts — agregar / modificar
 
-export type EndingType = 'collapse' | 'good_ending' | null;
+export type EndingType = 'collapse' | 'human_collapse' | 'good_ending' | null;
 
-export interface RunStats {
+export interface EndgameStats {
   blocksMined: number;
   totalCryptoCoinsEarned: number;
   totalMoneyEarned: number;
-  totalEnergyConsumedTW: number;
   planetResourcesAtEnd: number;
   aiLevelReached: AILevel;
   runDurationMs: number;
@@ -242,9 +249,14 @@ export interface RunStats {
 // En GameState, modificar PrestigeState para incluir:
 // collapseCount: number;     // cuántas veces terminó en colapso
 // goodEndingCount: number;   // cuántas veces terminó el buen ending
-// lastRunStats: RunStats | null;
-// endingType: EndingType;    // ending de la run actual
+// lastEndgameStats: EndgameStats | null;  // estadísticas capturadas al triggear ending
+// goodEndingTriggered: boolean;  // true when 21M blocks mined with resources > 0
+// disconnectAttempted: boolean;  // player already saw the disconnect popup
 ```
+
+> **Nota de implementacion**: La interfaz se llama `EndgameStats` (no `RunStats`) en el codigo (`src/types/game.ts`). El campo `totalEnergyConsumedTW` NO existe ni se trackea en el game state. La estadistica de energia no se muestra en el EndingScreen. `RunStats` es una interfaz separada que trackea stats del run actual (blocksMinedThisRun, coinsEarnedThisRun, etc.) y no incluye campos de endgame. El builder esta en `src/utils/endgameLogic.ts` (`buildEndgameStats`).
+
+> **Nota de implementacion**: El campo se llama `lastEndgameStats` (no `lastRunStats`) y es de tipo `EndgameStats` (no `RunStats`). No existe un campo `endingType` en el state directamente -- el tipo de ending se determina por los flags `collapseTriggered` y `goodEndingTriggered`.
 
 ---
 
@@ -282,6 +294,9 @@ export interface RunStats {
 - `state.blocksMined >= 21_000_000`
 - `state.planetResources > 0`
 - `state.goodEndingTriggered === false`
+- `state.ai.level < 3` (el buen ending es imposible con AI Level 3)
+
+> **Nota de implementacion**: El buen ending tambien se triggerea al cargar un save (`LOAD_GAME`) cuando `blocksMined >= 21M` y `planetResources > 0` y `ai.level < 3`. Esto cubre el caso de app reload cuando los bloques ya alcanzaron 21M. Ver `ADD_PRODUCTION` en `GameContext.tsx`.
 
 ### Post-prestige
 - `planetResources` resetea a 100

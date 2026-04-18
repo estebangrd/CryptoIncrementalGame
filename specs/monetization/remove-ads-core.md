@@ -48,8 +48,10 @@ El producto incluye Restore Purchases functionality para usuarios que reinstalan
 6. **Restore Purchases automatico**: En inicializacion IAP
 7. **Multi-device sync**: Funciona en todos los devices del usuario
 8. **Promociones opcionales**: Mostrar despues de X ads vistos
+> **Nota de implementacion**: La config de promotions existe en `REMOVE_ADS_CONFIG` de `iapConfig.ts` (`interstitialThreshold: 50`, `reminderThreshold: 25`) y la accion `MARK_PROMO_SHOWN` existe en el reducer, pero NO hay ningun componente que muestre un dialog de promocion basado en estos thresholds. La logica de "mostrar promo despues de N interstitials" no esta implementada como UI.
 9. **No refund detection sin backend**: Usuario mantiene beneficio (aceptable Phase 1)
 10. **Analytics tracking obligatorio**: Trackear conversion funnel completo
+> **Nota de implementacion**: Los eventos se emiten via `logEvent()` pero van a `DevAnalyticsProvider` (solo consola). Firebase Analytics no esta integrado.
 
 ## Constantes de Configuracion
 
@@ -79,6 +81,10 @@ export const REMOVE_ADS_CONFIG = {
     recommended: true,                      // Show "Recommended" badge
     adFreeIndicator: true,                  // Show "Ad Free" badge after purchase
     adFreeIndicatorDuration: 10000,         // Show for 10 seconds
+    // **Nota de implementacion**: El badge "Ad Free" SI esta implementado en
+    // GameScreen.tsx (linea ~335-473). Se muestra brevemente despues de la compra
+    // con duracion de REMOVE_ADS_CONFIG.badges.adFreeIndicatorDurationMs.
+    // La config usa `adFreeIndicatorDurationMs` (no `adFreeIndicatorDuration`).
   },
 
   // Analytics
@@ -97,6 +103,11 @@ interface GameState {
     removeAdsPurchased: boolean;            // Si fue comprado
     removeAdsPurchaseDate: number | null;   // Timestamp de compra
     adsSeenBeforePurchase: number;          // Cuantos ads vio antes de comprar
+    // **Nota de implementacion**: Este campo se incrementa en la accion
+    // INCREMENT_INTERSTITIAL_COUNT (cada vez que se muestra un interstitial
+    // y Remove Ads no esta comprado), pero NO se captura como snapshot al
+    // momento de la compra. El reducer PURCHASE_REMOVE_ADS no copia el valor
+    // de totalInterstitialsShown; solo marca removeAdsPurchased: true.
 
     // Flash sale state (see remove-ads-flash-sale.md)
     flashSaleExpiresAt: number;
@@ -111,11 +122,17 @@ interface GameState {
     totalInterstitialsShown: number;        // Total de interstitials mostrados
     totalBannerImpressions: number;         // Total de banner impressions
     lastPromotionShownAt: number | null;    // Timestamp de ultima promo
+    // **Nota de implementacion**: totalBannerImpressions existe en el tipo
+    // y se inicializa en 0, pero NINGUN reducer action lo incrementa.
+    // Es un campo vestigial. totalInterstitialsShown SI se incrementa
+    // via la accion UPDATE_INTERSTITIAL_TIME e INCREMENT_INTERSTITIAL_COUNT.
   };
 }
 ```
 
 ### Promotion Dialog State
+> **Nota de implementacion**: Esta interfaz `PromotionState` NO existe en el codigo. No hay componente de promotion dialog ni tracking de dismissed count. La accion `MARK_PROMO_SHOWN` existe en el reducer pero solo actualiza `adState.lastPromotionShownAt` — no hay estado de `triggered`, `dismissed`, ni `dismissedCount`.
+
 ```typescript
 interface PromotionState {
   type: 'remove_ads_promo';
@@ -160,6 +177,9 @@ function shouldShowRewardedAdButton(gameState: GameState): boolean {
 ```
 
 ## GameContext Action
+
+> **Nota de implementacion**: La implementacion real difiere del codigo de referencia abajo. El reducer actual: (1) recibe un `PurchaseRecord` como payload, (2) NO captura `adsSeenBeforePurchase` desde `adState.totalInterstitialsShown` — ese campo se acumula incrementalmente via `INCREMENT_INTERSTITIAL_COUNT`, (3) agrega el record a `purchaseHistory`, y (4) pone `isPurchasing: false`.
+
 ```typescript
 // src/contexts/GameContext.tsx
 case 'PURCHASE_REMOVE_ADS':
@@ -182,6 +202,7 @@ case 'PURCHASE_REMOVE_ADS':
 - `GameContext` - Para state management
 - `AsyncStorage` - Para persistencia
 - `Firebase Analytics` - Para tracking
+> **Nota de implementacion**: Firebase Analytics NO esta integrado. Se usa `DevAnalyticsProvider` (solo consola).
 - `Ad System` - Para verificar y ocultar ads
 
 ### Bloquea

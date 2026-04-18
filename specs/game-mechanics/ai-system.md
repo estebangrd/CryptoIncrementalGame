@@ -2,9 +2,9 @@
 
 ## Estado
 - **Fase**: Phase 5 — La Inteligencia Artificial (narrativa)
-- **Estado**: Planned
+- **Estado**: Implemented
 - **Prioridad**: High
-- **Última actualización**: 2026-02-22
+- **Última actualización**: 2026-04-18
 - **Depende de**: Energy System implementado, Hardware tiers 9-11 implementados
 
 ---
@@ -33,7 +33,7 @@ La IA tiene tres niveles de autonomía progresivos. Cada nivel es una compra sep
 **Cuando** entra a la pestaña de Upgrades
 **Entonces**
 - Aparece una sección especial "Inteligencia Artificial" separada del resto de upgrades
-- Muestra el upgrade "IA — Nivel 1: Asistente" disponible para comprar por $500,000
+- Muestra el upgrade "IA — Nivel 1: Asistente" disponible para comprar por $25,000,000
 - Descripción: "Un equipo de investigadores ofrece integrar IA en tu operación. El sistema analizará tu minería y sugerirá optimizaciones."
 
 ### Caso 2: IA Nivel 1 — Asistente
@@ -48,7 +48,7 @@ La IA tiene tres niveles de autonomía progresivos. Cada nivel es una compra sep
 - Ejemplo de sugerencias: "La IA recomienda minar NeuralCoin. Rendimiento proyectado: +340%."
 
 ### Caso 3: IA Nivel 2 — Copiloto
-**Dado que** el jugador tiene IA Nivel 1 y $5,000,000
+**Dado que** el jugador tiene IA Nivel 1 y $100,000,000
 **Cuando** compra IA Nivel 2
 **Entonces**
 - La IA toma decisiones operativas automáticamente: reasigna hashrate entre cryptos para maximizar profit
@@ -58,7 +58,7 @@ La IA tiene tres niveles de autonomía progresivos. Cada nivel es una compra sep
 - El log de IA pasa de "sugerencias" a "acciones tomadas": "La IA reasignó 60% del hashrate a QuantumBit."
 
 ### Caso 4: IA Nivel 3 — Autónomo (IRREVERSIBLE)
-**Dado que** el jugador tiene IA Nivel 2 y $50,000,000
+**Dado que** el jugador tiene IA Nivel 2 y $250,000,000
 **Cuando** intenta comprar IA Nivel 3
 **Entonces**
 - Aparece un modal de confirmación con texto de advertencia explícito:
@@ -221,12 +221,19 @@ export interface AIState {
   isAutonomous: boolean;       // true cuando level === 3
   logEntries: AILogEntry[];    // últimas 50 entradas
   lastSuggestionAt: number;    // timestamp
+  capRemovalLogged: boolean;   // LOG 14:23 — cap 21M removed
+  renewablesSatLogged: boolean; // LOG 31:07 — renewables saturated
+  lastActionAt: number;        // timestamp of last observer action
+  aiHardwareCreated: string[]; // IDs of AI-exclusive hardware injected
 }
 
 // En GameState, agregar:
 // ai: AIState;
 // aiCryptosUnlocked: string[]; // ['neural_coin', 'quantum_bit', 'singularity_coin']
+// aiTickerMessage: string;     // last AI observer action message
 ```
+
+> **Nota de implementacion**: El control de la IA sobre el sistema de energia NO se trackea per-hardware. No existe un campo `aiControlled` en los items de hardware individuales. En su lugar, `EnergyState.aiControlled: boolean` en `src/types/game.ts` indica si la IA Level 3 esta activa globalmente. Se setea a `true` en la accion `UPGRADE_AI` cuando se compra Level 3. Tambien hay un modo `OBSERVER_MODE` en `AI_CONFIG` con `ACTION_INTERVAL_MS: 4000` para acciones autonomas de la IA (sell CC, etc.).
 
 ---
 
@@ -252,15 +259,15 @@ export interface AIState {
 ┌─────────────────────────────────────────────┐
 │  🤖 INTELIGENCIA ARTIFICIAL                 │
 ├─────────────────────────────────────────────┤
-│  IA Nivel 1 — Asistente          $500,000  │
+│  IA Nivel 1 — Asistente       $25,000,000  │
 │  +20% producción global                     │
 │  "Un equipo de investigadores..."            │
 │  [COMPRAR]                                  │
 ├─────────────────────────────────────────────┤
-│  IA Nivel 2 — Copiloto       $5,000,000 🔒 │
+│  IA Nivel 2 — Copiloto      $100,000,000 🔒 │
 │  Requiere: IA Nivel 1                        │
 ├─────────────────────────────────────────────┤
-│  IA Nivel 3 — Autónomo      $50,000,000 🔒 │
+│  IA Nivel 3 — Autónomo      $250,000,000 🔒 │
 │  Requiere: IA Nivel 2 • ⚠️ IRREVERSIBLE    │
 └─────────────────────────────────────────────┘
 ```
@@ -324,6 +331,8 @@ export interface AIState {
 ## Criterios de Aceptación
 
 - [ ] La sección de IA no aparece en Upgrades hasta tener Quantum Miner
+> **Nota de implementacion**: `AI_CONFIG` en `balanceConfig.ts` tambien incluye `AI_EXCLUSIVE_HARDWARE` con dos tiers adicionales: `neural_cluster` (level 12, cost $10B) y `singularity_core` (level 13, cost $100B). Estos son hardware inyectados por la IA autonoma, definidos en `aiExclusiveHardware` en `hardwareData.ts`.
+
 - [ ] Nivel 1 cuesta $25M y da +20% producción
 - [ ] Nivel 2 cuesta $100M, requiere Nivel 1, da +50% producción
 - [ ] Nivel 3 cuesta $250M, requiere Nivel 2, muestra modal de advertencia

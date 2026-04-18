@@ -17,77 +17,87 @@
 
 ## Remove Ads Product Card (Store)
 
+> **Nota de implementación**: La implementación actual usa un diseño cyberpunk completamente diferente al diseño blanco/material descrito abajo. El card real usa `LinearGradient` con tonos rojos/naranjas (`#ff3d5a` → `#ff8c42`), un icono `🚫` grande, perks listados con iconos `✕` y `✓`, y un sistema de "unlock steps" (3 compras → desbloqueo progresivo). No existe un componente separado `RemoveAdsCard.tsx` — toda la UI está integrada en `ShopScreen.tsx` → `renderNoAds()`.
+
 ### Not Purchased State
-- [ ] Posicion: Top de la tienda (primera opcion)
+- [x] Posicion: Top de la tienda (primera opcion) — es el primer tab `removeAds`
 - [ ] Badge: "Popular" o "Recommended" (destacado)
-- [ ] Icono: Grande, ad blocker symbol
-- [ ] Titulo: "Remove Ads" (bold, grande)
-- [ ] Descripcion:
-  - "Remove annoying banner and interstitial ads"
-  - "Keep rewarded ads for free boosts"
-  - "One-time purchase, permanent benefit"
+  > **Nota de implementación**: No se muestra badge "Popular" ni "Recommended" en la UI. La config `REMOVE_ADS_CONFIG.badges.popular` existe en `iapConfig.ts` pero no se renderiza.
+- [x] Icono: Grande, ad blocker symbol — usa emoji `🚫`
+- [x] Titulo: "Remove Ads" (bold, grande) — via `t('shop.noAds.title')`
+- [x] Descripcion (como perks):
+  - "✕ No banner ads"
+  - "✕ No interstitial ads"
+  - "✓ Rewarded ads still available"
+  - "✓ Permanent"
 - [ ] Precio: "$0.99" (muy grande, verde)
-- [ ] Boton: "Buy Now" (verde brillante, call-to-action)
+  > **Nota de implementación**: El precio normal se muestra como **$2.99** (price anchoring). El precio real de $0.99 solo aparece cuando hay flash sale activa, tachando el $2.99. Sin flash sale, el botón solo dice el texto de compra sin mostrar $0.99 explícitamente.
+- [x] Boton: Buy button con shimmer animation (rojo sin sale, amarillo con sale)
 - [ ] Si el usuario ha visto muchos ads (>20 interstitials):
   - Badge adicional: "You've seen X ads - time to remove them!"
   - Discount offer (opcional): "Limited time: $0.99 -> $0.49"
+  > **Nota de implementación**: No implementado. No existe lógica de "ads seen" banner ni promotion dialog en ShopScreen. La config `REMOVE_ADS_CONFIG.promotions` existe pero no hay UI que la consuma. El action `MARK_PROMO_SHOWN` existe en el reducer pero no se despacha desde ninguna parte.
 
 ### Purchased State
-- [ ] Badge: "Purchased" (verde)
-- [ ] Boton: "Purchased" (gris, deshabilitado)
-- [ ] Checkmark verde grande
-- [ ] Descripcion actualizada: "✓ Ads removed - Thank you!"
+- [x] Badge/banner: "Owned" banner verde — via `t('shop.noAds.owned')`
+- [x] Boton: No se muestra (reemplazado por banner "Owned")
+- [ ] Checkmark verde grande — no hay checkmark separado, se muestra texto de "Owned"
+- [ ] Descripcion actualizada: "✓ Ads removed - Thank you!" — se muestra banner "Owned" sin descripción adicional
 
 ## Confirmation Dialog
+
+> **Nota de implementación**: No hay confirmation dialog. `confirmPurchase()` llama directamente a `doPurchase()`, que invoca `purchaseProduct()` del IAPService sin diálogo previo. El OS muestra su propio diálogo de confirmación (Face ID / biometrics).
+
 - [ ] Titulo: "Remove Ads"
-- [ ] Lista de beneficios:
-  - "✓ Remove banner ads"
-  - "✓ Remove interstitial ads"
-  - "✓ Keep rewarded ads for boosts"
-  - "✓ Permanent - never expires"
+- [ ] Lista de beneficios
 - [ ] Precio: "$0.99" (destacado)
 - [ ] Warning: "One-time purchase" (subtle)
-- [ ] Botones:
-  - "Cancel" (gris, outlined)
-  - "Purchase" (verde, filled, bold)
+- [ ] Botones: "Cancel" / "Purchase"
 
 ## Success Dialog
+
+> **Nota de implementación**: No hay success dialog ni animación de confetti. Tras la compra exitosa, el reducer marca `removeAdsPurchased = true` y la UI se actualiza inmediatamente (el card muestra "Owned"). Un toast puede aparecer vía `showToast`, pero no hay diálogo dedicado.
+
 - [ ] Icono: Checkmark grande verde con animacion
 - [ ] Titulo: "Ads Removed!" (bold)
-- [ ] Descripcion:
-  - "Banner and interstitial ads are now removed"
-  - "Enjoy ad-free gameplay!"
-- [ ] Note: "Rewarded ads are still available for free boosts" (subtle)
+- [ ] Descripcion
 - [ ] Boton: "Awesome!" (verde)
 - [ ] Background: Confetti animation (sutil)
 
 ## Ad Free Badge (Post-Purchase)
-- [ ] Ubicacion: Top bar, junto a coins/money
-- [ ] Icono: Checkmark o shield
-- [ ] Texto: "Ad Free"
-- [ ] Color: Dorado/verde
-- [ ] Animacion: Fade in, visible 10s, fade out
-- [ ] Al tocar: Tooltip "Thanks for supporting the game!"
+
+> **Nota de implementación**: Implementado en `GameScreen.tsx`. El badge se muestra en el top bar con animación fade-in → 10s visible → fade-out, controlado por `REMOVE_ADS_CONFIG.badges.adFreeIndicatorDurationMs`. No tiene handler de toque (tooltip no implementado).
+
+- [x] Ubicacion: Top bar, junto a coins/money
+- [x] Icono: Checkmark — muestra "✓ Ad Free"
+- [x] Texto: "Ad Free"
+- [x] Color: Verde (usando estilos `adFreeBadge` / `adFreeBadgeText`)
+- [x] Animacion: Fade in (300ms), visible 10s, fade out (400ms)
+- [ ] Al tocar: Tooltip "Thanks for supporting the game!" — no implementado
 
 ## Promotion Dialog (After X Ads)
+
+> **Nota de implementación**: No implementado. No existe componente de promotion dialog. La configuración (`REMOVE_ADS_CONFIG.promotions`) y el estado (`adState.lastPromotionShownAt`, action `MARK_PROMO_SHOWN`) existen en el código pero no hay UI que muestre el diálogo ni lógica que lo dispare. El archivo `src/utils/promotionTriggers.ts` referenciado en la spec de analytics no existe.
+
 - [ ] Titulo: "You've seen X ads!"
-- [ ] Descripcion:
-  - "Remove all ads for just $0.99"
-  - "Support the game and enjoy ad-free experience"
+- [ ] Descripcion
 - [ ] Icono: Frustrated emoji o ad icon con X
-- [ ] Botones:
-  - "Remove Ads Now" (verde, large)
-  - "Maybe Later" (gris, small)
+- [ ] Botones: "Remove Ads Now" / "Maybe Later"
 - [ ] Checkbox: "Don't show this again" (opcional)
 
 ## Settings Screen (Remove Ads Status)
-- [ ] Seccion: "Ads & Purchases"
+
+> **Nota de implementación**: Implementado en `SettingsModal.tsx`. La sección "Ads & Purchases" existe. El estado comprado muestra "✓ Ad Free Mode: Active". El botón "Restore Purchases" (`🔄 Restore Purchases`) existe y llama a `restorePurchases()` del IAPService. Sin embargo, no hay link directo a la store cuando no está comprado — solo se muestra el status si ya fue comprado.
+
+- [x] Seccion: "Ads & Purchases"
 - [ ] Item:
-  - Si NO comprado: "Remove Ads - $0.99" (link a store)
-  - Si comprado: "Ad Free Mode: ✓ Active" (verde, checkmark)
-- [ ] Boton: "Restore Purchases"
+  - Si NO comprado: "Remove Ads - $0.99" (link a store) — no implementado, la sección solo muestra status si está comprado
+  - Si comprado: "Ad Free Mode: ✓ Active" (verde, checkmark) — implementado
+- [x] Boton: "Restore Purchases" — implementado con toast de resultado
 
 ## Reference Component Implementation
+
+> **Nota de implementación**: No existe `RemoveAdsCard.tsx` como componente separado. Toda la UI de Remove Ads está integrada en `ShopScreen.tsx` → función `renderNoAds()`. El diseño real usa cyberpunk theme (fondos oscuros, LinearGradient rojo/naranja, fuentes Orbitron) en lugar del diseño blanco/material mostrado abajo. El código de referencia abajo NO refleja la implementación actual.
 
 ```tsx
 // src/components/RemoveAdsCard.tsx (full render)
@@ -161,6 +171,8 @@ export const RemoveAdsCard: React.FC = () => {
 ```
 
 ## Styles
+
+> **Nota de implementación**: Los estilos reales están en `ShopScreen.tsx` con prefijo `na_` (ej: `na_hero`, `na_buyBtnOuter`, `na_priceNormal`). Usan el tema cyberpunk (`colors` y `fonts` de `theme.ts`), no los colores Material/blancos de abajo.
 
 ```typescript
 const styles = StyleSheet.create({

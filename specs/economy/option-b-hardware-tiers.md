@@ -4,9 +4,10 @@
 - **Fase**: Game Length Extension (Pre-Phase 4)
 - **Estado**: Implemented & Active
 - **Prioridad**: High
-- **Última actualización**: 2026-03-28
+- **Última actualización**: 2026-04-18
 - **Objetivo conjunto**: Alcanzar 10-15h por primera run (combinado con Opciones A, C y D)
 - **Contribución de esta opción**: Agregar 3 capas de contenido endgame que requieren horas para alcanzar
+- **Nota**: Hardware values were superseded by `bitcoin-faithful-economy.md` (Economy Rebalance v3). Actual values: mining_farm ($120M, 100K blk/s), quantum_miner ($500M, 650K blk/s), supercomputer ($2B, 4M blk/s). Unlock requirement: 8 units (not 5). `megascale` category was never implemented — upgrades use `target: hardware_id` directly.
 
 ## Narrativa del Juego (Contexto)
 

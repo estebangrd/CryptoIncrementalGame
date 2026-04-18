@@ -4,8 +4,8 @@
 - **Fase**: Game Length Extension (Pre-Phase 4)
 - **Estado**: ⚠️ Superseded by `bitcoin-faithful-economy.md`
 - **Prioridad**: High
-- **Última actualización**: 2026-03-28
-- **Nota**: Los valores de esta spec fueron **superados** por el Economy Rebalance v2 (2026-03-27). Los valores actuales están en `balanceConfig.ts` y documentados en `bitcoin-faithful-economy.md`. Esta spec se mantiene como referencia histórica. Los costos reales implementados son significativamente menores a los propuestos aquí (ej: basic_cpu=$25 vs $500 propuesto).
+- **Última actualización**: 2026-04-18
+- **Nota**: **SUPERSEDED**. Los valores de esta spec fueron superados por el Economy Rebalance v2/v3. Los valores actuales están en `balanceConfig.ts` y documentados en `bitcoin-faithful-economy.md`. Global `COST_MULTIPLIER` = 1.35 (not 1.20 as proposed here), but per-tier `COST_MULTIPLIER_BY_ID` is used instead (ranges 1.20-1.40). `UNLOCK_REQUIREMENT` = 8 matches current code.
 - **Objetivo conjunto**: Alcanzar game length significativo por primera run
 - **Contribución de esta opción**: ~2-3x slowdown en adquisición de hardware (posteriormente rebalanceado por bitcoin-faithful-economy)
 

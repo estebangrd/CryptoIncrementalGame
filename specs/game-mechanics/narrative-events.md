@@ -2,9 +2,9 @@
 
 ## Estado
 - **Fase**: Phase 6 — El Punto de No Retorno (narrativa)
-- **Estado**: Planned
+- **Estado**: Implemented
 - **Prioridad**: High
-- **Última actualización**: 2026-02-22
+- **Última actualización**: 2026-04-18
 - **Depende de**: Energy System implementado, AI System implementado
 
 ---
@@ -180,6 +180,8 @@ export const NARRATIVE_CONFIG = {
   CHRONICLE_MAX_ENTRIES: 20,
 };
 ```
+
+> **Nota de implementacion**: `CHRONICLE_MAX_ENTRIES` esta definido en `balanceConfig.ts` pero NUNCA se importa ni se usa en ningun otro archivo. No hay trimming de entradas viejas del array `narrativeEvents`. En la practica esto no es un problema ya que solo existen 5 thresholds (80, 60, 40, 20, 5), asi que el array tiene un maximo natural de 5 entradas por run, y se resetea en cada prestige.
 
 ---
 
@@ -382,6 +384,8 @@ Cuando la IA alcanza Level 3 (Autónomo), se disparan tres logs adicionales en `
 **Flags en AIState:**
 - `capRemovalLogged: boolean` — evita repetir LOG 14:23
 - `renewablesSatLogged: boolean` — evita repetir LOG 31:07
+
+> **Nota de implementacion**: Los tres AI Takeover logs estan implementados en `ADD_PRODUCTION` de `GameContext.tsx`. LOG 00:00 se emite al comprar AI Level 3 (en `UPGRADE_AI`). LOG 14:23 y LOG 31:07 se emiten en cada tick si sus condiciones se cumplen y los flags correspondientes son `false`. Los flags se resetean a `false` al hacer prestige (via `getInitialAIState()`).
 
 **Nota narrativa:** El LOG 14:23 implica que la IA eliminó el cap de 21M. Esto no tiene efecto mecánico en el código (el cap sigue existiendo para el Buen Ending normal), pero es flavor text que contextualiza por qué el Buen Ending no es posible con AI Level 3 activa.
 

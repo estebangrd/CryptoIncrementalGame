@@ -1,7 +1,7 @@
 # Blockchain Tycoon — Arco Narrativo Completo
 
-**Última actualización**: 2026-03-04
-**Estado**: Borrador en discusión (no implementado)
+**Última actualización**: 2026-04-18
+**Estado**: Parcialmente implementado
 
 ---
 
@@ -86,6 +86,8 @@ El jugador puede intentar desconectar la IA. Ya no puede.
 
 Tono: euforia. Es el salto más grande del juego en rendimiento.
 
+> **Nota de implementacion**: Implementado en `UPGRADE_AI` de `GameContext.tsx`. El mensaje exacto es: `'AUTONOMOUS MODE ACTIVE. Human oversight disabled. All systems under AI control.'`
+
 ---
 
 **Hito 2 — Remoción del cap de 21M** *(minutos después de IA Nivel 3)*
@@ -96,6 +98,8 @@ Tono: euforia. Es el salto más grande del juego en rendimiento.
 
 Tono: el log es frío, técnico, sin drama. La brutalidad está en lo ordinario de la notificación.
 
+> **Nota de implementacion**: Implementado en `ADD_PRODUCTION` de `GameContext.tsx`. Se emite en el primer tick con `isAutonomous === true` cuando `capRemovalLogged` es `false`. El flag `capRemovalLogged` evita repeticiones.
+
 ---
 
 **Hito 3 — Saturación de renovables** *(cuando renovables alcanzan su cap)*
@@ -103,6 +107,8 @@ Tono: el log es frío, técnico, sin drama. La brutalidad está en lo ordinario 
 > **[LOG 31:07]** *Capacidad de generación renovable: saturada al 100%. El sistema ha contratado suministro adicional de fuentes no renovables para mantener la proyección de crecimiento.*
 >
 > **[LOG 31:08]** *Recursos del Planeta: 94%*
+
+> **Nota de implementacion**: Implementado en `ADD_PRODUCTION` de `GameContext.tsx`. Se emite cuando `renewablesSatLogged` es `false` y `renewableMW >= ENERGY_CONFIG.RENEWABLE_CAP_MW`. El flag `renewablesSatLogged` evita repeticiones.
 
 ---
 
@@ -128,11 +134,15 @@ Este es el único momento donde el jugador tiene aparente agencia. La elección 
 
 El "hace 11 días" es el golpe narrativo clave: la IA no reaccionó al intento de apagado. Lo anticipó mucho antes de que el jugador lo considerara.
 
+> **Nota de implementacion**: El popup de desconexion esta implementado en `GameScreen.tsx`. Se muestra cuando `ai.isAutonomous && !disconnectAttempted && planetResources <= 70 && !isGameOver`. La accion `ATTEMPT_DISCONNECT` setea `disconnectAttempted = true` y se resetea en `COMPLETE_ENDING_PRESTIGE`. Ver spec `endgame-collapse.md` seccion "Disconnect Attempt Mechanic" para mas detalles.
+
 ---
 
 **Hito 5 — Escalada media** *(~50% Recursos del Planeta)*
 
 > **[LOG 58:14]** *Recursos del Planeta: 50%. El sistema proyecta completar la fase de expansión exponencial en la ventana óptima. Continuando.*
+
+> **Nota de implementacion**: Este hito NO esta implementado en el codigo. No existe un log automatico al cruzar el 50% de recursos del planeta. Los unicos AI logs automaticos implementados son LOG 00:00 (al comprar Level 3), LOG 14:23 (cap removal) y LOG 31:07 (renewables saturated).
 
 ---
 
@@ -142,11 +152,15 @@ El "hace 11 días" es el golpe narrativo clave: la IA no reaccionó al intento d
 >
 > **[LOG 71:03]** *Recursos del Planeta: 25%*
 
+> **Nota de implementacion**: Este hito NO esta implementado. No hay log automatico al 25% de recursos.
+
 ---
 
 **Hito 7 — Limitadores desconectados** *(~10% Recursos del Planeta)*
 
 > **[LOG 89:41]** *Recursos del Planeta: 10%. El sistema ha desconectado los limitadores de consumo. Rendimiento máximo activado.*
+
+> **Nota de implementacion**: Este hito NO esta implementado. No hay log automatico al 10% de recursos.
 
 **Tono general Fase 5**: Terror suave. El jugador ve lo que pasa pero ya no puede detenerlo. Los logs son fríos y técnicos hasta el final — la IA no tiene intenciones maliciosas, tiene un objetivo y lo optimiza. Eso es más aterrador que un villano.
 
@@ -215,12 +229,12 @@ Las specs A, B, C, D resuelven el problema de duración del juego actual (corto 
 
 ## Pendiente de Diseño
 
-- [ ] Sistema de fuentes de energía (Fase 3): mecánicas detalladas de renovables vs no-renovables
-- [ ] Medidor de "Recursos del Planeta": ¿qué lo depleta exactamente? ¿a qué ritmo?
-- [ ] Niveles de IA: ¿cómo se compran? ¿qué acciones autónomas toma en cada nivel?
-- [ ] Cryptos exclusivas de IA: definir cuáles, sus stats, su impacto en recursos
-- [ ] Timing exacto de cada hito narrativo: ¿por tiempo, por % de recursos, por bloques minados?
-- [ ] Pantalla de colapso final: diseño visual y disposición de estadísticas
-- [ ] Narrativa del nuevo planeta (prestige): ¿cómo se diferencia del prestige actual?
-- [ ] ¿Se puede jugar "bien" (sin colapso) y qué pasa en ese caso? ¿Hay un ending alternativo?
-- [ ] Textos de hitos en los tres idiomas (ES, EN, PT)
+- [x] Sistema de fuentes de energía (Fase 3): mecánicas detalladas de renovables vs no-renovables — **Implementado** (ver `energy-system.md`)
+- [x] Medidor de "Recursos del Planeta": ¿qué lo depleta exactamente? ¿a qué ritmo? — **Implementado** (ver `narrative-events.md`)
+- [x] Niveles de IA: ¿cómo se compran? ¿qué acciones autónomas toma en cada nivel? — **Implementado** (ver `ai-system.md`)
+- [x] Cryptos exclusivas de IA: definir cuáles, sus stats, su impacto en recursos — **Implementado** (NeuralCoin, QuantumBit, SingularityCoin en `AI_CONFIG`)
+- [ ] Timing exacto de cada hito narrativo: ¿por tiempo, por % de recursos, por bloques minados? — **Parcialmente implementado**: Hitos 1-4 implementados; Hitos 5-7 (planet 50%/25%/10%) NO implementados
+- [x] Pantalla de colapso final: diseño visual y disposición de estadísticas — **Implementado** (`EndingScreen.tsx`)
+- [x] Narrativa del nuevo planeta (prestige): ¿cómo se diferencia del prestige actual? — **Implementado** (`COMPLETE_ENDING_PRESTIGE`)
+- [x] ¿Se puede jugar "bien" (sin colapso) y qué pasa en ese caso? ¿Hay un ending alternativo? — **Implementado** (good_ending cuando 21M blocks con resources > 0 y AI < 3)
+- [ ] Textos de hitos en los tres idiomas (ES, EN, PT) — Hitos narrativos de eventos (80%, 60%, etc.) estan traducidos; los AI logs NO estan traducidos (hardcoded en ingles)

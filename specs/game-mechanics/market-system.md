@@ -4,7 +4,7 @@
 - **Fase**: Phase 2 - Expansion (Implemented)
 - **Estado**: Implemented & Active
 - **Prioridad**: High (Monetization Bridge)
-- **Última actualización**: 2026-03-28
+- **Última actualización**: 2026-04-18
 
 ## Descripción
 
@@ -41,7 +41,7 @@ El CryptoCoin nativo deriva su precio del precio base de la era actual (`ERA_BAS
 - Se ejecuta un tick del proceso Ornstein-Uhlenbeck (`tickOU()`)
 - El nuevo precio = `ERA_BASE_PRICES[currentEra] × (1 + priceDeviation)`
 - `priceDeviation` se actualiza: mean-reversion + volatilidad del régimen + drift
-- Se agrega el nuevo precio al chart (ventana deslizante de 30 puntos)
+- Se agrega el nuevo precio al chart (ventana deslizante de 120 puntos)
 - Se descarta el punto más antiguo del chart
 - Si el régimen actual expira (`priceRegimeTicksLeft === 0`), se selecciona uno nuevo
 
@@ -88,7 +88,7 @@ cryptoCoinPrice = ERA_BASE_PRICES[currentEra] × (1 + priceDeviation)
 ```
 - `priceDeviation`: valor mean-reverting generado por proceso Ornstein-Uhlenbeck, rango **-0.30 a +0.40**
 - `ERA_BASE_PRICES`: [0.08, 0.50, 2.00, 5.00, 8.00, 8.00, 8.00] — el precio base sube con cada era
-- Parámetros OU: theta=0.12 (velocidad de reversión), sigma=0.045 (volatilidad base)
+- Parámetros OU: theta=0.12 (velocidad de reversión), sigma=0.055 (volatilidad base)
 - 6 regímenes de mercado (normal/bull/bear/volatile/spike/crash) modifican theta/sigma/drift
 
 ### Bitcoin (BTC)
@@ -160,12 +160,6 @@ function calculateSaleValue(amount: number, price: number): number {
   }
 
   const value = amount * price;
-
-  // Límite de seguridad para prevenir bugs
-  if (value > 100000000) { // $100M
-    console.warn('Suspiciously large transaction:', value);
-    return 0;
-  }
 
   return value;
 }
@@ -252,7 +246,7 @@ price = ERA_BASE_PRICES[currentEra] * (1 + newDeviation)
 ```
 
 - `theta` (0.12): velocidad de reversión a la media — previene que el precio diverga
-- `sigma` (0.045): volatilidad base por tick
+- `sigma` (0.055): volatilidad base por tick
 - `drift`: tendencia direccional (0 en normal, positivo en bull, negativo en bear)
 - `deviation` se clampea a [-0.30, +0.40] como safety rails
 
@@ -348,7 +342,7 @@ interface GameState {
 7. **Market se desbloquea con 10 bloques + 500 CC**: Ambas condiciones deben cumplirse (`UNLOCK_CONFIG.market`)
 8. **Hardware tab se desbloquea con $150 earned**: No importa el balance actual, sino el total ganado (`UNLOCK_CONFIG.hardware.requiredMoney`)
 9. **Los precios persisten offline**: Se guardan con el game state
-10. **Transacciones muy grandes son bloqueadas**: Límite de $100M para prevenir bugs. Indicar con un mensaje al usuario para que pueda vender un monto menor.
+10. **Validación de transacciones**: Solo se valida `isFinite(moneyEarned) && moneyEarned > 0`. No hay cap explícito de $100M.
 
 ## Desbloqueo Progresivo
 
@@ -424,7 +418,7 @@ function shouldUnlockHardware(gameState: GameState): boolean {
 - [ ] Verificar que amount > 0
 - [ ] Verificar que amount <= cryptoCoins balance
 - [ ] Verificar que price > 0 y sea finito
-- [ ] Verificar que el valor calculado < $100M (límite de seguridad)
+- [ ] Verificar que el valor calculado es finito y > 0
 - [ ] Verificar que gameState no sea null
 
 ### Post-Sale Validations
@@ -534,10 +528,7 @@ case 'SELL_COINS_FOR_MONEY':
 
   const moneyEarned = coinsToSell * action.payload.price;
 
-  if (moneyEarned > 100000000) {
-    console.warn('Suspiciously large transaction');
-    return state;
-  }
+  if (!isFinite(moneyEarned) || moneyEarned <= 0) return state;
 
   return recalculateGameStats({
     ...state,

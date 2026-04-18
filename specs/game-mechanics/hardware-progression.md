@@ -4,7 +4,7 @@
 - **Fase**: Phase 1 - Genesis (Implemented)
 - **Estado**: Implemented & Active
 - **Prioridad**: Critical (Core Progression Mechanic)
-- **Última actualización**: 2026-04-04
+- **Última actualización**: 2026-04-18
 
 ## Descripción
 
@@ -79,11 +79,11 @@ Cada nivel de hardware tiene costos crecientes (scaling exponencial con per-tier
   blockReward: 0,          // Deprecated: reward is global per era
   miningSpeed: 0.1,        // 0.1 bloques/segundo
   electricityCost: 0,      // Sin costo
-  owned: 1,                // Siempre 1 (no comprable)
+  owned: 0,                // Set to 1 on prestige reset (GameContext DO_PRESTIGE)
 }
 ```
 **Propósito**: Minería inicial para arrancar el juego (primer CryptoCoin)
-**Estado**: Oculto en UI, solo usado internamente
+**Estado**: Oculto en UI. `owned: 0` en hardwareData.ts; se pone a 1 solo en prestige reset
 
 ### Nivel 2: Basic CPU
 ```typescript
@@ -518,7 +518,7 @@ La visibilidad NO debe condicionar por `electricityCost > 0` — siempre renderi
 - [ ] `owned` debe ser >= 0 (entero)
 - [ ] `baseCost` debe ser > 0
 - [ ] `miningSpeed` debe ser >= 0
-- [ ] `blockReward` debe ser > 0
+- [ ] `blockReward` = 0 (deprecated — global per era via `calculateCurrentReward`)
 - [ ] `electricityCost` debe ser >= 0
 
 ## Dependencias
@@ -594,7 +594,7 @@ export const hardwareProgression: Hardware[] = [
     blockReward: HARDWARE_CONFIG.levels.manual_mining.blockReward,
     miningSpeed: HARDWARE_CONFIG.levels.manual_mining.miningSpeed,
     electricityCost: HARDWARE_CONFIG.levels.manual_mining.electricityCost,
-    owned: 1, // Siempre 1
+    owned: 0, // Set to 1 on prestige reset
     costMultiplier: HARDWARE_CONFIG.COST_MULTIPLIER,
     icon: 'hand-pointer',
     currencyId: 'cryptocoin',

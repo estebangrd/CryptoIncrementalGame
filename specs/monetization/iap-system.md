@@ -22,9 +22,11 @@ La integración utiliza `react-native-iap` para soportar tanto iOS (StoreKit 2) 
 - [ ] Implementar catálogo de productos (Remove Ads, Boosters, Starter Packs)
 - [ ] Implementar flujo de compra completo (select → confirm → verify → deliver)
 - [ ] Implementar receipt validation (client-side inicialmente, server-side futuro)
+> **Nota de implementacion**: Receipt validation es client-side only. `IAP_RECEIPT_VALIDATION` en `iapConfig.ts` tiene `clientSide: true`, `serverSide: false`, `serverEndpoint: null`. La validacion real en `completePurchase()` de `IAPService.ts` marca `validated: false` en el `PurchaseRecord` — no ejecuta la funcion `validateReceiptClientSide()` descrita en esta spec. El reducer confía en que la transacción fue completada exitosamente por la store nativa.
 - [ ] Implementar Restore Purchases para non-consumables
 - [ ] Manejar errores gracefully (payment failed, cancelled, already owned)
 - [ ] Trackear todas las compras en Firebase Analytics
+> **Nota de implementacion**: Firebase Analytics NO esta integrado. Los eventos de IAP (como `iap_purchase_success`, `remove_ads_purchased`, etc.) se emiten via `logEvent()` del modulo `src/services/analytics/`, pero el provider activo es `DevAnalyticsProvider` que solo loguea a consola. La interfaz existe para swap futuro a Firebase. El `analyticsMiddleware.ts` SI emite eventos correctamente en cada accion de compra.
 - [ ] Prevenir double-spending y fraud básico
 - [ ] Soportar test products para development
 
@@ -722,6 +724,8 @@ interface Product {
 - [ ] Guardar estado en AsyncStorage
 
 ### Receipt Validation
+> **Nota de implementacion**: La validacion de receipt descrita abajo NO se ejecuta en la practica. `completePurchase()` en `IAPService.ts` construye un `PurchaseRecord` con `validated: false` y lo retorna sin verificar campos. La funcion `validateReceiptClientSide()` descrita en la seccion de formulas no existe como codigo — es solo referencia de diseno. Server-side validation tampoco esta implementada (`IAP_RECEIPT_VALIDATION.serverSide = false`).
+
 - [ ] Transaction ID presente y no vacío
 - [ ] Product ID coincide con producto comprado
 - [ ] Timestamp razonable (no futuro, no muy antiguo)
@@ -739,6 +743,8 @@ interface Product {
 ## Dependencias
 
 ### NPM Packages
+> **Nota de implementacion**: `react-native-iap` esta instalado (v14, no v12). `@react-native-firebase/analytics` NO esta integrado — el sistema usa un provider abstracto con `DevAnalyticsProvider` activo (solo consola).
+
 ```json
 {
   "react-native-iap": "^12.10.0",
@@ -789,14 +795,18 @@ interface Product {
 - [ ] Starter Packs se pueden comprar solo una vez cada uno
 - [ ] Restore Purchases restaura non-consumables correctamente
 - [ ] Receipt validation previene fraud básico
+> **Nota de implementacion**: Client-side receipt validation NO se ejecuta en la practica. Se confia en la store nativa.
 - [ ] Purchase history se guarda correctamente
 - [ ] Pending transactions se procesan automáticamente
 - [ ] Errores se manejan gracefully sin crashes
 - [ ] Todas las compras se trackean en Firebase Analytics
+> **Nota de implementacion**: Eventos se emiten via `logEvent()` pero van a `DevAnalyticsProvider` (consola), no a Firebase.
 
 ## Notas de Implementación
 
 ### Inicialización de IAP
+> **Nota de implementacion**: La implementacion real en `src/services/IAPService.ts` usa funciones exportadas (no una clase singleton) y NO importa `@react-native-firebase/analytics`. Usa `react-native-iap` v14 con API de Nitro modules. La config viene de `IAP_PRODUCT_IDS` y `ALL_PRODUCT_IDS` (no `IAP_CONFIG.productIds`). El purchase listener se configura en `GameContext.tsx` (no en IAPService), y la validacion de receipt se omite (el reducer confia en la store nativa). El codigo siguiente es referencia de diseno; la implementacion activa difiere significativamente.
+
 ```typescript
 // src/services/IAPService.ts
 import * as RNIap from 'react-native-iap';

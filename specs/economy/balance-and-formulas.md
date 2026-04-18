@@ -434,9 +434,10 @@ priceDeviation = mean-reverting OU process, range [-0.30, +0.40]
 - **COST_MULTIPLIER_BY_ID**: per-tier (1.20-1.40); 8 unidades to unlock next tier
 - **ERA_BASE_PRICES**: 20-entry array [$0.05 → $4,000,000]
 - **Difficulty**: Speed-based power curve `1.0 + 0.35 × (totalMiningSpeed / 80)^0.70`
-- **Electricity fee**: Disabled (RATE_PERCENT = 0, pending rework)
+- **Electricity fee**: Disabled (`RATE_PERCENT = 0`). Disabled because fixed CC drain becomes unsustainable in late halving eras — block reward halves exponentially while electricity cost stays constant, creating an unwinnable death spiral around era 11+.
 - **blockReward**: Global per era (50 → 25 → 12.5...), NOT per hardware
-- **Sin offline progress**; producción solo durante sesión activa
+- **Offline progress**: Implemented via two paths: (1) free ad-gated offline earnings (`updateOfflineProgress`, capped to `MAX_OFFLINE_SECONDS`/`MAX_OFFLINE_ERA_ADVANCE`), (2) IAP Offline Miner booster (8h at 50%, auto-credited).
+- **`networkDifficulty`**: Not added as a separate field — `difficulty` field serves this role, calculated via `calculateDifficulty(constrainedMiningSpeed)`.
 - **Target**: ~12 hours active play to first prestige
 
 ### $/bloque por Era

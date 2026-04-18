@@ -7,7 +7,7 @@
 | Fase | Economy Rebalance |
 | Estado | ✅ Implemented |
 | Prioridad | Critical |
-| Última actualización | 2026-03-27 |
+| Última actualización | 2026-04-18 |
 
 ## Descripción
 
@@ -26,8 +26,8 @@ CC_fee_per_tick = totalElectricityWeight × (RATE_PERCENT / 100)
 ```
 
 - `totalElectricityWeight = Σ(hw.electricityCost × hw.owned)` — existing calculation
-- `RATE_PERCENT = 1.5` — configurable in `ELECTRICITY_FEE_CONFIG`
-- Net CC = mined CC - fee (clamped to 0)
+- `RATE_PERCENT = 0` — **DISABLED**. Was 1.5, but fixed CC drain becomes unsustainable in late halving eras because block reward halves exponentially while electricity cost stays constant, creating an unwinnable death spiral around era 11+. Infrastructure code is present but fee is a no-op.
+- Net CC = mined CC - fee (clamped to 0) — currently fee = 0
 - `realMoney` is **never** drained by electricity
 
 ## Fórmulas

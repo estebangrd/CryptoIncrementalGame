@@ -4,7 +4,7 @@
 - **Fase**: Phase 1 - Genesis (Implemented)
 - **Estado**: Implemented & Active
 - **Prioridad**: Critical (Core Game Mechanic)
-- **Última actualización**: 2026-03-27
+- **Última actualización**: 2026-04-18
 
 ## Descripción
 
@@ -41,42 +41,43 @@ Este sistema es el corazón del loop de gameplay: minar bloques → ganar Crypto
 **Entonces**
 - Se verifica `canMineBlock()` — si retorna false, no ocurre nada
 - Se calcula `clickMultiplier` leyendo todos los upgrades de tipo `clickPower` comprados (multiplicativos)
-- Se calcula `reward = Math.max(1, Math.floor(currentReward × clickMultiplier))`
-  - Siempre es un número entero (no se minan fracciones de coin)
-  - Mínimo 1 coin, incluso si `currentReward` es cercano a 0
+- Se calcula `reward = baseReward × clickMultiplier` (raw float, sin rounding)
+  - El resultado puede ser decimal (no se aplica `Math.floor` ni `Math.max`)
+  - No hay mínimo forzado — el reward sigue la curva natural de halvings
 - Se consume 1 bloque del supply de 21M (`blocksMined += 1`)
 - El jugador recibe `reward` CryptoCoins
 - Se actualiza `currentReward` y `nextHalving` en caso de halving
 
 **Diseño de balance:**
 - **Early game** (sin hardware): click = 50 coins = fuente primaria de ingresos
-- **Con Click Power**: click = 250 coins (5×) — impacto notable early-mid
-- **Con Hash Injection** (5× × 3×): click = 750 coins (15×) — extiende utilidad del click al mid game
-- **Con Click Legend** (5× × 3× × 2×): click = 1,500 coins (30×) — relevante en late game con ASICs
+- **Con Click Power**: click = 100 coins (2×) — impacto notable early-mid
+- **Con Hash Injection** (2× × 2×): click = 200 coins (4×) — extiende utilidad del click al mid game
+- **Con Click Legend** (2× × 2× × 2×): click = 400 coins (8×) — relevante en late game con ASICs
 - **Late game**: halvings reducen el reward base (50 → 25 → 12.5...) AND hardware escala exponencialmente
 
 **Upgrades de Click (3 tiers, multiplicativos entre sí):**
 
 | ID | Nombre | Mult | Costo | Unlock | Total acumulado |
 |---|---|---|---|---|---|
-| `clickPower` | Click Power | ×5 | $5,000 | `type: 'always'` (siempre visible) | ×5 |
-| `clickMastery` | Hash Injection | ×3 | $100,000 | `type: 'hardware'` — 5× `basic_gpu` | ×15 |
-| `clickLegend` | Click Legend | ×2 | $2,000,000 | `type: 'hardware'` — 10× `asic_gen3` | ×30 |
+| `clickPower` | Click Power | ×2 | $8,000 | `type: 'always'` (siempre visible) | ×2 |
+| `clickMastery` | Hash Injection | ×2 | $150,000 | `type: 'hardware'` — 5× `basic_gpu` | ×4 |
+| `clickLegend` | Click Legend | ×2 | $500,000 | `type: 'hardware'` — 5× `advanced_gpu` | ×8 |
 
 - Los upgrades se ocultan hasta que se cumple su `unlockCondition` (mismo sistema que todos los upgrades)
-- Los multiplicadores se apilan multiplicativamente: 5 × 3 × 2 = 30×
+- Los multiplicadores se apilan multiplicativamente: 2 × 2 × 2 = 8×
 - Cada tier extiende la utilidad del click manual a fases más avanzadas del juego
 
-### Caso de Uso 3: Producción Automática Estable Post-Halvings
+### Caso de Uso 3: Producción Automática — Bitcoin-Faithful Model
 **Dado que** el jugador tiene hardware activo y ha pasado por múltiples halvings (e.g., blocksMined = 5,000,000)
 **Cuando** el game loop tick se ejecuta
 **Entonces**
-- Se añaden exactamente `cryptoCoinsPerSecond` coins al balance del jugador
-- El valor de `cryptoCoinsPerSecond` NO decreció por los halvings
-- `blocksMined` sigue incrementando normalmente
-- `currentReward` (display) sí refleja el valor halved, pero no afecta el income
+- Se acumulan bloques: `effectiveBlocksPerSec = (constrainedMiningSpeed × allMultipliers) / difficulty`
+- Por cada bloque minado se llama `calculateCurrentReward(blocksMined)` para obtener CC
+- Los coins ganados por tick = suma de rewards por cada bloque minado en ese tick
+- `blocksMined` se incrementa por cada bloque
+- `currentReward` refleja el valor halved y SÍ afecta el income (modelo Bitcoin-faithful)
 
-**Anti-patrón evitado**: No se usa `calculateCurrentReward(blocksMined)` para calcular coins en la producción automática. Con alto mining speed (ej: 5 Mining Farms = 750 bloques/tick), el block reward efectivo caería a near-zero después de minutos, congelando la producción.
+**Modelo actual**: Se usa `calculateCurrentReward(blocksMined)` para calcular coins en la producción automática. El reward decrece con halvings, pero ERA_BASE_PRICES (20 entries, escalando de $0.05 a $4M) compensa el decrecimiento del reward haciendo que el valor en $ de cada CC suba con cada era.
 
 ### Caso de Uso 3b: Mining Speed Respeta Restricciones de Energía en ADD_PRODUCTION
 **Dado que** el jugador tiene 5 Mining Farms (500 MW c/u) y 0 MW de energía generada
@@ -131,8 +132,8 @@ function getClickMultiplier(gameState: GameState): number {
 
 function calculateClickReward(gameState: GameState): number {
   const baseReward = calculateCurrentReward(gameState.blocksMined);
-  const multiplier = getClickMultiplier(gameState);
-  return Math.max(1, Math.floor(baseReward * multiplier));
+  const clickMultiplier = getClickMultiplier(gameState);
+  return baseReward * clickMultiplier;
 }
 
 // Ejemplos de relevancia relativa:
@@ -195,36 +196,28 @@ function getBlocksUntilHalving(blocksMined: number): number {
 }
 ```
 
-### Producción de CryptoCoins por Segundo
+### Producción de CryptoCoins por Segundo — Bitcoin-Faithful Model
 
-La producción de monedas está **desacoplada del sistema de halvings** por diseño. Los halvings afectan el contador de bloques (progresión hacia 21M) pero no reducen el income per se.
+La producción de monedas está **acoplada al sistema de halvings** (modelo Bitcoin-faithful). Los halvings reducen el block reward y por tanto el income en CC, pero ERA_BASE_PRICES compensa haciendo que cada CC valga más en $.
 
 ```typescript
-function calculateTotalProduction(gameState: GameState): number {
-  let totalProduction = 0;
+// En ADD_PRODUCTION (GameContext.tsx):
+// Coins se calculan per-block usando calculateCurrentReward(blocksMined)
+const constrainedMiningSpeed = getConstrainedMiningSpeed(state);
+const boostedSpeed = constrainedMiningSpeed * allMultipliers;
+const difficulty = calculateDifficulty(constrainedMiningSpeed);
+const effectiveBlocksPerSec = boostedSpeed / difficulty;
 
-  for (const hardware of gameState.hardware) {
-    // Para hardware tier 9+ (energyRequired > 0), solo cuentan las unidades activas
-    const effectiveOwned = hardware.energyRequired > 0
-      ? getActiveUnitsFromEnergyConstraint(hardware, gameState.energy)
-      : hardware.owned;
-
-    if (effectiveOwned === 0) continue;
-
-    // Mining speed (blocks/second) × blockReward estático (coins/block)
-    // NOTA: Se usa hardware.blockReward (estático), NO calculateCurrentReward(blocksMined)
-    // Esto garantiza que las monedas por segundo nunca decaen por halvings
-    const speed = calculateHardwareMiningSpeed({ ...hardware, owned: effectiveOwned }, gameState.upgrades);
-    const coinsPerSecond = speed * hardware.blockReward;
-    totalProduction += coinsPerSecond;
-  }
-
-  // Apply all multipliers (prestige, IAP boosters, ad boost, AI)
-  return totalProduction * allMultipliers;
+let coinsThisTick = 0;
+for (let i = 0; i < blocksToMine && canMineBlock(newState); i++) {
+  newState.blocksMined += 1;
+  const rewardThisBlock = calculateCurrentReward(newState.blocksMined);
+  coinsThisTick += rewardThisBlock;
 }
+newState.cryptoCoins += coinsThisTick;
 ```
 
-**Rationale**: `hardware.blockReward` es el valor de diseño de balance (e.g., 15 CC/bloque para Mining Farm). `calculateCurrentReward(blocksMined)` es el reward de la blockchain que decrece con halvings. Mezclarlos haría que la producción automática colapsara a cero, rompiendo el loop del juego.
+**Rationale**: `blockReward` por hardware está deprecated (todos = 0). El reward viene de `calculateCurrentReward(blocksMined)` que decrece con halvings (50 → 25 → 12.5...). La compensación es que ERA_BASE_PRICES escala el valor en $ de cada CC con cada era, manteniendo el loop económico viable.
 
 ### Verificación de Minado Permitido
 ```typescript
@@ -285,15 +278,20 @@ export const BLOCK_CONFIG = {
   HALVING_INTERVAL: 210_000,     // Bloques entre cada halving
   INITIAL_DIFFICULTY: 1,         // Dificultad inicial
   DIFFICULTY: {
-    AMPLITUDE: 0.8,              // Scaling factor
-    SCALE_BLOCKS: 200_000,       // Reference block count
-    EXPONENT: 0.65,              // Power curve exponent
+    AMPLITUDE: 0.35,             // Scaling factor
+    SCALE: 80,                   // Reference mining speed
+    EXPONENT: 0.70,              // Power curve exponent
   },
-  ERA_BASE_PRICES: [0.08, 0.50, 2.00, 5.00, 8.00, 8.00, 8.00],
+  ERA_BASE_PRICES: [
+    0.05, 0.18, 0.55, 1.40, 3.50,
+    8.00, 18.00, 40.00, 90.00, 200.00,
+    450.00, 1000.00, 2300.00, 5500.00, 14000.00,
+    38000.00, 110000.00, 340000.00, 1100000.00, 4000000.00,
+  ],
 };
 
-// Difficulty formula: 1.0 + AMPLITUDE × (blocksMined / SCALE_BLOCKS)^EXPONENT
-// At 0 blocks: 1.0, at 210K: ~1.83, at 1M: ~3.28, at 21M: ~17.47
+// Difficulty formula: 1.0 + AMPLITUDE × (totalMiningSpeed / SCALE)^EXPONENT
+// Difficulty scales with hash rate (mining speed), not blocks mined
 ```
 
 ## Estructura de Datos
@@ -340,9 +338,9 @@ interface Hardware {
 
 1. **Un bloque solo se mina si `canMineBlock()` retorna true**: No se pueden minar más de 21M bloques
 2. **Los bloques se minan de forma discreta**: Solo bloques completos, no fracciones (aunque mining speed puede ser decimal)
-2b. **El click manual siempre otorga mínimo 1 coin**: `Math.max(1, Math.floor(reward))` — nunca 0 ni decimal
+2b. **El click manual otorga `baseReward * clickMultiplier`**: raw float, sin rounding ni mínimo forzado
 2c. **El click manual consume 1 bloque del supply**: Contribuye a los halvings igual que el minado automático
-2d. **Existen 3 tiers de click upgrades** (clickPower ×5, clickMastery ×3, clickLegend ×2) que se apilan multiplicativamente (máx ×30). Se ocultan hasta cumplir su `unlockCondition`
+2d. **Existen 3 tiers de click upgrades** (clickPower ×2, clickMastery ×2, clickLegend ×2) que se apilan multiplicativamente (máx ×8). Se ocultan hasta cumplir su `unlockCondition`
 3. **La recompensa se calcula en el momento del minado**: No se puede "guardar" una recompensa mayor
 4. **El halving es automático e irreversible**: Una vez que se reduce la recompensa, no vuelve a subir
 5. **El mining speed puede ser 0**: Si el jugador no tiene hardware o tiene solo manual mining inactivo
@@ -445,14 +443,14 @@ interface Hardware {
 - [x] La producción considera el prestige multiplier
 - [x] La electricidad reduce la producción neta correctamente
 - [x] El click manual aplica el multiplicador de upgrades clickPower
-- [x] El click manual siempre retorna un entero ≥ 1
+- [x] El click manual retorna `baseReward * clickMultiplier` (raw float)
 - [x] El click manual consume 1 bloque del supply de 21M
 - [x] El click manual es irrelevante en midgame por diseño (no requiere fix)
-- [x] La producción automática de coins NO decrece con los halvings (usa `cryptoCoinsPerSecond`, no `calculateCurrentReward`)
+- [x] La producción automática de coins usa `calculateCurrentReward(blocksMined)` per block (modelo Bitcoin-faithful); ERA_BASE_PRICES compensa el decay
 - [x] El Hash Rate mostrado incluye multiplicadores de upgrades de producción, prestige, boosters (ad, IAP) e IA — coherente con `cryptoCoinsPerSecond`
 - [x] Hardware tier 9+ (energyRequired > 0) NO contribuye a `blocksToMine` en ADD_PRODUCTION si no tiene energía suficiente
 - [x] Con balance de energía positivo (+X MW), todos los mining farms/quantum miners activos generan coins correctamente
-- [x] Los halvings afectan solo el display de "reward por bloque" y la progresión del contador, no el income real del jugador
+- [x] Los halvings reducen el reward por bloque (CC income), compensado por ERA_BASE_PRICES que sube el valor $/CC por era
 
 ## Notas de Implementación
 
@@ -482,31 +480,29 @@ useEffect(() => {
 case 'ADD_PRODUCTION':
   if (state.collapseTriggered || state.goodEndingTriggered) return state;
 
-  // Mining speed respeta restricciones de energía: hardware tier 9+
-  // solo cuenta si tiene energía suficiente
-  const constrainedHardware = state.hardware.map(hw =>
-    hw.energyRequired > 0
-      ? { ...hw, owned: getActiveUnitsFromEnergy(hw, state.energy) }
-      : hw
-  );
-  const totalMiningSpeed = calculateTotalMiningSpeed(constrainedHardware, state.upgrades);
-  const blocksToMine = Math.floor(totalMiningSpeed);
+  const allMult = getAllMultipliers(state);
+  const constrainedMiningSpeed = getConstrainedMiningSpeed(state);
+  const boostedSpeed = constrainedMiningSpeed * allMult;
+  const difficulty = calculateDifficulty(constrainedMiningSpeed);
+  const effectiveBlocksPerSec = boostedSpeed / difficulty;
+  const accumulated = (state.blockAccumulator ?? 0) + effectiveBlocksPerSec;
+  const blocksToMine = Math.floor(accumulated);
 
   if (blocksToMine > 0 && canMineBlock(state)) {
     let newState = { ...state };
 
-    // Minar bloques: solo incrementa el contador de progresión (21M goal)
-    // Las monedas NO provienen de calculateCurrentReward (que decrece con halvings)
+    // Mine blocks — CC earned = sum of calculateCurrentReward per block
+    let coinsThisTick = 0;
     for (let i = 0; i < blocksToMine && canMineBlock(newState); i++) {
       newState.blocksMined += 1;
-      newState.currentReward = calculateCurrentReward(newState.blocksMined);
+      const rewardThisBlock = calculateCurrentReward(newState.blocksMined);
+      coinsThisTick += rewardThisBlock;
+      newState.currentReward = rewardThisBlock;
       newState.nextHalving = calculateNextHalving(newState.blocksMined);
     }
 
-    // Coins por tick = cryptoCoinsPerSecond (rate estático basado en hardware.blockReward)
-    // Independiente de halvings → garantiza producción estable
-    newState.cryptoCoins += state.cryptoCoinsPerSecond;
-    newState.totalCryptoCoins += state.cryptoCoinsPerSecond;
+    newState.cryptoCoins += coinsThisTick;
+    newState.totalCryptoCoins += coinsThisTick;
 
     return recalculateGameStats(newState);
   }
@@ -514,7 +510,7 @@ case 'ADD_PRODUCTION':
   return state;
 ```
 
-**Invariante clave**: los halvings reducen `calculateCurrentReward(blocksMined)` (visible en la UI como "recompensa actual por bloque"), pero NO reducen `cryptoCoinsPerSecond`. El income del jugador se mantiene estable mientras tenga hardware activo y energía suficiente.
+**Modelo Bitcoin-faithful**: los halvings reducen `calculateCurrentReward(blocksMined)` y SÍ reducen el income en CC. La compensación viene de ERA_BASE_PRICES que escala el precio $/CC con cada era, manteniendo el valor económico del income.
 
 ### Configuración de Balance
 Para ajustar la velocidad del juego:

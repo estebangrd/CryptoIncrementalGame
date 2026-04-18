@@ -19,62 +19,47 @@
 **Dado que** el usuario presiona "Buy Remove Ads"
 **Cuando** confirma la compra
 **Entonces**
-- Se muestra confirmation dialog:
-  - Titulo: "Remove Ads"
-  - Descripcion:
-    - "✓ Remove banner ads (bottom of screen)"
-    - "✓ Remove interstitial ads (app opens)"
-    - "✓ Rewarded ads still available for free boosts"
-    - "✓ Permanent - never expires"
-  - Precio: "$0.99"
-  - Warning: "This is a one-time purchase"
-  - Botones:
-    - "Cancel" (gris, secondary)
-    - "Purchase" (verde, primary)
-- Si selecciona Cancel: cerrar dialog, no proceder
-- Si selecciona Purchase:
-  - Mostrar loading: "Processing purchase..."
+
+> **Nota de implementación**: El flujo real es más simple que lo descrito. No hay confirmation dialog propio — `confirmPurchase()` llama directamente a `doPurchase()` que invoca `purchaseProduct()` del IAPService. El OS muestra su propio diálogo (Face ID/biometrics). No hay success dialog tras la compra. El botón muestra `ActivityIndicator` durante la compra y la UI se actualiza automáticamente cuando el reducer procesa `PURCHASE_REMOVE_ADS`.
+
+- ~~Se muestra confirmation dialog~~ — **No implementado**: no hay diálogo de confirmación propio
+- Al presionar el botón de compra:
+  - Mostrar loading: `ActivityIndicator` en el botón (via `purchasing` state)
   - Sistema operativo muestra dialog de confirmacion (Face ID/biometrics)
   - Usuario autoriza pago
   - Purchase se procesa:
     - Receipt validation (client-side)
     - Marcar como comprado: `removeAdsPurchased = true`
-    - Guardar en AsyncStorage: `@removeAdsPurchased: true`
-    - Enviar a backend (si implementado): `POST /api/purchases`
+    - ~~Guardar en AsyncStorage: `@removeAdsPurchased: true`~~ — se guarda como parte del gameState completo via auto-save
+    - ~~Enviar a backend (si implementado): `POST /api/purchases`~~ — no implementado
     - Guardar en purchase history con timestamp
     - Finalizar transaccion: `finishTransaction()`
   - Inmediatamente ocultar banner ad (si visible)
   - Actualizar UI:
-    - Banner desaparece con animacion fade-out
-    - Store card muestra badge "Purchased"
-    - Boton cambia a "Purchased" (gris, deshabilitado)
-  - Mostrar success dialog:
-    - Titulo: "Ads Removed!"
-    - Icono: Checkmark verde
-    - Descripcion: "Banner and interstitial ads are now removed. Enjoy ad-free gameplay!"
-    - Note: "Rewarded ads are still available if you want free boosts"
-    - Boton: "Awesome!"
-  - Log Analytics: see [remove-ads-analytics.md](remove-ads-analytics.md)
+    - Store card muestra banner "Owned"
+    - Botón de compra desaparece
+  - ~~Mostrar success dialog~~ — **No implementado**: no hay diálogo de éxito ni animación de confetti
+  - Log Analytics: `remove_ads_purchased` + `iap_purchase_success` (via analyticsMiddleware)
 
 ## Caso de Uso 2: Inmediatamente Despues de Comprar
 **Dado que** el usuario acaba de comprar Remove Ads
 **Cuando** esta en el juego
 **Entonces**
 - Banner ad (si estaba visible):
-  - Fade out con animacion suave (300ms)
+  - Se oculta (el componente retorna null cuando `removeAdsPurchased`)
   - Contenido del juego se expande para llenar espacio
-  - Layout se ajusta sin jarring jumps
+  > **Nota de implementación**: No hay animación fade-out del banner — simplemente deja de renderizarse.
 - Top bar muestra badge temporal:
-  - "Ad Free" badge (dorado, con icono de checkmark)
+  - "✓ Ad Free" badge (verde, con checkmark)
   - Visible por 10 segundos, luego fade out
-  - Al tocar: tooltip "You removed ads! Thanks for supporting the game."
+  - ~~Al tocar: tooltip~~ — **No implementado**: no hay handler de toque en el badge
+  > **Nota de implementación**: Implementado en `GameScreen.tsx` con `adFreeBadgeOpacity` animación. Fade-in 300ms, visible 10s (`REMOVE_ADS_CONFIG.badges.adFreeIndicatorDurationMs`), fade-out 400ms.
 - Proximos app opens:
   - NO se mostraran interstitial ads
   - Codigo verifica `removeAdsPurchased === true` y skipea
 - Rewarded ads:
   - Boton "Watch Ad for 2x Boost" SIGUE VISIBLE
   - Funcionalidad completamente intacta
-  - Tooltip opcional: "You can still watch ads for free boosts!"
 
 ## Caso de Uso 3: Navegacion Post-Compra
 **Dado que** Remove Ads fue comprado
@@ -84,30 +69,26 @@
   - Banner ad NO se muestra (ni espacio reservado)
   - Contenido usa full height de pantalla
 - En tab de Store/IAP:
-  - Remove Ads card muestra badge "Purchased"
-  - Boton deshabilitado, texto "Purchased"
-  - Descripcion actualizada: "✓ Ads removed - Thank you!"
+  - Remove Ads card muestra banner "Owned" (verde)
+  - Botón de compra no se renderiza
+  > **Nota de implementación**: No muestra "Purchased" como badge ni texto de descripción "✓ Ads removed - Thank you!". Muestra un banner simple con texto de `t('shop.noAds.owned')`.
 - En Settings:
-  - Opcion visible: "Ad Free Mode: ✓ Active"
-  - Link opcional: "Restore Purchases"
+  - Opcion visible: "✓ Ad Free Mode: Active" (implementado en `SettingsModal.tsx`)
+  - Botón "🔄 Restore Purchases" disponible
 
 ## Caso de Uso 4: Intentar Comprar Remove Ads (Ya Comprado)
 **Dado que** el usuario YA compro Remove Ads
 **Cuando** intenta comprarlo de nuevo
 **Entonces**
-- Boton esta deshabilitado visualmente:
-  - Background gris
-  - Texto: "Purchased"
-  - Cursor: not-allowed
-- Si de alguna forma intenta hacer click:
-  - Mostrar toast: "You already own this item"
-  - NO abrir confirmation dialog
-  - NO procesar compra
-  - NO cobrar dinero
+
+> **Nota de implementación**: Cuando `removeAdsPurchased` es `true`, el card muestra el banner "Owned" y el botón de compra no se renderiza en absoluto (el bloque completo de precio + botón se reemplaza por el banner). No hay posibilidad de re-compra a nivel de UI. No se emite `iap_already_owned_attempt` — el evento no existe en `AnalyticsEventMap`.
+
+- Boton no se renderiza (reemplazado por banner "Owned")
+- El reducer también protege: `if (state.iapState.removeAdsPurchased) return state;`
 - Store detecta que producto es non-consumable y ya purchased:
   - iOS: StoreKit retorna error "Already purchased"
   - Android: Play Billing retorna `ITEM_ALREADY_OWNED`
-- Log Analytics: `iap_already_owned_attempt`
+- ~~Log Analytics: `iap_already_owned_attempt`~~ — no implementado
 
 ## Caso de Uso 5: App Open Despues de Comprar (Same Session)
 **Dado que** el usuario compro Remove Ads en esta sesion
@@ -120,28 +101,25 @@
   - NO intenta cargar ad
 - Banner ad:
   - NO se carga ni se muestra
-  - Component `<AdBanner>` retorna `null` inmediatamente
-- Log Analytics: `interstitial_skipped_remove_ads`
+  - Component retorna `null` inmediatamente
+- ~~Log Analytics: `interstitial_skipped_remove_ads`~~ — no implementado (el skip ocurre silenciosamente)
 
 ## Caso de Uso 6: Reinstalar App (Restore Purchases)
 **Dado que** el usuario compro Remove Ads previamente
 **Cuando** reinstala la app o cambia de device
 **Entonces**
+
+> **Nota de implementación**: Implementado en `SettingsModal.tsx` → `handleRestorePurchases()`. Llama a `restorePurchases()` del IAPService, itera los purchases retornados, y despacha `PURCHASE_REMOVE_ADS` si encuentra el product ID correspondiente. Muestra toast con resultado. No hay auto-restore en inicialización — solo manual via Settings.
+
 - Al abrir app por primera vez:
   - gameState inicial: `removeAdsPurchased = false`
   - Banner ads se muestran temporalmente
   - Interstitial ads se intentan mostrar
-- Usuario va a Settings -> "Restore Purchases"
-- O automaticamente en inicializacion IAP:
-  - `getAvailablePurchases()` retorna Remove Ads
-  - Sistema detecta compra previa
-  - Marca automaticamente: `removeAdsPurchased = true`
-  - Oculta banner ad
-  - Guarda en AsyncStorage
-- Mostrar notificacion:
-  - "Purchases Restored!"
-  - "Remove Ads: ✓ Active"
-- Log Analytics: `iap_restore_success` con product: `remove_ads`
+- Usuario va a Settings -> "🔄 Restore Purchases"
+- ~~O automaticamente en inicializacion IAP~~ — no hay auto-restore al iniciar
+- Mostrar toast:
+  - "✓ Restored N purchase(s)" (si hay compras) o "No restorable purchases found"
+- ~~Log Analytics: `iap_restore_success`~~ — no implementado
 
 ## Caso de Uso 7: Multiples Devices (Same Account)
 **Dado que** el usuario usa iOS/Android con misma Apple ID / Google Account
@@ -162,32 +140,29 @@
 **Dado que** el usuario intenta comprar Remove Ads
 **Cuando** el pago falla (tarjeta rechazada, fondos insuficientes)
 **Entonces**
-- Sistema operativo muestra error nativo:
-  - iOS: "Payment not completed"
-  - Android: "Transaction failed"
-- App detecta error en purchase listener
-- Mostrar error dialog:
-  - Titulo: "Purchase Failed"
-  - Mensaje: "Your payment could not be processed. Please check your payment method and try again."
-  - Boton: "OK"
+
+> **Nota de implementación**: No hay error dialog (Alert.alert). Los errores se muestran via `showToast(error.message, 'error')` — un toast efímero en la parte superior de la pantalla.
+
+- Sistema operativo muestra error nativo
+- App detecta error en `doPurchase()` catch block
+- Mostrar toast de error: `showToast(error.message || 'Purchase failed', 'error')`
 - Estado NO cambia:
   - `removeAdsPurchased = false`
-  - Banner ads siguen visibles
-  - Interstitial ads siguen activos
-- NO se finaliza transaccion (puede retry)
-- Log Analytics: `iap_purchase_failed` con error_code, product: `remove_ads`, reason: payment_failed
+  - `isPurchasing` se resetea a `false`
+- Log Analytics: `iap_purchase_failed` con `{ productId, errorMessage }` (payload difiere del spec — usa `productId` + `errorMessage` en vez de `error_code` + `product` + `reason`)
 
 ## Caso de Uso 9: Compra Cancelada por Usuario
 **Dado que** el usuario inicio compra de Remove Ads
 **Cuando** cancela en dialog del sistema operativo
 **Entonces**
-- Purchase listener recibe error `E_USER_CANCELLED`
-- NO mostrar error dialog (es intencional)
+
+> **Nota de implementación**: Implementado correctamente en `ShopScreen.tsx` → `doPurchase()`. Detecta `error.code === 'E_USER_CANCELLED'` y no muestra toast de error.
+
+- Purchase catch recibe error `E_USER_CANCELLED`
+- NO mostrar error (es intencional) — solo se resetea `purchasing` state
 - Volver a store screen normalmente
-- Estado no cambia:
-  - `removeAdsPurchased = false`
-  - Ads siguen activos
-- Log Analytics: `iap_purchase_cancelled` con product: `remove_ads`
+- Estado no cambia
+- Log Analytics: `iap_purchase_cancelled` con `{ productId }` (nota: usa `productId`, no `product`)
 
 ## Caso de Uso 10: Refund (Usuario Solicita Reembolso)
 **Dado que** el usuario compro Remove Ads
@@ -208,14 +183,12 @@
 **Dado que** el usuario compro Remove Ads
 **Cuando** completa la compra
 **Entonces**
-- Ademas del success dialog, mostrar:
-  - "Thank you for supporting Blockchain Tycoon!"
-  - "Your support helps us create more games"
-  - Emoji/sticker de apreciacion
-- En changelog/updates futuros:
-  - Seccion especial: "Thanks to our supporters"
-  - Badge en profile (futuro): "Supporter"
-- Opcional: Unlock cosmetico pequeno (ej: gold UI theme)
+
+> **Nota de implementación**: No implementado. No hay success dialog, gratitude message, badge "Supporter", ni unlock cosmético. La única señal post-compra es el badge "✓ Ad Free" temporal en el top bar (10s, implementado en `GameScreen.tsx`) y el banner "Owned" en el card del shop.
+
+- ~~Ademas del success dialog, mostrar mensaje de agradecimiento~~ — no implementado
+- ~~Badge en profile: "Supporter"~~ — no implementado
+- ~~Unlock cosmetico~~ — no implementado
 
 ## Validaciones
 
@@ -264,14 +237,16 @@
 
 ## Reference Implementation
 
+> **Nota de implementación**: No existe `RemoveAdsCard.tsx` como componente separado. La compra se maneja en `ShopScreen.tsx` → `doPurchase()` / `confirmPurchase()`. No usa `Alert.alert()` para confirmación, no importa `@react-native-firebase/analytics` (usa `logEvent` de `src/services/analytics/`). El código de referencia abajo NO refleja la implementación actual.
+
 ```tsx
-// src/components/RemoveAdsCard.tsx
+// src/components/RemoveAdsCard.tsx (NO EXISTE — ver ShopScreen.tsx)
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useGame } from '../contexts/GameContext';
 import IAPService from '../services/IAPService';
 import { REMOVE_ADS_CONFIG } from '../config/iapConfig';
-import analytics from '@react-native-firebase/analytics';
+import analytics from '@react-native-firebase/analytics'; // NO INTEGRADO
 
 export const RemoveAdsCard: React.FC = () => {
   const { gameState, dispatch } = useGame();

@@ -4,7 +4,7 @@
 - **Fase**: Phase 2 - Economy Overhaul
 - **Estado**: Implemented
 - **Prioridad**: Critical
-- **Ultima actualizacion**: 2026-04-04
+- **Ultima actualizacion**: 2026-04-18
 
 ---
 
@@ -21,7 +21,7 @@ Blocks/sec          = totalMiningSpeed / difficulty
 CC/sec              = blocks/sec × globalBlockReward
 ```
 
-**Nota**: La dificultad escala con `totalMiningSpeed` (speed-based), NO con `blocksMined`. Comprar más hardware aumenta la velocidad bruta pero también la dificultad.
+**Nota**: La dificultad escala con `constrainedMiningSpeed` (energy-constrained mining speed), NO con `blocksMined`. Hardware sin energía suficiente no contribuye a la dificultad.
 
 ### Flujo económico
 ```
@@ -102,7 +102,7 @@ El precio base de CC sube con cada era, simulando la apreciación histórica de 
 
 **20 eras definidas**: ERA_BASE_PRICES tiene 20 entradas [$0.05 → $4,000,000]. El $/bloque crece ~8-12% por era, plateaus in mid-game, and accelerates from era 14+ to support endgame hardware purchases across multiple prestiges.
 
-**Beyond era 19**: Price doubles each era (BTC-faithful appreciation). `getBasePrice` extrapolates: `lastPrice × 2^(era - 19)`. This keeps $/block roughly constant as block reward halves, preventing a 0.0 CC/s softlock at high eras.
+**Beyond era 19**: `getBasePrice` extrapolates with a deceleration factor: `lastPrice × 2^n × R` where `R = (1 + 0.04n)^0.85` and `n = era - 19`. This keeps $/block growing but at a controlled pace, preventing runaway inflation while avoiding the 0.0 CC/s softlock.
 
 **Nota**: A diferencia de la v2 donde $/bloque peaked y declined, la v3 mantiene un crecimiento gradual controlado. Esto permite comprar hardware cada vez más caro sin que el income se estanque.
 
@@ -114,9 +114,10 @@ function getBasePrice(blocksMined: number): number {
   const era = Math.floor(blocksMined / 210_000);
   const prices = BLOCK_CONFIG.ERA_BASE_PRICES;
   if (era < prices.length) return prices[era];
-  // BTC-faithful: price doubles per era beyond defined prices
-  const extraEras = era - (prices.length - 1);
-  return prices[prices.length - 1] * Math.pow(2, extraEras);
+  // Controlled extrapolation: doubling with deceleration factor R
+  const n = era - (prices.length - 1);
+  const R = Math.pow(1 + 0.04 * n, 0.85);
+  return prices[prices.length - 1] * Math.pow(2, n) * R;
 }
 // ERA_BASE_PRICES = [0.05, 0.18, 0.55, 1.40, 3.50, 8.00, 18.00, 40.00, 90.00, 200.00,
 //                    450.00, 1000.00, 2300.00, 5500.00, 14000.00, 38000.00, 110000.00,
@@ -242,13 +243,13 @@ La nueva economía está diseñada para una primera run significativamente más 
 
 4. **`src/contexts/GameContext.tsx`**
    - `ADD_PRODUCTION`: usar nueva fórmula de producción
-   - Agregar `networkDifficulty` al estado
+   - `networkDifficulty` no se agregó como campo separado — `difficulty` en GameState sirve este rol
 
 5. **`src/utils/marketLogic.ts`**
    - Integrar precio base por era como floor del precio de CC
 
 6. **`src/types/game.ts`**
-   - Agregar `networkDifficulty: number` a GameState
+   - `networkDifficulty` no implementado como campo separado — `difficulty: number` en GameState cumple este rol
    - Remover `blockReward` de Hardware type (o marcarlo como deprecated)
 
 7. **`src/data/hardwareData.ts`**

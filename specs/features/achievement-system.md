@@ -58,23 +58,29 @@ Sistema de logros que recompensa a los jugadores por alcanzar hitos importantes 
 - **Upgrader**: Own 10 units of any hardware
 - **Hardware Collector**: Own at least 1 unit of every hardware type
 - **ASIC Master**: Own 100 ASIC Gen 3 miners
-- **Data Empire**: Own 50 Data Centers
+
+> **Nota de implementacion**: "Data Empire" NO esta implementado en `achievements.ts`. "ASIC Master" no tiene reward definido en el codigo. "Hardware Collector" excluye `manual_mining` del check -- verifica que todo hardware comprable tenga owned >= 1.
 
 ### 3. Economy Achievements (Economía)
 - **First Sale**: Sell CryptoCoins for the first time
 - **Millionaire**: Accumulate $1,000,000 real money
 - **Market Trader**: Make 100 market transactions
-- **Smart Investor**: Buy low, sell high 10 times in a row
+
+> **Nota de implementacion**: "Smart Investor" NO esta implementado. "Millionaire" verifica `realMoney` (balance actual), NO `totalRealMoneyEarned`. Esto significa que el jugador debe tener $1M en el balance al momento del check, no que haya ganado $1M en total. "Market Trader" no tiene auto-tracking -- debe desbloquearse via la accion `UNLOCK_ACHIEVEMENT` (actualmente no se dispara automaticamente).
 
 ### 4. Prestige Achievements (Prestigio)
 - **Rebirth**: Complete your first prestige
 - **Veteran**: Complete 10 prestiges
-- **Eternal**: Complete 100 prestiges
+- **Eternal**: Complete 100 prestiges (hidden)
+
+> **Nota de implementacion**: "Rebirth" se verifica con `prestigeLevel >= 1`. Su reward es `duration: 15 min (floor $5000)`, NO un bonus permanente de prestige como decia la spec original. "Veteran" y "Eternal" usan `prestigeLevel` directamente (no un conteo separado de prestiges). "Eternal" tiene `hidden: true`.
 
 ### 5. Secret Achievements (Secretos)
 - **Pizza Day**: Sell exactly 10,000 BTC (reference to Bitcoin Pizza Day)
 - **HODL Master**: Keep 1M coins without selling for 24 hours
 - **Speed Runner**: Reach $100K in under 1 hour
+
+> **Nota de implementacion**: Los secret achievements estan definidos en `achievements.ts` con `hidden: true` pero sus condiciones de unlock NO estan implementadas en `checkAchievements()` (el switch/case no los cubre). Necesitarian ser desbloqueados manualmente via `UNLOCK_ACHIEVEMENT`. `pizza_day`, `hodl_master`, y `speed_runner_eco` existen como entradas pero sin logica de auto-check.
 
 ## Fórmulas y Cálculos
 
@@ -122,24 +128,34 @@ interface Achievement {
 }
 
 interface AchievementReward {
-  type: 'coins' | 'money' | 'multiplier' | 'cosmetic'
+  type: 'coins' | 'money' | 'multiplier' | 'cosmetic' | 'duration'
   amount?: number          // For coins/money
   multiplier?: number      // For production multipliers
   duration?: number        // For temporary rewards (ms)
+  // Duration-based reward fields (used when type === 'duration')
+  durationMinutes?: number // Minutes of current production to grant
+  floorUSD?: number        // Minimum USD value for early-game
 }
 ```
+
+> **Nota de implementacion**: El tipo `duration` fue agregado al union type. Es el tipo mas usado en la implementacion actual. Los tipos `coins` y `money` estan deprecated. El `Achievement` interface en `game.ts` tambien tiene campos opcionales `name` y `description` (strings directos ademas de las translation keys).
 
 ## Valores de Recompensas
 
 | Logro | Categoría | Rareza | Recompensa |
 |-------|-----------|--------|------------|
-| First Block | Mining | Common | 50 CryptoCoins |
-| Century | Mining | Common | 500 CryptoCoins |
-| Millennium | Mining | Rare | $100 |
-| First Steps | Hardware | Common | 100 CryptoCoins |
-| Hardware Collector | Hardware | Epic | $1,000 |
+| First Block | Mining | Common | duration: 1 min de produccion (floor $5) |
+| Century | Mining | Common | duration: 2 min de produccion (floor $50) |
+| Millennium | Mining | Rare | duration: 2 min de produccion (floor $100) |
+| Epic Miner | Mining | Epic | duration: 7 min de produccion (floor $10,000) |
+| First Steps | Hardware | Common | duration: 1 min de produccion (floor $10) |
+| Upgrader | Hardware | Common | duration: 2 min de produccion (floor $50) |
+| Hardware Collector | Hardware | Epic | duration: 6 min de produccion (floor $1,000) |
+| First Sale | Economy | Common | duration: 1 min de produccion (floor $20) |
 | Millionaire | Economy | Legendary | 2x production for 24h |
-| Rebirth | Prestige | Rare | +5% permanent prestige bonus |
+| Rebirth | Prestige | Rare | duration: 15 min de produccion (floor $5,000) |
+
+> **Nota de implementacion**: La mayoria de las recompensas usan el tipo `duration` en vez de `coins` o `money` fijos. Un reward `{ type: 'duration', durationMinutes: N, floorUSD: X }` otorga N minutos de produccion actual (CC + cash split 50/50) con un minimo de $X USD para que sea significativo en early-game. Las rewards tipo `coins` y `money` fijos estan deprecated. El tipo `duration` se procesa en `APPLY_ACHIEVEMENT_REWARD` en `GameContext.tsx`. El logro "Rebirth" NO da un bonus permanente de prestige como decia la spec original.
 
 ## Reglas de Negocio
 
@@ -163,13 +179,15 @@ interface AchievementReward {
 - [ ] Puede ser tocada para ver detalles
 
 ### Achievements Screen
-- [ ] Accesible desde el menú de configuración
-- [ ] Lista scrolleable de todos los logros
-- [ ] Filtros por categoría
+- [x] Accesible desde el menú de configuración
+- [x] Lista scrolleable de todos los logros
+- [x] Filtros por categoría
 - [ ] Ordenar por: fecha de desbloqueo, rareza, categoría
-- [ ] Barra de progreso total en la parte superior
+- [x] Barra de progreso total en la parte superior
 - [ ] Logros bloqueados muestran "???" en vez de descripción
-- [ ] Logros desbloqueados muestran fecha de desbloqueo
+- [x] Logros desbloqueados muestran fecha de desbloqueo
+
+> **Nota de implementacion**: NO hay sorting de achievements implementado. El orden es el del array `ALL_ACHIEVEMENTS` en `achievements.ts` (orden de definicion). El filtro por categoria funciona. Los logros bloqueados no ocultan su descripcion con "???" -- muestran la descripcion real pero con visual gris/opaco.
 
 ### Achievement Card
 - [ ] Icono del logro (color si desbloqueado, gris si bloqueado)
@@ -206,22 +224,24 @@ interface AchievementReward {
 
 ## Notas de Implementación
 
-### Archivos a Crear
-- `src/data/achievements.ts` - Definición de todos los logros
-- `src/components/AchievementsScreen.tsx` - Pantalla principal de logros
-- `src/components/AchievementCard.tsx` - Card individual de logro
-- `src/components/AchievementToast.tsx` - Notificación de desbloqueo
-- `src/utils/achievementLogic.ts` - Lógica de verificación y desbloqueo
+### Archivos Creados
+- `src/data/achievements.ts` - Definición de todos los logros (implementado)
+- `src/components/AchievementsScreen.tsx` - Pantalla principal de logros (implementado)
+- `src/components/AchievementToast.tsx` - Notificación de desbloqueo (implementado)
+- `src/utils/achievementLogic.ts` - Lógica de verificación y desbloqueo (implementado)
 
-### Archivos a Modificar
-- `src/types/game.ts` - Agregar `Achievement` interface y `achievements: Achievement[]` a GameState
-- `src/contexts/GameContext.tsx` - Agregar reducer actions: `UNLOCK_ACHIEVEMENT`, `UPDATE_ACHIEVEMENT_PROGRESS`
-- `src/data/translations.ts` - Agregar traducciones para todos los logros
-- `src/components/SettingsModal.tsx` - Agregar botón "Achievements" que abre AchievementsScreen
+> **Nota de implementacion**: `AchievementCard.tsx` NO fue creado como archivo separado -- el card esta inline dentro de `AchievementsScreen.tsx`. Existe un sistema paralelo de **Badges** (insignias) en `src/data/badges.ts` con `checkBadgeUnlocks()` en `src/utils/prestigeLogic.ts`. Los Badges otorgan multiplicadores permanentes de produccion o click y se verifican en el prestige. Los Achievements son separados, se verifican en cada tick via `CHECK_ACHIEVEMENTS`, y usan rewards de tipo `duration`. Ambos sistemas coexisten independientemente.
+
+### Archivos Modificados
+- `src/types/game.ts` - `Achievement` interface, `AchievementReward` interface, `achievements: Achievement[]` en GameState
+- `src/contexts/GameContext.tsx` - Reducer actions: `UNLOCK_ACHIEVEMENT`, `CHECK_ACHIEVEMENTS`, `APPLY_ACHIEVEMENT_REWARD`
+- `src/data/translations.ts` - Traducciones para logros
+- `src/components/SettingsModal.tsx` - Boton "Achievements"
 
 ### Configuración
-- Balance config: Ninguna (las recompensas están hardcodeadas en `achievements.ts`)
+- Balance config: Las recompensas están hardcodeadas en `achievements.ts` (no en `balanceConfig.ts`)
 - AsyncStorage key: Guardado automáticamente como parte de GameState
+- Merge de nuevos logros en updates via `mergeAchievements()` en `achievementLogic.ts`
 
 ### Verificación en Game Loop
 ```typescript

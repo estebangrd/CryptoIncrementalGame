@@ -755,6 +755,8 @@ function checkBadgeUnlocks(gameState: GameState): string[] {
         break;
 
       case 'total_blocks':
+        // TODO: NOT YET IMPLEMENTED in code (prestigeLogic.ts checkBadgeUnlocks)
+        // Falls through to default: break. Implement if badges using this condition are added.
         const totalBlocks = gameState.prestigeHistory.reduce(
           (sum, run) => sum + run.blocksMined,
           gameState.blocksMined

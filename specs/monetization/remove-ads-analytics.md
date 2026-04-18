@@ -15,15 +15,21 @@
 
 ---
 
+> **Nota de implementación general**: Firebase NO está integrado. No existe dependencia `@react-native-firebase/analytics` en `package.json`. Todos los eventos de analytics se envían a `DevAnalyticsProvider` (`src/services/analytics/devAnalytics.ts`), que solo hace `console.log`. La infraestructura está preparada para swappear a Firebase via `setAnalyticsProvider()` en `src/services/analytics/index.ts`, pero actualmente solo funciona en dev/console. Los eventos se emiten desde `analyticsMiddleware.ts` (post-reducer) y desde `ShopScreen.tsx` (errores de compra).
+
 ## Analytics Events
 
 ### Purchase Funnel
+
+> **Nota de implementación**: Los eventos se emiten via `logEvent()` de `src/services/analytics/index.ts`, que delega al provider activo (actualmente `DevAnalyticsProvider` → console.log). Los nombres y payloads de los eventos difieren del spec original — ver notas por evento.
 
 ```typescript
 // Initiated — user tapped Buy and confirmed in our dialog
 analytics().logEvent('remove_ads_purchase_initiated', {
   ads_seen_before_purchase: gameState.adState.totalInterstitialsShown,
 });
+// ⚠️ NO IMPLEMENTADO: no existe evento "remove_ads_purchase_initiated".
+// No hay confirmation dialog, así que no hay punto de "initiated".
 
 // Success — purchase completed and receipt validated
 analytics().logEvent('remove_ads_purchase_success', {
@@ -31,6 +37,11 @@ analytics().logEvent('remove_ads_purchase_success', {
   currency: 'USD',
   ads_seen: gameState.iapState.adsSeenBeforePurchase,
 });
+// ✅ IMPLEMENTADO como dos eventos en analyticsMiddleware.ts:
+//   logEvent('remove_ads_purchased', { price })
+//   logEvent('iap_purchase_success', { productId, price, currency })
+// Nota: el nombre es 'remove_ads_purchased' (no 'remove_ads_purchase_success')
+// y no incluye ads_seen en el payload.
 
 // Revenue event (for Firebase revenue tracking)
 analytics().logEvent('revenue', {
@@ -38,6 +49,7 @@ analytics().logEvent('revenue', {
   currency: 'USD',
   product_id: 'remove_ads',
 });
+// ⚠️ NO IMPLEMENTADO: no existe evento 'revenue' separado.
 
 // Failed — payment error (not user cancellation)
 analytics().logEvent('iap_purchase_failed', {
@@ -45,16 +57,24 @@ analytics().logEvent('iap_purchase_failed', {
   product: 'remove_ads',
   reason: 'payment_failed',
 });
+// ✅ IMPLEMENTADO en ShopScreen.tsx con payload diferente:
+//   logEvent('iap_purchase_failed', { productId, errorMessage })
+// Nota: usa 'productId' y 'errorMessage' en vez de 'error_code', 'product', 'reason'.
 
 // Cancelled — user dismissed OS payment dialog
 analytics().logEvent('iap_purchase_cancelled', {
   product: 'remove_ads',
 });
+// ✅ IMPLEMENTADO en ShopScreen.tsx:
+//   logEvent('iap_purchase_cancelled', { productId })
+// Nota: usa 'productId' en vez de 'product'.
 
 // Already owned — user somehow tried to re-purchase
 analytics().logEvent('iap_already_owned_attempt', {
   product: 'remove_ads',
 });
+// ⚠️ NO IMPLEMENTADO: no existe este evento. El botón se deshabilita
+// cuando purchased=true, previniendo re-compra a nivel de UI.
 ```
 
 ### Post-Purchase
@@ -62,36 +82,47 @@ analytics().logEvent('iap_already_owned_attempt', {
 ```typescript
 // Interstitial skipped because Remove Ads is active
 analytics().logEvent('interstitial_skipped_remove_ads', {});
+// ⚠️ NO IMPLEMENTADO: la lógica de skip existe (el reducer chequea
+// removeAdsPurchased) pero no se emite evento analytics al respecto.
 
 // Restore purchases succeeded
 analytics().logEvent('iap_restore_success', {
   product: 'remove_ads',
 });
+// ⚠️ NO IMPLEMENTADO: SettingsModal.tsx hace restore y muestra toast,
+// pero no emite evento analytics de restore success.
 
 // Refund detected (future, backend only)
 analytics().logEvent('iap_refund', {
   product: 'remove_ads',
 });
+// ⚠️ NO IMPLEMENTADO (esperado — requiere backend).
 ```
 
 ### Promotion Events
+
+> **Nota de implementación**: Ninguno de estos eventos está implementado. No existe promotion dialog UI. Los eventos `remove_ads_promo_shown` y `remove_ads_promo_clicked` no están definidos en `AnalyticsEventMap` (`src/services/analytics/types.ts`) ni se emiten desde ningún componente.
 
 ```typescript
 // Promotion dialog shown (after X interstitials seen)
 analytics().logEvent('remove_ads_promo_shown', {
   ads_seen: gameState.adState.totalInterstitialsShown,
 });
+// ⚠️ NO IMPLEMENTADO
 
 // User tapped "Remove Ads Now" in promotion dialog
 analytics().logEvent('remove_ads_promo_clicked', {
   ads_seen: gameState.adState.totalInterstitialsShown,
 });
+// ⚠️ NO IMPLEMENTADO
 ```
 
 ## Promotion Trigger Logic
 
+> **Nota de implementación**: El archivo `src/utils/promotionTriggers.ts` NO existe. La configuración de promociones (`REMOVE_ADS_CONFIG.promotions`) existe en `iapConfig.ts` y el estado `adState.lastPromotionShownAt` / action `MARK_PROMO_SHOWN` existen en el reducer, pero la función `shouldShowRemoveAdsPromo()` y su UI no están implementadas.
+
 ```typescript
-// src/utils/promotionTriggers.ts
+// src/utils/promotionTriggers.ts (NO EXISTE)
 export function shouldShowRemoveAdsPromo(gameState: GameState): boolean {
   // Don't show if already purchased
   if (gameState.iapState.removeAdsPurchased) {

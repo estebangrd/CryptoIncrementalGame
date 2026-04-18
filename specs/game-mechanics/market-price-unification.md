@@ -67,7 +67,7 @@ Cuando hay múltiples eventos activos, sus multiplicadores se combinan multiplic
 |----|---------|--------|----------|----------|----------|----------|
 | `halving_anticipation` | Faltan ≤ 10.000 bloques para el próximo halving | +25% | Hasta el halving (se cancela al producirse) | Halving incoming | Halving inminente | Halving iminente |
 | `halving_shock` | Inmediatamente después del halving | −25% | 5 minutos | Post-halving correction | Corrección post-halving | Correção pós-halving |
-| `market_spike` | El jugador activa el **ad booster** de precio | +25% | 10 minutos | Market spike | Alza de mercado | Alta do mercado |
+| `market_spike` | El jugador activa el **ad booster** de precio | +25% | 5 minutos | Market spike | Alza de mercado | Alta do mercado |
 | `blackout_regional` | Se dispara automáticamente con el Local Protest (recursos ≤ 66%) | −9% | 6 minutos | Regional blackout | Apagón regional | Apagão regional |
 | `ai_autonomous` | El jugador compra AI Level 3 | +15% | Permanente | AI trading active | IA operando en mercado | IA operando no mercado |
 | `planetary_collapse_incoming` | Recursos planetarios ≤ 20% | −40% | Permanente | Market panic | Pánico de mercado | Pânico de mercado |
@@ -84,7 +84,7 @@ El mercado anticipa la reducción de oferta. Los miners grandes venden antes del
 **Halving shock** (−25%, 5 min)
 La corrección clásica post-halving. El precio cae abruptamente y luego se recupera gradualmente hacia el nuevo precio base de la era siguiente (más alto). El jugador que sobrevive el shock sin vender se beneficia del nuevo piso.
 
-**Market spike** (+25%, 10 min)
+**Market spike** (+25%, 5 min)
 Volatilidad extrema positiva, activada por el jugador al ver un ad. Es la única forma de que el jugador influya directamente en el precio visible. El timing importa — vender durante el spike maximiza los ingresos. **Nota:** este evento es independiente del IAP Market Pump ($0.99, ×2 invisible en venta, 30 min). El IAP no se modifica y opera en una capa separada (multiplicador directo en SELL_COINS_FOR_MONEY). Si ambos están activos, stackean.
 
 **Regional blackout** (−9%, 6 min)
@@ -131,7 +131,7 @@ Son dos productos independientes:
 | Booster | Fuente | Efecto | Visible en chart | Duración | Scope |
 |---------|--------|--------|-----------------|----------|-------|
 | **Market Pump** (IAP $0.99) | Compra pagada | ×2 al vender | No — multiplicador invisible en SELL_COINS_FOR_MONEY | 30 min | No se modifica |
-| **market_spike** (ad booster) | Ver un ad gratuito | +25% precio visible | Sí — label en chart + afecta precio OU | 10 min | Nuevo, parte de este refactor |
+| **market_spike** (ad booster) | Ver un ad gratuito | +25% precio visible | Sí — label en chart + afecta precio OU | 5 min | Nuevo, parte de este refactor |
 
 Si ambos están activos, stackean. El jugador ve +25% en el chart y además recibe ×2 en la transacción. Cada uno cumple lo prometido desde su fuente.
 

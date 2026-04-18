@@ -23,7 +23,9 @@ Este es el primer juego del desarrollador, por lo que AdMob es la plataforma ele
 - [ ] Respetar estado de "Remove Ads" IAP (ocultar banner/interstitial)
 - [ ] Implementar graceful degradation (si ad falla, continuar gameplay)
 - [ ] Cumplir con GDPR/COPPA compliance
+> **Nota de implementacion**: El flujo de GDPR consent NO esta implementado. No hay CMP SDK integrado. El campo `gdprConsentGiven` existe en el tipo `AdState` y se inicializa como `null`, pero ningun componente muestra un consent dialog ni verifica region del usuario.
 - [ ] Trackear eventos de ads en Firebase Analytics
+> **Nota de implementacion**: Firebase Analytics NO esta integrado. El sistema de analytics usa un `DevAnalyticsProvider` que solo loguea a consola. Los eventos se emiten via `logEvent()` pero no llegan a Firebase. La interfaz `IAnalyticsProvider` existe para swap futuro a Firebase.
 
 ## Comportamiento Esperado
 
@@ -35,12 +37,14 @@ Este es el primer juego del desarrollador, por lo que AdMob es la plataforma ele
 - Se verifica si hay consent para GDPR (usuarios de EU)
 - Si es EU y no hay consent: mostrar consent dialog
 - Si hay consent o no es EU: inicializar AdMob normalmente
+> **Nota de implementacion**: La verificacion de GDPR consent NO esta implementada. `initializeAdMob()` en `AdMobService.ts` llama a `MobileAds().initialize()` directamente sin verificar region ni mostrar consent dialog.
 - Se pre-cargan anuncios en background:
   - Banner ad (para mostrar inmediatamente)
   - Interstitial ad (para próximo app open)
   - Rewarded ad (para cuando usuario quiera verlo)
 - Si la inicialización falla: log error pero continuar gameplay
 - Estado de inicialización se guarda en `adInitialized: true`
+> **Nota de implementacion**: `adInitialized` se pone a `true` via la accion `INITIALIZE_AD_SYSTEM` despues de que `initializeAdMob()` retorna exitosamente.
 
 ### Caso de Uso 2: Mostrar Banner Ad (Primera Vez)
 **Dado que** el usuario está en la pantalla principal
@@ -432,6 +436,9 @@ interface GameState {
     // Banner state
     bannerLoaded: boolean;               // Si banner está cargado
     bannerVisible: boolean;              // Si banner está visible
+    // **Nota de implementacion**: bannerLoaded y bannerVisible existen en el tipo
+    // AdState y se inicializan como false, pero NINGUN reducer action los actualiza.
+    // Son campos vestigiales que nunca reflejan el estado real del banner.
 
     // Interstitial state
     lastInterstitialShownAt: number | null;  // Timestamp de último interstitial
@@ -459,6 +466,8 @@ interface GameState {
 ```
 
 ### Ad Event Log (Analytics)
+> **Nota de implementacion**: Los eventos de analytics se emiten via `logEvent()` del modulo `src/services/analytics/`, pero el provider activo es `DevAnalyticsProvider` que solo loguea a consola. No hay integracion con Firebase Analytics. La interfaz `AdEvent` descrita abajo es la estructura ideal; en la practica los eventos se emiten con nombres simples como `'rewarded_ad_watched'` y parametros ad-hoc.
+
 ```typescript
 interface AdEvent {
   eventName: string;                     // Nombre del evento
@@ -568,6 +577,8 @@ AD_BUBBLE_CONFIG = {
 - [ ] NO mostrar loading spinner (silent background load)
 
 ### GDPR Consent Dialog (EU Users)
+> **Nota de implementacion**: Toda esta seccion de GDPR consent dialog NO esta implementada. No hay CMP SDK, no hay deteccion de region EU, no hay dialog de consent. El campo `gdprConsentGiven` en `AdState` se inicializa como `null` y nunca se actualiza.
+
 - [ ] Mostrar antes de inicializar AdMob
 - [ ] Título: "We use ads to keep this game free"
 - [ ] Texto:
@@ -628,6 +639,8 @@ AD_BUBBLE_CONFIG = {
 ## Dependencias
 
 ### NPM Packages
+> **Nota de implementacion**: `react-native-google-mobile-ads` esta instalado. `@react-native-firebase/analytics` NO esta integrado — el sistema usa un provider abstracto (`IAnalyticsProvider`) con `DevAnalyticsProvider` activo (solo consola).
+
 ```json
 {
   "react-native-google-mobile-ads": "^14.0.0",
@@ -677,12 +690,16 @@ AD_BUBBLE_CONFIG = {
 - [ ] Interstitial NO se muestra si Remove Ads fue comprado
 - [ ] Si ad falla al cargar, gameplay continúa sin bloqueo
 - [ ] GDPR consent dialog se muestra a usuarios de EU
+> **Nota de implementacion**: NO implementado. No hay CMP SDK ni deteccion de region.
 - [ ] Todos los eventos de ads se trackean en Firebase Analytics
+> **Nota de implementacion**: Los eventos se emiten pero van a `DevAnalyticsProvider` (consola), no a Firebase.
 - [ ] Boost persiste correctamente entre sesiones (offline)
 
 ## Notas de Implementación
 
 ### Inicialización de AdMob
+> **Nota de implementacion**: La implementacion real en `src/services/AdMobService.ts` usa funciones exportadas (no una clase singleton) y NO importa `@react-native-firebase/analytics`. Usa `logEvent` del modulo local `src/services/analytics/` y `getAdUnitId`/`AD_TIMING` de `src/config/adConfig.ts`. La config no se llama `AD_CONFIG` sino que esta dividida en `getAdUnitId()` y `AD_TIMING`. El codigo siguiente es referencia de diseno; la implementacion activa difiere.
+
 ```typescript
 // src/services/AdMobService.ts
 import MobileAds, { BannerAd, RewardedAd, InterstitialAd } from 'react-native-google-mobile-ads';
@@ -902,6 +919,8 @@ const styles = StyleSheet.create({
   },
 });
 ```
+
+> **Nota de implementacion**: El componente `RewardedAdButton.tsx` descrito abajo fue reemplazado por `AdBoosterBubbles.tsx`, que implementa el sistema de rotacion de 3 tipos de bubbles (hash/market/energy). El codigo siguiente es referencia historica; la implementacion activa esta en `AdBoosterBubbles.tsx`.
 
 ### Rewarded Ad Button Component
 ```tsx

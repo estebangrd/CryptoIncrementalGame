@@ -74,30 +74,37 @@ The flash sale is a time-limited discount on the Remove Ads product that creates
 ```
 
 ### GameContext Action
+
+> **Nota de implementacion**: El payload real usa claves abreviadas: `{ expiresAt: number; cooldownUntil: number }` (no `flashSaleExpiresAt`/`flashSaleCooldownUntil`). El reducer mapea `action.payload.expiresAt` a `state.iapState.flashSaleExpiresAt`.
+
 ```typescript
 case 'SET_FLASH_SALE':
   return {
     ...state,
     iapState: {
       ...state.iapState,
-      flashSaleExpiresAt: action.payload.flashSaleExpiresAt,
-      flashSaleCooldownUntil: action.payload.flashSaleCooldownUntil,
+      flashSaleExpiresAt: action.payload.expiresAt,
+      flashSaleCooldownUntil: action.payload.cooldownUntil,
     },
   };
 ```
 
 ## Logic Functions
 
-### `computeHasActiveSale(iapState, now?)`
+### `computeHasActiveSale(input: FlashSaleInput)`
 Returns `true` if `flashSaleExpiresAt > now`. Used to determine whether to show the sale banner and timer.
 
-### `shouldRollFlashSale(iapState, now?)`
+> **Nota de implementacion**: La firma real es `computeHasActiveSale(input: FlashSaleInput)` donde `FlashSaleInput = { flashSaleExpiresAt: number; removeAdsPurchased: boolean }`. NO acepta un parametro `now` — usa `Date.now()` internamente. Tampoco recibe el `iapState` completo, solo los dos campos necesarios.
+
+### `shouldRollFlashSale(input: ShouldRollInput)`
 Returns `true` if all roll conditions are met:
 - `removeAdsPurchased === false`
 - `flashSaleExpiresAt <= now` (no active sale)
 - `flashSaleCooldownUntil <= now` (no active cooldown)
 
 This function does NOT perform the random roll — it only checks eligibility. The caller performs `Math.random() < 0.35`.
+
+> **Nota de implementacion**: La firma real es `shouldRollFlashSale(input: ShouldRollInput)` donde `ShouldRollInput = { removeAdsPurchased: boolean; flashSaleExpiresAt: number; flashSaleCooldownUntil: number; now: number }`. El parametro `now` es obligatorio dentro del objeto input (no opcional ni separado). El caller en `ShopScreen.tsx` pasa `now: Date.now()` explicitamente.
 
 ## Implementation Detail: Preventing Re-rolls (Bug Fix)
 
@@ -114,7 +121,12 @@ useEffect(() => {
   if (activeTab !== 'removeAds') return;
   const now = Date.now();
   const snap = iapStateRef.current;
-  if (!shouldRollFlashSale({ ...snap, now })) return;
+  if (!shouldRollFlashSale({
+    removeAdsPurchased: snap.removeAdsPurchased,
+    flashSaleExpiresAt: snap.flashSaleExpiresAt,
+    flashSaleCooldownUntil: snap.flashSaleCooldownUntil,
+    now,
+  })) return;
 
   if (Math.random() < FLASH_SALE_CONFIG.ROLL_CHANCE) {
     const range = FLASH_SALE_CONFIG.MAX_DURATION_MS - FLASH_SALE_CONFIG.MIN_DURATION_MS;

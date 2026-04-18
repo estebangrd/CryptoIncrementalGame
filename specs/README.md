@@ -47,7 +47,7 @@ Este directorio contiene todas las especificaciones técnicas exhaustivas (Level
 
 | Spec | Estado | Fase | Prioridad | Descripción |
 |------|--------|------|-----------|-------------|
-| [Game Flow](ui-ux/game-flow.md) | ✅ Documented | Phase 1-2 | High | Flujo completo del jugador y FTUE |
+| [Game Flow](ui-ux/game-flow.md) | ⚠️ Partial | Phase 1-2 | High | Flujo del jugador (FTUE/tutorials/StatsScreen/halving modal NO implementados) |
 | [Interactive Banner Events](ui-ux/narrative-events.html) | ✅ Implemented | Phase 6 | High | 3 eventos narrativos interactivos: Reguladores UE, Oportunidad de Mercado, Protesta Local |
 | [AI Collapse Ending UI](ui-ux/blockchain-tycoon-ai-collapse.html) | ✅ Implemented | Phase 7 | High | Pantalla final colapso IA: tema rojo/violeta cyberpunk, globe muerto, log card, stats |
 | [Human Collapse Ending UI](ui-ux/blockchain-tycoon-human-collapse.html) | ✅ Implemented | Phase 7 | High | Pantalla final colapso humano: tema naranja/ember, globe moribundo con skull, blame card |
@@ -63,7 +63,7 @@ Este directorio contiene todas las especificaciones técnicas exhaustivas (Level
 
 | Spec | Estado | Fase | Prioridad | Descripción |
 |------|--------|------|-----------|-------------|
-| [Game Narrative Arc](narrative/game-narrative-arc.md) | 📋 Planned | Phase 6 | Medium | Arco narrativo completo: del minero aficionado al colapso civilizatorio |
+| [Game Narrative Arc](narrative/game-narrative-arc.md) | ⚠️ Partial | Phase 6 | Medium | Arco narrativo completo: hitos 1-4 implementados, hitos 5-7 (planet 50%/25%/10%) pendientes |
 
 ## 📊 Estado General
 
@@ -254,6 +254,6 @@ Para preguntas sobre estas specs, consulta:
 
 ---
 
-**Última actualización**: 2026-04-04
+**Última actualización**: 2026-04-18
 **Versión del proyecto**: 0.0.1 (Phase 1-7)
 **Próxima fase**: Post-narrativa (Daily Missions, Market Events, Polish)

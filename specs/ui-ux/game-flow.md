@@ -2,9 +2,9 @@
 
 ## Estado
 - **Fase**: Phase 1 - Genesis (Design Complete)
-- **Estado**: Specification Complete
+- **Estado**: Partially Implemented
 - **Prioridad**: Critical (Core UX Design)
-- **Última actualización**: 2026-03-28
+- **Última actualización**: 2026-04-18
 
 ## Descripción
 
@@ -24,6 +24,8 @@ El objetivo es crear una experiencia fluida donde el jugador siempre sepa qué h
 ## Player Journey Map
 
 ### First Time User Experience (FTUE)
+
+> **Nota de implementacion**: La FTUE (First Time User Experience) descrita en las fases 0-5 NO esta implementada. No hay tooltips, tutorials, modals celebratorios de desbloqueo, ni guias para el jugador nuevo. El jugador simplemente ve la pantalla principal y puede empezar a jugar. Los desbloqueos de tabs ocurren silenciosamente sin ningun modal ni celebracion.
 
 #### Fase 0: App Launch (0-10 segundos)
 **Usuario**: Abre la app por primera vez
@@ -114,7 +116,9 @@ analytics().logEvent('tutorial_step_completed', { step: 'first_click' });
 - Bottom sheet "Hardware" ahora accesible (tab o botón)
 - Hardware list muestra: Basic CPU (Owned: 1)
 - Production counter visible: "13.5 CC/s"
-- Próximo hardware (Advanced CPU) muestra 🔒 "Requires 5 Basic CPU"
+- Próximo hardware (Advanced CPU) muestra 🔒 "Requires 8 Basic CPU"
+
+> **Nota de implementacion**: El requisito de unidades para desbloquear el siguiente nivel de hardware es **8** (no 5). Definido como `HARDWARE_CONFIG.UNLOCK_REQUIREMENT: 8` en `balanceConfig.ts`.
 
 **Analytics**:
 ```typescript
@@ -132,10 +136,10 @@ analytics().logEvent('tutorial_step_completed', { step: 'first_hardware' });
 **Goal**: Entender unlock progresivo
 
 **Flow**:
-1. Usuario compra más Basic CPUs (2do, 3ro, 4to, 5to)
-   - Costo escala: 500 → 575 → 661 → 760 → 875 CC
-   - Producción aumenta linealmente: 13.5 → 27 → 40.5 → 54 → 67.5 CC/s
-2. Al comprar el 5to Basic CPU:
+1. Usuario compra más Basic CPUs (2do, 3ro, ... 8vo)
+   - Costo escala progresivamente
+   - Producción aumenta linealmente
+2. Al comprar el 8vo Basic CPU:
    - Animación de "UNLOCK!"
    - Modal celebratorio:
      - "🔓 New Hardware Unlocked!"
@@ -146,12 +150,12 @@ analytics().logEvent('tutorial_step_completed', { step: 'first_hardware' });
 3. Tooltip: "Keep buying hardware to unlock even more powerful options!"
 
 **UI Changes**:
-- Basic CPU: Owned: 5
+- Basic CPU: Owned: 8
 - Advanced CPU: Ahora visible (no locked)
   - Cost: 2,500 CC
   - Production: 33.6 CC/s
   - Button: "BUY" (disabled si no hay fondos)
-- Siguiente unlock: Basic GPU (🔒 Requires 5 Advanced CPU)
+- Siguiente unlock: Basic GPU (🔒 Requires 8 Advanced CPU)
 
 **Analytics**:
 ```typescript
@@ -291,22 +295,21 @@ analytics().logEvent('hardware_tab_unlocked', {
 **Goal**: Escalar producción hasta alcanzar ASICs
 
 **Flow** (resumido, no hay tutorials):
-1. Usuario compra 5+ Advanced CPUs
+1. Usuario compra 8+ Advanced CPUs
    - Desbloquea Basic GPU
-   - Animación de unlock
-2. Usuario compra 5+ Basic GPUs
+2. Usuario compra 8+ Basic GPUs
    - Desbloquea Advanced GPU
 3. Usuario experimenta primer Halving (210k bloques):
-   - Modal: "⚠️ Halving Event! Block reward reduced from 50 to 25 CC"
    - Producción efectiva se reduce a la mitad
-   - Tooltip: "This is normal! Keep upgrading hardware to compensate"
+
+> **Nota de implementacion**: NO existe modal ni notificacion de halving. El halving ocurre silenciosamente -- la recompensa por bloque se reduce automaticamente segun la logica de `blockLogic.ts` pero el jugador no recibe ninguna alerta visual.
 4. Usuario compra upgrades de producción:
    - "CPU Efficiency" (2x multiplier para CPUs)
    - "GPU Optimization" (2x multiplier para GPUs)
 5. Usuario desbloquea ASICs:
-   - ASIC Gen 1 (5+ Advanced GPUs)
-   - ASIC Gen 2 (5+ ASIC Gen 1)
-   - ASIC Gen 3 (5+ ASIC Gen 2)
+   - ASIC Gen 1 (8+ Advanced GPUs)
+   - ASIC Gen 2 (8+ ASIC Gen 1)
+   - ASIC Gen 3 (8+ ASIC Gen 2)
 6. Producción escala exponencialmente
 7. Bloques minados: 0 → 1M → 5M → 10M → 15M → 20M
 
@@ -389,13 +392,11 @@ analytics().logEvent('prestige_completed', {
 **Flow**:
 1. App launch
 2. Cargar saved state de AsyncStorage
-3. Sincronizar `lastSaveTime` sin acreditar coins (no hay offline earnings)
-4. Continúa exactamente donde lo dejó
+3. Calcular offline earnings (si aplica)
+4. Mostrar modal de offline earnings si hay ganancia pendiente
+5. Continúa donde lo dejó
 
-**UI**:
-- Coins balance igual al momento de cierre
-- No interrupciones ni modals
-- Game loop continúa normalmente
+> **Nota de implementacion**: Las offline earnings estan implementadas. Se calculan en `updateOfflineProgress()` en `gameLogic.ts`. El modal muestra CC ganados offline con un boton para reclamarlos. Hay un cap de tiempo libre (configurable, actualmente limitado por eras). El Offline Miner booster (IAP) permite 8h de offline al 50%. Los campos relevantes en GameState son: `pendingOfflineEarnings`, `offlineSecondsAway`, `offlineWasCapped`, `offlineBlocksProcessed`.
 
 **Analytics**:
 ```typescript
@@ -452,7 +453,7 @@ analytics().logEvent('session_started', {
 2. **Comprar hardware**
    - Requerido: Al menos 1 hardware para automatizar
 3. **Desbloquear hardware progresivamente**
-   - Requerido: Comprar 5 unidades de cada nivel para desbloquear siguiente
+   - Requerido: Comprar 8 unidades de cada nivel para desbloquear siguiente
 4. **Vender CryptoCoins**
    - Requerido: Para ganar $ y desbloquear contenido
 5. **Hacer Prestige**
@@ -491,15 +492,15 @@ analytics().logEvent('session_started', {
 |-------|---------|------------------|----------------|
 | 1 | Manual Mining | Always available | 0s |
 | 2 | Basic CPU | Always available | ~2 min |
-| 3 | Advanced CPU | 5 Basic CPUs owned | ~10 min |
+| 3 | Advanced CPU | 8 Basic CPUs owned | ~10 min |
 | 4 | Market Tab | 10 blocks + 500 CC | ~15 min |
-| 5 | Basic GPU | 5 Advanced CPUs owned | ~30 min |
+| 5 | Basic GPU | 8 Advanced CPUs owned | ~30 min |
 | 6 | Upgrades Tab | 1+ hardware owned | ~30 min |
-| 7 | Advanced GPU | 5 Basic GPUs owned | ~1 hour |
+| 7 | Advanced GPU | 8 Basic GPUs owned | ~1 hour |
 | 8 | Hardware Tab | $150 total earned | ~1.5 hours |
-| 9 | ASIC Gen 1 | 5 Advanced GPUs owned | ~3 hours |
-| 10 | ASIC Gen 2 | 5 ASIC Gen 1 owned | ~5 hours |
-| 11 | ASIC Gen 3 | 5 ASIC Gen 2 owned | ~8 hours |
+| 9 | ASIC Gen 1 | 8 Advanced GPUs owned | ~3 hours |
+| 10 | ASIC Gen 2 | 8 ASIC Gen 1 owned | ~5 hours |
+| 11 | ASIC Gen 3 | 8 ASIC Gen 2 owned | ~8 hours |
 | 12 | Prestige | 21M blocks mined | ~15 hours |
 
 **Design Philosophy**:
@@ -588,6 +589,8 @@ analytics().logEvent('session_started', {
 ---
 
 ### Tutorial Moments (Non-Intrusive)
+
+> **Nota de implementacion**: NINGUNO de los tutorials descritos a continuacion esta implementado. No hay tooltips, no hay auto-dismiss, no hay tutorial state persistido. La seccion entera es diseño planificado sin implementacion.
 
 **Philosophy**: No modals obligatorios, solo tooltips opcionales que se auto-dismiss
 
@@ -733,6 +736,8 @@ El orden visual de las pestañas en la barra inferior es fijo:
 | 7 | Prestige | 🌟 | 21M bloques minados |
 
 **Nota**: Prestige (posición 7, última) refuerza que es un evento de end-game. Chronicle (posición 6) aparece antes ya que puede activarse durante mid-game.
+
+> **Nota de implementacion**: La condicion de unlock de Prestige en el codigo es `blocksMined >= 21M OR prestigeLevel >= 1` -- una vez que el jugador ha hecho prestige al menos una vez, el tab permanece desbloqueado siempre. La condicion de Energy tab es que el jugador tenga 1+ hardware con `energyRequired > 0` (tier 9+). La condicion de Chronicle tab es que haya al menos 1 narrative event en el array. El tab order implementado en `HorizontalTabs.tsx` coincide con esta tabla.
 
 ---
 
@@ -883,7 +888,9 @@ Load State (AsyncStorage)
 
 ---
 
-#### StatsScreen
+> **Nota de implementacion**: `StatsScreen` NO existe como componente. No hay una pantalla dedicada de estadisticas. Las stats del run actual se trackean en `currentRunStats` dentro de GameState pero no tienen una UI propia. Los badges se ven en `PrestigeScreen` y los achievements en `AchievementsScreen` (accesible desde Settings).
+
+#### StatsScreen (NO IMPLEMENTADO)
 **Accessible**: Always (menu button)
 **Content**:
 - Tabs: Current Run | History | Badges

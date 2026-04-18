@@ -4,7 +4,7 @@
 - **Fase**: Phase 3 - Monetization
 - **Estado**: ✅ Implemented
 - **Prioridad**: High (Monetization)
-- **Última actualización**: 2026-04-04
+- **Última actualización**: 2026-04-18
 
 ## Descripción
 
@@ -17,8 +17,8 @@ El catálogo de Boosters y Starter Packs proporciona opciones de monetización o
 
 **Specialty Boosters (Consumables):**
 - Offline Miner ($1.99) - 8h de minado offline al 50% de producción; 30% chance de oferta extendida (12h)
-- Lucky Block ($0.99) - 10x recompensa por N bloques (500/2500/10000 según hashRate)
-- Market Pump ($0.99) - 2x precio de venta por 30 min; 30% chance de oferta extendida (37 min)
+- Lucky Block ($0.99) - 5x recompensa por N bloques (500/2500/10000 según hashRate)
+- Market Pump ($0.99) - 2x precio de venta por 15 min; 30% chance de oferta extendida (20 min)
 
 **Dynamic Packs (Timed Offers):**
 Los packs ya NO son one-time estáticos. Son **ofertas dinámicas** con valores dentro de un rango, que aparecen por 20 minutos con 8h de cooldown. La visibilidad depende del hardware que posee el jugador:
@@ -309,10 +309,10 @@ Todos los boosters stackean multiplicativamente con prestige y rewarded ad boost
 **Cuando** compra Market Pump ($0.99)
 **Entonces**
 - Al abrir tab Boosters:
-  - 30% de probabilidad de ver oferta extendida (37 min en vez de 30 min)
+  - 30% de probabilidad de ver oferta extendida (20 min en vez de 15 min)
   - Si extendida: badge "EXTENDED" visible
 - Al comprar:
-  - Precio de venta se multiplica por 2x (`priceMultiplier: 2.0`) durante `baseDurationMs` (30 min) o `extendedDurationMs` (37 min)
+  - Precio de venta se multiplica por 2x (`priceMultiplier: 2.0`) durante `baseDurationMs` (15 min) o `extendedDurationMs` (20 min)
   - Aplicado en la acción `SELL_COINS_FOR_MONEY` del reducer
   - UI muestra badge: "Market Pump: MM:SS remaining"
   - Timer es real-time
@@ -423,7 +423,7 @@ Todos los boosters stackean multiplicativamente con prestige y rewarded ad boost
   permanentMultiplier = 2.0x (permanent IAP)
   temporaryBooster = 5.0x (5x booster)
   adBoost = 2.0x (rewarded ad)
-  luckyBlock = 10x (por bloque, si activo)
+  luckyBlock = 5x (por bloque, si activo)
 
   finalProduction = 1000 × 2.0 × 2.0 × 5.0 × 2.0 = 40,000 CC/s
   + Lucky Block: cada bloque minado otorga 10× recompensa
@@ -544,8 +544,8 @@ export const BOOSTER_CONFIG = {
   },
   MARKET_PUMP: {
     priceMultiplier: 2.0,                      // 2x sell price
-    baseDurationMs: 30 * 60 * 1000,            // 30 min
-    extendedDurationMs: 37 * 60 * 1000,        // 37 min
+    baseDurationMs: 15 * 60 * 1000,            // 15 min
+    extendedDurationMs: 20 * 60 * 1000,        // 20 min
     extendedOfferChance: 0.30,                 // 30% chance on tab open
   },
 };
@@ -655,8 +655,8 @@ interface IAPState {
 
 ### Specialty Boosters
 6. **Offline Miner**: Producción al 50% mientras app cerrada; duración 8h (o 12h si extended)
-7. **Lucky Block**: 10x reward por bloque durante N bloques (500/2500/10000); N escala con hashRate del jugador
-8. **Market Pump**: 2x precio de venta durante 30 min (o 37 min si extended)
+7. **Lucky Block**: 5x reward por bloque durante N bloques (500/2500/10000); N escala con hashRate del jugador
+8. **Market Pump**: 2x precio de venta durante 15 min (o 20 min si extended). **Known UI bug**: ShopScreen text still shows "30 min" / "37 min".
 9. **Extended offers**: 30% chance, se pre-rolla al abrir tab Boosters (via `pendingBoosterMetaRef`); no re-rolla por render
 10. **Specialty boosters son independientes**: Se pueden usar simultáneamente entre sí y con production boosters
 
