@@ -67,7 +67,7 @@ import {
   getAIPreferredEnergySource,
   generateAISuggestion,
 } from '../utils/aiLogic';
-import { getNextAIAction } from '../utils/aiObserverLogic';
+import { getAIActions } from '../utils/aiObserverLogic';
 import { aiExclusiveHardware } from '../data/hardwareData';
 import { checkNarrativeThresholds } from '../utils/narrativeLogic';
 import { getCompositeMultiplier, filterExpiredEvents, addOrRefreshEvent, removeEvent, isEventActive } from '../utils/marketEventLogic';
@@ -1577,50 +1577,52 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       const ai = state.ai ?? getInitialAIState();
       if (!ai.isAutonomous) return state;
 
-      const action_result = getNextAIAction(state);
-      if (!action_result) return state;
+      const actions = getAIActions(state);
+      if (actions.length === 0) return state;
 
       let newState = { ...state };
       const now = Date.now();
 
-      switch (action_result.type) {
-        case 'SELL_CC': {
-          const cashGained = action_result.amount * action_result.pricePerCoin;
-          newState.cryptoCoins -= action_result.amount;
-          newState.realMoney += cashGained;
-          newState.totalRealMoneyEarned += cashGained;
-          newState.totalSellCount += 1;
-          break;
-        }
-        case 'BUY_ENERGY': {
-          const energy = newState.energy ?? getInitialEnergyState();
-          newState.energy = buildEnergySource(energy, action_result.sourceId);
-          newState.realMoney -= action_result.cost;
-          break;
-        }
-        case 'BUY_HARDWARE': {
-          newState.hardware = newState.hardware.map(h =>
-            h.id === action_result.hardwareId ? { ...h, owned: h.owned + 1 } : h,
-          );
-          newState.realMoney -= action_result.cost;
-          break;
-        }
-        case 'CREATE_AI_HARDWARE': {
-          const template = aiExclusiveHardware.find(h => h.id === action_result.hardwareId);
-          if (template) {
-            newState.hardware = [...newState.hardware, { ...template, owned: 0 }];
-            newState.ai = {
-              ...ai,
-              aiHardwareCreated: [...(ai.aiHardwareCreated ?? []), template.id],
-            };
+      for (const act of actions) {
+        switch (act.type) {
+          case 'SELL_CC': {
+            const cashGained = act.amount * act.pricePerCoin;
+            newState.cryptoCoins -= act.amount;
+            newState.realMoney += cashGained;
+            newState.totalRealMoneyEarned += cashGained;
+            newState.totalSellCount += 1;
+            break;
           }
-          break;
+          case 'BUY_ENERGY': {
+            const energy = newState.energy ?? getInitialEnergyState();
+            newState.energy = buildEnergySource(energy, act.sourceId);
+            newState.realMoney -= act.cost;
+            break;
+          }
+          case 'BUY_HARDWARE': {
+            newState.hardware = newState.hardware.map(h =>
+              h.id === act.hardwareId ? { ...h, owned: h.owned + 1 } : h,
+            );
+            newState.realMoney -= act.cost;
+            break;
+          }
+          case 'CREATE_AI_HARDWARE': {
+            const template = aiExclusiveHardware.find(h => h.id === act.hardwareId);
+            if (template) {
+              newState.hardware = [...newState.hardware, { ...template, owned: 0 }];
+              newState.ai = {
+                ...(newState.ai ?? ai),
+                aiHardwareCreated: [...((newState.ai ?? ai).aiHardwareCreated ?? []), template.id],
+              };
+            }
+            break;
+          }
         }
+        newState.ai = addAILogEntry(newState.ai ?? ai, act.message, 'autonomous');
       }
 
-      newState.ai = addAILogEntry(newState.ai ?? ai, action_result.message, 'autonomous');
       newState.ai.lastActionAt = now;
-      newState.aiTickerMessage = action_result.message;
+      newState.aiTickerMessage = actions[actions.length - 1].message;
       return recalculateGameStats(newState);
     }
 

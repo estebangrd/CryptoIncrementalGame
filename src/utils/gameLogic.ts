@@ -795,8 +795,8 @@ export const checkAndUpdateUnlocks = (gameState: GameState): GameState => {
     newUnlockedTabs.energy = true;
   }
 
-  // Unlock Chronicle tab: when first narrative event has fired
-  if (!newUnlockedTabs.chronicle && (gameState.narrativeEvents?.length ?? 0) > 0) {
+  // Unlock Chronicle tab: when first narrative event has fired OR AI Level 3 active
+  if (!newUnlockedTabs.chronicle && ((gameState.narrativeEvents?.length ?? 0) > 0 || gameState.ai?.isAutonomous)) {
     newUnlockedTabs.chronicle = true;
   }
 
