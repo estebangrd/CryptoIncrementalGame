@@ -237,7 +237,7 @@ function calculateTotalHashRate(gameState: GameState): number {
   for (const hardware of gameState.hardware) {
     if (hardware.owned === 0) continue;
 
-    const baseHashRate = hardware.baseProduction * 10; // H/s base por unidad
+    const baseHashRate = hardware.baseProduction; // H/s base por unidad (consistente con HardwareList)
 
     // Multiplicadores de upgrades por hardware (mismo criterio que calculateHardwareMiningSpeed)
     let upgradeMultiplier = 1;

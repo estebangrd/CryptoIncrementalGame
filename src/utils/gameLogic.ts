@@ -217,7 +217,7 @@ export const calculateTotalHashRate = (gameState: GameState): number => {
     if (hardware.id === 'manual_mining') return;
     if (hardware.owned === 0) return;
     if (!isHardwareEnabled(hardware)) return;
-    const baseHashRate = hardware.baseProduction * 10;
+    const baseHashRate = hardware.baseProduction;
     // Apply same per-hardware upgrade multipliers as calculateHardwareMiningSpeed
     let upgradeMultiplier = 1;
     gameState.upgrades.forEach(upgrade => {

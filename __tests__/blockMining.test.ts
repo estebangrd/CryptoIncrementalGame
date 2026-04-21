@@ -25,7 +25,7 @@ const makeState = (overrides: any = {}): any => ({
 });
 
 const CPU = { id: 'basic_cpu', baseProduction: 10, owned: 5, energyRequired: 0 };
-// baseHashRate = 10 * 10 = 100 H/s per unit → 500 H/s for 5 units
+// baseHashRate = baseProduction = 10 H/s per unit → 50 H/s for 5 units
 
 describe('calculateTotalHashRate', () => {
   describe('base calculation', () => {
@@ -34,17 +34,17 @@ describe('calculateTotalHashRate', () => {
       expect(calculateTotalHashRate(state)).toBe(0);
     });
 
-    it('sums baseProduction * 10 * owned for each hardware', () => {
+    it('sums baseProduction * owned for each hardware', () => {
       const state = makeState({ hardware: [CPU] });
-      // 10 * 10 * 5 = 500
-      expect(calculateTotalHashRate(state)).toBe(500);
+      // 10 * 5 = 50
+      expect(calculateTotalHashRate(state)).toBe(50);
     });
 
     it('sums across multiple hardware types', () => {
       const gpu = { id: 'basic_gpu', baseProduction: 20, owned: 3, energyRequired: 0 };
       const state = makeState({ hardware: [CPU, gpu] });
-      // cpu: 10*10*5=500, gpu: 20*10*3=600 → 1100
-      expect(calculateTotalHashRate(state)).toBe(1100);
+      // cpu: 10*5=50, gpu: 20*3=60 → 110
+      expect(calculateTotalHashRate(state)).toBe(110);
     });
   });
 
@@ -55,8 +55,8 @@ describe('calculateTotalHashRate', () => {
         effect: { type: 'production', target: 'basic_cpu', value: 2 },
       };
       const state = makeState({ hardware: [CPU], upgrades: [upgrade] });
-      // 500 * 2 = 1000
-      expect(calculateTotalHashRate(state)).toBe(1000);
+      // 50 * 2 = 100
+      expect(calculateTotalHashRate(state)).toBe(100);
     });
 
     it('applies category upgrade for cpu hardware', () => {
@@ -65,8 +65,8 @@ describe('calculateTotalHashRate', () => {
         effect: { type: 'production', target: 'cpu', value: 3 },
       };
       const state = makeState({ hardware: [CPU], upgrades: [upgrade] });
-      // 500 * 3 = 1500
-      expect(calculateTotalHashRate(state)).toBe(1500);
+      // 50 * 3 = 150
+      expect(calculateTotalHashRate(state)).toBe(150);
     });
 
     it('applies category upgrade for gpu hardware', () => {
@@ -76,8 +76,8 @@ describe('calculateTotalHashRate', () => {
         effect: { type: 'production', target: 'gpu', value: 4 },
       };
       const state = makeState({ hardware: [gpu], upgrades: [upgrade] });
-      // 20*10*2*4 = 1600
-      expect(calculateTotalHashRate(state)).toBe(1600);
+      // 20*2*4 = 160
+      expect(calculateTotalHashRate(state)).toBe(160);
     });
 
     it('ignores unpurchased upgrades', () => {
@@ -86,7 +86,7 @@ describe('calculateTotalHashRate', () => {
         effect: { type: 'production', target: 'basic_cpu', value: 2 },
       };
       const state = makeState({ hardware: [CPU], upgrades: [upgrade] });
-      expect(calculateTotalHashRate(state)).toBe(500);
+      expect(calculateTotalHashRate(state)).toBe(50);
     });
 
     it('ignores non-production upgrade types', () => {
@@ -95,7 +95,7 @@ describe('calculateTotalHashRate', () => {
         effect: { type: 'clickPower', target: 'basic_cpu', value: 5 },
       };
       const state = makeState({ hardware: [CPU], upgrades: [upgrade] });
-      expect(calculateTotalHashRate(state)).toBe(500);
+      expect(calculateTotalHashRate(state)).toBe(50);
     });
 
     it('stacks multiple upgrade multipliers multiplicatively', () => {
@@ -104,15 +104,15 @@ describe('calculateTotalHashRate', () => {
         { purchased: true, effect: { type: 'production', target: 'cpu', value: 3 } },
       ];
       const state = makeState({ hardware: [CPU], upgrades });
-      // 500 * 2 * 3 = 3000
-      expect(calculateTotalHashRate(state)).toBe(3000);
+      // 50 * 2 * 3 = 300
+      expect(calculateTotalHashRate(state)).toBe(300);
     });
   });
 
   describe('prestige multiplier', () => {
     it('applies prestigeProductionMultiplier when present', () => {
       const state = makeState({ hardware: [CPU], prestigeProductionMultiplier: 2 });
-      expect(calculateTotalHashRate(state)).toBe(1000); // 500 * 2
+      expect(calculateTotalHashRate(state)).toBe(100); // 50 * 2
     });
 
     it('falls back to prestigeMultiplier when prestigeProductionMultiplier is undefined', () => {
@@ -121,12 +121,12 @@ describe('calculateTotalHashRate', () => {
         prestigeMultiplier: 3,
         prestigeProductionMultiplier: undefined,
       });
-      expect(calculateTotalHashRate(state)).toBe(1500); // 500 * 3
+      expect(calculateTotalHashRate(state)).toBe(150); // 50 * 3
     });
 
     it('defaults to 1x when both prestige fields are absent', () => {
       const state = makeState({ hardware: [CPU] });
-      expect(calculateTotalHashRate(state)).toBe(500);
+      expect(calculateTotalHashRate(state)).toBe(50);
     });
   });
 
@@ -140,7 +140,7 @@ describe('calculateTotalHashRate', () => {
           booster5x: { isActive: false, expiresAt: null },
         },
       });
-      expect(calculateTotalHashRate(state)).toBe(500 * BOOSTER_CONFIG.PERMANENT_MULTIPLIER.multiplier);
+      expect(calculateTotalHashRate(state)).toBe(50 * BOOSTER_CONFIG.PERMANENT_MULTIPLIER.multiplier);
     });
 
     it('applies active 2x booster', () => {
@@ -153,7 +153,7 @@ describe('calculateTotalHashRate', () => {
           booster5x: { isActive: false, expiresAt: null },
         },
       });
-      expect(calculateTotalHashRate(state)).toBe(500 * BOOSTER_CONFIG.BOOSTER_2X.multiplier);
+      expect(calculateTotalHashRate(state)).toBe(50 * BOOSTER_CONFIG.BOOSTER_2X.multiplier);
     });
 
     it('applies active 5x booster', () => {
@@ -166,7 +166,7 @@ describe('calculateTotalHashRate', () => {
           booster5x: { isActive: true, expiresAt: futureExpiry },
         },
       });
-      expect(calculateTotalHashRate(state)).toBe(500 * BOOSTER_CONFIG.BOOSTER_5X.multiplier);
+      expect(calculateTotalHashRate(state)).toBe(50 * BOOSTER_CONFIG.BOOSTER_5X.multiplier);
     });
 
     it('5x booster takes priority over 2x when both active', () => {
@@ -179,7 +179,7 @@ describe('calculateTotalHashRate', () => {
           booster5x: { isActive: true, expiresAt: futureExpiry },
         },
       });
-      expect(calculateTotalHashRate(state)).toBe(500 * BOOSTER_CONFIG.BOOSTER_5X.multiplier);
+      expect(calculateTotalHashRate(state)).toBe(50 * BOOSTER_CONFIG.BOOSTER_5X.multiplier);
     });
 
     it('ignores expired booster', () => {
@@ -192,7 +192,7 @@ describe('calculateTotalHashRate', () => {
           booster5x: { isActive: false, expiresAt: null },
         },
       });
-      expect(calculateTotalHashRate(state)).toBe(500);
+      expect(calculateTotalHashRate(state)).toBe(50);
     });
   });
 
@@ -212,9 +212,9 @@ describe('calculateTotalHashRate', () => {
           booster5x: { isActive: false, expiresAt: null },
         },
       });
-      // 500 * 2 (upgrade) * 3 (prestige) * 2 (IAP permanent) = 6000
+      // 50 * 2 (upgrade) * 3 (prestige) * 2 (IAP permanent) = 600
       expect(calculateTotalHashRate(state)).toBe(
-        500 * 2 * 3 * BOOSTER_CONFIG.PERMANENT_MULTIPLIER.multiplier
+        50 * 2 * 3 * BOOSTER_CONFIG.PERMANENT_MULTIPLIER.multiplier
       );
     });
 
@@ -300,8 +300,8 @@ describe('manual_mining exclusion from auto-production stats', () => {
 
     it('still counts real hardware alongside manual_mining', () => {
       const state = makeState({ hardware: [MANUAL_MINING, CPU] });
-      // Only CPU contributes: 10 * 10 * 5 = 500
-      expect(calculateTotalHashRate(state)).toBe(500);
+      // Only CPU contributes: 10 * 5 = 50
+      expect(calculateTotalHashRate(state)).toBe(50);
     });
 
     it('prestige multiplier does not inflate hash rate from manual_mining alone', () => {

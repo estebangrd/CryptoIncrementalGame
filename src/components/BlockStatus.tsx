@@ -4,6 +4,7 @@ import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import { GameState } from '../types/game';
 import { formatBlockInfo } from '../utils/blockLogic';
 import { formatNumber, formatSignedNumber, formatUSDCompact } from '../utils/gameLogic';
+import { getBadgeClickMultiplier } from '../utils/prestigeLogic';
 import { colors, fonts } from '../config/theme';
 
 const CLICK_WINDOW_MS = 1000;
@@ -183,9 +184,8 @@ const statStyles = StyleSheet.create({
 // ── BlockStatus ────────────────────────────────────────────────────
 export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock, onClickBoostChange, t }) => {
   const blockInfo = formatBlockInfo(gameState);
-  const [clickBoost, setClickBoost] = useState(0);
+  const [clicksInWindow, setClicksInWindow] = useState(0);
   const clickTimestamps = useRef<number[]>([]);
-  const boostPerClickRef = useRef(10);
   const decayInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const shimmerAnim = useRef(new Animated.Value(-300)).current;
@@ -221,20 +221,31 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
     return () => swing.stop();
   }, [isComplete, hammerAnim]);
 
+  // Real CC earned per click: base × click upgrades × prestige × badges
+  const upgradeClickMultiplier = gameState.upgrades
+    .filter(u => u.purchased && u.effect.type === 'clickPower')
+    .reduce((acc: number, u) => acc * u.effect.value, 1);
+  const prestigeClickMultiplier = gameState.prestigeClickMultiplier ?? 1;
+  const badgeClickMultiplier = getBadgeClickMultiplier(gameState.unlockedBadges || []);
+  const ccPerClick = blockInfo.currentReward * upgradeClickMultiplier * prestigeClickMultiplier * badgeClickMultiplier;
+
+  // Hash rate boost proportional to CC boost, using the same H/s : CC/s ratio the player's hardware shows.
+  // Falls back to 1:1 when no hardware produces CC yet.
+  const ccClickBoost = clicksInWindow * ccPerClick;
+  const hashPerCc = blockInfo.totalHashRate > 0 && gameState.cryptoCoinsPerSecond > 0
+    ? blockInfo.totalHashRate / gameState.cryptoCoinsPerSecond
+    : 1;
+  const hashClickBoost = ccClickBoost * hashPerCc;
+
   useEffect(() => {
-    onClickBoostChange?.(clickBoost);
+    onClickBoostChange?.(ccClickBoost);
     return () => onClickBoostChange?.(0);
-  }, [clickBoost, onClickBoostChange]);
+  }, [ccClickBoost, onClickBoostChange]);
 
   const handleMineClick = useCallback(() => {
-    const clickMultiplier = gameState.upgrades
-      .filter(u => u.purchased && u.effect.type === 'clickPower')
-      .reduce((acc: number, u) => acc * u.effect.value, 1);
-    boostPerClickRef.current = Math.max(10, blockInfo.currentReward * clickMultiplier * 10);
-
     const now = Date.now();
     clickTimestamps.current.push(now);
-    setClickBoost(clickTimestamps.current.length * boostPerClickRef.current);
+    setClicksInWindow(clickTimestamps.current.length);
 
     if (!decayInterval.current) {
       decayInterval.current = setInterval(() => {
@@ -242,11 +253,11 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
         clickTimestamps.current = clickTimestamps.current.filter(ts => t2 - ts < CLICK_WINDOW_MS);
 
         if (clickTimestamps.current.length === 0) {
-          setClickBoost(0);
+          setClicksInWindow(0);
           clearInterval(decayInterval.current!);
           decayInterval.current = null;
         } else {
-          setClickBoost(clickTimestamps.current.length * boostPerClickRef.current);
+          setClicksInWindow(clickTimestamps.current.length);
         }
       }, 100);
     }
@@ -258,10 +269,10 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
     ]).start();
 
     onMineBlock();
-  }, [gameState.upgrades, blockInfo.currentReward, onMineBlock, scaleAnim]);
+  }, [onMineBlock, scaleAnim]);
 
-  const displayHashRate = blockInfo.totalHashRate + clickBoost;
-  const hasClickBoost = clickBoost > 0;
+  const displayHashRate = blockInfo.totalHashRate + hashClickBoost;
+  const hasClickBoost = clicksInWindow > 0;
   const isAIAutonomous = gameState.ai?.isAutonomous ?? false;
   const isComplete = !isAIAutonomous && blockInfo.blocksMined >= blockInfo.totalBlocks;
   const progressPct = blockInfo.phaseProgress;
@@ -299,7 +310,7 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
           icon="🖥"
           label="Hash Rate"
           value={formatNumber(displayHashRate)}
-          sub={hasClickBoost ? `+${formatNumber(clickBoost)} click` : 'H/s — Active'}
+          sub={hasClickBoost ? `+${formatNumber(hashClickBoost)} click` : 'H/s — Active'}
           variant={hasClickBoost ? 'green' : 'cyan'}
         />
         <NodeStat
@@ -316,9 +327,9 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
         <NodeStat
           icon="🪙"
           label="Net Income"
-          value={formatSignedNumber(gameState.cryptoCoinsPerSecond + clickBoost)}
-          sub={hasClickBoost ? `+${formatNumber(clickBoost)} click` : 'CC/sec'}
-          variant={(gameState.cryptoCoinsPerSecond + clickBoost) < 0 ? 'red' : 'green'}
+          value={formatSignedNumber(gameState.cryptoCoinsPerSecond + ccClickBoost)}
+          sub={hasClickBoost ? `+${formatNumber(ccClickBoost)} click` : 'CC/sec'}
+          variant={(gameState.cryptoCoinsPerSecond + ccClickBoost) < 0 ? 'red' : 'green'}
         />
         <NodeStat
           icon="🔌"
