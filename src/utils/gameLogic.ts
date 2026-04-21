@@ -813,6 +813,10 @@ export const isHardwareUnlocked = (gameState: GameState, hardware: Hardware): bo
   // Manual mining is always hidden
   if (hardware.id === 'manual_mining') return false;
 
+  // AI-exclusive hardware never appears in the player purchase list —
+  // it is rendered in its own dedicated AI section when isAutonomous.
+  if (hardware.aiExclusive) return false;
+
   // First hardware (basic_cpu) is always unlocked
   if (hardware.level === 2) return true;
 
