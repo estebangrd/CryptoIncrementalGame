@@ -283,18 +283,30 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       return recalculateGameStats(updatedState);
     case 'LOAD_GAME': {
       // Migrate hardware: refresh all balance values from fresh hardwareProgression,
-      // preserving only the player's owned count
-      const migratedHardware = action.payload.hardware?.map(hw => {
-        const fresh = hardwareProgression.find(h => h.id === hw.id);
-        if (fresh) {
-          return {
-            ...fresh,              // fresh balance values (miningSpeed, costMultiplier, etc.)
-            owned: hw.owned,       // preserve player progress
-            isEnabled: hw.isEnabled,  // preserve toggle state
-          };
-        }
-        return hw;
-      }) || hardwareProgression;
+      // preserving only the player's owned count. Dedupe by id — prior bug may
+      // have injected duplicate AI-exclusive entries; collapse them and sum owned.
+      const rawHardware = action.payload.hardware ?? [];
+      const hardwareById = new Map<string, typeof rawHardware[number]>();
+      for (const hw of rawHardware) {
+        const existing = hardwareById.get(hw.id);
+        hardwareById.set(hw.id, existing
+          ? { ...existing, owned: (existing.owned ?? 0) + (hw.owned ?? 0) }
+          : hw);
+      }
+      const dedupedHardware = Array.from(hardwareById.values());
+      const migratedHardware = dedupedHardware.length > 0
+        ? dedupedHardware.map(hw => {
+          const fresh = hardwareProgression.find(h => h.id === hw.id);
+          if (fresh) {
+            return {
+              ...fresh,              // fresh balance values (miningSpeed, costMultiplier, etc.)
+              owned: hw.owned,       // preserve player progress
+              isEnabled: hw.isEnabled,  // preserve toggle state
+            };
+          }
+          return hw;
+        })
+        : hardwareProgression;
 
       // Merge defaults first so new fields get default values for old saves
       const loadedState: GameState = {
@@ -378,13 +390,19 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         adHashBoost: action.payload.adHashBoost ?? { isActive: false, activatedAt: null, expiresAt: null },
         adMarketBoost: action.payload.adMarketBoost ?? { isActive: false, activatedAt: null, expiresAt: null },
         energyBonusMW: action.payload.energyBonusMW ?? 0,
-        // AI system migration: provide defaults for old saves
-        ai: action.payload.ai
-          ? {
-              ...getInitialAIState(),
-              ...action.payload.ai,
-            }
-          : getInitialAIState(),
+        // AI system migration: provide defaults for old saves.
+        // Reconstruct aiHardwareCreated from the actual hardware array so a
+        // stale/empty list can't trigger re-injection of duplicate entries.
+        ai: (() => {
+          const base = action.payload.ai
+            ? { ...getInitialAIState(), ...action.payload.ai }
+            : getInitialAIState();
+          const aiHwFromState = migratedHardware
+            .filter(h => h.aiExclusive)
+            .map(h => h.id);
+          const merged = Array.from(new Set([...(base.aiHardwareCreated ?? []), ...aiHwFromState]));
+          return { ...base, aiHardwareCreated: merged };
+        })(),
         aiCryptosUnlocked: action.payload.aiCryptosUnlocked ?? [],
         aiTickerMessage: action.payload.aiTickerMessage ?? '',
         // Narrative Events migration: provide defaults for old saves
@@ -1609,10 +1627,17 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           case 'CREATE_AI_HARDWARE': {
             const template = aiExclusiveHardware.find(h => h.id === act.hardwareId);
             if (template) {
-              newState.hardware = [...newState.hardware, { ...template, owned: 0 }];
+              const alreadyExists = newState.hardware.some(h => h.id === template.id);
+              if (!alreadyExists) {
+                newState.hardware = [...newState.hardware, { ...template, owned: 0 }];
+              }
+              const currentAI = newState.ai ?? ai;
+              const currentCreated = currentAI.aiHardwareCreated ?? [];
               newState.ai = {
-                ...(newState.ai ?? ai),
-                aiHardwareCreated: [...((newState.ai ?? ai).aiHardwareCreated ?? []), template.id],
+                ...currentAI,
+                aiHardwareCreated: currentCreated.includes(template.id)
+                  ? currentCreated
+                  : [...currentCreated, template.id],
               };
             }
             break;
