@@ -218,6 +218,26 @@ export interface RunStats {
   playtimeThisRun: number;    // seconds
 }
 
+// ─── Prestige Skill Tree ──────────────────────────────────────────────────────
+
+export type SkillTreeBranch = 'hardware' | 'market' | 'click';
+export type SkillNodePosition = 1 | 2 | 3 | 4 | 5 | 6;
+
+export interface SkillNode {
+  id: string;                    // e.g. "hardware_1", "market_3", "click_6"
+  branch: SkillTreeBranch;
+  position: SkillNodePosition;
+  value: number;                 // additive bonus (0.05 = +5%)
+  nameKey: string;               // translation key
+  descriptionKey: string;        // translation key
+  purchased: boolean;
+}
+
+export interface PrestigeSkillTree {
+  nodes: SkillNode[];            // all 18 nodes (3 branches × 6 positions)
+  lostPoints: number;             // points lost permanently via respec
+}
+
 // Badge definition
 export interface Badge {
   id: string;
@@ -329,6 +349,7 @@ export interface GameState {
   prestigeClickMultiplier: number;
   prestigeHistory: PrestigeRun[];
   unlockedBadges: string[];
+  prestigeSkillTree: PrestigeSkillTree;
   currentRunStartTime: number;
   currentRunStats: RunStats;
   // Phase 1: Genesis - Block system

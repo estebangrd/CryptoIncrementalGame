@@ -4,6 +4,8 @@ import { generateInitialChartWindow, getInitialPriceEngineState } from './priceE
 import { getInitialEnergyState, getActiveHardwareWithEnergyConstraint } from './energyLogic';
 import { getAIProductionMultiplier, getInitialAIState } from './aiLogic';
 import { getBadgeProductionMultiplier } from './prestigeLogic';
+import { calculateSkillTreeHardwareMultiplier } from './skillTreeLogic';
+import { getInitialSkillTree } from '../data/skillTree';
 import { hardwareProgression } from '../data/hardwareData';
 import { initialUpgrades } from '../data/gameData';
 import { cryptocurrencies } from '../data/cryptocurrencies';
@@ -150,8 +152,9 @@ export const getAllMultipliers = (gameState: GameState): number => {
   }
 
   const badgeProductionMultiplier = getBadgeProductionMultiplier(gameState.unlockedBadges || []);
+  const skillTreeHardwareMultiplier = calculateSkillTreeHardwareMultiplier(gameState);
 
-  return prestigeMultiplier * badgeProductionMultiplier * adBoostMultiplier * permanentMultiplier * iapBoosterMultiplier * aiMultiplier * adHashMultiplier;
+  return prestigeMultiplier * badgeProductionMultiplier * skillTreeHardwareMultiplier * adBoostMultiplier * permanentMultiplier * iapBoosterMultiplier * aiMultiplier * adHashMultiplier;
 };
 
 /**
@@ -856,6 +859,7 @@ export const getInitialGameState = (): GameState => {
     prestigeClickMultiplier: 1,
     prestigeHistory: [],
     unlockedBadges: [],
+    prestigeSkillTree: getInitialSkillTree(),
     currentRunStartTime: Date.now(),
     currentRunStats: {
       blocksMinedThisRun: 0,

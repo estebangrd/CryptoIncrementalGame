@@ -14,8 +14,10 @@ import { formatNumber, formatUSD } from '../utils/gameLogic';
 import { PRESTIGE_CONFIG } from '../config/balanceConfig';
 import { ALL_BADGES } from '../data/badges';
 import { PrestigeRun } from '../types/game';
+import SkillTreeScreen from './SkillTreeScreen';
+import { calculateAvailableSkillPoints } from '../utils/skillTreeLogic';
 
-type SubTab = 'prestige' | 'history' | 'badges';
+type SubTab = 'prestige' | 'skillTree' | 'history' | 'badges';
 
 const PrestigeScreen: React.FC = () => {
   const { gameState, dispatch, t, showToast } = useGame();
@@ -232,12 +234,17 @@ const PrestigeScreen: React.FC = () => {
   );
 
   const isConfirmValid = confirmText === PRESTIGE_CONFIG.confirmationText;
+  const skillTreeUnlocked = prestigeLevel >= 1;
+  const availableSkillPoints = skillTreeUnlocked ? calculateAvailableSkillPoints(gameState) : 0;
+  const visibleSubTabs: SubTab[] = skillTreeUnlocked
+    ? ['prestige', 'skillTree', 'history', 'badges']
+    : ['prestige', 'history', 'badges'];
 
   return (
     <View style={styles.container}>
       {/* Sub-tab selector */}
       <View style={styles.subTabsContainer}>
-        {(['prestige', 'history', 'badges'] as SubTab[]).map(tab => (
+        {visibleSubTabs.map(tab => (
           <TouchableOpacity
             key={tab}
             style={[styles.subTab, activeSubTab === tab && styles.subTabActive]}
@@ -245,16 +252,23 @@ const PrestigeScreen: React.FC = () => {
           >
             <Text style={[styles.subTabText, activeSubTab === tab && styles.subTabTextActive]}>
               {tab === 'prestige' ? t('prestige.system') :
+               tab === 'skillTree' ? t('skillTree.tabName') :
                tab === 'history' ? t('prestige.historyTab') :
                t('prestige.badgesTab')}
             </Text>
+            {tab === 'skillTree' && availableSkillPoints > 0 && (
+              <View style={styles.skillTreeBadge}>
+                <Text style={styles.skillTreeBadgeText}>{availableSkillPoints}</Text>
+              </View>
+            )}
           </TouchableOpacity>
         ))}
       </View>
 
       {/* Content */}
-      <View style={styles.content}>
+      <View style={activeSubTab === 'skillTree' ? styles.contentFlush : styles.content}>
         {activeSubTab === 'prestige' && renderPrestigeTab()}
+        {activeSubTab === 'skillTree' && <SkillTreeScreen />}
         {activeSubTab === 'history' && renderHistoryTab()}
         {activeSubTab === 'badges' && renderBadgesTab()}
       </View>
@@ -343,6 +357,26 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 16,
+  },
+  contentFlush: {
+    flex: 1,
+  },
+  skillTreeBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 10,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#00e5ff',
+    paddingHorizontal: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  skillTreeBadgeText: {
+    fontSize: 10,
+    color: '#000',
+    fontWeight: 'bold',
   },
   card: {
     backgroundColor: '#2a2a2a',

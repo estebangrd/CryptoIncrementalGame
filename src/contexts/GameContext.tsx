@@ -13,6 +13,15 @@ import {
   checkBadgeUnlocks,
 } from '../utils/prestigeLogic';
 import {
+  canPurchaseNode,
+  purchaseNode,
+  resetSkillTree,
+  hasPurchasedNodes,
+  migrateSkillTree,
+  calculateSkillTreeMarketMultiplier,
+} from '../utils/skillTreeLogic';
+import { getInitialSkillTree } from '../data/skillTree';
+import {
   calculateCurrentReward,
   calculateNextHalving,
   calculateDifficulty,
@@ -160,7 +169,9 @@ export type GameAction =
   | { type: 'DISMISS_OFFLINE_EARNINGS' }
   | { type: 'DISMISS_PREMIUM_OFFLINE' }
   | { type: 'SET_PREMIUM_OFFLINE_DEBUG'; payload: import('../types/game').PendingPremiumOfflineData }
-  | { type: 'TOGGLE_HARDWARE'; payload: string };
+  | { type: 'TOGGLE_HARDWARE'; payload: string }
+  | { type: 'PURCHASE_SKILL_NODE'; payload: { nodeId: string } }
+  | { type: 'RESET_SKILL_TREE' };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
@@ -326,6 +337,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           ?? calculateClickMultiplier(action.payload.prestigeLevel ?? 0),
         prestigeHistory: action.payload.prestigeHistory ?? [],
         unlockedBadges: action.payload.unlockedBadges ?? [],
+        prestigeSkillTree: migrateSkillTree(action.payload.prestigeSkillTree),
         currentRunStartTime: action.payload.currentRunStartTime ?? Date.now(),
         currentRunStats: action.payload.currentRunStats ?? {
           blocksMinedThisRun: 0,
@@ -925,8 +937,9 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         Date.now() < state.iapState.marketPump.expiresAt
         ? BOOSTER_CONFIG.MARKET_PUMP.priceMultiplier
         : 1;
+      const skillTreeMarketMult = calculateSkillTreeMarketMultiplier(state);
       // Ad market boost effect is now in the visible price via market_spike event
-      const moneyEarned = coinsToSell * action.payload.price * pumpMultiplier;
+      const moneyEarned = coinsToSell * action.payload.price * pumpMultiplier * skillTreeMarketMult;
       if (!isFinite(moneyEarned) || moneyEarned <= 0) return state;
 
       const newRealMoneyAfterSell = state.realMoney + moneyEarned;
@@ -1013,6 +1026,22 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       const toggledHardware = [...state.hardware];
       toggledHardware[toggleIdx] = { ...toggleHw, isEnabled: toggleHw.isEnabled === false ? undefined : false };
       return recalculateGameStats({ ...state, hardware: toggledHardware });
+    }
+    case 'PURCHASE_SKILL_NODE': {
+      if (!canPurchaseNode(state, action.payload.nodeId)) return state;
+      const tree = state.prestigeSkillTree ?? getInitialSkillTree();
+      return recalculateGameStats({
+        ...state,
+        prestigeSkillTree: purchaseNode(tree, action.payload.nodeId),
+      });
+    }
+    case 'RESET_SKILL_TREE': {
+      const tree = state.prestigeSkillTree;
+      if (!tree || !hasPurchasedNodes(tree)) return state;
+      return recalculateGameStats({
+        ...state,
+        prestigeSkillTree: resetSkillTree(tree),
+      });
     }
     case 'UPDATE_CRYPTO_PRICES':
       // Esta acción se manejará de forma asíncrona en el useEffect

@@ -791,6 +791,31 @@ export const PACK_CONFIG = {
 } as const;
 
 // ============================================================================
+// PRESTIGE SKILL TREE
+// ============================================================================
+// Árbol de 3 ramas (Hardware / Mercado / Click), 6 nodos por rama, progresión
+// lineal. 1 punto por prestige level. Respec pierde 1 punto permanentemente.
+// Bonos aditivos dentro de cada rama, multiplicativos entre ramas y con el
+// resto de sistemas del juego.
+export const SKILL_TREE_CONFIG = {
+  BRANCHES: ['hardware', 'market', 'click'] as const,
+  NODES_PER_BRANCH: 6,
+  POINTS_PER_PRESTIGE: 1,
+  RESPEC_COST: 1, // puntos perdidos permanentemente por reset
+
+  // Valores aditivos por nodo: NODE_VALUES[branch][position - 1]
+  // Totales maxeados:
+  //   hardware: +80% producción
+  //   market:   +52% precio venta
+  //   click:    +150% click power
+  NODE_VALUES: {
+    hardware: [0.05, 0.10, 0.10, 0.15, 0.15, 0.25],
+    market:   [0.03, 0.05, 0.07, 0.10, 0.12, 0.15],
+    click:    [0.10, 0.15, 0.20, 0.25, 0.30, 0.50],
+  },
+} as const;
+
+// ============================================================================
 // OFFLINE EARNINGS SCREEN
 // ============================================================================
 export const OFFLINE_SCREEN_CONFIG = {

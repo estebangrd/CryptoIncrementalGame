@@ -1,6 +1,7 @@
 import { GameState } from '../types/game';
 import { BLOCK_CONFIG } from '../config/balanceConfig';
 import { getBadgeClickMultiplier } from './prestigeLogic';
+import { calculateSkillTreeClickMultiplier } from './skillTreeLogic';
 
 // Phase 1: Genesis - Block system constants
 export const GENESIS_CONSTANTS = {
@@ -88,7 +89,8 @@ const getClickMultiplier = (gameState: GameState): number => {
     .reduce((acc, u) => acc * u.effect.value, 1);
   const prestigeClickMultiplier = gameState.prestigeClickMultiplier ?? 1;
   const badgeClickMult = getBadgeClickMultiplier(gameState.unlockedBadges || []);
-  return upgradeMultiplier * prestigeClickMultiplier * badgeClickMult;
+  const skillTreeClickMult = calculateSkillTreeClickMultiplier(gameState);
+  return upgradeMultiplier * prestigeClickMultiplier * badgeClickMult * skillTreeClickMult;
 };
 
 // Mine a block and return updated game state

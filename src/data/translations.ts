@@ -2432,4 +2432,302 @@ export const translations: Translation = {
     es: '−30% hash rate por 24h — sin costo adicional',
     pt: '−30% hash rate por 24h — sem custo adicional',
   },
+
+  // ─── Skill Tree ─────────────────────────────────────────────────────────
+  'skillTree.tabName': {
+    en: 'Skill Tree',
+    es: 'Árbol de Skills',
+    pt: 'Árvore de Skills',
+  },
+  'skillTree.available': {
+    en: 'Available points',
+    es: 'Puntos disponibles',
+    pt: 'Pontos disponíveis',
+  },
+  'skillTree.totalEarned': {
+    en: 'Total earned',
+    es: 'Totales ganados',
+    pt: 'Total ganho',
+  },
+  'skillTree.lostPoints': {
+    en: 'Lost to respec',
+    es: 'Perdidos por respec',
+    pt: 'Perdidos por respec',
+  },
+  'skillTree.resetButton': {
+    en: 'Reset Skill Tree',
+    es: 'Resetear Skill Tree',
+    pt: 'Resetar Skill Tree',
+  },
+  'skillTree.resetTitle': {
+    en: 'Reset Skill Tree',
+    es: 'Resetear Skill Tree',
+    pt: 'Resetar Skill Tree',
+  },
+  'skillTree.resetWarning': {
+    en: 'You will lose 1 point PERMANENTLY',
+    es: 'Perderás 1 punto PERMANENTEMENTE',
+    pt: 'Você perderá 1 ponto PERMANENTEMENTE',
+  },
+  'skillTree.resetRefundLabel': {
+    en: 'Nodes to refund',
+    es: 'Nodos a devolver',
+    pt: 'Nós a devolver',
+  },
+  'skillTree.resetLostAfter': {
+    en: 'Lost points after reset',
+    es: 'Puntos perdidos luego del reset',
+    pt: 'Pontos perdidos após o reset',
+  },
+  'skillTree.resetAvailableAfter': {
+    en: 'Available after reset',
+    es: 'Disponibles luego del reset',
+    pt: 'Disponíveis após o reset',
+  },
+  'skillTree.resetConfirm': {
+    en: 'Reset',
+    es: 'Resetear',
+    pt: 'Resetar',
+  },
+  'skillTree.cancel': {
+    en: 'Cancel',
+    es: 'Cancelar',
+    pt: 'Cancelar',
+  },
+  'skillTree.learn': {
+    en: 'Learn',
+    es: 'Aprender',
+    pt: 'Aprender',
+  },
+  'skillTree.costLabel': {
+    en: 'Cost: 1 point',
+    es: 'Coste: 1 punto',
+    pt: 'Custo: 1 ponto',
+  },
+  'skillTree.locked': {
+    en: 'Locked',
+    es: 'Bloqueado',
+    pt: 'Bloqueado',
+  },
+  'skillTree.owned': {
+    en: 'Learned',
+    es: 'Aprendido',
+    pt: 'Aprendido',
+  },
+  'skillTree.noPoints': {
+    en: 'No points available',
+    es: 'Sin puntos disponibles',
+    pt: 'Sem pontos disponíveis',
+  },
+  'skillTree.branchHardware': {
+    en: 'Hardware',
+    es: 'Hardware',
+    pt: 'Hardware',
+  },
+  'skillTree.branchMarket': {
+    en: 'Market',
+    es: 'Mercado',
+    pt: 'Mercado',
+  },
+  'skillTree.branchClick': {
+    en: 'Click',
+    es: 'Click',
+    pt: 'Clique',
+  },
+  'skillTree.toast.purchased': {
+    en: 'Skill learned',
+    es: 'Skill aprendido',
+    pt: 'Skill aprendido',
+  },
+  'skillTree.toast.reset': {
+    en: 'Skill Tree reset — 1 point lost permanently',
+    es: 'Skill Tree reseteado — 1 punto perdido permanentemente',
+    pt: 'Skill Tree resetado — 1 ponto perdido permanentemente',
+  },
+
+  // Hardware branch nodes
+  'skillTree.hardware.node1.name': {
+    en: 'Hardware I',
+    es: 'Hardware I',
+    pt: 'Hardware I',
+  },
+  'skillTree.hardware.node1.desc': {
+    en: '+5% hardware production',
+    es: '+5% producción de hardware',
+    pt: '+5% produção de hardware',
+  },
+  'skillTree.hardware.node2.name': {
+    en: 'Hardware II',
+    es: 'Hardware II',
+    pt: 'Hardware II',
+  },
+  'skillTree.hardware.node2.desc': {
+    en: '+10% hardware production',
+    es: '+10% producción de hardware',
+    pt: '+10% produção de hardware',
+  },
+  'skillTree.hardware.node3.name': {
+    en: 'Hardware III',
+    es: 'Hardware III',
+    pt: 'Hardware III',
+  },
+  'skillTree.hardware.node3.desc': {
+    en: '+10% hardware production',
+    es: '+10% producción de hardware',
+    pt: '+10% produção de hardware',
+  },
+  'skillTree.hardware.node4.name': {
+    en: 'Hardware IV',
+    es: 'Hardware IV',
+    pt: 'Hardware IV',
+  },
+  'skillTree.hardware.node4.desc': {
+    en: '+15% hardware production',
+    es: '+15% producción de hardware',
+    pt: '+15% produção de hardware',
+  },
+  'skillTree.hardware.node5.name': {
+    en: 'Hardware V',
+    es: 'Hardware V',
+    pt: 'Hardware V',
+  },
+  'skillTree.hardware.node5.desc': {
+    en: '+15% hardware production',
+    es: '+15% producción de hardware',
+    pt: '+15% produção de hardware',
+  },
+  'skillTree.hardware.node6.name': {
+    en: 'Hardware Capstone',
+    es: 'Hardware Final',
+    pt: 'Hardware Final',
+  },
+  'skillTree.hardware.node6.desc': {
+    en: '+25% hardware production',
+    es: '+25% producción de hardware',
+    pt: '+25% produção de hardware',
+  },
+
+  // Market branch nodes
+  'skillTree.market.node1.name': {
+    en: 'Market I',
+    es: 'Mercado I',
+    pt: 'Mercado I',
+  },
+  'skillTree.market.node1.desc': {
+    en: '+3% sell price',
+    es: '+3% precio de venta',
+    pt: '+3% preço de venda',
+  },
+  'skillTree.market.node2.name': {
+    en: 'Market II',
+    es: 'Mercado II',
+    pt: 'Mercado II',
+  },
+  'skillTree.market.node2.desc': {
+    en: '+5% sell price',
+    es: '+5% precio de venta',
+    pt: '+5% preço de venda',
+  },
+  'skillTree.market.node3.name': {
+    en: 'Market III',
+    es: 'Mercado III',
+    pt: 'Mercado III',
+  },
+  'skillTree.market.node3.desc': {
+    en: '+7% sell price',
+    es: '+7% precio de venta',
+    pt: '+7% preço de venda',
+  },
+  'skillTree.market.node4.name': {
+    en: 'Market IV',
+    es: 'Mercado IV',
+    pt: 'Mercado IV',
+  },
+  'skillTree.market.node4.desc': {
+    en: '+10% sell price',
+    es: '+10% precio de venta',
+    pt: '+10% preço de venda',
+  },
+  'skillTree.market.node5.name': {
+    en: 'Market V',
+    es: 'Mercado V',
+    pt: 'Mercado V',
+  },
+  'skillTree.market.node5.desc': {
+    en: '+12% sell price',
+    es: '+12% precio de venta',
+    pt: '+12% preço de venda',
+  },
+  'skillTree.market.node6.name': {
+    en: 'Market Capstone',
+    es: 'Mercado Final',
+    pt: 'Mercado Final',
+  },
+  'skillTree.market.node6.desc': {
+    en: '+15% sell price',
+    es: '+15% precio de venta',
+    pt: '+15% preço de venda',
+  },
+
+  // Click branch nodes
+  'skillTree.click.node1.name': {
+    en: 'Click I',
+    es: 'Click I',
+    pt: 'Clique I',
+  },
+  'skillTree.click.node1.desc': {
+    en: '+10% click power',
+    es: '+10% potencia de click',
+    pt: '+10% poder de clique',
+  },
+  'skillTree.click.node2.name': {
+    en: 'Click II',
+    es: 'Click II',
+    pt: 'Clique II',
+  },
+  'skillTree.click.node2.desc': {
+    en: '+15% click power',
+    es: '+15% potencia de click',
+    pt: '+15% poder de clique',
+  },
+  'skillTree.click.node3.name': {
+    en: 'Click III',
+    es: 'Click III',
+    pt: 'Clique III',
+  },
+  'skillTree.click.node3.desc': {
+    en: '+20% click power',
+    es: '+20% potencia de click',
+    pt: '+20% poder de clique',
+  },
+  'skillTree.click.node4.name': {
+    en: 'Click IV',
+    es: 'Click IV',
+    pt: 'Clique IV',
+  },
+  'skillTree.click.node4.desc': {
+    en: '+25% click power',
+    es: '+25% potencia de click',
+    pt: '+25% poder de clique',
+  },
+  'skillTree.click.node5.name': {
+    en: 'Click V',
+    es: 'Click V',
+    pt: 'Clique V',
+  },
+  'skillTree.click.node5.desc': {
+    en: '+30% click power',
+    es: '+30% potencia de click',
+    pt: '+30% poder de clique',
+  },
+  'skillTree.click.node6.name': {
+    en: 'Click Capstone',
+    es: 'Click Final',
+    pt: 'Clique Final',
+  },
+  'skillTree.click.node6.desc': {
+    en: '+50% click power',
+    es: '+50% potencia de click',
+    pt: '+50% poder de clique',
+  },
 };

@@ -12,6 +12,7 @@ Este directorio contiene todas las especificaciones técnicas exhaustivas (Level
 | [Hardware Progression](game-mechanics/hardware-progression.md) | ✅ Implemented | Phase 1 | Critical | 8 niveles de hardware con desbloqueo progresivo |
 | [Market System](game-mechanics/market-system.md) | ✅ Implemented | Phase 2 | High | Venta de CryptoCoins por dinero real (motor OU) |
 | [Prestige System](game-mechanics/prestige-system.md) | ✅ Implemented | Phase 2 | High | Sistema de reinicio con bonos permanentes |
+| [Skill Tree](game-mechanics/skill-tree.md) | 📋 Planned | Post-narrativa | High | Árbol de 3 ramas (Hardware/Mercado/Click), 1 punto por prestige, respec -1 |
 | [Energy System](game-mechanics/energy-system.md) | ✅ Implemented | Phase 4 | High | Generación energética: renovables/no-renovables, balance MW, control de IA |
 | [AI System](game-mechanics/ai-system.md) | ✅ Implemented | Phase 5 | High | IA con 3 niveles de autonomía, cryptos exclusivas, control irreversible |
 | [Narrative Events](game-mechanics/narrative-events.md) | ✅ Implemented | Phase 6 | High | Medidor de Recursos del Planeta, 5 hitos narrativos, pestaña Crónica |
