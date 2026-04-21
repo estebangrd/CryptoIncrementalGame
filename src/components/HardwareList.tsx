@@ -10,6 +10,7 @@ import { useGame } from '../contexts/GameContext';
 import {
   formatNumber,
   formatUSDCompact,
+  calculateHardwareCost,
   calculateHardwareProduction,
   calculateHardwareElectricityCost,
   calculateHardwareMiningSpeed,
@@ -284,27 +285,97 @@ const HardwareList: React.FC = () => {
       {isAIAutonomous && gameState.hardware
         .filter(h => h.aiExclusive && h.owned > 0)
         .map((hardware) => {
+          const cost = calculateHardwareCost(hardware);
           const hashRate = calculateHardwareProduction(hardware, gameState.upgrades);
+          const electricityCost = calculateHardwareElectricityCost(hardware);
           const miningSpeed = calculateHardwareMiningSpeed(hardware, gameState.upgrades);
+          const difficulty = calculateDifficulty(getConstrainedMiningSpeed(gameState));
+          const globalReward = calculateCurrentReward(gameState.blocksMined);
+          const coinsPerSecond = (miningSpeed / difficulty) * globalReward;
+
+          // +1 unit deltas
+          const unitHardware = { ...hardware, owned: 1 };
+          const deltaHashRate = calculateHardwareProduction(unitHardware, gameState.upgrades);
+          const deltaMiningSpeed = calculateHardwareMiningSpeed(unitHardware, gameState.upgrades);
+          const deltaCoinsPerSec = (deltaMiningSpeed / difficulty) * globalReward;
+          const deltaElectricity = hardware.electricityCost;
+
           return (
-            <View key={hardware.id} style={[styles.card, styles.cardOwned]}>
-              <View style={[styles.cardAccent, { backgroundColor: '#9c27b0' }]} />
-              <View style={styles.header}>
-                <View style={styles.titleRow}>
+            <View key={hardware.id} style={[styles.card, styles.cardOwned, styles.cardAI]}>
+              <View style={[styles.cardAccent, styles.cardAccentAI]} />
+
+              {/* Header */}
+              <View style={styles.cardHeader}>
+                <View style={[styles.iconWrap, styles.iconWrapAI]}>
                   <Text style={styles.icon}>{hardware.icon}</Text>
-                  <View style={styles.titleCol}>
-                    <Text style={styles.name}>{t(hardware.nameKey) || hardware.name}</Text>
-                    <Text style={[styles.tierBadge, { color: '#ce93d8' }]}>🤖 AI-DESIGNED</Text>
+                </View>
+                <View style={styles.titleGroup}>
+                  <Text style={styles.hwName}>{t(hardware.nameKey) || hardware.name}</Text>
+                  <Text style={styles.hwDesc}>{t(hardware.descriptionKey)}</Text>
+                  <Text style={styles.aiBadge}>🤖 AI-DESIGNED</Text>
+                </View>
+                <View style={styles.ownedToggleCol}>
+                  <View style={[styles.ownedBadge, styles.ownedBadgeAI]}>
+                    <Text style={[styles.ownedNum, styles.ownedNumAI]}>{hardware.owned}</Text>
+                    <Text style={[styles.ownedLbl, styles.ownedLblAI]}>OWNED</Text>
                   </View>
                 </View>
-                <View style={styles.ownedBadge}>
-                  <Text style={styles.ownedNum}>{hardware.owned}</Text>
-                  <Text style={styles.ownedLbl}>OWNED</Text>
-                </View>
               </View>
+
+              {/* Metrics grid */}
               <View style={styles.metricsGrid}>
-                <MetricCell noBorder label="Hash Rate" value={formatNumber(hashRate)} unit="H/s" delta="" valueColor="#ce93d8" deltaType="zero" />
-                <MetricCell label="Mine Spd" value={formatNumber(miningSpeed)} unit="blk/s" delta="" valueColor="#ce93d8" deltaType="zero" />
+                <MetricCell
+                  noBorder
+                  label="Hash Rate"
+                  value={formatNumber(hashRate)}
+                  unit="H/s"
+                  delta={`+${formatNumber(deltaHashRate)}`}
+                  valueColor="#ce93d8"
+                  deltaType="pos"
+                />
+                <MetricCell
+                  label="Mine Spd"
+                  value={formatNumber(miningSpeed)}
+                  unit="blk/s"
+                  delta={`+${formatNumber(deltaMiningSpeed)}`}
+                  valueColor="#ce93d8"
+                  deltaType="pos"
+                />
+                <MetricCell
+                  label="Coins/s"
+                  value={formatNumber(coinsPerSecond)}
+                  unit="CC/s"
+                  delta={`+${formatNumber(deltaCoinsPerSec)}`}
+                  valueColor="#ce93d8"
+                  deltaType="pos"
+                />
+                <MetricCell
+                  label="Power"
+                  value={electricityCost > 0 ? `-${formatNumber(electricityCost)}` : '0'}
+                  unit="kW/h"
+                  delta={deltaElectricity > 0 ? `-${formatNumber(deltaElectricity)}` : '0'}
+                  valueColor={colors.nr}
+                  deltaType={deltaElectricity > 0 ? 'neg' : 'zero'}
+                />
+              </View>
+
+              {/* Footer */}
+              <View style={styles.footer}>
+                <View style={styles.costRow}>
+                  <Text style={styles.costLabel}>PURCHASE COST</Text>
+                  <Text style={[styles.costValue, styles.costValueAI]}>
+                    {formatUSDCompact(cost)}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={[styles.buyBtn, styles.buyBtnAI]}
+                  disabled
+                  activeOpacity={0.75}
+                >
+                  <Text style={[styles.buyBtnText, styles.buyBtnTextAI]}>
+                    🤖 AI CONTROLLED
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
           );
@@ -540,6 +611,47 @@ const styles = StyleSheet.create({
   },
   buyBtnTextDim: {
     color: colors.dim,
+    letterSpacing: 1,
+  },
+
+  // ── AI-exclusive card overrides ──
+  cardAI: {
+    borderColor: 'rgba(156,39,176,0.30)',
+  },
+  cardAccentAI: {
+    backgroundColor: '#9c27b0',
+    opacity: 0.7,
+  },
+  iconWrapAI: {
+    backgroundColor: 'rgba(156,39,176,0.12)',
+    borderColor: 'rgba(206,147,216,0.25)',
+  },
+  ownedBadgeAI: {
+    backgroundColor: 'rgba(156,39,176,0.15)',
+    borderColor: 'rgba(206,147,216,0.30)',
+  },
+  ownedNumAI: {
+    color: '#ce93d8',
+  },
+  ownedLblAI: {
+    color: 'rgba(206,147,216,0.6)',
+  },
+  aiBadge: {
+    fontFamily: fonts.mono,
+    fontSize: 8,
+    letterSpacing: 2,
+    color: '#ce93d8',
+    marginTop: 3,
+  },
+  costValueAI: {
+    color: '#ce93d8',
+  },
+  buyBtnAI: {
+    borderColor: 'rgba(156,39,176,0.40)',
+    backgroundColor: 'rgba(156,39,176,0.08)',
+  },
+  buyBtnTextAI: {
+    color: '#ce93d8',
     letterSpacing: 1,
   },
 });

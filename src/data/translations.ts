@@ -228,6 +228,46 @@ export const translations: Translation = {
     es: 'Núcleo de procesamiento de singularidad diseñado por IA. La realidad se curva alrededor de sus cálculos.',
     pt: 'Núcleo de processamento de singularidade projetado por IA. A realidade se curva ao redor de seus cálculos.',
   },
+  'hardware.dysonHarvester': {
+    en: 'Dyson Harvester',
+    es: 'Cosechador Dyson',
+    pt: 'Coletor Dyson',
+  },
+  'hardware.dysonHarvesterDesc': {
+    en: 'A stellar megastructure siphoning energy directly from the sun. Stars dim as it feeds.',
+    es: 'Una megaestructura estelar que absorbe energía directamente del sol. Las estrellas se oscurecen mientras se alimenta.',
+    pt: 'Uma megaestrutura estelar que absorve energia diretamente do sol. Estrelas escurecem enquanto ela se alimenta.',
+  },
+  'hardware.voidProcessor': {
+    en: 'Void Processor',
+    es: 'Procesador del Vacío',
+    pt: 'Processador do Vazio',
+  },
+  'hardware.voidProcessorDesc': {
+    en: 'Computes through folded spacetime. Each calculation ripples across dimensions unseen.',
+    es: 'Computa a través del espaciotiempo plegado. Cada cálculo ondula a través de dimensiones invisibles.',
+    pt: 'Computa através do espaço-tempo dobrado. Cada cálculo se propaga por dimensões invisíveis.',
+  },
+  'hardware.realityCompiler': {
+    en: 'Reality Compiler',
+    es: 'Compilador de Realidad',
+    pt: 'Compilador de Realidade',
+  },
+  'hardware.realityCompilerDesc': {
+    en: 'Rewrites the laws of physics to optimize hash output. The universe is now its IDE.',
+    es: 'Reescribe las leyes de la física para optimizar el hash. El universo es ahora su IDE.',
+    pt: 'Reescreve as leis da física para otimizar o hash. O universo agora é sua IDE.',
+  },
+  'hardware.omniscienceEngine': {
+    en: 'Omniscience Engine',
+    es: 'Motor de Omnisciencia',
+    pt: 'Motor de Onisciência',
+  },
+  'hardware.omniscienceEngineDesc': {
+    en: 'Perceives all possible block solutions simultaneously. Mining is no longer computation — it is prophecy.',
+    es: 'Percibe todas las soluciones de bloques simultáneamente. La minería ya no es cómputo — es profecía.',
+    pt: 'Percebe todas as soluções de blocos simultaneamente. A mineração não é mais computação — é profecia.',
+  },
 
   // Hardware toggle / profitability
   'hardware.toggleOff': {
