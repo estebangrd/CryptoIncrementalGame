@@ -38,7 +38,7 @@ interface PriceChartProps {
 
 const PriceChart: React.FC<PriceChartProps> = ({ priceHistory }) => {
   const [chartWidth, setChartWidth] = useState(300);
-  const [timeRange, setTimeRange] = useState<TimeRange>('30m');
+  const [timeRange, setTimeRange] = useState<TimeRange>('5m');
   const pulseAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {

@@ -53,9 +53,14 @@ const PrestigeScreen: React.FC = () => {
   const formatDuration = (seconds: number): string => {
     if (seconds < 60) return `${Math.floor(seconds)}s`;
     if (seconds < 3600) return `${Math.floor(seconds / 60)}m ${Math.floor(seconds % 60)}s`;
-    const h = Math.floor(seconds / 3600);
+    const totalH = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
-    return `${h}h ${m}m`;
+    if (totalH >= 24) {
+      const d = Math.floor(totalH / 24);
+      const h = totalH % 24;
+      return `${d}d ${h}h ${m}m`;
+    }
+    return `${totalH}h ${m}m`;
   };
 
   const renderPrestigeTab = () => (

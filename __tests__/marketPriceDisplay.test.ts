@@ -60,23 +60,21 @@ describe('formatUSD — USD price formatter', () => {
     expect(formatUSD(1.23e6)).toBe('$1.23M');
     expect(formatUSD(1.23e9)).toBe('$1.23B');
     expect(formatUSD(1.23e12)).toBe('$1.23T');
-    expect(formatUSD(1.23e15)).toBe('$1.23Q');
+    expect(formatUSD(1.23e15)).toBe('$1.23Qa');
   });
 
-  it('never produces raw scientific notation below 1e18', () => {
-    // Regression test for the $1.652667965277204e+21k bug: values up to
-    // 1e18 must use clean suffixes, not fall through to toFixed-induced
-    // exponential output.
-    for (const v of [1e3, 1.5e5, 9.9e11, 4.2e14, 7.7e17]) {
+  it('never produces raw scientific notation for large values', () => {
+    // Regression test: values must use clean suffixes, not exponential.
+    for (const v of [1e3, 1.5e5, 9.9e11, 4.2e14, 7.7e17, 1.65e24, 6.33e82]) {
       const out = formatUSD(v);
       expect(out).not.toMatch(/e\+/i);
     }
   });
 
-  it('falls back to exponential only for ≥ 1e18', () => {
+  it('uses extended suffixes for very large values', () => {
     const out = formatUSD(1.65e24);
     expect(out.startsWith('$')).toBe(true);
-    expect(out).toMatch(/e\+/);
+    expect(out).toBe('$1.65Sp');
   });
 
   it('handles zero and non-finite inputs as plain "$0" (finance convention)', () => {

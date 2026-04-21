@@ -49,9 +49,14 @@ const AI_LEVEL_LABELS: Record<number, string> = {
 
 const formatDuration = (ms: number): string => {
   const totalMinutes = Math.floor(ms / 60000);
-  const hours = Math.floor(totalMinutes / 60);
+  const totalHours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
-  if (hours > 0) return `${hours}h ${minutes}m`;
+  if (totalHours >= 24) {
+    const days = Math.floor(totalHours / 24);
+    const hours = totalHours % 24;
+    return `${days}d ${hours}h ${minutes}m`;
+  }
+  if (totalHours > 0) return `${totalHours}h ${minutes}m`;
   return `${minutes}m`;
 };
 

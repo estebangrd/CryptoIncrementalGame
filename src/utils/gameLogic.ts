@@ -594,7 +594,7 @@ export const calculateRewardFromDuration = (
  *                               "276", "123.4" (never "276.0")
  * - [1K, 1M, 1B, 1T, 1Q)      → suffix with up to 1 decimal, trimmed when
  *                               round: "1.5K", "2K", "45.8M" (never "2.0K")
- * - ≥ 1e18                    → scientific notation, e.g. "1.23e+18"
+ * - ≥ 1e18                    → suffix notation (Qa, Qi, Sx, … up to ~1e87)
  *
  * Use this for anything that is NOT a USD $ amount. For USD use `formatUSD`.
  */
@@ -613,16 +613,8 @@ export const formatNumber = (num: number): string => {
     return sign + Number(abs.toPrecision(2)).toString();
   }
   if (abs < 1000) return sign + trimTrailingDecimalZeros(abs.toFixed(1));
-  if (abs < 1e6) return sign + trimTrailingDecimalZeros((abs / 1e3).toFixed(1)) + 'K';
-  if (abs < 1e9) return sign + trimTrailingDecimalZeros((abs / 1e6).toFixed(1)) + 'M';
-  if (abs < 1e12) return sign + trimTrailingDecimalZeros((abs / 1e9).toFixed(1)) + 'B';
-  if (abs < 1e15) return sign + trimTrailingDecimalZeros((abs / 1e12).toFixed(1)) + 'T';
-  if (abs < 1e18) return sign + trimTrailingDecimalZeros((abs / 1e15).toFixed(1)) + 'Qa';
-  if (abs < 1e21) return sign + trimTrailingDecimalZeros((abs / 1e18).toFixed(1)) + 'Qi';
-  if (abs < 1e24) return sign + trimTrailingDecimalZeros((abs / 1e21).toFixed(1)) + 'Sx';
-  if (abs < 1e27) return sign + trimTrailingDecimalZeros((abs / 1e24).toFixed(1)) + 'Sp';
-  if (abs < 1e30) return sign + trimTrailingDecimalZeros((abs / 1e27).toFixed(1)) + 'Oc';
-  return sign + abs.toExponential(2);
+  const s = formatLargeSuffix(abs, 1, true);
+  return s ? sign + s : sign + abs.toExponential(2);
 };
 
 /**
@@ -639,6 +631,28 @@ export const formatNumber = (num: number): string => {
 const trimTrailingDecimalZeros = (s: string): string => {
   if (!s.includes('.')) return s;
   return s.replace(/\.?0+$/, '').replace(/\.$/, '');
+};
+
+/** Suffixes for powers of 1000, starting at 1e3 (K). Covers up to ~1e87. */
+const SUFFIXES_1K = [
+  'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No',
+  'Dc', 'UDc', 'DDc', 'TDc', 'QaDc', 'QiDc', 'SxDc', 'SpDc', 'OcDc', 'NoDc',
+  'Vg', 'UVg', 'DVg', 'TVg', 'QaVg', 'QiVg', 'SxVg', 'SpVg',
+];
+
+/**
+ * Format a number ≥ 1000 with the appropriate suffix.
+ * @param decimals – fixed decimal places (e.g. 1 for "1.5K", 2 for "1.50K")
+ * @param trim – if true, trim trailing decimal zeros
+ * @returns formatted string WITHOUT sign, or null if beyond suffix table.
+ */
+const formatLargeSuffix = (abs: number, decimals: number, trim: boolean): string | null => {
+  const exp = Math.floor(Math.log10(abs));
+  const tier = Math.floor(exp / 3) - 1; // K=0, M=1, B=2, …
+  if (tier < 0 || tier >= SUFFIXES_1K.length) return null;
+  const scaled = abs / Math.pow(10, (tier + 1) * 3);
+  const fixed = scaled.toFixed(decimals);
+  return (trim ? trimTrailingDecimalZeros(fixed) : fixed) + SUFFIXES_1K[tier];
 };
 
 /**
@@ -661,8 +675,8 @@ export const formatCC = formatNumber;
  *                                 price changes stay visible in the chart,
  *                                 but round hardware prices don't show zeros)
  * - [100, 1000)                → 2 decimals, e.g. "$123.45"
- * - [1K, 1M, 1B, 1T, 1Q)       → suffix with 2 decimals, e.g. "$1.23M"
- * - ≥ 1e18                     → scientific notation, e.g. "$1.23e+18"
+ * - [1K, 1M, 1B, 1T, …)        → suffix with 2 decimals, e.g. "$1.23M"
+ *                                (K, M, B, T, Qa, Qi, … up to ~1e87)
  *
  * Use this for ANY USD value in the UI (prices, balances, costs, earnings).
  */
@@ -675,12 +689,8 @@ export const formatUSD = (num: number): string => {
   if (abs < 0.10) return sign + '$' + trimUSDDecimals(abs.toFixed(4));
   if (abs < 10) return sign + '$' + trimUSDDecimals(abs.toFixed(2));
   if (abs < 1000) return sign + '$' + abs.toFixed(2);
-  if (abs < 1e6) return sign + '$' + (abs / 1e3).toFixed(2) + 'K';
-  if (abs < 1e9) return sign + '$' + (abs / 1e6).toFixed(2) + 'M';
-  if (abs < 1e12) return sign + '$' + (abs / 1e9).toFixed(2) + 'B';
-  if (abs < 1e15) return sign + '$' + (abs / 1e12).toFixed(2) + 'T';
-  if (abs < 1e18) return sign + '$' + (abs / 1e15).toFixed(2) + 'Q';
-  return sign + '$' + abs.toExponential(2);
+  const s = formatLargeSuffix(abs, 2, false);
+  return s ? sign + '$' + s : sign + '$' + abs.toExponential(2);
 };
 
 /**
@@ -705,9 +715,9 @@ const trimUSDDecimals = (fixed: string): string => {
  * - (0, 1e-4)                  → exponential, e.g. "$1.23e-5"
  * - [1e-4, 1)                  → up to 2 decimals trimmed, e.g. "$0.86"
  * - [1, 1000)                  → up to 1 decimal trimmed, e.g. "$25", "$25.5"
- * - [1K, 1M, 1B, 1T, 1Q)       → suffix with up to 1 decimal trimmed,
+ * - [1K, 1M, 1B, 1T, …)        → suffix with up to 1 decimal trimmed,
  *                                e.g. "$1.2K", "$3M", "$45.8M"
- * - ≥ 1e18                     → scientific notation
+ *                                (K, M, B, T, Qa, Qi, … up to ~1e87)
  *
  * Use for stat cards, dashboards, and dense UIs. For transactional displays
  * (store, market, balances) prefer `formatUSD` which keeps cent precision.
@@ -719,16 +729,8 @@ export const formatUSDCompact = (num: number): string => {
   if (abs < 1e-4) return sign + '$' + abs.toExponential(2);
   if (abs < 1) return sign + '$' + trimTrailingDecimalZeros(abs.toFixed(2));
   if (abs < 1000) return sign + '$' + trimTrailingDecimalZeros(abs.toFixed(1));
-  if (abs < 1e6) return sign + '$' + trimTrailingDecimalZeros((abs / 1e3).toFixed(1)) + 'K';
-  if (abs < 1e9) return sign + '$' + trimTrailingDecimalZeros((abs / 1e6).toFixed(1)) + 'M';
-  if (abs < 1e12) return sign + '$' + trimTrailingDecimalZeros((abs / 1e9).toFixed(1)) + 'B';
-  if (abs < 1e15) return sign + '$' + trimTrailingDecimalZeros((abs / 1e12).toFixed(1)) + 'T';
-  if (abs < 1e18) return sign + '$' + trimTrailingDecimalZeros((abs / 1e15).toFixed(1)) + 'Qa';
-  if (abs < 1e21) return sign + '$' + trimTrailingDecimalZeros((abs / 1e18).toFixed(1)) + 'Qi';
-  if (abs < 1e24) return sign + '$' + trimTrailingDecimalZeros((abs / 1e21).toFixed(1)) + 'Sx';
-  if (abs < 1e27) return sign + '$' + trimTrailingDecimalZeros((abs / 1e24).toFixed(1)) + 'Sp';
-  if (abs < 1e30) return sign + '$' + trimTrailingDecimalZeros((abs / 1e27).toFixed(1)) + 'Oc';
-  return sign + '$' + abs.toExponential(2);
+  const s = formatLargeSuffix(abs, 1, true);
+  return s ? sign + '$' + s : sign + '$' + abs.toExponential(2);
 };
 
 export const formatSignedNumber = (num: number): string => {
