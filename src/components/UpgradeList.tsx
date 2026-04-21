@@ -43,7 +43,11 @@ const AISection: React.FC = () => {
     dispatch({ type: 'PURCHASE_AI_LEVEL', payload: { level: 3, confirmed: true } });
   };
 
-  const levels: Array<1 | 2 | 3> = [1, 2, 3];
+  // Show only purchased levels + the next sequentially-unlocked one.
+  // Higher locked tiers stay hidden until their predecessor is acquired.
+  const levels: Array<1 | 2 | 3> = ([1, 2, 3] as Array<1 | 2 | 3>).filter(
+    L => L <= ai.level + 1,
+  );
 
   return (
     <View style={styles.aiSection}>
@@ -77,20 +81,15 @@ const AISection: React.FC = () => {
         const config = AI_CONFIG.LEVELS[level];
         const isPurchased = ai.level >= level;
         const canAfford = canPurchaseAILevel(gameState, level);
-        const isLocked = !isPurchased && (level === 1 ? !aiUnlocked : ai.level < level - 1);
         const pctBonus = Math.round((config.productionMultiplier - 1) * 100);
 
         return (
           <View
             key={level}
-            style={[
-              styles.aiCard,
-              isPurchased && styles.aiCardPurchased,
-              isLocked && styles.aiCardLocked,
-            ]}
+            style={[styles.aiCard, isPurchased && styles.aiCardPurchased]}
           >
             <View style={styles.aiCardHeader}>
-              <Text style={[styles.aiCardTitle, isLocked && styles.textMuted]}>
+              <Text style={styles.aiCardTitle}>
                 {t(`ai.level${level}.name`)}
               </Text>
               {config.isIrreversible && !isPurchased && (
@@ -99,7 +98,7 @@ const AISection: React.FC = () => {
               {isPurchased && <Text style={styles.ownedBadge}>✓ ACTIVE</Text>}
             </View>
 
-            <Text style={[styles.aiCardDesc, isLocked && styles.textMuted]}>
+            <Text style={styles.aiCardDesc}>
               {t(`ai.level${level}.description`)}
             </Text>
 
@@ -110,15 +109,7 @@ const AISection: React.FC = () => {
               </Text>
             </View>
 
-            {isLocked && (
-              <Text style={styles.lockHint}>
-                {level === 1
-                  ? '🔒 ' + t('ai.requires.hardware')
-                  : `🔒 ${t('ai.requires.level').replace('{{level}}', String(level - 1))}`}
-              </Text>
-            )}
-
-            {!isPurchased && !isLocked && (
+            {!isPurchased && (
               <TouchableOpacity
                 style={[
                   styles.buyButton,
@@ -338,9 +329,6 @@ const styles = StyleSheet.create({
     borderColor: '#a855f7',
     backgroundColor: 'rgba(168,85,247,0.1)',
   },
-  aiCardLocked: {
-    opacity: 0.4,
-  },
   aiCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -386,12 +374,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.mono,
     fontSize: 12,
     color: colors.ng,
-  },
-  lockHint: {
-    fontFamily: fonts.rajdhani,
-    fontSize: 12,
-    color: colors.dim,
-    fontStyle: 'italic',
   },
   // Modal
   modalOverlay: {
@@ -584,9 +566,6 @@ const styles = StyleSheet.create({
   },
   buyButtonTextDim: {
     color: colors.dim,
-  },
-  textMuted: {
-    color: '#555',
   },
 });
 
