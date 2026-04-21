@@ -1953,9 +1953,9 @@ export const translations: Translation = {
     pt: 'Produção acumulada',
   },
   'offline.capWarning': {
-    en: 'Production capped at 1h — come back more often to maximize',
-    es: 'Producción capada a 1h — volvé más seguido para maximizar',
-    pt: 'Produção limitada a 1h — volte mais vezes para maximizar',
+    en: 'Production capped at 30m — come back more often to maximize',
+    es: 'Producción capada a 30m — volvé más seguido para maximizar',
+    pt: 'Produção limitada a 30m — volte mais vezes para maximizar',
   },
   'offline.claimTitle': {
     en: 'Claim production',

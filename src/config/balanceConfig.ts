@@ -795,7 +795,7 @@ export const PACK_CONFIG = {
 // ============================================================================
 export const OFFLINE_SCREEN_CONFIG = {
   MIN_OFFLINE_SECONDS: 300,     // 5 min minimum to show modal
-  MAX_OFFLINE_SECONDS: 3600,    // 1h cap on production
+  MAX_OFFLINE_SECONDS: 1800,    // 30m cap on production
   MAX_OFFLINE_ERA_ADVANCE: 2,   // max eras the player can advance while offline
   REWARD_MIN_PCT: 80,           // minimum % on ad watch
   REWARD_MAX_PCT: 100,          // maximum %
