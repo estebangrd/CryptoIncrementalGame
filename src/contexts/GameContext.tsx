@@ -333,11 +333,21 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         })
         : hardwareProgression;
 
+      // Migrate upgrades: refresh cost/effect/unlockCondition from initialUpgrades,
+      // preserve only `purchased`. Required so balance/unlock changes apply to old saves.
+      const savedUpgrades = action.payload.upgrades ?? [];
+      const purchasedById = new Map(savedUpgrades.map(u => [u.id, u.purchased]));
+      const migratedUpgrades = initialUpgrades.map(fresh => ({
+        ...fresh,
+        purchased: purchasedById.get(fresh.id) ?? false,
+      }));
+
       // Merge defaults first so new fields get default values for old saves
       const loadedState: GameState = {
         ...getInitialGameState(),
         ...action.payload,
         hardware: migratedHardware,
+        upgrades: migratedUpgrades,
         cryptocurrencies: action.payload.cryptocurrencies || cryptocurrencies,
         marketUpdateTime: action.payload.marketUpdateTime || Date.now(),
         totalPrestigeGains: action.payload.totalPrestigeGains || 0,

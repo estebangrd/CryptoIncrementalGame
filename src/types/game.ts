@@ -466,11 +466,12 @@ export interface UpgradeEffect {
 }
 
 export interface UpgradeUnlockCondition {
-  type: 'always' | 'hardware' | 'blocks' | 'money';
+  type: 'always' | 'hardware' | 'blocks' | 'money' | 'upgrade';
   hardwareId?: string;
   minOwned?: number;
   minBlocks?: number;
   minMoney?: number;
+  upgradeId?: string;
 }
 
 export interface Language {

@@ -200,23 +200,23 @@ export const UPGRADE_CONFIG = {
     multiplier: 2,             // Multiplicador (2 = 2x coins por click)
   },
 
-  // Hash Injection - 3x click (apilable con clickPower → total 15x)
+  // Hash Injection - 2x click (apilable con clickPower → total 4x)
+  // Aparece solo después de comprar Click Power (progresión secuencial)
   clickMastery: {
     cost: 150000,
     multiplier: 2,
     unlockRequirement: {
-      hardwareId: 'basic_gpu',
-      minOwned: 5,
+      upgradeId: 'clickPower',
     },
   },
 
-  // Click Legend - 2x click (apilable → total 30x)
+  // Click Legend - 2x click (apilable → total 8x)
+  // Aparece solo después de comprar Hash Injection (progresión secuencial)
   clickLegend: {
     cost: 500000,
     multiplier: 2,
     unlockRequirement: {
-      hardwareId: 'advanced_gpu',
-      minOwned: 5,
+      upgradeId: 'clickMastery',
     },
   },
 

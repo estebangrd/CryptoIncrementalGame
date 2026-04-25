@@ -114,9 +114,8 @@ export const initialUpgrades: Upgrade[] = [
     },
     icon: 'zap',
     unlockCondition: {
-      type: 'hardware',
-      hardwareId: UPGRADE_CONFIG.clickMastery.unlockRequirement.hardwareId,
-      minOwned: UPGRADE_CONFIG.clickMastery.unlockRequirement.minOwned,
+      type: 'upgrade',
+      upgradeId: UPGRADE_CONFIG.clickMastery.unlockRequirement.upgradeId,
     },
   },
   {
@@ -133,9 +132,8 @@ export const initialUpgrades: Upgrade[] = [
     },
     icon: 'award',
     unlockCondition: {
-      type: 'hardware',
-      hardwareId: UPGRADE_CONFIG.clickLegend.unlockRequirement.hardwareId,
-      minOwned: UPGRADE_CONFIG.clickLegend.unlockRequirement.minOwned,
+      type: 'upgrade',
+      upgradeId: UPGRADE_CONFIG.clickLegend.unlockRequirement.upgradeId,
     },
   },
   {

@@ -232,8 +232,8 @@ analytics().logEvent('first_sale', {
      - Effect: 5× coins per click
      - Status: 🔒 Locked (necesita $5,000)
    - Upgrades posteriores ocultos hasta cumplir unlock:
-     - "Hash Injection" ($100K) — aparece con 5× basic_gpu → 3× click (total 15×)
-     - "Click Legend" ($2M) — aparece con 10× asic_gen3 → 2× click (total 30×)
+     - "Hash Injection" ($150K) — aparece tras comprar Click Power → 2× click (total 4×)
+     - "Click Legend" ($500K) — aparece tras comprar Hash Injection → 2× click (total 8×)
    - Upgrade visible pero no comprable aún
 5. Tutorial tooltip: "Upgrades give permanent bonuses. Keep earning $ to unlock them!"
 6. Usuario vende suficientes coins para ganar $5,000

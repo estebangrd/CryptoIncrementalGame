@@ -264,6 +264,10 @@ export const isUpgradeUnlocked = (gameState: GameState, upgrade: Upgrade): boole
       return condition.minBlocks ? gameState.blocksMined >= condition.minBlocks : false;
     case 'money':
       return condition.minMoney ? gameState.realMoney >= condition.minMoney : false;
+    case 'upgrade':
+      if (!condition.upgradeId) return false;
+      const requiredUpgrade = gameState.upgrades.find(u => u.id === condition.upgradeId);
+      return requiredUpgrade ? requiredUpgrade.purchased : false;
     default:
       return false;
   }
