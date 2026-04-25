@@ -12,6 +12,7 @@ export const buildInitialSkillNodes = (): SkillNode[] => {
         branch: branch as SkillTreeBranch,
         position,
         value: values[i],
+        cost: SKILL_TREE_CONFIG.NODE_COSTS[i],
         nameKey: `skillTree.${branch}.node${position}.name`,
         descriptionKey: `skillTree.${branch}.node${position}.desc`,
         purchased: false,

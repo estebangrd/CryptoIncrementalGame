@@ -2470,9 +2470,9 @@ export const translations: Translation = {
     pt: 'Você perderá 1 ponto PERMANENTEMENTE',
   },
   'skillTree.resetRefundLabel': {
-    en: 'Nodes to refund',
-    es: 'Nodos a devolver',
-    pt: 'Nós a devolver',
+    en: 'Points to refund',
+    es: 'Puntos a devolver',
+    pt: 'Pontos a devolver',
   },
   'skillTree.resetLostAfter': {
     en: 'Lost points after reset',
@@ -2500,9 +2500,9 @@ export const translations: Translation = {
     pt: 'Aprender',
   },
   'skillTree.costLabel': {
-    en: 'Cost: 1 point',
-    es: 'Coste: 1 punto',
-    pt: 'Custo: 1 ponto',
+    en: 'Cost: {cost} pts',
+    es: 'Coste: {cost} pts',
+    pt: 'Custo: {cost} pts',
   },
   'skillTree.locked': {
     en: 'Locked',

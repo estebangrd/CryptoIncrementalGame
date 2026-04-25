@@ -15,6 +15,7 @@ import {
   findSkillNode,
   getBranchBonusPercent,
   hasPurchasedNodes,
+  sumPurchasedCost,
 } from '../utils/skillTreeLogic';
 import { SKILL_TREE_CONFIG } from '../config/balanceConfig';
 
@@ -61,13 +62,13 @@ const SkillTreeScreen: React.FC = () => {
     setResetModalVisible(false);
   };
 
-  const purchasedCount = tree ? tree.nodes.filter(n => n.purchased).length : 0;
+  const purchasedCost = tree ? sumPurchasedCost(tree) : 0;
 
   const renderBranch = (branch: SkillTreeBranch) => {
     if (!tree) return null;
     const branchNodes = tree.nodes
       .filter(n => n.branch === branch)
-      .sort((a, b) => b.position - a.position); // render top (6) → bottom (1)
+      .sort((a, b) => a.position - b.position); // render top (1) → bottom (6)
     const color = BRANCH_COLORS[branch];
     const branchBonus = getBranchBonusPercent(gameState, branch);
 
@@ -112,7 +113,7 @@ const SkillTreeScreen: React.FC = () => {
                   {purchased
                     ? t('skillTree.owned')
                     : canBuy
-                      ? t('skillTree.costLabel')
+                      ? t('skillTree.costLabel').replace('{cost}', String(node.cost))
                       : t('skillTree.locked')}
                 </Text>
               </TouchableOpacity>
@@ -185,7 +186,9 @@ const SkillTreeScreen: React.FC = () => {
                   {t(selectedNode.nameKey)}
                 </Text>
                 <Text style={styles.modalDesc}>{t(selectedNode.descriptionKey)}</Text>
-                <Text style={styles.modalCost}>{t('skillTree.costLabel')}</Text>
+                <Text style={styles.modalCost}>
+                  {t('skillTree.costLabel').replace('{cost}', String(selectedNode.cost))}
+                </Text>
                 <View style={styles.modalButtons}>
                   <TouchableOpacity
                     style={styles.modalCancelButton}
@@ -224,7 +227,7 @@ const SkillTreeScreen: React.FC = () => {
             <Text style={styles.modalWarning}>{t('skillTree.resetWarning')}</Text>
             <View style={styles.modalInfoRow}>
               <Text style={styles.modalInfoLabel}>{t('skillTree.resetRefundLabel')}</Text>
-              <Text style={styles.modalInfoValue}>{purchasedCount}</Text>
+              <Text style={styles.modalInfoValue}>{purchasedCost}</Text>
             </View>
             <View style={styles.modalInfoRow}>
               <Text style={styles.modalInfoLabel}>{t('skillTree.resetLostAfter')}</Text>

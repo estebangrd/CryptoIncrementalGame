@@ -5,6 +5,8 @@ import { buildInitialSkillNodes, getInitialSkillTree } from '../data/skillTree';
 /**
  * Ensures the skill tree has all 18 nodes. Used when loading saves created
  * before the feature or when new nodes are added in future updates.
+ * Always re-applies canonical node values and costs from config, so balance
+ * tweaks propagate to existing players.
  */
 export const migrateSkillTree = (tree: PrestigeSkillTree | undefined): PrestigeSkillTree => {
   if (!tree) return getInitialSkillTree();
@@ -25,10 +27,13 @@ export const migrateSkillTree = (tree: PrestigeSkillTree | undefined): PrestigeS
 export const countPurchasedNodes = (tree: PrestigeSkillTree): number =>
   tree.nodes.filter(n => n.purchased).length;
 
+export const sumPurchasedCost = (tree: PrestigeSkillTree): number =>
+  tree.nodes.filter(n => n.purchased).reduce((sum, n) => sum + n.cost, 0);
+
 export const calculateAvailableSkillPoints = (state: GameState): number => {
   const tree = state.prestigeSkillTree;
   if (!tree) return 0;
-  const spent = countPurchasedNodes(tree);
+  const spent = sumPurchasedCost(tree);
   const earned = (state.prestigeLevel ?? 0) * SKILL_TREE_CONFIG.POINTS_PER_PRESTIGE;
   return Math.max(0, earned - spent - tree.lostPoints);
 };
@@ -63,7 +68,7 @@ export const canPurchaseNode = (state: GameState, nodeId: string): boolean => {
   const node = findSkillNode(tree, nodeId);
   if (!node) return false;
   if (node.purchased) return false;
-  if (calculateAvailableSkillPoints(state) < 1) return false;
+  if (calculateAvailableSkillPoints(state) < node.cost) return false;
 
   if (node.position === 1) return true;
   const prevId = `${node.branch}_${node.position - 1}`;

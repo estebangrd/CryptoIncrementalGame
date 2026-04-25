@@ -14,6 +14,7 @@ import {
   hasPurchasedNodes,
   migrateSkillTree,
   getBranchBonusPercent,
+  sumPurchasedCost,
 } from '../src/utils/skillTreeLogic';
 import { getInitialSkillTree, buildInitialSkillNodes } from '../src/data/skillTree';
 import { GameState, PrestigeSkillTree } from '../src/types/game';
@@ -47,6 +48,13 @@ describe('buildInitialSkillNodes', () => {
     expect(click6?.value).toBe(SKILL_TREE_CONFIG.NODE_VALUES.click[5]);
   });
 
+  it('assigns correct cost from NODE_COSTS', () => {
+    const nodes = buildInitialSkillNodes();
+    expect(nodes.find(n => n.id === 'hardware_1')?.cost).toBe(SKILL_TREE_CONFIG.NODE_COSTS[0]);
+    expect(nodes.find(n => n.id === 'market_3')?.cost).toBe(SKILL_TREE_CONFIG.NODE_COSTS[2]);
+    expect(nodes.find(n => n.id === 'click_6')?.cost).toBe(SKILL_TREE_CONFIG.NODE_COSTS[5]);
+  });
+
   it('all nodes start unpurchased', () => {
     const nodes = buildInitialSkillNodes();
     expect(nodes.every(n => !n.purchased)).toBe(true);
@@ -62,9 +70,24 @@ describe('calculateAvailableSkillPoints', () => {
     expect(calculateAvailableSkillPoints(makeState({ prestigeLevel: 5 }))).toBe(5);
   });
 
-  it('subtracts spent nodes', () => {
+  it('subtracts sum of purchased node costs', () => {
+    // hardware_1 (cost 1) + hardware_2 (cost 1) = 2 spent
     const state = stateWithPurchased(['hardware_1', 'hardware_2'], 5);
     expect(calculateAvailableSkillPoints(state)).toBe(3);
+  });
+
+  it('subtracts higher costs for later nodes', () => {
+    // 1 + 1 + 2 = 4 spent (positions 1, 2, 3)
+    const state = stateWithPurchased(['hardware_1', 'hardware_2', 'hardware_3'], 10);
+    expect(calculateAvailableSkillPoints(state)).toBe(6);
+  });
+
+  it('correctly sums all 6 nodes of a branch (=12 spent)', () => {
+    const state = stateWithPurchased(
+      ['hardware_1', 'hardware_2', 'hardware_3', 'hardware_4', 'hardware_5', 'hardware_6'],
+      15,
+    );
+    expect(calculateAvailableSkillPoints(state)).toBe(3); // 15 - 12 = 3
   });
 
   it('subtracts lost points (respec penalty)', () => {
@@ -151,6 +174,25 @@ describe('canPurchaseNode', () => {
     expect(canPurchaseNode(state, 'market_1')).toBe(false);
   });
 
+  it('blocks node 3 when only 1 point available (node 3 costs 2)', () => {
+    // hardware_1 (1) + hardware_2 (1) purchased → 2 spent, prestige=3 → 1 available
+    const state = stateWithPurchased(['hardware_1', 'hardware_2'], 3);
+    expect(canPurchaseNode(state, 'hardware_3')).toBe(false);
+  });
+
+  it('allows node 3 when 2 points available (matches cost)', () => {
+    // hardware_1 (1) + hardware_2 (1) purchased → 2 spent, prestige=4 → 2 available
+    const state = stateWithPurchased(['hardware_1', 'hardware_2'], 4);
+    expect(canPurchaseNode(state, 'hardware_3')).toBe(true);
+  });
+
+  it('blocks node 6 (cost 3) when only 2 points available', () => {
+    const ids = ['hardware_1', 'hardware_2', 'hardware_3', 'hardware_4', 'hardware_5'];
+    // Spent: 1+1+2+2+3 = 9, prestige=11 → 2 available, but node 6 costs 3
+    const state = stateWithPurchased(ids, 11);
+    expect(canPurchaseNode(state, 'hardware_6')).toBe(false);
+  });
+
   it('blocks already-purchased node', () => {
     const state = stateWithPurchased(['hardware_1'], 5);
     expect(canPurchaseNode(state, 'hardware_1')).toBe(false);
@@ -176,6 +218,28 @@ describe('resetSkillTree', () => {
     tree = purchaseNode(tree, 'market_1');
     tree = resetSkillTree(tree);
     expect(tree.lostPoints).toBe(2);
+  });
+});
+
+describe('sumPurchasedCost', () => {
+  it('returns 0 on fresh tree', () => {
+    expect(sumPurchasedCost(getInitialSkillTree())).toBe(0);
+  });
+
+  it('sums costs across branches', () => {
+    let tree = purchaseNode(getInitialSkillTree(), 'hardware_1'); // cost 1
+    tree = purchaseNode(tree, 'market_1');                         // cost 1
+    tree = purchaseNode(tree, 'click_1');                          // cost 1
+    expect(sumPurchasedCost(tree)).toBe(3);
+  });
+
+  it('sums correctly when later nodes are purchased', () => {
+    let tree = getInitialSkillTree();
+    for (const id of ['hardware_1', 'hardware_2', 'hardware_3', 'hardware_4']) {
+      tree = purchaseNode(tree, id);
+    }
+    // 1 + 1 + 2 + 2 = 6
+    expect(sumPurchasedCost(tree)).toBe(6);
   });
 });
 

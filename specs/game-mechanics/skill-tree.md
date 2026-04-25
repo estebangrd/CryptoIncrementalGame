@@ -4,13 +4,15 @@
 - **Fase**: Post-narrativa (Retention)
 - **Estado**: 📋 Planned
 - **Prioridad**: High (Replayability & Prestige Retention)
-- **Última actualización**: 2026-04-21
+- **Última actualización**: 2026-04-24
 
 ## Descripción
 
 El **Skill Tree** es una capa de progresión permanente complementaria al sistema de Prestige. Cada nivel de prestige otorga **1 punto de skill** que el jugador puede invertir en uno de tres árboles lineales (Hardware / Mercado / Click) para obtener bonos aditivos permanentes sobre el estado base del juego.
 
 A diferencia del bono de prestige base (que escala linealmente con `prestigeLevel`), el skill tree permite **elegir build**: el jugador decide en qué rama invertir y puede hacer **respec** para probar otra configuración a costa de perder 1 punto del total disponible.
+
+Los nodos tienen **coste escalado por posición**: nodos tempranos cuestan 1 punto, nodos finales cuestan 3. Esto refuerza la sensación de "los capstones son aspiracionales" sin castigar al jugador casual que quiere bonos rápidos.
 
 El objetivo es dar un "gancho" motivacional en cada prestige (el jugador quiere el siguiente punto) sin romper el balance del juego: los nodos son **aditivos dentro de cada rama**, no multiplicativos, con techos predecibles.
 
@@ -34,15 +36,15 @@ El objetivo es dar un "gancho" motivacional en cada prestige (el jugador quiere 
 - Solo el **Nodo 1** de cada rama es clickeable; nodos 2-6 aparecen bloqueados (grises)
 - Un panel superior indica: "Puntos disponibles: 1 · Puntos totales ganados: 1 · Puntos perdidos: 0"
 
-### Caso de Uso 2: Invertir un Punto en un Nodo
-**Dado que** el jugador tiene ≥ 1 punto disponible y abre el Skill Tree
+### Caso de Uso 2: Invertir Puntos en un Nodo
+**Dado que** el jugador tiene ≥ `node.cost` puntos disponibles y abre el Skill Tree
 **Cuando** presiona un nodo desbloqueable (nodo 1 de cualquier rama, o el siguiente nodo de una rama ya iniciada)
 **Entonces**
-- Se muestra un modal de confirmación con: nombre del nodo, descripción del bono (ej. "+5% producción de hardware"), coste (1 punto)
+- Se muestra un modal de confirmación con: nombre del nodo, descripción del bono (ej. "+5% producción de hardware"), coste (`node.cost` puntos)
 - Al confirmar:
-  - Puntos disponibles se reduce en 1
+  - Puntos disponibles se reducen en `node.cost` (1, 2 o 3 según posición)
   - El nodo se marca como comprado (estado visual: verde/neón)
-  - El **siguiente nodo** de la misma rama se desbloquea (pasa de gris → clickeable)
+  - El **siguiente nodo** de la misma rama se desbloquea (pasa de gris → clickeable) si el jugador tiene puntos suficientes para el siguiente coste
   - Se recalculan stats del juego aplicando el bono del nodo
   - Toast: "Skill aprendido: +5% producción de hardware"
 
@@ -101,8 +103,11 @@ El objetivo es dar un "gancho" motivacional en cada prestige (el jugador quiere 
 ### Puntos Disponibles
 ```typescript
 function calculateAvailableSkillPoints(state: GameState): number {
-  const spent = state.prestigeSkillTree.nodes.filter(n => n.purchased).length;
-  return state.prestigeLevel - spent - state.prestigeSkillTree.lostPoints;
+  // Cost-based: spent = sum of costs of purchased nodes (NOT count)
+  const spent = state.prestigeSkillTree.nodes
+    .filter(n => n.purchased)
+    .reduce((sum, n) => sum + n.cost, 0);
+  return Math.max(0, state.prestigeLevel - spent - state.prestigeSkillTree.lostPoints);
 }
 ```
 
@@ -192,8 +197,8 @@ function canPurchaseNode(state: GameState, nodeId: string): boolean {
   // Ya comprado?
   if (state.prestigeSkillTree.nodes.find(n => n.id === nodeId)?.purchased) return false;
 
-  // Puntos suficientes?
-  if (calculateAvailableSkillPoints(state) < 1) return false;
+  // Puntos suficientes para el coste del nodo?
+  if (calculateAvailableSkillPoints(state) < node.cost) return false;
 
   // Nodo anterior de la misma rama comprado? (excepto nodo 1)
   if (node.position === 1) return true;
@@ -244,6 +249,10 @@ export const SKILL_TREE_CONFIG = {
     click:    [0.10, 0.15, 0.20, 0.25, 0.30, 0.50],  // +150% maxeado
   },
 
+  // Coste por posición (1..6). Maxear una rama = 1+1+2+2+3+3 = 12 puntos.
+  // Árbol completo (18 nodos) = 36 puntos = 36 prestiges.
+  NODE_COSTS: [1, 1, 2, 2, 3, 3] as const,
+
   // Iconos/colores por rama (referenciar theme.ts)
   BRANCH_THEMES: {
     hardware: { color: '#00ff88', icon: 'chip' },     // neon green
@@ -280,6 +289,7 @@ interface SkillNode {
   branch: 'hardware' | 'market' | 'click';
   position: 1 | 2 | 3 | 4 | 5 | 6;
   value: number;                 // Bono aditivo (ej: 0.05 = +5%)
+  cost: number;                  // Puntos requeridos (1, 2 o 3 según posición)
   nameKey: string;               // Ej: "skillTree.hardware.node1.name"
   descriptionKey: string;        // Ej: "skillTree.hardware.node1.desc"
   purchased: boolean;
@@ -307,38 +317,44 @@ const initialSkillTree: PrestigeSkillTree = {
 ## Tabla de Nodos
 
 ### Rama Hardware (Producción)
-| # | Bono | Valor acumulado | Requisito |
-|---|------|----------------|-----------|
-| 1 | +5% producción | +5% | Ninguno |
-| 2 | +10% producción | +15% | Hardware 1 |
-| 3 | +10% producción | +25% | Hardware 2 |
-| 4 | +15% producción | +40% | Hardware 3 |
-| 5 | +15% producción | +55% | Hardware 4 |
-| 6 | +25% producción (capstone) | **+80%** | Hardware 5 |
+| # | Bono | Valor acumulado | Coste | Coste acumulado | Requisito |
+|---|------|----------------|-------|------------------|-----------|
+| 1 | +5% producción | +5% | 1 | 1 | Ninguno |
+| 2 | +10% producción | +15% | 1 | 2 | Hardware 1 |
+| 3 | +10% producción | +25% | 2 | 4 | Hardware 2 |
+| 4 | +15% producción | +40% | 2 | 6 | Hardware 3 |
+| 5 | +15% producción | +55% | 3 | 9 | Hardware 4 |
+| 6 | +25% producción (capstone) | **+80%** | 3 | **12** | Hardware 5 |
 
 ### Rama Mercado (Sell Price)
-| # | Bono | Valor acumulado | Requisito |
-|---|------|----------------|-----------|
-| 1 | +3% precio venta | +3% | Ninguno |
-| 2 | +5% precio venta | +8% | Mercado 1 |
-| 3 | +7% precio venta | +15% | Mercado 2 |
-| 4 | +10% precio venta | +25% | Mercado 3 |
-| 5 | +12% precio venta | +37% | Mercado 4 |
-| 6 | +15% precio venta (capstone) | **+52%** | Mercado 5 |
+| # | Bono | Valor acumulado | Coste | Coste acumulado | Requisito |
+|---|------|----------------|-------|------------------|-----------|
+| 1 | +3% precio venta | +3% | 1 | 1 | Ninguno |
+| 2 | +5% precio venta | +8% | 1 | 2 | Mercado 1 |
+| 3 | +7% precio venta | +15% | 2 | 4 | Mercado 2 |
+| 4 | +10% precio venta | +25% | 2 | 6 | Mercado 3 |
+| 5 | +12% precio venta | +37% | 3 | 9 | Mercado 4 |
+| 6 | +15% precio venta (capstone) | **+52%** | 3 | **12** | Mercado 5 |
 
 ### Rama Click (Click Power)
-| # | Bono | Valor acumulado | Requisito |
-|---|------|----------------|-----------|
-| 1 | +10% click power | +10% | Ninguno |
-| 2 | +15% click power | +25% | Click 1 |
-| 3 | +20% click power | +45% | Click 2 |
-| 4 | +25% click power | +70% | Click 3 |
-| 5 | +30% click power | +100% | Click 4 |
-| 6 | +50% click power (capstone) | **+150%** | Click 5 |
+| # | Bono | Valor acumulado | Coste | Coste acumulado | Requisito |
+|---|------|----------------|-------|------------------|-----------|
+| 1 | +10% click power | +10% | 1 | 1 | Ninguno |
+| 2 | +15% click power | +25% | 1 | 2 | Click 1 |
+| 3 | +20% click power | +45% | 2 | 4 | Click 2 |
+| 4 | +25% click power | +70% | 2 | 6 | Click 3 |
+| 5 | +30% click power | +100% | 3 | 9 | Click 4 |
+| 6 | +50% click power (capstone) | **+150%** | 3 | **12** | Click 5 |
+
+### Total para árbol completo
+- Maxear una rama: **12 prestiges**
+- Maxear el árbol completo (18 nodos): **36 prestiges**
 
 ## Reglas de Negocio
 
 1. **Solo 1 punto por prestige level**: Progresión garantizada pero escasa.
+   - Coste de los nodos escalado por posición: posiciones 1–2 = 1 punto, 3–4 = 2 puntos, 5–6 = 3 puntos.
+   - Maxear una rama requiere 12 puntos (= 12 prestiges); el árbol completo, 36 puntos.
 2. **Progresión lineal por rama**: Debe comprarse nodo N antes de poder comprar N+1 dentro de la misma rama.
 3. **Ramas independientes**: El jugador puede mezclar nodos de distintas ramas libremente.
 4. **Nodos son permanentes entre prestiges**: Hacer prestige NO resetea el skill tree.
@@ -367,15 +383,16 @@ const initialSkillTree: PrestigeSkillTree = {
 
 ### Árbol Visual
 - [ ] 3 columnas (una por rama): Hardware / Mercado / Click
-- [ ] Cada columna con 6 nodos verticales (bottom → top: nodo 1 → nodo 6)
+- [ ] Cada columna con 6 nodos verticales (top → bottom: nodo 1 → nodo 6, lectura natural).
+  - Decisión UX: el nodo 1 (siempre el primero accionable post-prestige) debe estar visible inmediatamente al entrar al árbol, sin requerir scroll.
 - [ ] Nodos conectados con líneas verticales
 - [ ] Header de cada columna con icono + nombre de la rama + total bonus actual acumulado
 - [ ] Estados visuales de nodo:
   - **Comprado**: Verde neón (`#00ff88`) con glow, check mark
   - **Desbloqueable**: Color de la rama (interactivo, pulsante si hay puntos)
   - **Bloqueado**: Gris oscuro, sin interacción
-- [ ] Cada nodo muestra: icono, nombre corto, valor del bono (ej: "+5%")
-- [ ] Al presionar un nodo desbloqueable: modal de confirmación
+- [ ] Cada nodo muestra: valor del bono (ej: "+5%") y, si desbloqueable, su coste (ej: "Coste: 2 pts")
+- [ ] Al presionar un nodo desbloqueable: modal de confirmación con coste exacto del nodo
 
 ### Modal de Confirmación de Nodo
 - [ ] Título: nombre completo del nodo

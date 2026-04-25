@@ -813,6 +813,10 @@ export const SKILL_TREE_CONFIG = {
     market:   [0.03, 0.05, 0.07, 0.10, 0.12, 0.15],
     click:    [0.10, 0.15, 0.20, 0.25, 0.30, 0.50],
   },
+
+  // Coste en puntos por posición (1..6). Maxear una rama = 12 puntos.
+  // Maxear el árbol completo = 36 puntos (= 36 prestiges).
+  NODE_COSTS: [1, 1, 2, 2, 3, 3] as const,
 } as const;
 
 // ============================================================================

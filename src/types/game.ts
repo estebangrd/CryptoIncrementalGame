@@ -228,6 +228,7 @@ export interface SkillNode {
   branch: SkillTreeBranch;
   position: SkillNodePosition;
   value: number;                 // additive bonus (0.05 = +5%)
+  cost: number;                  // points required to purchase
   nameKey: string;               // translation key
   descriptionKey: string;        // translation key
   purchased: boolean;
