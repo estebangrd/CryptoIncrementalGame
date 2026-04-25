@@ -15,6 +15,11 @@ import {
   migrateSkillTree,
   getBranchBonusPercent,
   sumPurchasedCost,
+  isSkillTreeMastered,
+  calculateMasteryLevel,
+  calculateMasteryProductionMultiplier,
+  calculateMasteryClickMultiplier,
+  getTotalTreeCost,
 } from '../src/utils/skillTreeLogic';
 import { getInitialSkillTree, buildInitialSkillNodes } from '../src/data/skillTree';
 import { GameState, PrestigeSkillTree } from '../src/types/game';
@@ -275,6 +280,134 @@ describe('migrateSkillTree', () => {
   it('clamps negative lostPoints to 0', () => {
     const tree = { nodes: buildInitialSkillNodes(), lostPoints: -5 } as PrestigeSkillTree;
     expect(migrateSkillTree(tree).lostPoints).toBe(0);
+  });
+});
+
+describe('getTotalTreeCost', () => {
+  it('returns 36 (sum of all node costs across 3 branches)', () => {
+    expect(getTotalTreeCost()).toBe(36);
+  });
+});
+
+const allNodeIds = [
+  'hardware_1', 'hardware_2', 'hardware_3', 'hardware_4', 'hardware_5', 'hardware_6',
+  'market_1', 'market_2', 'market_3', 'market_4', 'market_5', 'market_6',
+  'click_1', 'click_2', 'click_3', 'click_4', 'click_5', 'click_6',
+];
+
+describe('isSkillTreeMastered', () => {
+  it('returns false when no nodes purchased', () => {
+    expect(isSkillTreeMastered(getInitialSkillTree())).toBe(false);
+  });
+
+  it('returns false when partial', () => {
+    const tree = purchaseNode(getInitialSkillTree(), 'hardware_1');
+    expect(isSkillTreeMastered(tree)).toBe(false);
+  });
+
+  it('returns true when all 18 nodes are purchased', () => {
+    let tree = getInitialSkillTree();
+    for (const id of allNodeIds) tree = purchaseNode(tree, id);
+    expect(isSkillTreeMastered(tree)).toBe(true);
+  });
+
+  it('returns false for undefined tree', () => {
+    expect(isSkillTreeMastered(undefined)).toBe(false);
+  });
+});
+
+describe('calculateMasteryLevel', () => {
+  it('returns 0 when tree is not mastered', () => {
+    const state = stateWithPurchased(['hardware_1'], 50);
+    expect(calculateMasteryLevel(state)).toBe(0);
+  });
+
+  it('returns 0 at exactly P36 with mastered tree (0 surplus)', () => {
+    const state = stateWithPurchased(allNodeIds, 36);
+    expect(calculateMasteryLevel(state)).toBe(0);
+  });
+
+  it('returns 4 at P40 with mastered tree (40 - 36 - 0)', () => {
+    const state = stateWithPurchased(allNodeIds, 40);
+    expect(calculateMasteryLevel(state)).toBe(4);
+  });
+
+  it('subtracts lostPoints from mastery level', () => {
+    let tree = getInitialSkillTree();
+    for (const id of allNodeIds) tree = purchaseNode(tree, id);
+    tree = { ...tree, lostPoints: 2 };
+    const state = makeState({ prestigeLevel: 40, prestigeSkillTree: tree });
+    expect(calculateMasteryLevel(state)).toBe(2); // 40 - 36 - 2
+  });
+
+  it('clamps to 0 when lostPoints exceed surplus', () => {
+    let tree = getInitialSkillTree();
+    for (const id of allNodeIds) tree = purchaseNode(tree, id);
+    tree = { ...tree, lostPoints: 10 };
+    const state = makeState({ prestigeLevel: 40, prestigeSkillTree: tree });
+    expect(calculateMasteryLevel(state)).toBe(0);
+  });
+});
+
+describe('calculateMasteryProductionMultiplier', () => {
+  it('returns 1.0 when not mastered', () => {
+    const state = stateWithPurchased(['hardware_1'], 50);
+    expect(calculateMasteryProductionMultiplier(state)).toBe(1.0);
+  });
+
+  it('returns 1.0 at exactly P36 mastered (level 0)', () => {
+    const state = stateWithPurchased(allNodeIds, 36);
+    expect(calculateMasteryProductionMultiplier(state)).toBe(1.0);
+  });
+
+  it('returns 1.4 at P40 mastered (+40% from level 4)', () => {
+    const state = stateWithPurchased(allNodeIds, 40);
+    expect(calculateMasteryProductionMultiplier(state)).toBeCloseTo(1.4, 5);
+  });
+
+  it('returns 1.0 if mastery breaks via respec (mastered=false)', () => {
+    let tree = getInitialSkillTree();
+    for (const id of allNodeIds) tree = purchaseNode(tree, id);
+    tree = resetSkillTree(tree); // unpurchases all → not mastered
+    const state = makeState({ prestigeLevel: 40, prestigeSkillTree: tree });
+    expect(calculateMasteryProductionMultiplier(state)).toBe(1.0);
+  });
+});
+
+describe('calculateMasteryClickMultiplier', () => {
+  it('returns 1.0 when not mastered', () => {
+    const state = stateWithPurchased(['hardware_1'], 50);
+    expect(calculateMasteryClickMultiplier(state)).toBe(1.0);
+  });
+
+  it('returns 1.20 at P40 mastered (+20% from level 4)', () => {
+    const state = stateWithPurchased(allNodeIds, 40);
+    expect(calculateMasteryClickMultiplier(state)).toBeCloseTo(1.20, 5);
+  });
+});
+
+describe('respec continuation semantics', () => {
+  it('after respec at P40 → mastery breaks (level 0)', () => {
+    let tree = getInitialSkillTree();
+    for (const id of allNodeIds) tree = purchaseNode(tree, id);
+    tree = resetSkillTree(tree);
+    const state = makeState({ prestigeLevel: 40, prestigeSkillTree: tree });
+    expect(isSkillTreeMastered(state.prestigeSkillTree)).toBe(false);
+    expect(calculateMasteryLevel(state)).toBe(0);
+  });
+
+  it('after respec + 1 prestige + re-master, mastery continues from same level', () => {
+    // Pre-respec at P40: level = 4
+    // Post-respec at P40: lost=1, mastery broken
+    // After 1 prestige to P41 + re-buying all 18 nodes: lost=1, mastered=true
+    // Mastery level = 41 - 36 - 1 = 4 (continued)
+    let tree = getInitialSkillTree();
+    for (const id of allNodeIds) tree = purchaseNode(tree, id);
+    tree = resetSkillTree(tree); // lost=1, all unpurchased
+    for (const id of allNodeIds) tree = purchaseNode(tree, id); // re-purchased
+    const state = makeState({ prestigeLevel: 41, prestigeSkillTree: tree });
+    expect(isSkillTreeMastered(state.prestigeSkillTree)).toBe(true);
+    expect(calculateMasteryLevel(state)).toBe(4);
   });
 });
 

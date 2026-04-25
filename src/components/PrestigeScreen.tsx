@@ -15,7 +15,14 @@ import { PRESTIGE_CONFIG } from '../config/balanceConfig';
 import { ALL_BADGES } from '../data/badges';
 import { PrestigeRun } from '../types/game';
 import SkillTreeScreen from './SkillTreeScreen';
-import { calculateAvailableSkillPoints } from '../utils/skillTreeLogic';
+import {
+  calculateAvailableSkillPoints,
+  isSkillTreeMastered,
+  calculateMasteryLevel,
+  getTotalTreeCost,
+  sumPurchasedCost,
+  getBranchBonusPercent,
+} from '../utils/skillTreeLogic';
 
 type SubTab = 'prestige' | 'skillTree' | 'history' | 'badges';
 
@@ -26,14 +33,30 @@ const PrestigeScreen: React.FC = () => {
   const [confirmText, setConfirmText] = useState('');
 
   const prestigeLevel = gameState.prestigeLevel;
-  const nextLevel = prestigeLevel + 1;
-  const currentProductionBonus = Math.round(prestigeLevel * PRESTIGE_CONFIG.bonuses.productionBonus * 100);
-  const currentClickBonus = Math.round(prestigeLevel * PRESTIGE_CONFIG.bonuses.clickBonus * 100);
-  const nextProductionBonus = Math.round(nextLevel * PRESTIGE_CONFIG.bonuses.productionBonus * 100);
-  const nextClickBonus = Math.round(nextLevel * PRESTIGE_CONFIG.bonuses.clickBonus * 100);
   const canDoPrestige = canPrestige(gameState);
   const prestigeHistory = gameState.prestigeHistory || [];
   const unlockedBadges = gameState.unlockedBadges || [];
+
+  // Mastery: bonuses kick in only after the player has fully purchased the skill tree.
+  const mastered = isSkillTreeMastered(gameState.prestigeSkillTree);
+  const masteryLevel = calculateMasteryLevel(gameState);
+  const masteryProductionBonus = Math.round(masteryLevel * PRESTIGE_CONFIG.bonuses.productionBonus * 100);
+  const masteryClickBonus = Math.round(masteryLevel * PRESTIGE_CONFIG.bonuses.clickBonus * 100);
+  const nextMasteryLevel = masteryLevel + 1;
+  const nextMasteryProductionBonus = Math.round(nextMasteryLevel * PRESTIGE_CONFIG.bonuses.productionBonus * 100);
+  const nextMasteryClickBonus = Math.round(nextMasteryLevel * PRESTIGE_CONFIG.bonuses.clickBonus * 100);
+
+  // Pre-mastery progress: total points spent across the tree vs total cost.
+  const treeTotalCost = getTotalTreeCost();
+  const treePointsSpent = gameState.prestigeSkillTree
+    ? sumPurchasedCost(gameState.prestigeSkillTree)
+    : 0;
+  const treeProgressPct = Math.min(100, Math.round((treePointsSpent / treeTotalCost) * 100));
+
+  // Active skill tree bonuses (consolidated by branch).
+  const skillTreeHardwarePct = getBranchBonusPercent(gameState, 'hardware');
+  const skillTreeMarketPct = getBranchBonusPercent(gameState, 'market');
+  const skillTreeClickPct = getBranchBonusPercent(gameState, 'click');
 
   const handlePrestigePress = () => {
     if (!canDoPrestige) return;
@@ -44,7 +67,7 @@ const PrestigeScreen: React.FC = () => {
     dispatch({ type: 'DO_PRESTIGE' });
     setConfirmModalVisible(false);
     setConfirmText('');
-    showToast(`✨ Prestige Level ${gameState.prestigeLevel + 1}! +${Math.round((gameState.prestigeLevel + 1) * 10)}% production`, 'success');
+    showToast(`✨ Prestige Level ${gameState.prestigeLevel + 1}! +1 skill point`, 'success');
   };
 
   const handleCancelConfirm = () => {
@@ -73,29 +96,65 @@ const PrestigeScreen: React.FC = () => {
         <Text style={styles.levelText}>{prestigeLevel}</Text>
       </View>
 
-      {/* Current Bonuses */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>{t('prestige.currentBonuses')}</Text>
-        <View style={styles.bonusRow}>
-          <Text style={styles.bonusLabel}>{t('prestige.productionBoost')}</Text>
-          <Text style={styles.bonusValueGreen}>+{currentProductionBonus}%</Text>
+      {/* Mastery progress (pre-completion) or active mastery card (post-completion) */}
+      {!mastered ? (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>{t('prestige.mastery.progressTitle')}</Text>
+          <View style={styles.progressBarTrack}>
+            <View style={[styles.progressBarFill, { width: `${treeProgressPct}%` }]} />
+          </View>
+          <Text style={styles.progressText}>{treePointsSpent} / {treeTotalCost}</Text>
+          <Text style={styles.masteryHint}>{t('prestige.mastery.progressBody')}</Text>
         </View>
-        <View style={styles.bonusRow}>
-          <Text style={styles.bonusLabel}>{t('prestige.clickBoost')}</Text>
-          <Text style={styles.bonusValueGreen}>+{currentClickBonus}%</Text>
-        </View>
-      </View>
+      ) : (
+        <>
+          <View style={[styles.card, styles.masteryCard]}>
+            <Text style={styles.masteryTitle}>✓ {t('prestige.mastery.completedTitle')}</Text>
+            <Text style={styles.masteryHint}>{t('prestige.mastery.completedBody')}</Text>
+          </View>
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>
+              {t('prestige.mastery.bonusesTitle').replace('{level}', String(masteryLevel))}
+            </Text>
+            <View style={styles.bonusRow}>
+              <Text style={styles.bonusLabel}>{t('prestige.productionBoost')}</Text>
+              <Text style={styles.bonusValueGreen}>+{masteryProductionBonus}%</Text>
+            </View>
+            <View style={styles.bonusRow}>
+              <Text style={styles.bonusLabel}>{t('prestige.clickBoost')}</Text>
+              <Text style={styles.bonusValueGreen}>+{masteryClickBonus}%</Text>
+            </View>
+          </View>
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>
+              {t('prestige.mastery.nextTitle').replace('{level}', String(nextMasteryLevel))}
+            </Text>
+            <View style={styles.bonusRow}>
+              <Text style={styles.bonusLabel}>{t('prestige.productionBoost')}</Text>
+              <Text style={styles.bonusValueGold}>+{nextMasteryProductionBonus}%</Text>
+            </View>
+            <View style={styles.bonusRow}>
+              <Text style={styles.bonusLabel}>{t('prestige.clickBoost')}</Text>
+              <Text style={styles.bonusValueGold}>+{nextMasteryClickBonus}%</Text>
+            </View>
+          </View>
+        </>
+      )}
 
-      {/* Next Level Bonuses */}
+      {/* Active Skill Tree Bonuses (always visible, derived from purchased nodes) */}
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>{t('prestige.nextBonuses')} (Level {nextLevel})</Text>
+        <Text style={styles.cardTitle}>{t('prestige.skillTreeBonusesTitle')}</Text>
         <View style={styles.bonusRow}>
-          <Text style={styles.bonusLabel}>{t('prestige.productionBoost')}</Text>
-          <Text style={styles.bonusValueGold}>+{nextProductionBonus}%</Text>
+          <Text style={styles.bonusLabel}>{t('prestige.skillTreeBonus.hardware')}</Text>
+          <Text style={skillTreeHardwarePct > 0 ? styles.bonusValueGreen : styles.bonusValueDim}>+{skillTreeHardwarePct}%</Text>
         </View>
         <View style={styles.bonusRow}>
-          <Text style={styles.bonusLabel}>{t('prestige.clickBoost')}</Text>
-          <Text style={styles.bonusValueGold}>+{nextClickBonus}%</Text>
+          <Text style={styles.bonusLabel}>{t('prestige.skillTreeBonus.market')}</Text>
+          <Text style={skillTreeMarketPct > 0 ? styles.bonusValueGreen : styles.bonusValueDim}>+{skillTreeMarketPct}%</Text>
+        </View>
+        <View style={styles.bonusRow}>
+          <Text style={styles.bonusLabel}>{t('prestige.skillTreeBonus.click')}</Text>
+          <Text style={skillTreeClickPct > 0 ? styles.bonusValueGreen : styles.bonusValueDim}>+{skillTreeClickPct}%</Text>
         </View>
       </View>
 
@@ -364,7 +423,7 @@ const styles = StyleSheet.create({
   skillTreeBadge: {
     position: 'absolute',
     top: 4,
-    right: 10,
+    right: 2,
     minWidth: 18,
     height: 18,
     borderRadius: 9,
@@ -420,6 +479,43 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#FFD700',
     fontWeight: 'bold',
+  },
+  bonusValueDim: {
+    fontSize: 13,
+    color: '#555',
+    fontWeight: 'bold',
+  },
+  progressBarTrack: {
+    height: 10,
+    backgroundColor: '#1a1a1a',
+    borderRadius: 5,
+    overflow: 'hidden',
+    marginVertical: 6,
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: '#00e5ff',
+  },
+  progressText: {
+    fontSize: 14,
+    color: '#fff',
+    fontWeight: 'bold',
+    textAlign: 'right',
+    marginBottom: 4,
+  },
+  masteryHint: {
+    fontSize: 12,
+    color: '#888',
+  },
+  masteryCard: {
+    borderLeftWidth: 3,
+    borderLeftColor: '#00e5ff',
+  },
+  masteryTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#00e5ff',
+    marginBottom: 4,
   },
   keepCard: {
     borderLeftWidth: 3,

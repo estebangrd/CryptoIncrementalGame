@@ -2433,6 +2433,58 @@ export const translations: Translation = {
     pt: '−30% hash rate por 24h — sem custo adicional',
   },
 
+  // ─── Prestige Mastery (post skill-tree completion) ──────────────────────
+  'prestige.mastery.progressTitle': {
+    en: 'Skill Tree Mastery',
+    es: 'Maestría del Skill Tree',
+    pt: 'Maestria do Skill Tree',
+  },
+  'prestige.mastery.progressBody': {
+    en: 'Complete the tree to unlock infinite prestige scaling',
+    es: 'Completá el árbol para desbloquear bonos infinitos por prestige',
+    pt: 'Complete a árvore para desbloquear bônus infinitos por prestige',
+  },
+  'prestige.mastery.completedTitle': {
+    en: 'Skill Tree Mastered',
+    es: 'Skill Tree Completado',
+    pt: 'Skill Tree Concluído',
+  },
+  'prestige.mastery.completedBody': {
+    en: 'Mastery bonuses are now active',
+    es: 'Bonos de maestría activos',
+    pt: 'Bônus de maestria ativos',
+  },
+  'prestige.mastery.bonusesTitle': {
+    en: 'Mastery Bonuses (Level {level})',
+    es: 'Bonos de Maestría (Nivel {level})',
+    pt: 'Bônus de Maestria (Nível {level})',
+  },
+  'prestige.mastery.nextTitle': {
+    en: 'Next Bonuses (Level {level})',
+    es: 'Próximos Bonos (Nivel {level})',
+    pt: 'Próximos Bônus (Nível {level})',
+  },
+  'prestige.skillTreeBonusesTitle': {
+    en: 'Active Skill Tree Bonuses',
+    es: 'Bonos Activos del Skill Tree',
+    pt: 'Bônus Ativos do Skill Tree',
+  },
+  'prestige.skillTreeBonus.hardware': {
+    en: 'Hardware Production',
+    es: 'Producción de Hardware',
+    pt: 'Produção de Hardware',
+  },
+  'prestige.skillTreeBonus.market': {
+    en: 'Sell Price',
+    es: 'Precio de Venta',
+    pt: 'Preço de Venda',
+  },
+  'prestige.skillTreeBonus.click': {
+    en: 'Click Power',
+    es: 'Potencia de Click',
+    pt: 'Poder de Clique',
+  },
+
   // ─── Skill Tree ─────────────────────────────────────────────────────────
   'skillTree.tabName': {
     en: 'Skill Tree',

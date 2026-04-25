@@ -19,6 +19,8 @@ import {
   hasPurchasedNodes,
   migrateSkillTree,
   calculateSkillTreeMarketMultiplier,
+  calculateMasteryProductionMultiplier,
+  calculateMasteryClickMultiplier,
 } from '../utils/skillTreeLogic';
 import { getInitialSkillTree } from '../data/skillTree';
 import {
@@ -195,7 +197,19 @@ const recalculateGameStats = (state: GameState): GameState => {
     energyWithRequired = { ...energyWithRequired, totalGeneratedMW: reducedMW };
   }
 
-  const stateWithEnergy = { ...state, energy: energyWithRequired };
+  // Mastery multipliers are derived from skill tree state (only active when
+  // tree fully purchased). Compute BEFORE production so getAllMultipliers
+  // reads the up-to-date value from state.
+  const masteryProductionMultiplier = calculateMasteryProductionMultiplier(state);
+  const masteryClickMultiplier = calculateMasteryClickMultiplier(state);
+
+  const stateWithEnergy = {
+    ...state,
+    energy: energyWithRequired,
+    prestigeProductionMultiplier: masteryProductionMultiplier,
+    prestigeClickMultiplier: masteryClickMultiplier,
+    prestigeMultiplier: masteryProductionMultiplier, // backwards compat
+  };
 
   // Calculate total CC production (pure CC, no electricity subtraction)
   const totalProduction = calculateTotalProduction(stateWithEnergy);
@@ -330,11 +344,10 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         realMoney: action.payload.realMoney || 0,
         totalRealMoneyEarned: action.payload.totalRealMoneyEarned || 0,
         totalSellCount: action.payload.totalSellCount || 0,
-        // Ensure new prestige fields exist if missing from old saves
-        prestigeProductionMultiplier: action.payload.prestigeProductionMultiplier
-          ?? calculateProductionMultiplier(action.payload.prestigeLevel ?? 0),
-        prestigeClickMultiplier: action.payload.prestigeClickMultiplier
-          ?? calculateClickMultiplier(action.payload.prestigeLevel ?? 0),
+        // Mastery multipliers are recomputed by recalculateGameStats below;
+        // these defaults are placeholders until that runs.
+        prestigeProductionMultiplier: action.payload.prestigeProductionMultiplier ?? 1,
+        prestigeClickMultiplier: action.payload.prestigeClickMultiplier ?? 1,
         prestigeHistory: action.payload.prestigeHistory ?? [],
         unlockedBadges: action.payload.unlockedBadges ?? [],
         prestigeSkillTree: migrateSkillTree(action.payload.prestigeSkillTree),
@@ -741,8 +754,9 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         upgradesPurchased: state.upgrades.filter(u => u.purchased).length,
       };
       const newPrestigeLevel = state.prestigeLevel + 1;
-      const newProductionMultiplier = calculateProductionMultiplier(newPrestigeLevel);
-      const newClickMultiplier = calculateClickMultiplier(newPrestigeLevel);
+      // prestigeProductionMultiplier / prestigeClickMultiplier are derived
+      // from skill tree mastery state inside recalculateGameStats — no need
+      // to compute here.
       const resetHardware = state.hardware.map(hw => ({
         ...hw,
         owned: hw.id === 'manual_mining' ? 1 : 0,
@@ -768,9 +782,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       const prestigedState: GameState = {
         ...state,
         prestigeLevel: newPrestigeLevel,
-        prestigeProductionMultiplier: newProductionMultiplier,
-        prestigeClickMultiplier: newClickMultiplier,
-        prestigeMultiplier: newProductionMultiplier, // backwards compat
+        // prestigeProductionMultiplier / prestigeClickMultiplier set by recalc
         prestigeHistory: newHistory,
         unlockedBadges: newUnlockedBadges,
         blocksMined: 0,

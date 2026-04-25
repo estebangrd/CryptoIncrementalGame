@@ -5,6 +5,7 @@ import { GameState } from '../types/game';
 import { formatBlockInfo } from '../utils/blockLogic';
 import { formatNumber, formatSignedNumber, formatUSDCompact } from '../utils/gameLogic';
 import { getBadgeClickMultiplier } from '../utils/prestigeLogic';
+import { calculateSkillTreeClickMultiplier } from '../utils/skillTreeLogic';
 import { colors, fonts } from '../config/theme';
 
 const CLICK_WINDOW_MS = 1000;
@@ -221,13 +222,15 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
     return () => swing.stop();
   }, [isComplete, hammerAnim]);
 
-  // Real CC earned per click: base × click upgrades × prestige × badges
+  // Real CC earned per click: base × click upgrades × prestige × badges × skill tree
+  // Mirrors getClickMultiplier in blockLogic.ts so the displayed boost matches the actual reward.
   const upgradeClickMultiplier = gameState.upgrades
     .filter(u => u.purchased && u.effect.type === 'clickPower')
     .reduce((acc: number, u) => acc * u.effect.value, 1);
   const prestigeClickMultiplier = gameState.prestigeClickMultiplier ?? 1;
   const badgeClickMultiplier = getBadgeClickMultiplier(gameState.unlockedBadges || []);
-  const ccPerClick = blockInfo.currentReward * upgradeClickMultiplier * prestigeClickMultiplier * badgeClickMultiplier;
+  const skillTreeClickMultiplier = calculateSkillTreeClickMultiplier(gameState);
+  const ccPerClick = blockInfo.currentReward * upgradeClickMultiplier * prestigeClickMultiplier * badgeClickMultiplier * skillTreeClickMultiplier;
 
   // Hash rate boost proportional to CC boost, using the same H/s : CC/s ratio the player's hardware shows.
   // Falls back to 1:1 when no hardware produces CC yet.

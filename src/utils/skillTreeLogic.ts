@@ -1,6 +1,52 @@
 import { GameState, PrestigeSkillTree, SkillNode, SkillTreeBranch } from '../types/game';
-import { SKILL_TREE_CONFIG } from '../config/balanceConfig';
+import { SKILL_TREE_CONFIG, PRESTIGE_CONFIG } from '../config/balanceConfig';
 import { buildInitialSkillNodes, getInitialSkillTree } from '../data/skillTree';
+
+/**
+ * Total points required to fully purchase the entire skill tree.
+ * Sum of all node costs across all branches.
+ * With NODE_COSTS = [1,1,2,2,3,3] and 3 branches → 12 × 3 = 36.
+ */
+export const getTotalTreeCost = (): number =>
+  SKILL_TREE_CONFIG.NODE_COSTS.reduce((sum, c) => sum + c, 0)
+    * SKILL_TREE_CONFIG.BRANCHES.length;
+
+/**
+ * Returns true when every node of the tree is purchased.
+ * Used as the gate for "Mastery Bonuses" (the legacy auto prestige bonuses
+ * resume after the player completes the tree).
+ */
+export const isSkillTreeMastered = (tree: PrestigeSkillTree | undefined): boolean => {
+  if (!tree) return false;
+  if (tree.nodes.length === 0) return false;
+  return tree.nodes.every(n => n.purchased);
+};
+
+/**
+ * How many "post-mastery" prestige levels the player has earned.
+ * Returns 0 unless the tree is currently mastered.
+ *
+ * Formula: prestigeLevel - totalTreeCost - lostPoints (clamped at 0).
+ *
+ * The lostPoints subtraction means each respec costs the player one
+ * "post-mastery prestige level" — they need an extra prestige to make it up.
+ */
+export const calculateMasteryLevel = (state: GameState): number => {
+  const tree = state.prestigeSkillTree;
+  if (!isSkillTreeMastered(tree)) return 0;
+  const earned = state.prestigeLevel ?? 0;
+  return Math.max(0, earned - getTotalTreeCost() - (tree?.lostPoints ?? 0));
+};
+
+export const calculateMasteryProductionMultiplier = (state: GameState): number => {
+  const level = calculateMasteryLevel(state);
+  return 1 + level * PRESTIGE_CONFIG.bonuses.productionBonus;
+};
+
+export const calculateMasteryClickMultiplier = (state: GameState): number => {
+  const level = calculateMasteryLevel(state);
+  return 1 + level * PRESTIGE_CONFIG.bonuses.clickBonus;
+};
 
 /**
  * Ensures the skill tree has all 18 nodes. Used when loading saves created

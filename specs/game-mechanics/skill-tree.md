@@ -4,7 +4,7 @@
 - **Fase**: Post-narrativa (Retention)
 - **Estado**: 📋 Planned
 - **Prioridad**: High (Replayability & Prestige Retention)
-- **Última actualización**: 2026-04-24
+- **Última actualización**: 2026-04-25
 
 ## Descripción
 
@@ -13,6 +13,25 @@ El **Skill Tree** es una capa de progresión permanente complementaria al sistem
 A diferencia del bono de prestige base (que escala linealmente con `prestigeLevel`), el skill tree permite **elegir build**: el jugador decide en qué rama invertir y puede hacer **respec** para probar otra configuración a costa de perder 1 punto del total disponible.
 
 Los nodos tienen **coste escalado por posición**: nodos tempranos cuestan 1 punto, nodos finales cuestan 3. Esto refuerza la sensación de "los capstones son aspiracionales" sin castigar al jugador casual que quiere bonos rápidos.
+
+### Mastery Bonuses (post-completion)
+
+Una vez que el jugador **completa el árbol** (compra los 18 nodos = 36 puntos), se desbloquean los **Mastery Bonuses**: el sistema retoma los bonos automáticos clásicos (+10% producción y +5% click por nivel post-mastery), reemplazando el viejo sistema lineal de prestige. Esto da progresión infinita para jugadores veteranos sin romper la fase de "elegir build" del early/mid game.
+
+**Fórmula del nivel de maestría**:
+```
+masteryLevel = isMastered ? max(0, prestigeLevel - 36 - lostPoints) : 0
+```
+
+- `isMastered`: true cuando los 18 nodos están comprados.
+- `36`: coste total del árbol completo (suma de todos los `NODE_COSTS`).
+- `lostPoints`: si el jugador hace respec, `lostPoints` aumenta y la mastery se "pausa" (el árbol queda incompleto). Cada respec cuesta 1 nivel post-mastery permanente: el jugador necesita 1 prestige adicional para "reconstruir" el árbol y volver al mismo masteryLevel.
+
+**Ejemplo**:
+- P36 mastered: level=0 (sin bonos extra todavía)
+- P40 mastered: level=4 → +40% prod, +20% click
+- P40 + respec: mastered=false → level=0
+- P41 (recomprar todo): mastered=true, lost=1 → level = 41-36-1 = 4 (continuación)
 
 El objetivo es dar un "gancho" motivacional en cada prestige (el jugador quiere el siguiente punto) sin romper el balance del juego: los nodos son **aditivos dentro de cada rama**, no multiplicativos, con techos predecibles.
 

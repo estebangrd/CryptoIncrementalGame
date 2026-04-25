@@ -230,12 +230,6 @@ const SkillTreeScreen: React.FC = () => {
               <Text style={styles.modalInfoValue}>{purchasedCost}</Text>
             </View>
             <View style={styles.modalInfoRow}>
-              <Text style={styles.modalInfoLabel}>{t('skillTree.resetLostAfter')}</Text>
-              <Text style={styles.modalInfoValueLost}>
-                {lost} → {lost + SKILL_TREE_CONFIG.RESPEC_COST}
-              </Text>
-            </View>
-            <View style={styles.modalInfoRow}>
               <Text style={styles.modalInfoLabel}>{t('skillTree.resetAvailableAfter')}</Text>
               <Text style={styles.modalInfoValue}>
                 {Math.max(0, earned - (lost + SKILL_TREE_CONFIG.RESPEC_COST))}
