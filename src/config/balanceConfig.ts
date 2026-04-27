@@ -531,7 +531,7 @@ export const AI_CONFIG = {
   },
   OBSERVER_MODE: {
     ACTION_INTERVAL_MS: 4_000,
-    SELL_CC_THRESHOLD: 1,
+    SELL_CC_THRESHOLD: 1e-9,
     SELL_PERCENT: 0.90,
   },
 

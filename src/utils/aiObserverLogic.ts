@@ -36,12 +36,14 @@ export const getAIActions = (state: GameState): AIAction[] => {
   let availableMoney = state.realMoney;
   let availableCoins = state.cryptoCoins;
 
-  // 1. Sell CC — if any meaningful amount exists, sell 50% at real market price
+  // 1. Sell CC — sell 90% at market price. No floor: late-game CC arrives in
+  //    fractions while $/CC compensates with multi-million-dollar prices, so
+  //    a tiny 0.001 CC can still be a meaningful sale.
   if (availableCoins > OBSERVER_MODE.SELL_CC_THRESHOLD) {
-    const amount = Math.floor(availableCoins * OBSERVER_MODE.SELL_PERCENT);
+    const amount = availableCoins * OBSERVER_MODE.SELL_PERCENT;
     const pricePerCoin = getCCMarketPrice(state);
+    const cashGain = amount * pricePerCoin;
     if (amount > 0 && pricePerCoin > 0) {
-      const cashGain = amount * pricePerCoin;
       actions.push({
         type: 'SELL_CC',
         amount,
@@ -74,25 +76,11 @@ export const getAIActions = (state: GameState): AIAction[] => {
     }
   }
 
-  // 3. Buy hardware — buy most expensive affordable hardware
-  const normalHardware = state.hardware
-    .filter(h => !h.aiExclusive)
-    .map(h => ({ hw: h, cost: calculateHardwareCost(h) }))
-    .filter(({ cost }) => availableMoney >= cost)
-    .sort((a, b) => b.cost - a.cost);
-
-  if (normalHardware.length > 0) {
-    const best = normalHardware[0];
-    actions.push({
-      type: 'BUY_HARDWARE',
-      hardwareId: best.hw.id,
-      cost: best.cost,
-      message: `AI purchased 1 ${best.hw.id.replace(/_/g, ' ')}. Unit #${best.hw.owned + 1}.`,
-    });
-    availableMoney -= best.cost;
-  }
-
-  // 4. Create AI-exclusive hardware — if none created yet, invent next tier
+  // 3. Create AI-exclusive hardware — if a tier hasn't been invented yet, design
+  //    the next one. Player-tier hardware (manual_mining → supercomputer) is
+  //    intentionally skipped: the autonomous AI only operates on tech beyond
+  //    human comprehension. Each new tier ramps energy demand sharply, forcing
+  //    the energy step (#2) to keep building non-renewable sources.
   const ai = state.ai;
   const createdSet = new Set(ai?.aiHardwareCreated ?? []);
   for (const template of aiExclusiveHardware) {
@@ -106,23 +94,22 @@ export const getAIActions = (state: GameState): AIAction[] => {
     }
   }
 
-  // 5. Buy AI-exclusive hardware — if AI hardware exists, buy more units
-  if (actions.length === 0 || availableMoney > 0) {
-    const aiHw = state.hardware
-      .filter(h => h.aiExclusive)
-      .map(h => ({ hw: h, cost: calculateHardwareCost(h) }))
-      .filter(({ cost }) => availableMoney >= cost)
-      .sort((a, b) => b.cost - a.cost);
+  // 4. Buy AI-exclusive hardware — pick the highest-tier the AI can afford.
+  const aiHw = state.hardware
+    .filter(h => h.aiExclusive)
+    .map(h => ({ hw: h, cost: calculateHardwareCost(h) }))
+    .filter(({ cost }) => availableMoney >= cost)
+    .sort((a, b) => b.hw.level - a.hw.level);
 
-    if (aiHw.length > 0) {
-      const best = aiHw[0];
-      actions.push({
-        type: 'BUY_HARDWARE',
-        hardwareId: best.hw.id,
-        cost: best.cost,
-        message: `AI expanded ${best.hw.id.replace(/_/g, ' ')} array. Unit #${best.hw.owned + 1}.`,
-      });
-    }
+  if (aiHw.length > 0) {
+    const best = aiHw[0];
+    actions.push({
+      type: 'BUY_HARDWARE',
+      hardwareId: best.hw.id,
+      cost: best.cost,
+      message: `AI expanded ${best.hw.id.replace(/_/g, ' ')} array. Unit #${best.hw.owned + 1}.`,
+    });
+    availableMoney -= best.cost;
   }
 
   return actions;
@@ -142,5 +129,7 @@ const formatNumber = (n: number): string => {
   if (n >= 1e9) return `${(n / 1e9).toFixed(1)}B`;
   if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
   if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
-  return n.toFixed(0);
+  if (n >= 1) return n.toFixed(0);
+  if (n > 0) return n.toPrecision(2); // fractional CC in late game (e.g. 0.0017)
+  return '0';
 };
