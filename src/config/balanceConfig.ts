@@ -479,22 +479,22 @@ export const AI_CONFIG = {
   LEVELS: {
     1: {
       name: 'Asistente',
-      cost: 25_000_000,
-      productionMultiplier: 1.20,
+      cost: 5_000_000_000,
+      productionMultiplier: 1.50,
       unlockCrypto: 'neural_coin',
       isIrreversible: false,
     },
     2: {
       name: 'Copiloto',
-      cost: 100_000_000,
-      productionMultiplier: 1.50,
+      cost: 50_000_000_000,
+      productionMultiplier: 3.75,
       unlockCrypto: 'quantum_bit',
       isIrreversible: false,
     },
     3: {
       name: 'Autónomo',
-      cost: 250_000_000,
-      productionMultiplier: 2.50,
+      cost: 500_000_000_000,
+      productionMultiplier: 18.75,
       unlockCrypto: 'singularity_coin',
       isIrreversible: true,
     },

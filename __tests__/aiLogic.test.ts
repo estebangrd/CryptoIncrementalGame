@@ -17,6 +17,7 @@ import { canMineBlock } from '../src/utils/blockLogic';
 import { updateOfflineProgress } from '../src/utils/gameLogic';
 import { GameState, AIState, AILevel, EnergySource } from '../src/types/game';
 import { getInitialGameState } from '../src/utils/gameLogic';
+import { AI_CONFIG } from '../src/config/balanceConfig';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -81,16 +82,16 @@ describe('getAIProductionMultiplier', () => {
     expect(getAIProductionMultiplier(0)).toBe(1.0);
   });
 
-  it('returns 1.20 at Level 1', () => {
-    expect(getAIProductionMultiplier(1)).toBe(1.20);
+  it('returns Level 1 multiplier from config', () => {
+    expect(getAIProductionMultiplier(1)).toBe(AI_CONFIG.LEVELS[1].productionMultiplier);
   });
 
-  it('returns 1.50 at Level 2', () => {
-    expect(getAIProductionMultiplier(2)).toBe(1.50);
+  it('returns Level 2 multiplier from config', () => {
+    expect(getAIProductionMultiplier(2)).toBe(AI_CONFIG.LEVELS[2].productionMultiplier);
   });
 
-  it('returns 2.50 at Level 3', () => {
-    expect(getAIProductionMultiplier(3)).toBe(2.50);
+  it('returns Level 3 multiplier from config', () => {
+    expect(getAIProductionMultiplier(3)).toBe(AI_CONFIG.LEVELS[3].productionMultiplier);
   });
 });
 
@@ -132,7 +133,7 @@ describe('canPurchaseAILevel', () => {
   it('Level 1: available with Quantum Miner and enough money', () => {
     // AI level 0, but player owns a Quantum Miner and has enough money
     const state = makeState({
-      realMoney: 25_000_000,
+      realMoney: AI_CONFIG.LEVELS[1].cost,
       ai: getInitialAIState(),
       aiCryptosUnlocked: [],
       hardware: getInitialGameState().hardware.map(h =>
@@ -153,17 +154,17 @@ describe('canPurchaseAILevel', () => {
   });
 
   it('Level 2: available when Level 1 purchased and enough money', () => {
-    const state = makeStateWithAI(1, 100_000_000);
+    const state = makeStateWithAI(1, AI_CONFIG.LEVELS[2].cost);
     expect(canPurchaseAILevel(state, 2)).toBe(true);
   });
 
   it('Level 3: requires Level 2 purchased', () => {
-    const state = makeStateWithAI(1, 100_000_000);
+    const state = makeStateWithAI(1, AI_CONFIG.LEVELS[3].cost);
     expect(canPurchaseAILevel(state, 3)).toBe(false);
   });
 
   it('Level 3: available when Level 2 purchased and enough money', () => {
-    const state = makeStateWithAI(2, 250_000_000);
+    const state = makeStateWithAI(2, AI_CONFIG.LEVELS[3].cost);
     expect(canPurchaseAILevel(state, 3)).toBe(true);
   });
 
