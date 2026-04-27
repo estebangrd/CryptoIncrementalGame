@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useGame } from '../contexts/GameContext';
-import { formatUSD } from '../utils/gameLogic';
+import { calculateLocalProtestCompensation, formatUSD } from '../utils/gameLogic';
 import { fonts } from '../config/theme';
 import { LocalProtestEvent } from '../types/game';
 
@@ -50,6 +50,7 @@ const LocalProtestModal: React.FC<Props> = ({ event }) => {
 
   const pct = event.resourcesConsumedAtTrigger;
   const description = t('localProtest.description').replace('{pct}', String(pct));
+  const compensationCost = calculateLocalProtestCompensation(gameState);
 
   return (
     <Modal transparent={true} animationType="fade" visible={true} onRequestClose={() => {}}>
@@ -111,13 +112,12 @@ const LocalProtestModal: React.FC<Props> = ({ event }) => {
               <TouchableOpacity
                 style={styles.btn}
                 onPress={() => {
-                  const cost = Math.round(gameState.realMoney * 0.15);
-                  dispatch({ type: 'DISMISS_LOCAL_PROTEST', payload: { choice: 'compensation', compensationCost: cost } });
+                  dispatch({ type: 'DISMISS_LOCAL_PROTEST', payload: { choice: 'compensation', compensationCost } });
                 }}
                 activeOpacity={0.75}
               >
                 <Text style={styles.btnText}>{t('localProtest.choiceCompensation')}</Text>
-                <Text style={styles.btnSub}>{formatUSD(Math.round(gameState.realMoney * 0.15))}</Text>
+                <Text style={styles.btnSub}>{formatUSD(compensationCost)}</Text>
               </TouchableOpacity>
             </View>
           </View>

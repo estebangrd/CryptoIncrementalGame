@@ -548,6 +548,39 @@ export const getCurrentCoinPrice = (gameState: GameState): number => {
 };
 
 /**
+ * Local Protest compensation cost ($). Anchored to production-equivalent
+ * revenue, NOT cash on hand — when AI Level 3 auto-sells/reinvests, cash
+ * collapses to ~zero and a 15%-of-cash formula yields meaningless amounts.
+ *
+ * Formula: max(stageFloor, prodCC/s × coinPrice × WINDOW_SECONDS × FACTOR)
+ * Stage floor picks AI level first, then highest hardware tier reached.
+ */
+export const calculateLocalProtestCompensation = (gameState: GameState): number => {
+  const ccPerSec = Math.max(0, calculateTotalProduction(gameState));
+  const coinPrice = Math.max(0, getCurrentCoinPrice(gameState));
+  const productionUSD =
+    ccPerSec * coinPrice * LOCAL_PROTEST_CONFIG.COMPENSATION_WINDOW_SECONDS * LOCAL_PROTEST_CONFIG.COMPENSATION_FACTOR;
+
+  const aiLevel = gameState.ai?.level ?? 0;
+  const aiFloor = LOCAL_PROTEST_CONFIG.COMPENSATION_FLOORS_BY_AI_LEVEL[aiLevel];
+  if (aiFloor !== undefined) {
+    return Math.round(Math.max(aiFloor, productionUSD));
+  }
+
+  const highestHardwareLevel = gameState.hardware
+    .filter(h => h.owned > 0)
+    .reduce((max, h) => (h.level > max ? h.level : max), 0);
+  const hardwareFloors = LOCAL_PROTEST_CONFIG.COMPENSATION_FLOORS_BY_HARDWARE_LEVEL;
+  const hardwareFloor = Object.keys(hardwareFloors)
+    .map(Number)
+    .sort((a, b) => b - a)
+    .find(level => highestHardwareLevel >= level);
+  const floor = hardwareFloor !== undefined ? hardwareFloors[hardwareFloor] : LOCAL_PROTEST_CONFIG.COMPENSATION_DEFAULT_FLOOR;
+
+  return Math.round(Math.max(floor, productionUSD));
+};
+
+/**
  * Computes a CC + cash reward scaled by `durationMinutes` of current
  * production, using $/s as the stable metric across halving eras. Falls
  * back to `floorUSD` in early game when production is still microscopic.
@@ -745,7 +778,7 @@ export const formatSignedNumber = (num: number): string => {
   return prefix + formatNumber(num);
 };
 
-import { UNLOCK_CONFIG, HARDWARE_CONFIG, BOOSTER_CONFIG, BALANCE_CONFIG, ELECTRICITY_FEE_CONFIG, AD_BUBBLE_CONFIG, OFFLINE_SCREEN_CONFIG } from '../config/balanceConfig';
+import { UNLOCK_CONFIG, HARDWARE_CONFIG, BOOSTER_CONFIG, BALANCE_CONFIG, ELECTRICITY_FEE_CONFIG, AD_BUBBLE_CONFIG, OFFLINE_SCREEN_CONFIG, LOCAL_PROTEST_CONFIG } from '../config/balanceConfig';
 
 // Progressive unlock system
 export const UNLOCK_REQUIREMENTS = {

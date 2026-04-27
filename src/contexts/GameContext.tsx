@@ -636,16 +636,32 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
             (newState.activeBannerEvent === null || newState.activeBannerEvent === undefined)
           ) {
             const resourcesConsumed = Math.round(100 - newResources);
-            newState.localProtestEvent = {
-              status: 'active',
-              triggeredAt: Date.now(),
-              resourcesConsumedAtTrigger: resourcesConsumed,
-            };
-            newState.activeBannerEvent = 'local_protest';
-            // Blackout market event fires alongside local protest
+            // Blackout market event fires alongside local protest, regardless of AI state
             newState.activeMarketEvents = addOrRefreshEvent(
               newState.activeMarketEvents ?? [], 'blackout_regional', Date.now()
             );
+            // AI Level 3 owns all energy decisions — resolve silently as rationing
+            // and append an AI log entry instead of interrupting the player.
+            if (newState.ai?.isAutonomous) {
+              newState.localProtestEvent = {
+                status: 'resolved',
+                triggeredAt: Date.now(),
+                resourcesConsumedAtTrigger: resourcesConsumed,
+              };
+              newState.rationingPenaltyUntil = Date.now() + LOCAL_PROTEST_RATIONING.DURATION_MS;
+              newState.ai = addAILogEntry(
+                newState.ai,
+                `[LOG] Local protest absorbed (${resourcesConsumed}% planetary resources consumed). Rationing accepted autonomously: ${Math.round(LOCAL_PROTEST_RATIONING.ENERGY_REDUCTION * 100)}% capacity reduction for ${LOCAL_PROTEST_RATIONING.DURATION_MS / 60000} min.`,
+                'autonomous',
+              );
+            } else {
+              newState.localProtestEvent = {
+                status: 'active',
+                triggeredAt: Date.now(),
+                resourcesConsumedAtTrigger: resourcesConsumed,
+              };
+              newState.activeBannerEvent = 'local_protest';
+            }
           }
 
           // Planetary collapse incoming market event (resources <= 20%)

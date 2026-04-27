@@ -862,6 +862,25 @@ export const MARKET_OPPORTUNITY_CONFIG = {
 
 export const LOCAL_PROTEST_CONFIG = {
   TRIGGER_RESOURCES_THRESHOLD: 66, // fire when planetResources <= 66 (34% consumed)
+
+  // Compensation cost = max(stageFloor, prodCC/s × coinPrice × WINDOW_SECONDS × FACTOR)
+  // Anchored to production (not cash on hand) so AI Level 3 auto-sells don't
+  // collapse the value to a meaningless few dollars.
+  COMPENSATION_FACTOR: 0.15,
+  COMPENSATION_WINDOW_SECONDS: 1800, // 30 min of production-equivalent revenue
+
+  // Stage-based floors. Picks the highest matching tier the player has reached.
+  // ai-level tiers take precedence over hardware tiers.
+  COMPENSATION_FLOORS_BY_AI_LEVEL: {
+    1: 15_000_000,  // Asistente: $1B-50B cash range
+    2: 50_000_000,  // Copiloto:  the value should still feel like a tactical choice
+  } as Record<number, number>,
+  COMPENSATION_FLOORS_BY_HARDWARE_LEVEL: {
+    11: 3_000_000,  // supercomputer
+    10: 400_000,    // quantum_miner
+    9:  50_000,     // mining_farm
+  } as Record<number, number>,
+  COMPENSATION_DEFAULT_FLOOR: 50_000,
 };
 
 // ============================================================================
