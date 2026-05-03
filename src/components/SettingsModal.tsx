@@ -6,6 +6,8 @@ import {
   StyleSheet,
   Modal,
   ScrollView,
+  Alert,
+  Platform,
 } from 'react-native';
 import { useGame } from '../contexts/GameContext';
 import { languages } from '../data/translations';
@@ -54,7 +56,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose, onReset
     const purchases = await restorePurchases();
 
     if (purchases.length === 0) {
-      showToast('No purchases to restore', 'info');
+      showToast(t('ui.iap.noPurchases'), 'info');
       return;
     }
 
@@ -71,27 +73,29 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose, onReset
     }
 
     showToast(
-      restoredCount > 0 ? `✓ Restored ${restoredCount} purchase(s)` : 'No restorable purchases found',
+      restoredCount > 0
+        ? t('ui.iap.restoredCount').replace('{count}', String(restoredCount))
+        : t('ui.iap.noRestorable'),
       restoredCount > 0 ? 'success' : 'info',
     );
   };
 
   const handleClearSavedData = () => {
     Alert.alert(
-      'Clear Saved Data',
-      'This will completely clear all saved game data and reset the app to a fresh state. Are you sure?',
+      t('ui.clearData.title'),
+      t('ui.clearData.message'),
       [
         {
-          text: 'Cancel',
+          text: t('ui.cancel'),
           style: 'cancel',
         },
         {
-          text: 'Clear Data',
+          text: t('ui.clearData.confirm'),
           style: 'destructive',
           onPress: async () => {
             await clearAllGameData();
             dispatch({ type: 'RESET_GAME' });
-            Alert.alert('Success', 'All saved data has been cleared. The app will now start fresh.');
+            Alert.alert(t('ui.success'), t('ui.clearData.successMessage'));
           },
         },
       ]
@@ -145,109 +149,121 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose, onReset
 
             {/* Game Actions */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Game Actions</Text>
-              
+              <Text style={styles.sectionTitle}>{t('ui.settings.gameActions')}</Text>
+
               <TouchableOpacity style={styles.dangerButton} onPress={onReset}>
                 <Text style={styles.dangerButtonText}>{t('ui.reset')}</Text>
               </TouchableOpacity>
-              
-              <TouchableOpacity style={[styles.dangerButton, { marginTop: 8 }]} onPress={handleClearSavedData}>
-                <Text style={styles.dangerButtonText}>Clear Saved Data (Debug)</Text>
-              </TouchableOpacity>
 
-              <TouchableOpacity style={[styles.actionButton, { marginTop: 8 }]} onPress={handleRestorePurchases}>
-                <Text style={styles.actionButtonText}>🔄 Restore Purchases</Text>
-              </TouchableOpacity>
+              {/*
+                Restore Purchases button — iOS only.
+                Android performs silent restore on app launch (see GameContext.setupIAP),
+                so the button is hidden there. Apple Guideline 3.1.1 requires this button
+                visible whenever the app sells non-consumables.
+              */}
+              {Platform.OS === 'ios' && (
+                <TouchableOpacity style={[styles.actionButton, { marginTop: 8 }]} onPress={handleRestorePurchases}>
+                  <Text style={styles.actionButtonText}>{t('ui.settings.restorePurchases')}</Text>
+                </TouchableOpacity>
+              )}
 
               <TouchableOpacity style={[styles.actionButton, { marginTop: 8 }]} onPress={() => setShowAchievements(true)}>
-                <Text style={styles.actionButtonText}>🏆 Achievements</Text>
+                <Text style={styles.actionButtonText}>{t('ui.settings.achievements')}</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={[styles.actionButton, { marginTop: 8 }]} onPress={onTestGoodEnding}>
-                <Text style={styles.actionButtonText}>🌍 Test Good Ending (Debug)</Text>
-              </TouchableOpacity>
+              {__DEV__ && (
+                <>
+                  <TouchableOpacity style={[styles.dangerButton, { marginTop: 8 }]} onPress={handleClearSavedData}>
+                    <Text style={styles.dangerButtonText}>{t('ui.settings.clearDataDebug')}</Text>
+                  </TouchableOpacity>
 
-              <TouchableOpacity style={[styles.actionButton, { marginTop: 8, backgroundColor: '#5c2a2a' }]} onPress={onTestAICollapse}>
-                <Text style={styles.actionButtonText}>🤖 Test AI Collapse (Debug)</Text>
-              </TouchableOpacity>
+                  <TouchableOpacity style={[styles.actionButton, { marginTop: 8 }]} onPress={onTestGoodEnding}>
+                    <Text style={styles.actionButtonText}>{t('ui.settings.testGoodEnding')}</Text>
+                  </TouchableOpacity>
 
-              <TouchableOpacity style={[styles.actionButton, { marginTop: 8, backgroundColor: '#5c3a1a' }]} onPress={onTestHumanCollapse}>
-                <Text style={styles.actionButtonText}>🔥 Test Human Collapse (Debug)</Text>
-              </TouchableOpacity>
+                  <TouchableOpacity style={[styles.actionButton, { marginTop: 8, backgroundColor: '#5c2a2a' }]} onPress={onTestAICollapse}>
+                    <Text style={styles.actionButtonText}>{t('ui.settings.testAICollapse')}</Text>
+                  </TouchableOpacity>
 
-              <TouchableOpacity style={[styles.actionButton, { marginTop: 8, backgroundColor: '#3a2a5c' }]} onPress={onTestAchievementToast}>
-                <Text style={styles.actionButtonText}>🏅 Test Achievement Toast (Debug)</Text>
-              </TouchableOpacity>
+                  <TouchableOpacity style={[styles.actionButton, { marginTop: 8, backgroundColor: '#5c3a1a' }]} onPress={onTestHumanCollapse}>
+                    <Text style={styles.actionButtonText}>{t('ui.settings.testHumanCollapse')}</Text>
+                  </TouchableOpacity>
 
-              <TouchableOpacity style={[styles.actionButton, { marginTop: 8, backgroundColor: '#0a2a1a' }]} onPress={onTestEarningsToast}>
-                <Text style={styles.actionButtonText}>⛏ Test Earnings Toast (Debug)</Text>
-              </TouchableOpacity>
+                  <TouchableOpacity style={[styles.actionButton, { marginTop: 8, backgroundColor: '#3a2a5c' }]} onPress={onTestAchievementToast}>
+                    <Text style={styles.actionButtonText}>{t('ui.settings.testAchievementToast')}</Text>
+                  </TouchableOpacity>
 
-              <TouchableOpacity style={[styles.actionButton, { marginTop: 8, backgroundColor: '#2a2a0a' }]} onPress={onTestPremiumOffline}>
-                <Text style={styles.actionButtonText}>⚡ Test Premium Offline (Debug)</Text>
-              </TouchableOpacity>
+                  <TouchableOpacity style={[styles.actionButton, { marginTop: 8, backgroundColor: '#0a2a1a' }]} onPress={onTestEarningsToast}>
+                    <Text style={styles.actionButtonText}>{t('ui.settings.testEarningsToast')}</Text>
+                  </TouchableOpacity>
 
-              <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>
-                <TouchableOpacity style={[styles.actionButton, { flex: 1, backgroundColor: '#0a2a3a' }]} onPress={() => { debugForceSpawnRef.current?.('hash'); onClose(); }}>
-                  <Text style={styles.actionButtonText}>🖥 Hash</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.actionButton, { flex: 1, backgroundColor: '#0a2a1a' }]} onPress={() => { debugForceSpawnRef.current?.('market'); onClose(); }}>
-                  <Text style={styles.actionButtonText}>📈 Market</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.actionButton, { flex: 1, backgroundColor: '#2a1a1a' }]} onPress={() => { debugForceSpawnRef.current?.('energy'); onClose(); }}>
-                  <Text style={styles.actionButtonText}>⚡ Energy</Text>
-                </TouchableOpacity>
-              </View>
+                  <TouchableOpacity style={[styles.actionButton, { marginTop: 8, backgroundColor: '#2a2a0a' }]} onPress={onTestPremiumOffline}>
+                    <Text style={styles.actionButtonText}>{t('ui.settings.testPremiumOffline')}</Text>
+                  </TouchableOpacity>
 
-              <TouchableOpacity style={[styles.actionButton, { marginTop: 8, backgroundColor: '#2a2a0a' }]} onPress={() => { dispatch({ type: 'APPLY_MARKET_EVENT', payload: { eventId: 'media_hype' } }); onClose(); }}>
-                <Text style={styles.actionButtonText}>📰 Trigger Media Hype (Debug)</Text>
-              </TouchableOpacity>
+                  <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>
+                    <TouchableOpacity style={[styles.actionButton, { flex: 1, backgroundColor: '#0a2a3a' }]} onPress={() => { debugForceSpawnRef.current?.('hash'); onClose(); }}>
+                      <Text style={styles.actionButtonText}>🖥 Hash</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.actionButton, { flex: 1, backgroundColor: '#0a2a1a' }]} onPress={() => { debugForceSpawnRef.current?.('market'); onClose(); }}>
+                      <Text style={styles.actionButtonText}>📈 Market</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.actionButton, { flex: 1, backgroundColor: '#2a1a1a' }]} onPress={() => { debugForceSpawnRef.current?.('energy'); onClose(); }}>
+                      <Text style={styles.actionButtonText}>⚡ Energy</Text>
+                    </TouchableOpacity>
+                  </View>
 
-              <TouchableOpacity style={[styles.actionButton, { marginTop: 8, backgroundColor: '#1a2a2a' }]} onPress={() => {
-                const idx = marketToastIndexRef.current;
-                const evt = MARKET_TOAST_LIST[idx];
-                const meta = MARKET_EVENT_META[evt.eventId];
-                const headline = t(evt.labelKey);
-                const toastType: ToastInfo['type'] = evt.multiplier >= 1 ? 'success' : 'warning';
-                const meData: MarketEventToastData | undefined = meta ? {
-                  tag: meta.tag,
-                  headline,
-                  delta: meta.delta,
-                  durationLabel: meta.durationLabel,
-                  polarity: evt.multiplier >= 1 ? 'pos' : 'neg',
-                } : undefined;
-                onClose();
-                setTimeout(() => showToast(headline, toastType, meData), 150);
-                marketToastIndexRef.current = (idx + 1) % MARKET_TOAST_LIST.length;
-              }}>
-                <Text style={styles.actionButtonText}>🔔 Next: {MARKET_TOAST_LIST[marketToastIndexRef.current]?.label} ({marketToastIndexRef.current + 1}/{MARKET_TOAST_LIST.length})</Text>
-              </TouchableOpacity>
+                  <TouchableOpacity style={[styles.actionButton, { marginTop: 8, backgroundColor: '#2a2a0a' }]} onPress={() => { dispatch({ type: 'APPLY_MARKET_EVENT', payload: { eventId: 'media_hype' } }); onClose(); }}>
+                    <Text style={styles.actionButtonText}>{t('ui.settings.triggerMediaHype')}</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity style={[styles.actionButton, { marginTop: 8, backgroundColor: '#1a2a2a' }]} onPress={() => {
+                    const idx = marketToastIndexRef.current;
+                    const evt = MARKET_TOAST_LIST[idx];
+                    const meta = MARKET_EVENT_META[evt.eventId];
+                    const headline = t(evt.labelKey);
+                    const toastType: ToastInfo['type'] = evt.multiplier >= 1 ? 'success' : 'warning';
+                    const meData: MarketEventToastData | undefined = meta ? {
+                      tag: meta.tag,
+                      headline,
+                      delta: meta.delta,
+                      durationLabel: meta.durationLabel,
+                      polarity: evt.multiplier >= 1 ? 'pos' : 'neg',
+                    } : undefined;
+                    onClose();
+                    setTimeout(() => showToast(headline, toastType, meData), 150);
+                    marketToastIndexRef.current = (idx + 1) % MARKET_TOAST_LIST.length;
+                  }}>
+                    <Text style={styles.actionButtonText}>🔔 Next: {MARKET_TOAST_LIST[marketToastIndexRef.current]?.label} ({marketToastIndexRef.current + 1}/{MARKET_TOAST_LIST.length})</Text>
+                  </TouchableOpacity>
+                </>
+              )}
             </View>
 
             {/* Ads & Purchases */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Ads & Purchases</Text>
+              <Text style={styles.sectionTitle}>{t('ui.settings.adsAndPurchases')}</Text>
               {gameState.iapState.removeAdsPurchased && (
                 <View style={[styles.adFreeStatus, { marginBottom: 8 }]}>
-                  <Text style={styles.adFreeStatusText}>✓ Ad Free Mode: Active</Text>
+                  <Text style={styles.adFreeStatusText}>{t('ui.settings.adFreeActive')}</Text>
                 </View>
               )}
               <TouchableOpacity
                 style={[styles.actionButton, { backgroundColor: '#2a1a3e', borderWidth: 1, borderColor: '#a855f7' }]}
                 onPress={() => { onClose(); onOpenShop(); }}
               >
-                <Text style={styles.actionButtonText}>💎 Open Shop</Text>
+                <Text style={styles.actionButtonText}>{t('ui.settings.openShop')}</Text>
               </TouchableOpacity>
             </View>
 
             {/* Game Info */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>About</Text>
+              <Text style={styles.sectionTitle}>{t('ui.settings.about')}</Text>
               <Text style={styles.infoText}>
-                Blockchain Tycoon v0.1.0
+                {t('ui.settings.aboutVersion')}
               </Text>
               <Text style={styles.infoText}>
-                An incremental mining game
+                {t('ui.settings.aboutDescription')}
               </Text>
             </View>
           </ScrollView>

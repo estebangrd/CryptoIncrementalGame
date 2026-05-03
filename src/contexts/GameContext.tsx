@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect, useState, useCallback, ReactNode } from 'react';
-import { AppState, AppStateStatus } from 'react-native';
+import { AppState, AppStateStatus, Platform } from 'react-native';
 import { GameState, Cryptocurrency, PrestigeRun, RunStats, AILevel, EndingType, OfflineMinerState, LuckyBlockState, MarketPumpState, RegulatoryPressureEvent, MarketOpportunityEvent, MarketEventId } from '../types/game';
 import { hardwareProgression } from '../data/hardwareData';
 import { initialUpgrades } from '../data/gameData';
@@ -49,6 +49,7 @@ import {
   terminateIAP,
   isStarterPack,
   registerDevPurchaseCallback,
+  restorePurchases,
 } from '../services/IAPService';
 import { purchaseUpdatedListener, purchaseErrorListener } from 'react-native-iap';
 import { BOOSTER_CONFIG, STARTER_PACK_REWARDS, ENERGY_CONFIG, PACK_CONFIG, REGULATORY_EVENT_CONFIG, MARKET_OPPORTUNITY_CONFIG, LOCAL_PROTEST_CONFIG, ELECTRICITY_FEE_CONFIG, AD_BUBBLE_CONFIG, AI_CONFIG, MARKET_EVENT_CONFIG, LOCAL_PROTEST_RATIONING, BLOCK_CONFIG, PRICE_ENGINE } from '../config/balanceConfig';
@@ -492,8 +493,20 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     case 'SET_HYDRATED':
       return { ...state, isHydrated: true };
     case 'RESET_GAME':
+      const initial = getInitialGameState();
       const resetState = {
-        ...getInitialGameState(),
+        ...initial,
+        // Preserve non-consumable IAP entitlements across game reset.
+        // Removing ads and the permanent multiplier are paid forever — losing
+        // them on reset would force the user to use Restore Purchases.
+        iapState: {
+          ...initial.iapState,
+          removeAdsPurchased: state.iapState.removeAdsPurchased,
+          removeAdsPurchaseDate: state.iapState.removeAdsPurchaseDate,
+          permanentMultiplierPurchased: state.iapState.permanentMultiplierPurchased,
+          purchaseHistory: state.iapState.purchaseHistory,
+          adsSeenBeforePurchase: state.iapState.adsSeenBeforePurchase,
+        },
         cryptocurrencies: cryptocurrencies,
         hardware: hardwareProgression,
         upgrades: initialUpgrades,
@@ -2135,7 +2148,9 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const t = (key: string): string => {
-    return translations[key]?.[currentLanguage] || key;
+    const entry = translations[key];
+    if (!entry) return key;
+    return entry[currentLanguage] || entry.en || key;
   };
 
   const setLanguage = async (languageCode: string) => {
@@ -2312,6 +2327,28 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (!success) return;
 
       await getProducts();
+
+      // Android: silent restore of non-consumable entitlements on every launch.
+      // Google Play Billing returns owned non-consumables via getAvailablePurchases();
+      // re-applying them automatically means the user keeps REMOVE_ADS / PERMANENT_MULTIPLIER
+      // after a reinstall or device change without needing a visible "Restore" button.
+      // iOS does NOT auto-sync non-consumables and Apple Guideline 3.1.1 requires an explicit
+      // Restore button — handled in SettingsModal under Platform.OS === 'ios'.
+      if (Platform.OS === 'android') {
+        try {
+          const purchases = await restorePurchases();
+          for (const purchase of purchases) {
+            const id = purchase.productId;
+            if (id === IAP_PRODUCT_IDS.REMOVE_ADS) {
+              dispatch({ type: 'PURCHASE_REMOVE_ADS', payload: { productId: id, transactionId: purchase.transactionId ?? '', purchaseDate: Date.now(), price: 0, currency: '', platform: 'android', receipt: '', validated: true, delivered: true } });
+            } else if (id === IAP_PRODUCT_IDS.PERMANENT_MULTIPLIER) {
+              dispatch({ type: 'PURCHASE_PERMANENT_MULTIPLIER', payload: { productId: id, transactionId: purchase.transactionId ?? '', purchaseDate: Date.now(), price: 0, currency: '', platform: 'android', receipt: '', validated: true, delivered: true } });
+            }
+          }
+        } catch (error) {
+          console.warn('[IAP] Silent restore failed:', error);
+        }
+      }
 
       // Listener for successful purchases (production path via native store)
       purchaseUpdateSub = purchaseUpdatedListener(async (purchase) => {
