@@ -54,6 +54,17 @@ jest.mock('react-native-google-mobile-ads', () => ({
   AdEventType: { LOADED: 'loaded', ERROR: 'error', CLOSED: 'closed' },
   RewardedAdEventType: { LOADED: 'loaded', EARNED_REWARD: 'rewarded' },
   TestIds: { BANNER: 'test-banner', REWARDED: 'test-rewarded', INTERSTITIAL: 'test-interstitial' },
+  AdsConsent: {
+    requestInfoUpdate: jest.fn(() => Promise.resolve({ status: 'NOT_REQUIRED', canRequestAds: true, isConsentFormAvailable: false, privacyOptionsRequirementStatus: 'NOT_REQUIRED' })),
+    showForm: jest.fn(() => Promise.resolve({ status: 'NOT_REQUIRED', canRequestAds: true, isConsentFormAvailable: false, privacyOptionsRequirementStatus: 'NOT_REQUIRED' })),
+    showPrivacyOptionsForm: jest.fn(() => Promise.resolve({ status: 'NOT_REQUIRED', canRequestAds: true, isConsentFormAvailable: false, privacyOptionsRequirementStatus: 'NOT_REQUIRED' })),
+    loadAndShowConsentFormIfRequired: jest.fn(() => Promise.resolve({ status: 'NOT_REQUIRED', canRequestAds: true, isConsentFormAvailable: false, privacyOptionsRequirementStatus: 'NOT_REQUIRED' })),
+    getConsentInfo: jest.fn(() => Promise.resolve({ status: 'NOT_REQUIRED', canRequestAds: true, isConsentFormAvailable: false, privacyOptionsRequirementStatus: 'NOT_REQUIRED' })),
+    gatherConsent: jest.fn(() => Promise.resolve({ status: 'NOT_REQUIRED', canRequestAds: true, isConsentFormAvailable: false, privacyOptionsRequirementStatus: 'NOT_REQUIRED' })),
+    reset: jest.fn(),
+  },
+  AdsConsentStatus: { UNKNOWN: 'UNKNOWN', REQUIRED: 'REQUIRED', NOT_REQUIRED: 'NOT_REQUIRED', OBTAINED: 'OBTAINED' },
+  AdsConsentPrivacyOptionsRequirementStatus: { UNKNOWN: 'UNKNOWN', REQUIRED: 'REQUIRED', NOT_REQUIRED: 'NOT_REQUIRED' },
 }));
 
 // IAP mock

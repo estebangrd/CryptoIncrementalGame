@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -17,6 +17,7 @@ import { IAP_PRODUCT_IDS } from '../config/iapConfig';
 import AchievementsScreen from './AchievementsScreen';
 import { debugForceSpawnRef } from './AdBoosterBubbles';
 import { MARKET_EVENT_CONFIG, MARKET_EVENT_META } from '../config/balanceConfig';
+import { isPrivacyOptionsRequired, showPrivacyOptionsForm } from '../services/UMPConsentService';
 import type { ToastInfo, MarketEventToastData } from './Toast';
 
 interface SettingsModalProps {
@@ -35,6 +36,18 @@ interface SettingsModalProps {
 const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose, onReset, onOpenShop, onTestGoodEnding, onTestAICollapse, onTestHumanCollapse, onTestAchievementToast, onTestEarningsToast, onTestPremiumOffline }) => {
   const { gameState, currentLanguage, setLanguage, t, dispatch, showToast } = useGame();
   const [showAchievements, setShowAchievements] = useState(false);
+  const [privacyOptionsAvailable, setPrivacyOptionsAvailable] = useState(false);
+
+  useEffect(() => {
+    if (!visible) return;
+    let cancelled = false;
+    isPrivacyOptionsRequired().then((required) => {
+      if (!cancelled) setPrivacyOptionsAvailable(required);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [visible]);
 
   const MARKET_TOAST_LIST: { eventId: string; labelKey: string; multiplier: number; label: string }[] = [
     { eventId: 'halving_anticipation', labelKey: MARKET_EVENT_CONFIG.halving_anticipation.labelKey, multiplier: MARKET_EVENT_CONFIG.halving_anticipation.multiplier, label: 'Halving Anticipation' },
@@ -255,6 +268,19 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose, onReset
                 <Text style={styles.actionButtonText}>{t('ui.settings.openShop')}</Text>
               </TouchableOpacity>
             </View>
+
+            {/* Privacy (UMP) */}
+            {privacyOptionsAvailable && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>{t('ui.privacySection')}</Text>
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={() => { showPrivacyOptionsForm(); }}
+                >
+                  <Text style={styles.actionButtonText}>{t('ui.privacyOptions')}</Text>
+                </TouchableOpacity>
+              </View>
+            )}
 
             {/* Game Info */}
             <View style={styles.section}>

@@ -494,6 +494,16 @@ export const translations: Translation = {
     es: '¿Estás seguro de que quieres reiniciar tu progreso? Esta acción no se puede deshacer.',
     pt: 'Tem certeza de que deseja reiniciar seu progresso? Esta ação não pode ser desfeita.',
   },
+  'ui.privacySection': {
+    en: 'Privacy',
+    es: 'Privacidad',
+    pt: 'Privacidade',
+  },
+  'ui.privacyOptions': {
+    en: 'Privacy options',
+    es: 'Opciones de privacidad',
+    pt: 'Opções de privacidade',
+  },
 
   // Prestige System
   'prestige.system': {

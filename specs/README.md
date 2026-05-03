@@ -31,6 +31,7 @@ Este directorio contiene todas las especificaciones técnicas exhaustivas (Level
 | [Remove Ads — UI/UX](monetization/remove-ads-ui.md) | ✅ Implemented | Phase 3 | High | Card design, badges, settings screen |
 | [Remove Ads — Analytics](monetization/remove-ads-analytics.md) | ✅ Implemented | Phase 3 | High | Events, conversion tracking, promotion triggers |
 | [Boosters Catalog](monetization/boosters-catalog.md) | ✅ Implemented | Phase 3 | High | Production boosters (2x/5x/permanent), specialty boosters (Offline Miner/Lucky Block/Market Pump), dynamic packs |
+| [UMP Consent](monetization/ump-consent.md) | ✅ Implemented | Phase 3 | Critical | Google UMP gating before AdMob init + Privacy options in Settings (GDPR EEA/UK/CH) |
 
 ### 💵 Economy (Economía)
 

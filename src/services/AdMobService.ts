@@ -10,6 +10,7 @@ import { getAdUnitId, AD_TIMING } from '../config/adConfig';
 import { OFFLINE_SCREEN_CONFIG } from '../config/balanceConfig';
 import { GameState } from '../types/game';
 import { logEvent } from './analytics';
+import { ensureConsentFlow } from './UMPConsentService';
 
 // Módulo-level state para instancias pre-cargadas
 let rewardedAd: RewardedAd | null = null;
@@ -24,6 +25,7 @@ let interstitialLoaded = false;
  */
 export const initializeAdMob = async (): Promise<boolean> => {
   try {
+    await ensureConsentFlow();
     await MobileAds().initialize();
     loadRewardedAd();
     return true;
