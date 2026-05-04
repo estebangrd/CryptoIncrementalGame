@@ -1,12 +1,17 @@
 import { Translation, Language } from '../types/game';
+import { translationsExtra } from './translations-extra';
 
 export const languages: Language[] = [
   { code: 'en', name: 'English', nativeName: 'English' },
   { code: 'es', name: 'Spanish', nativeName: 'Español' },
   { code: 'pt', name: 'Portuguese', nativeName: 'Português' },
+  { code: 'de', name: 'German', nativeName: 'Deutsch' },
+  { code: 'fr', name: 'French', nativeName: 'Français' },
+  { code: 'it', name: 'Italian', nativeName: 'Italiano' },
+  { code: 'ru', name: 'Russian', nativeName: 'Русский' },
 ];
 
-export const translations: Translation = {
+const translationsBase: Translation = {
   // Game UI
   'game.title': {
     en: 'Blockchain Tycoon',
@@ -2792,4 +2797,712 @@ export const translations: Translation = {
     es: '+50% potencia de click',
     pt: '+50% poder de clique',
   },
+
+  // ── UI: Settings ──
+  'ui.settings.gameActions': {
+    en: 'Game Actions',
+    es: 'Acciones del Juego',
+    pt: 'Ações do Jogo',
+  },
+  'ui.settings.clearDataDebug': {
+    en: 'Clear Saved Data (Debug)',
+    es: 'Borrar Datos Guardados (Debug)',
+    pt: 'Apagar Dados Salvos (Debug)',
+  },
+  'ui.settings.restorePurchases': {
+    en: '🔄 Restore Purchases',
+    es: '🔄 Restaurar Compras',
+    pt: '🔄 Restaurar Compras',
+  },
+  'ui.settings.achievements': {
+    en: '🏆 Achievements',
+    es: '🏆 Logros',
+    pt: '🏆 Conquistas',
+  },
+  'ui.settings.testGoodEnding': {
+    en: '🌍 Test Good Ending (Debug)',
+    es: '🌍 Probar Final Bueno (Debug)',
+    pt: '🌍 Testar Final Bom (Debug)',
+  },
+  'ui.settings.testAICollapse': {
+    en: '🤖 Test AI Collapse (Debug)',
+    es: '🤖 Probar Colapso IA (Debug)',
+    pt: '🤖 Testar Colapso IA (Debug)',
+  },
+  'ui.settings.testHumanCollapse': {
+    en: '🔥 Test Human Collapse (Debug)',
+    es: '🔥 Probar Colapso Humano (Debug)',
+    pt: '🔥 Testar Colapso Humano (Debug)',
+  },
+  'ui.settings.testAchievementToast': {
+    en: '🏅 Test Achievement Toast (Debug)',
+    es: '🏅 Probar Toast de Logro (Debug)',
+    pt: '🏅 Testar Toast de Conquista (Debug)',
+  },
+  'ui.settings.testEarningsToast': {
+    en: '⛏ Test Earnings Toast (Debug)',
+    es: '⛏ Probar Toast de Ganancias (Debug)',
+    pt: '⛏ Testar Toast de Ganhos (Debug)',
+  },
+  'ui.settings.testPremiumOffline': {
+    en: '⚡ Test Premium Offline (Debug)',
+    es: '⚡ Probar Premium Offline (Debug)',
+    pt: '⚡ Testar Premium Offline (Debug)',
+  },
+  'ui.settings.triggerMediaHype': {
+    en: '📰 Trigger Media Hype (Debug)',
+    es: '📰 Activar Hype Mediático (Debug)',
+    pt: '📰 Ativar Hype da Mídia (Debug)',
+  },
+  'ui.settings.adsAndPurchases': {
+    en: 'Ads & Purchases',
+    es: 'Anuncios y Compras',
+    pt: 'Anúncios e Compras',
+  },
+  'ui.settings.adFreeActive': {
+    en: '✓ Ad Free Mode: Active',
+    es: '✓ Modo Sin Anuncios: Activo',
+    pt: '✓ Modo Sem Anúncios: Ativo',
+  },
+  'ui.settings.openShop': {
+    en: '💎 Open Shop',
+    es: '💎 Abrir Tienda',
+    pt: '💎 Abrir Loja',
+  },
+  'ui.settings.about': {
+    en: 'About',
+    es: 'Acerca de',
+    pt: 'Sobre',
+  },
+  'ui.settings.aboutVersion': {
+    en: 'Blockchain Tycoon v0.1.0',
+    es: 'Blockchain Tycoon v0.1.0',
+    pt: 'Blockchain Tycoon v0.1.0',
+  },
+  'ui.settings.aboutDescription': {
+    en: 'An incremental mining game',
+    es: 'Un juego de minería incremental',
+    pt: 'Um jogo de mineração incremental',
+  },
+
+  // ── UI: Common dialogs / actions ──
+  'ui.success': {
+    en: 'Success',
+    es: 'Éxito',
+    pt: 'Sucesso',
+  },
+  'ui.clearData.title': {
+    en: 'Clear Saved Data',
+    es: 'Borrar Datos Guardados',
+    pt: 'Apagar Dados Salvos',
+  },
+  'ui.clearData.message': {
+    en: 'This will completely clear all saved game data and reset the app to a fresh state. Are you sure?',
+    es: 'Esto borrará completamente todos los datos guardados y reiniciará la aplicación a su estado inicial. ¿Estás seguro?',
+    pt: 'Isso apagará completamente todos os dados salvos e reiniciará o aplicativo ao estado inicial. Tem certeza?',
+  },
+  'ui.clearData.confirm': {
+    en: 'Clear Data',
+    es: 'Borrar Datos',
+    pt: 'Apagar Dados',
+  },
+  'ui.clearData.successMessage': {
+    en: 'All saved data has been cleared. The app will now start fresh.',
+    es: 'Se han borrado todos los datos guardados. La aplicación se iniciará desde cero.',
+    pt: 'Todos os dados salvos foram apagados. O aplicativo iniciará do zero.',
+  },
+  'ui.iap.noPurchases': {
+    en: 'No purchases to restore',
+    es: 'No hay compras para restaurar',
+    pt: 'Nenhuma compra para restaurar',
+  },
+  'ui.iap.restoredCount': {
+    en: '✓ Restored {count} purchase(s)',
+    es: '✓ {count} compra(s) restaurada(s)',
+    pt: '✓ {count} compra(s) restaurada(s)',
+  },
+  'ui.iap.noRestorable': {
+    en: 'No restorable purchases found',
+    es: 'No se encontraron compras restaurables',
+    pt: 'Nenhuma compra restaurável encontrada',
+  },
+
+  // ── UI: GameScreen top bar ──
+  'ui.adFreeBadge': {
+    en: '✓ Ad Free',
+    es: '✓ Sin Anuncios',
+    pt: '✓ Sem Anúncios',
+  },
+  'ui.shop': {
+    en: '💎 Shop',
+    es: '💎 Tienda',
+    pt: '💎 Loja',
+  },
+
+  // ── UI: Achievements ──
+  'achievements.title': {
+    en: 'Achievements',
+    es: 'Logros',
+    pt: 'Conquistas',
+  },
+  'achievements.percentComplete': {
+    en: '{pct}% Complete',
+    es: '{pct}% Completado',
+    pt: '{pct}% Completo',
+  },
+  'achievements.empty': {
+    en: 'No achievements in this category yet.',
+    es: 'Aún no hay logros en esta categoría.',
+    pt: 'Ainda não há conquistas nesta categoria.',
+  },
+  'achievements.unlocked': {
+    en: 'Unlocked: {date}',
+    es: 'Desbloqueado: {date}',
+    pt: 'Desbloqueado: {date}',
+  },
+  'achievements.toastUnlocked': {
+    en: 'ACHIEVEMENT UNLOCKED',
+    es: 'LOGRO DESBLOQUEADO',
+    pt: 'CONQUISTA DESBLOQUEADA',
+  },
+  'achievements.locked': {
+    en: 'Locked',
+    es: 'Bloqueado',
+    pt: 'Bloqueado',
+  },
+  'rarity.common': {
+    en: 'Common',
+    es: 'Común',
+    pt: 'Comum',
+  },
+  'rarity.rare': {
+    en: 'Rare',
+    es: 'Raro',
+    pt: 'Raro',
+  },
+  'rarity.epic': {
+    en: 'Epic',
+    es: 'Épico',
+    pt: 'Épico',
+  },
+  'rarity.legendary': {
+    en: 'Legendary',
+    es: 'Legendario',
+    pt: 'Lendário',
+  },
+
+  // ── UI: PriceChart ──
+  'chart.waitingData': {
+    en: 'Waiting for price data...',
+    es: 'Esperando datos de precio...',
+    pt: 'Aguardando dados de preço...',
+  },
+  'chart.now': {
+    en: 'Now',
+    es: 'Ahora',
+    pt: 'Agora',
+  },
+  'chart.minutesAgo': {
+    en: '{n}m ago',
+    es: 'hace {n}m',
+    pt: 'há {n}m',
+  },
+
+  // ── UI: BlockStatus ──
+  'blockStatus.nodeStatus': {
+    en: 'Node Status',
+    es: 'Estado del Nodo',
+    pt: 'Status do Nó',
+  },
+  'blockStatus.cashBalance': {
+    en: 'Cash Balance',
+    es: 'Saldo en Efectivo',
+    pt: 'Saldo em Dinheiro',
+  },
+  'blockStatus.totalEarned': {
+    en: 'Total Earned',
+    es: 'Total Ganado',
+    pt: 'Total Ganho',
+  },
+  'blockStatus.available': {
+    en: 'Available',
+    es: 'Disponible',
+    pt: 'Disponível',
+  },
+  'blockStatus.allTime': {
+    en: 'All time',
+    es: 'Histórico',
+    pt: 'Total',
+  },
+  'blockStatus.hashRate': {
+    en: 'Hash Rate',
+    es: 'Hash Rate',
+    pt: 'Hash Rate',
+  },
+  'blockStatus.hashActive': {
+    en: 'H/s — Active',
+    es: 'H/s — Activo',
+    pt: 'H/s — Ativo',
+  },
+  'blockStatus.clickBoost': {
+    en: 'click',
+    es: 'click',
+    pt: 'clique',
+  },
+  'blockStatus.blocksMined': {
+    en: 'Blocks Mined',
+    es: 'Bloques Minados',
+    pt: 'Blocos Minerados',
+  },
+  'blockStatus.netIncome': {
+    en: 'Net Income',
+    es: 'Ingreso Neto',
+    pt: 'Renda Líquida',
+  },
+  'blockStatus.ccPerSec': {
+    en: 'CC/sec',
+    es: 'CC/seg',
+    pt: 'CC/seg',
+  },
+  'blockStatus.currentPhase': {
+    en: 'Current Phase',
+    es: 'Fase Actual',
+    pt: 'Fase Atual',
+  },
+  'blockStatus.activeChain': {
+    en: 'ACTIVE CHAIN',
+    es: 'CADENA ACTIVA',
+    pt: 'CADEIA ATIVA',
+  },
+  'blockStatus.genesis': {
+    en: '⬡ GENESIS',
+    es: '⬡ GÉNESIS',
+    pt: '⬡ GÊNESIS',
+  },
+  'blockStatus.blocks': {
+    en: 'blocks',
+    es: 'bloques',
+    pt: 'blocos',
+  },
+  'blockStatus.reward': {
+    en: 'Reward',
+    es: 'Recompensa',
+    pt: 'Recompensa',
+  },
+  'blockStatus.halvingAt': {
+    en: 'Halving At',
+    es: 'Halving En',
+    pt: 'Halving Em',
+  },
+  'blockStatus.aiMiningActive': {
+    en: '🤖 AI Mining Active',
+    es: '🤖 IA Minando',
+    pt: '🤖 IA Minerando',
+  },
+  'blockStatus.phaseComplete': {
+    en: 'Phase Complete',
+    es: 'Fase Completa',
+    pt: 'Fase Completa',
+  },
+  'blockStatus.mineBlock': {
+    en: 'Mine Block',
+    es: 'Minar Bloque',
+    pt: 'Minerar Bloco',
+  },
+
+  // ── UI: MarketScreen ──
+  'market.liveMarket': {
+    en: 'Live Market',
+    es: 'Mercado en Vivo',
+    pt: 'Mercado ao Vivo',
+  },
+  'market.genesisChainSuffix': {
+    en: 'GENESIS CHAIN',
+    es: 'CADENA GÉNESIS',
+    pt: 'CADEIA GÊNESIS',
+  },
+  'market.aiControlsTrading': {
+    en: '🤖 AI controls all trading',
+    es: '🤖 La IA controla todo el trading',
+    pt: '🤖 A IA controla todo o trading',
+  },
+  'market.sellCoinsTitle': {
+    en: '💰 SELL COINS',
+    es: '💰 VENDER MONEDAS',
+    pt: '💰 VENDER MOEDAS',
+  },
+  'market.executeSellOrder': {
+    en: '⚡ EXECUTE SELL ORDER',
+    es: '⚡ EJECUTAR ORDEN DE VENTA',
+    pt: '⚡ EXECUTAR ORDEM DE VENDA',
+  },
+  'market.cancel': {
+    en: '✕ Cancel',
+    es: '✕ Cancelar',
+    pt: '✕ Cancelar',
+  },
+  'market.confirmSell': {
+    en: '✓ Sell {amount}',
+    es: '✓ Vender {amount}',
+    pt: '✓ Vender {amount}',
+  },
+  'market.max': {
+    en: 'MAX',
+    es: 'MÁX',
+    pt: 'MÁX',
+  },
+  'market.youllEarn': {
+    en: "YOU'LL EARN · PRICE {price} PER CC",
+    es: 'GANARÁS · PRECIO {price} POR CC',
+    pt: 'VOCÊ GANHARÁ · PREÇO {price} POR CC',
+  },
+
+  // ── UI: HardwareList ──
+  'hardwareList.miningRigs': {
+    en: 'Mining Rigs',
+    es: 'Equipos de Minería',
+    pt: 'Equipamentos de Mineração',
+  },
+  'hardwareList.metricHashRate': {
+    en: 'Hash Rate',
+    es: 'Hash Rate',
+    pt: 'Hash Rate',
+  },
+  'hardwareList.metricMineSpd': {
+    en: 'Mine Spd',
+    es: 'Vel. Mina',
+    pt: 'Vel. Mina',
+  },
+  'hardwareList.metricCoinsPerSec': {
+    en: 'Coins/s',
+    es: 'Monedas/s',
+    pt: 'Moedas/s',
+  },
+  'hardwareList.metricPower': {
+    en: 'Power',
+    es: 'Energía',
+    pt: 'Energia',
+  },
+  'hardwareList.owned': {
+    en: 'OWNED',
+    es: 'POSEÍDOS',
+    pt: 'POSSUÍDOS',
+  },
+  'hardwareList.purchaseCost': {
+    en: 'PURCHASE COST',
+    es: 'COSTO DE COMPRA',
+    pt: 'CUSTO DE COMPRA',
+  },
+  'hardwareList.buyUnit': {
+    en: '⬡ BUY UNIT',
+    es: '⬡ COMPRAR UNIDAD',
+    pt: '⬡ COMPRAR UNIDADE',
+  },
+  'hardwareList.insufficientFunds': {
+    en: '⊘ INSUFFICIENT FUNDS',
+    es: '⊘ FONDOS INSUFICIENTES',
+    pt: '⊘ FUNDOS INSUFICIENTES',
+  },
+  'hardwareList.aiControlled': {
+    en: '🤖 AI CONTROLLED',
+    es: '🤖 CONTROLADO POR IA',
+    pt: '🤖 CONTROLADO PELA IA',
+  },
+  'hardwareList.aiDesigned': {
+    en: '🤖 AI-DESIGNED',
+    es: '🤖 DISEÑADO POR IA',
+    pt: '🤖 PROJETADO PELA IA',
+  },
+
+  // ── UI: UpgradeList ──
+  'upgradeList.researchLab': {
+    en: 'Research Lab',
+    es: 'Laboratorio de Investigación',
+    pt: 'Laboratório de Pesquisa',
+  },
+  'upgradeList.researchCost': {
+    en: 'RESEARCH COST',
+    es: 'COSTO DE INVESTIGACIÓN',
+    pt: 'CUSTO DE PESQUISA',
+  },
+  'upgradeList.deployed': {
+    en: '✓ DEPLOYED',
+    es: '✓ DESPLEGADO',
+    pt: '✓ IMPLANTADO',
+  },
+  'upgradeList.acquire': {
+    en: 'ACQUIRE',
+    es: 'ADQUIRIR',
+    pt: 'ADQUIRIR',
+  },
+  'upgradeList.aiControlled': {
+    en: '🤖 AI CONTROLLED',
+    es: '🤖 CONTROLADO POR IA',
+    pt: '🤖 CONTROLADO PELA IA',
+  },
+  'upgradeList.aiActive': {
+    en: '✓ ACTIVE',
+    es: '✓ ACTIVO',
+    pt: '✓ ATIVO',
+  },
+  'ai.level1.localizedName': {
+    en: 'Assistant',
+    es: 'Asistente',
+    pt: 'Assistente',
+  },
+  'ai.level2.localizedName': {
+    en: 'Copilot',
+    es: 'Copiloto',
+    pt: 'Copiloto',
+  },
+  'ai.level3.localizedName': {
+    en: 'Autonomous',
+    es: 'Autónomo',
+    pt: 'Autônomo',
+  },
+
+  // ── UI: PrestigeScreen ──
+  'prestigeScreen.coinsEarned': {
+    en: 'Coins Earned',
+    es: 'Monedas Ganadas',
+    pt: 'Moedas Ganhas',
+  },
+  'prestigeScreen.moneyEarned': {
+    en: 'Money Earned',
+    es: 'Dinero Ganado',
+    pt: 'Dinheiro Ganho',
+  },
+  'prestigeScreen.hardwareOwned': {
+    en: 'Hardware Owned',
+    es: 'Hardware Poseído',
+    pt: 'Hardware Possuído',
+  },
+  'prestigeScreen.runNumber': {
+    en: 'Run #{n}',
+    es: 'Partida #{n}',
+    pt: 'Partida #{n}',
+  },
+  'prestigeScreen.prestigeLevelAtEnd': {
+    en: 'Prestige Level At End',
+    es: 'Nivel de Prestigio Final',
+    pt: 'Nível de Prestígio Final',
+  },
+  'prestigeScreen.totalCoins': {
+    en: 'Total Coins',
+    es: 'Monedas Totales',
+    pt: 'Moedas Totais',
+  },
+  'prestigeScreen.allHardwareUpgrades': {
+    en: 'All Hardware and Upgrades',
+    es: 'Todo el Hardware y Mejoras',
+    pt: 'Todo o Hardware e Melhorias',
+  },
+  'prestigeScreen.allCryptoCoins': {
+    en: 'All CryptoCoins: {amount}',
+    es: 'Todas las CryptoCoins: {amount}',
+    pt: 'Todas as CryptoCoins: {amount}',
+  },
+  'prestigeScreen.allRealMoney': {
+    en: 'All Real Money: {amount}',
+    es: 'Todo el Dinero Real: {amount}',
+    pt: 'Todo o Dinheiro Real: {amount}',
+  },
+  'prestigeScreen.keepLevel': {
+    en: '- Prestige Level (+1)',
+    es: '- Nivel de Prestigio (+1)',
+    pt: '- Nível de Prestígio (+1)',
+  },
+  'prestigeScreen.keepProduction': {
+    en: '- Production multiplier (+10%)',
+    es: '- Multiplicador de producción (+10%)',
+    pt: '- Multiplicador de produção (+10%)',
+  },
+  'prestigeScreen.keepClick': {
+    en: '- Click multiplier (+5%)',
+    es: '- Multiplicador de click (+5%)',
+    pt: '- Multiplicador de clique (+5%)',
+  },
+  'prestigeScreen.keepBadges': {
+    en: '- Badges and run history',
+    es: '- Insignias e historial de partidas',
+    pt: '- Emblemas e histórico de partidas',
+  },
+  'prestigeScreen.loseAllCC': {
+    en: '- All CryptoCoins ({amount})',
+    es: '- Todas las CryptoCoins ({amount})',
+    pt: '- Todas as CryptoCoins ({amount})',
+  },
+  'prestigeScreen.loseAllMoney': {
+    en: '- All Real Money ({amount})',
+    es: '- Todo el Dinero Real ({amount})',
+    pt: '- Todo o Dinheiro Real ({amount})',
+  },
+  'prestigeScreen.loseAllHardware': {
+    en: '- All Hardware (except Manual Mining)',
+    es: '- Todo el Hardware (excepto Minería Manual)',
+    pt: '- Todo o Hardware (exceto Mineração Manual)',
+  },
+  'prestigeScreen.loseAllUpgrades': {
+    en: '- All Upgrades',
+    es: '- Todas las Mejoras',
+    pt: '- Todas as Melhorias',
+  },
+  'prestigeScreen.loseUnlockedTabs': {
+    en: '- Unlocked tabs (reset)',
+    es: '- Pestañas desbloqueadas (reinicio)',
+    pt: '- Abas desbloqueadas (reset)',
+  },
+  'prestigeScreen.requirementBlocks': {
+    en: '{current} / {required} blocks',
+    es: '{current} / {required} bloques',
+    pt: '{current} / {required} blocos',
+  },
+  'prestigeScreen.toastSuccess': {
+    en: '✨ Prestige Level {level}! +1 skill point',
+    es: '✨ ¡Nivel de Prestigio {level}! +1 punto de habilidad',
+    pt: '✨ Nível de Prestígio {level}! +1 ponto de habilidade',
+  },
+
+  // ── UI: ShopScreen ──
+  'shop.price': {
+    en: 'PRICE',
+    es: 'PRECIO',
+    pt: 'PREÇO',
+  },
+  'shop.boosters.2x.name': {
+    en: '2x Production Booster',
+    es: 'Booster de Producción 2x',
+    pt: 'Booster de Produção 2x',
+  },
+  'shop.boosters.5x.name': {
+    en: '5x Production Booster',
+    es: 'Booster de Producción 5x',
+    pt: 'Booster de Produção 5x',
+  },
+  'shop.boosters.perm.name': {
+    en: 'Permanent 2x Multiplier',
+    es: 'Multiplicador 2x Permanente',
+    pt: 'Multiplicador 2x Permanente',
+  },
+  'shop.boosters.offlineMiner.name': {
+    en: 'Offline Miner',
+    es: 'Minero Offline',
+    pt: 'Minerador Offline',
+  },
+  'shop.boosters.offlineMiner.activeLabel': {
+    en: '🌙 Active — {time}',
+    es: '🌙 Activo — {time}',
+    pt: '🌙 Ativo — {time}',
+  },
+  'shop.boosters.offlineMiner.desc': {
+    en: 'Mine at 50% speed while offline for {hours} hours',
+    es: 'Mina al 50% de velocidad mientras estás desconectado durante {hours} horas',
+    pt: 'Minere a 50% de velocidade enquanto offline por {hours} horas',
+  },
+  'shop.boosters.offlineMiner.duration': {
+    en: '⏱ {hours}h · One-time use',
+    es: '⏱ {hours}h · Uso único',
+    pt: '⏱ {hours}h · Uso único',
+  },
+  'shop.boosters.offlineMiner.extendedSuffix': {
+    en: ' · ✨ Extended offer!',
+    es: ' · ✨ ¡Oferta extendida!',
+    pt: ' · ✨ Oferta estendida!',
+  },
+  'shop.boosters.offlineMiner.perk1': {
+    en: 'Earn coins while the app is closed',
+    es: 'Gana monedas mientras la app está cerrada',
+    pt: 'Ganhe moedas enquanto o app está fechado',
+  },
+  'shop.boosters.offlineMiner.perk2': {
+    en: '50% of your current production rate',
+    es: '50% de tu tasa de producción actual',
+    pt: '50% da sua taxa de produção atual',
+  },
+  'shop.boosters.luckyBlock.name': {
+    en: 'Lucky Block',
+    es: 'Bloque de la Suerte',
+    pt: 'Bloco da Sorte',
+  },
+  'shop.boosters.luckyBlock.activeLabel': {
+    en: '🎲 Active — {count} blocks left',
+    es: '🎲 Activo — {count} bloques restantes',
+    pt: '🎲 Ativo — {count} blocos restantes',
+  },
+  'shop.boosters.luckyBlock.desc': {
+    en: 'Next {count} blocks give 10x rewards',
+    es: 'Los próximos {count} bloques dan recompensas 10x',
+    pt: 'Os próximos {count} blocos dão recompensas 10x',
+  },
+  'shop.boosters.luckyBlock.duration': {
+    en: '◈ {count} blocks · One-time use',
+    es: '◈ {count} bloques · Uso único',
+    pt: '◈ {count} blocos · Uso único',
+  },
+  'shop.boosters.luckyBlock.perk1': {
+    en: '10x CryptoCoins per block mined',
+    es: '10x CryptoCoins por bloque minado',
+    pt: '10x CryptoCoins por bloco minerado',
+  },
+  'shop.boosters.luckyBlock.perk2': {
+    en: 'Block count scales with your mining stage',
+    es: 'La cantidad de bloques escala con tu etapa de minería',
+    pt: 'A quantidade de blocos escala com seu estágio de mineração',
+  },
+  'shop.boosters.marketPump.name': {
+    en: 'Market Pump',
+    es: 'Subida de Mercado',
+    pt: 'Subida de Mercado',
+  },
+  'shop.boosters.marketPump.activeLabel': {
+    en: '📈 Active — {time}',
+    es: '📈 Activo — {time}',
+    pt: '📈 Ativo — {time}',
+  },
+  'shop.boosters.marketPump.desc': {
+    en: '+100% sell price for {minutes} minutes',
+    es: '+100% en el precio de venta durante {minutes} minutos',
+    pt: '+100% no preço de venda por {minutes} minutos',
+  },
+  'shop.boosters.marketPump.duration': {
+    en: '⏱ {minutes} min · Stackable',
+    es: '⏱ {minutes} min · Acumulable',
+    pt: '⏱ {minutes} min · Acumulável',
+  },
+  'shop.boosters.marketPump.extendedSuffix': {
+    en: ' · ✨ Extended offer!',
+    es: ' · ✨ ¡Oferta extendida!',
+    pt: ' · ✨ Oferta estendida!',
+  },
+  'shop.boosters.marketPump.perk1': {
+    en: 'Double the price when selling CryptoCoins',
+    es: 'Duplica el precio al vender CryptoCoins',
+    pt: 'Dobra o preço ao vender CryptoCoins',
+  },
+  'shop.boosters.marketPump.perk2': {
+    en: 'Works on all market sales',
+    es: 'Funciona en todas las ventas del mercado',
+    pt: 'Funciona em todas as vendas do mercado',
+  },
+  'shop.boosters.activeLabel': {
+    en: 'Active — {time}',
+    es: 'Activo — {time}',
+    pt: 'Ativo — {time}',
+  },
 };
+
+// Merge base (en/es/pt) with extra languages (de/fr/it/ru) per key.
+// Missing language entries fall back to English at the call site (see GameContext.t).
+const mergedTranslations: Translation = {};
+const allKeys = new Set([
+  ...Object.keys(translationsBase),
+  ...Object.keys(translationsExtra),
+]);
+allKeys.forEach((key) => {
+  mergedTranslations[key] = {
+    ...translationsBase[key],
+    ...translationsExtra[key],
+  };
+});
+
+export const translations: Translation = mergedTranslations;

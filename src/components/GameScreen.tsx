@@ -475,7 +475,7 @@ const GameScreen: React.FC = () => {
         <View style={styles.rightGroup}>
           {gameState.iapState.removeAdsPurchased && (
             <Animated.View style={[styles.adFreeBadge, { opacity: adFreeBadgeOpacity }]}>
-              <Text style={styles.adFreeBadgeText}>✓ Ad Free</Text>
+              <Text style={styles.adFreeBadgeText}>{t('ui.adFreeBadge')}</Text>
             </Animated.View>
           )}
           {hasPermanentOffers && !(gameState.ai?.isAutonomous) && (
@@ -604,7 +604,7 @@ const GameScreen: React.FC = () => {
       >
         <View style={styles.shopModal}>
           <View style={styles.shopModalHeader}>
-            <Text style={styles.shopModalTitle}>💎 Shop</Text>
+            <Text style={styles.shopModalTitle}>{t('ui.shop')}</Text>
             <TouchableOpacity onPress={() => { setShowShop(false); setShopInitialTab(undefined); }} style={styles.shopModalClose}>
               <Text style={styles.shopModalCloseText}>✕</Text>
             </TouchableOpacity>

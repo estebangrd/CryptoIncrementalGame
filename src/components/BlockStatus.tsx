@@ -287,22 +287,22 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
     <ScrollView style={styles.scroll} contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
 
       {/* ── NODE STATUS ── */}
-      <SectionHeader label="Node Status" />
+      <SectionHeader label={t('blockStatus.nodeStatus')} />
 
       {/* Row 1: Cash Balance + Total Earned */}
       <View style={styles.statRow}>
         <NodeStat
           icon="💰"
-          label="Cash Balance"
+          label={t('blockStatus.cashBalance')}
           value={formatUSDCompact(gameState.realMoney)}
-          sub="Available"
+          sub={t('blockStatus.available')}
           variant="yellow"
         />
         <NodeStat
           icon="💵"
-          label="Total Earned"
+          label={t('blockStatus.totalEarned')}
           value={formatUSDCompact(gameState.totalRealMoneyEarned)}
-          sub="All time"
+          sub={t('blockStatus.allTime')}
           variant="yellow"
         />
       </View>
@@ -311,16 +311,16 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
       <View style={styles.statRow}>
         <NodeStat
           icon="🖥"
-          label="Hash Rate"
+          label={t('blockStatus.hashRate')}
           value={formatNumber(displayHashRate)}
-          sub={hasClickBoost ? `+${formatNumber(hashClickBoost)} click` : 'H/s — Active'}
+          sub={hasClickBoost ? `+${formatNumber(hashClickBoost)} ${t('blockStatus.clickBoost')}` : t('blockStatus.hashActive')}
           variant={hasClickBoost ? 'green' : 'cyan'}
         />
         <NodeStat
           icon="🏦"
-          label="Blocks Mined"
+          label={t('blockStatus.blocksMined')}
           value={formatNumber(gameState.blocksMined)}
-          sub="All time"
+          sub={t('blockStatus.allTime')}
           variant="cyan"
         />
       </View>
@@ -329,9 +329,9 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
       <View style={styles.statRow}>
         <NodeStat
           icon="🪙"
-          label="Net Income"
+          label={t('blockStatus.netIncome')}
           value={formatNumber(gameState.cryptoCoinsPerSecond + ccClickBoost)}
-          sub={hasClickBoost ? `+${formatNumber(ccClickBoost)} click` : 'CC/sec'}
+          sub={hasClickBoost ? `+${formatNumber(ccClickBoost)} ${t('blockStatus.clickBoost')}` : t('blockStatus.ccPerSec')}
           variant={(gameState.cryptoCoinsPerSecond + ccClickBoost) < 0 ? 'red' : 'green'}
         />
         <NodeStat
@@ -345,7 +345,7 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
 
 
       {/* ── CURRENT PHASE ── */}
-      <SectionHeader label="Current Phase" />
+      <SectionHeader label={t('blockStatus.currentPhase')} />
 
       {/* Phase Card */}
       <View style={styles.phaseCard}>
@@ -360,13 +360,13 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
         </Svg>
         <View style={styles.phaseRow}>
           <View>
-            <Text style={styles.phaseSublabel}>ACTIVE CHAIN</Text>
-            <Text style={styles.phaseTitle}>⬡ GENESIS</Text>
+            <Text style={styles.phaseSublabel}>{t('blockStatus.activeChain')}</Text>
+            <Text style={styles.phaseTitle}>{t('blockStatus.genesis')}</Text>
           </View>
           <View style={styles.phaseCountGroup}>
             <Text style={styles.phaseCountSub}>
               <Text style={styles.phaseCountValue}>{formatNumber(blockInfo.blocksMined)}</Text>
-              {' / '}{isAIAutonomous ? '∞' : formatNumber(blockInfo.totalBlocks)} blocks
+              {' / '}{isAIAutonomous ? '∞' : formatNumber(blockInfo.totalBlocks)} {t('blockStatus.blocks')}
             </Text>
           </View>
         </View>
@@ -375,11 +375,11 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
         </View>
         <View style={styles.phaseStats}>
           <View style={styles.phaseStat}>
-            <Text style={styles.phaseStatLabel}>Reward</Text>
+            <Text style={styles.phaseStatLabel}>{t('blockStatus.reward')}</Text>
             <Text style={[styles.phaseStatValue, { color: colors.ny }]}>{formatNumber(blockInfo.currentReward)} CC</Text>
           </View>
           <View style={styles.phaseStat}>
-            <Text style={styles.phaseStatLabel}>Halving At</Text>
+            <Text style={styles.phaseStatLabel}>{t('blockStatus.halvingAt')}</Text>
             <Text style={[styles.phaseStatValue, { color: colors.nr }]}>{formatNumber(blockInfo.blocksUntilHalving)}</Text>
           </View>
         </View>
@@ -411,7 +411,7 @@ export const BlockStatus: React.FC<BlockStatusProps> = ({ gameState, onMineBlock
           </Animated.View>
           <Animated.Text style={[styles.mineHammer, { transform: [{ rotate: hammerAnim.interpolate({ inputRange: [-10, 10], outputRange: ['-10deg', '10deg'] }) }] }]}>⛏</Animated.Text>
           <Text style={[styles.mineButtonText, (isComplete || isAIAutonomous) && styles.mineButtonTextDone]}>
-            {isAIAutonomous ? '🤖 AI Mining Active' : isComplete ? 'Phase Complete' : 'Mine Block'}
+            {isAIAutonomous ? t('blockStatus.aiMiningActive') : isComplete ? t('blockStatus.phaseComplete') : t('blockStatus.mineBlock')}
           </Text>
         </TouchableOpacity>
       </Animated.View>

@@ -14,11 +14,11 @@ const RARITY_COLORS: Record<string, string> = {
   legendary: '#FFD700',
 };
 
-const RARITY_LABELS: Record<string, string> = {
-  common: 'Common',
-  rare: 'Rare',
-  epic: 'Epic',
-  legendary: 'Legendary',
+const RARITY_LABEL_KEYS: Record<string, string> = {
+  common: 'rarity.common',
+  rare: 'rarity.rare',
+  epic: 'rarity.epic',
+  legendary: 'rarity.legendary',
 };
 
 const formatDate = (ts: number): string => {
@@ -26,6 +26,7 @@ const formatDate = (ts: number): string => {
 };
 
 const AchievementCard: React.FC<{ achievement: Achievement }> = ({ achievement }) => {
+  const { t } = useGame();
   const isHiddenLocked = achievement.hidden && !achievement.unlocked;
   const rarityColor = RARITY_COLORS[achievement.rarity] ?? '#888';
   const displayName = achievement.name || achievement.nameKey;
@@ -44,7 +45,7 @@ const AchievementCard: React.FC<{ achievement: Achievement }> = ({ achievement }
             {isHiddenLocked ? '???' : displayName}
           </Text>
           <Text style={[styles.rarityBadge, { color: rarityColor }]}>
-            {RARITY_LABELS[achievement.rarity]}
+            {t(RARITY_LABEL_KEYS[achievement.rarity] ?? 'rarity.common')}
           </Text>
         </View>
         <Text style={[styles.cardDesc, !achievement.unlocked && styles.textLocked]} numberOfLines={2}>
@@ -66,7 +67,7 @@ const AchievementCard: React.FC<{ achievement: Achievement }> = ({ achievement }
           </View>
         )}
         {achievement.unlocked && achievement.unlockedAt && (
-          <Text style={styles.unlockedDate}>Unlocked: {formatDate(achievement.unlockedAt)}</Text>
+          <Text style={styles.unlockedDate}>{t('achievements.unlocked').replace('{date}', formatDate(achievement.unlockedAt))}</Text>
         )}
         {achievement.unlocked && achievement.reward && (
           <Text style={styles.reward}>
@@ -91,7 +92,7 @@ const FILTER_TABS: { key: FilterCategory; label: string }[] = [
 ];
 
 const AchievementsScreen: React.FC = () => {
-  const { gameState } = useGame();
+  const { gameState, t } = useGame();
   const [filter, setFilter] = useState<FilterCategory>('all');
 
   const achievements = gameState.achievements || [];
@@ -105,9 +106,9 @@ const AchievementsScreen: React.FC = () => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Achievements</Text>
+        <Text style={styles.title}>{t('achievements.title')}</Text>
         <View style={styles.completionBadge}>
-          <Text style={styles.completionText}>{completionPct}% Complete</Text>
+          <Text style={styles.completionText}>{t('achievements.percentComplete').replace('{pct}', String(completionPct))}</Text>
         </View>
       </View>
 
@@ -129,7 +130,7 @@ const AchievementsScreen: React.FC = () => {
       {/* Achievement list */}
       <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
         {filtered.length === 0 && (
-          <Text style={styles.emptyText}>No achievements in this category yet.</Text>
+          <Text style={styles.emptyText}>{t('achievements.empty')}</Text>
         )}
         {filtered.map(a => (
           <AchievementCard key={a.id} achievement={a} />

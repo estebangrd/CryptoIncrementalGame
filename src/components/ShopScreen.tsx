@@ -542,7 +542,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({ initialTab }) => {
               {!effectiveSale ? (
                 /* Normal state: neutral price box */
                 <View style={st.na_priceBox}>
-                  <Text style={st.na_priceBoxLabel}>PRECIO</Text>
+                  <Text style={st.na_priceBoxLabel}>{t('shop.price')}</Text>
                   <Text style={st.na_priceBoxValue}>$2.99</Text>
                 </View>
               ) : (
@@ -690,7 +690,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({ initialTab }) => {
               <Text style={st.bo_iconEmoji}>⚡</Text>
             </View>
             <View style={st.bo_meta}>
-              <Text style={st.bo_name}>2x Production Booster</Text>
+              <Text style={st.bo_name}>{t('shop.boosters.2x.name')}</Text>
               {b2x.isActive && b2xRemaining > 0 && (
                 <View style={st.bo_activeBadge}>
                   <Text style={st.bo_activeBadgeText}>{'⚡ '}{t('shop.boosters.active')}{' — '}{formatTime(b2xRemaining)}</Text>
@@ -752,7 +752,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({ initialTab }) => {
               <Text style={st.bo_iconEmoji}>🚀</Text>
             </View>
             <View style={st.bo_meta}>
-              <Text style={st.bo_name}>5x Production Booster</Text>
+              <Text style={st.bo_name}>{t('shop.boosters.5x.name')}</Text>
               {b5x.isActive && b5xRemaining > 0 && (
                 <View style={[st.bo_activeBadge, st.bo_activeBadgeOrange]}>
                   <Text style={[st.bo_activeBadgeText, st.bo_activeBadgeTextOrange]}>
@@ -816,7 +816,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({ initialTab }) => {
               <Text style={st.bo_iconEmoji}>👑</Text>
             </View>
             <View style={st.bo_meta}>
-              <Text style={st.bo_name}>Permanent 2x Multiplier</Text>
+              <Text style={st.bo_name}>{t('shop.boosters.perm.name')}</Text>
               {perm && (
                 <View style={[st.bo_activeBadge, st.bo_activeBadgePurple]}>
                   <Text style={[st.bo_activeBadgeText, st.bo_activeBadgeTextPurple]}>
@@ -875,21 +875,21 @@ const ShopScreen: React.FC<ShopScreenProps> = ({ initialTab }) => {
               <Text style={st.bo_iconEmoji}>🌙</Text>
             </View>
             <View style={st.bo_meta}>
-              <Text style={st.bo_name}>Offline Miner</Text>
+              <Text style={st.bo_name}>{t('shop.boosters.offlineMiner.name')}</Text>
               {iapState.offlineMiner.isActive && iapState.offlineMiner.expiresAt && (
                 <View style={[st.bo_activeBadge, st.bo_activeBadgeCyan]}>
                   <Text style={[st.bo_activeBadgeText, st.bo_activeBadgeTextCyan]}>
-                    {'🌙 Active — '}{formatTime(Math.max(0, iapState.offlineMiner.expiresAt - now))}
+                    {t('shop.boosters.offlineMiner.activeLabel').replace('{time}', formatTime(Math.max(0, iapState.offlineMiner.expiresAt - now)))}
                   </Text>
                 </View>
               )}
               <Text style={st.bo_desc}>
-                {`Mine at 50% speed while offline for ${offlineMinerExtended ? '12' : '8'} hours`}
+                {t('shop.boosters.offlineMiner.desc').replace('{hours}', offlineMinerExtended ? '12' : '8')}
               </Text>
               <View style={st.bo_durationBadge}>
                 <Text style={st.bo_durationBadgeText}>
-                  {`⏱ ${offlineMinerExtended ? '12' : '8'}h · One-time use`}
-                  {offlineMinerExtended ? ' · ✨ Extended offer!' : ''}
+                  {t('shop.boosters.offlineMiner.duration').replace('{hours}', offlineMinerExtended ? '12' : '8')}
+                  {offlineMinerExtended ? t('shop.boosters.offlineMiner.extendedSuffix') : ''}
                 </Text>
               </View>
             </View>
@@ -897,11 +897,11 @@ const ShopScreen: React.FC<ShopScreenProps> = ({ initialTab }) => {
           <View style={st.bo_perks}>
             <View style={st.bo_perkRow}>
               <View style={st.bo_perkCheck}><Text style={st.bo_perkCheckText}>✓</Text></View>
-              <Text style={st.bo_perkText}>Earn coins while the app is closed</Text>
+              <Text style={st.bo_perkText}>{t('shop.boosters.offlineMiner.perk1')}</Text>
             </View>
             <View style={st.bo_perkRow}>
               <View style={st.bo_perkCheck}><Text style={st.bo_perkCheckText}>✓</Text></View>
-              <Text style={st.bo_perkText}>50% of your current production rate</Text>
+              <Text style={st.bo_perkText}>{t('shop.boosters.offlineMiner.perk2')}</Text>
             </View>
           </View>
           <View style={st.bo_footer}>
@@ -939,18 +939,18 @@ const ShopScreen: React.FC<ShopScreenProps> = ({ initialTab }) => {
               <Text style={st.bo_iconEmoji}>🎲</Text>
             </View>
             <View style={st.bo_meta}>
-              <Text style={st.bo_name}>Lucky Block</Text>
+              <Text style={st.bo_name}>{t('shop.boosters.luckyBlock.name')}</Text>
               {iapState.luckyBlock.isActive && (
                 <View style={[st.bo_activeBadge, st.bo_activeBadgeGreen]}>
                   <Text style={[st.bo_activeBadgeText, st.bo_activeBadgeTextGreen]}>
-                    {`🎲 Active — ${iapState.luckyBlock.blocksRemaining.toLocaleString()} blocks left`}
+                    {t('shop.boosters.luckyBlock.activeLabel').replace('{count}', iapState.luckyBlock.blocksRemaining.toLocaleString())}
                   </Text>
                 </View>
               )}
-              <Text style={st.bo_desc}>{`Next ${getLuckyBlockCount().toLocaleString()} blocks give 10x rewards`}</Text>
+              <Text style={st.bo_desc}>{t('shop.boosters.luckyBlock.desc').replace('{count}', getLuckyBlockCount().toLocaleString())}</Text>
               <View style={st.bo_durationBadge}>
                 <Text style={st.bo_durationBadgeText}>
-                  {`◈ ${getLuckyBlockCount().toLocaleString()} blocks · One-time use`}
+                  {t('shop.boosters.luckyBlock.duration').replace('{count}', getLuckyBlockCount().toLocaleString())}
                 </Text>
               </View>
             </View>
@@ -958,11 +958,11 @@ const ShopScreen: React.FC<ShopScreenProps> = ({ initialTab }) => {
           <View style={st.bo_perks}>
             <View style={st.bo_perkRow}>
               <View style={st.bo_perkCheck}><Text style={st.bo_perkCheckText}>✓</Text></View>
-              <Text style={st.bo_perkText}>10x CryptoCoins per block mined</Text>
+              <Text style={st.bo_perkText}>{t('shop.boosters.luckyBlock.perk1')}</Text>
             </View>
             <View style={st.bo_perkRow}>
               <View style={st.bo_perkCheck}><Text style={st.bo_perkCheckText}>✓</Text></View>
-              <Text style={st.bo_perkText}>Block count scales with your mining stage</Text>
+              <Text style={st.bo_perkText}>{t('shop.boosters.luckyBlock.perk2')}</Text>
             </View>
           </View>
           <View style={st.bo_footer}>
@@ -1000,19 +1000,19 @@ const ShopScreen: React.FC<ShopScreenProps> = ({ initialTab }) => {
               <Text style={st.bo_iconEmoji}>📈</Text>
             </View>
             <View style={st.bo_meta}>
-              <Text style={st.bo_name}>Market Pump</Text>
+              <Text style={st.bo_name}>{t('shop.boosters.marketPump.name')}</Text>
               {iapState.marketPump.isActive && iapState.marketPump.expiresAt && (
                 <View style={[st.bo_activeBadge, st.bo_activeBadgePink]}>
                   <Text style={[st.bo_activeBadgeText, st.bo_activeBadgeTextPink]}>
-                    {'📈 Active — '}{formatTime(Math.max(0, iapState.marketPump.expiresAt - now))}
+                    {t('shop.boosters.marketPump.activeLabel').replace('{time}', formatTime(Math.max(0, iapState.marketPump.expiresAt - now)))}
                   </Text>
                 </View>
               )}
-              <Text style={st.bo_desc}>{`+100% sell price for ${marketPumpExtended ? '37' : '30'} minutes`}</Text>
+              <Text style={st.bo_desc}>{t('shop.boosters.marketPump.desc').replace('{minutes}', marketPumpExtended ? '37' : '30')}</Text>
               <View style={st.bo_durationBadge}>
                 <Text style={st.bo_durationBadgeText}>
-                  {`⏱ ${marketPumpExtended ? '37' : '30'} min · Stackable`}
-                  {marketPumpExtended ? ' · ✨ Extended offer!' : ''}
+                  {t('shop.boosters.marketPump.duration').replace('{minutes}', marketPumpExtended ? '37' : '30')}
+                  {marketPumpExtended ? t('shop.boosters.marketPump.extendedSuffix') : ''}
                 </Text>
               </View>
             </View>
@@ -1020,11 +1020,11 @@ const ShopScreen: React.FC<ShopScreenProps> = ({ initialTab }) => {
           <View style={st.bo_perks}>
             <View style={st.bo_perkRow}>
               <View style={st.bo_perkCheck}><Text style={st.bo_perkCheckText}>✓</Text></View>
-              <Text style={st.bo_perkText}>Double the price when selling CryptoCoins</Text>
+              <Text style={st.bo_perkText}>{t('shop.boosters.marketPump.perk1')}</Text>
             </View>
             <View style={st.bo_perkRow}>
               <View style={st.bo_perkCheck}><Text style={st.bo_perkCheckText}>✓</Text></View>
-              <Text style={st.bo_perkText}>Works on all market sales</Text>
+              <Text style={st.bo_perkText}>{t('shop.boosters.marketPump.perk2')}</Text>
             </View>
           </View>
           <View style={st.bo_footer}>

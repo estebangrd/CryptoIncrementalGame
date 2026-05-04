@@ -13,10 +13,10 @@ import { isAIUnlocked, canPurchaseAILevel } from '../utils/aiLogic';
 import { AI_CONFIG } from '../config/balanceConfig';
 import { colors, fonts } from '../config/theme';
 
-const AI_LEVEL_NAMES: Record<number, string> = {
-  1: 'Asistente',
-  2: 'Copiloto',
-  3: 'Autónomo',
+const AI_LEVEL_KEYS: Record<number, string> = {
+  1: 'ai.level1.localizedName',
+  2: 'ai.level2.localizedName',
+  3: 'ai.level3.localizedName',
 };
 
 const AISection: React.FC = () => {
@@ -61,7 +61,7 @@ const AISection: React.FC = () => {
             <Text style={styles.logLevelBadge}>
               [{t('ai.active.level')
                 .replace('{{level}}', String(ai.level))
-                .replace('{{name}}', AI_LEVEL_NAMES[ai.level] ?? '')}]
+                .replace('{{name}}', t(AI_LEVEL_KEYS[ai.level] ?? ''))}]
             </Text>
           </Text>
           {ai.logEntries.length === 0 ? (
@@ -95,7 +95,7 @@ const AISection: React.FC = () => {
               {config.isIrreversible && !isPurchased && (
                 <Text style={styles.irreversibleBadge}>{t('ai.irreversible.badge')}</Text>
               )}
-              {isPurchased && <Text style={styles.ownedBadge}>✓ ACTIVE</Text>}
+              {isPurchased && <Text style={styles.ownedBadge}>{t('upgradeList.aiActive')}</Text>}
             </View>
 
             <Text style={styles.aiCardDesc}>
@@ -201,7 +201,7 @@ const UpgradeList: React.FC = () => {
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
       <AISection />
 
-      <SectionHeader label="Research Lab" />
+      <SectionHeader label={t('upgradeList.researchLab')} />
 
       {gameState.upgrades
         .filter((upgrade) => isUpgradeUnlocked(gameState, upgrade) || upgrade.purchased)
@@ -226,7 +226,7 @@ const UpgradeList: React.FC = () => {
 
               <View style={styles.upgradeFooter}>
                 <View>
-                  <Text style={styles.upgradeCostLabel}>RESEARCH COST</Text>
+                  <Text style={styles.upgradeCostLabel}>{t('upgradeList.researchCost')}</Text>
                   <Text style={[
                     styles.upgradeCost,
                     !canAfford && !isPurchased && styles.cannotAfford,
@@ -238,7 +238,7 @@ const UpgradeList: React.FC = () => {
 
                 {isPurchased ? (
                   <View style={styles.deployedBadge}>
-                    <Text style={styles.deployedBadgeText}>✓ DEPLOYED</Text>
+                    <Text style={styles.deployedBadgeText}>{t('upgradeList.deployed')}</Text>
                   </View>
                 ) : (
                   <TouchableOpacity
@@ -248,7 +248,7 @@ const UpgradeList: React.FC = () => {
                     activeOpacity={0.7}
                   >
                     <Text style={[styles.buyButtonText, (!canAfford || isAIAutonomous) && styles.buyButtonTextDim]}>
-                      {isAIAutonomous ? '🤖 AI CONTROLLED' : 'ACQUIRE'}
+                      {isAIAutonomous ? t('upgradeList.aiControlled') : t('upgradeList.acquire')}
                     </Text>
                   </TouchableOpacity>
                 )}

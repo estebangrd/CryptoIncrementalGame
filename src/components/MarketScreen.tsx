@@ -112,7 +112,7 @@ const MarketScreen: React.FC = () => {
     <View style={styles.container}>
       {/* Section header */}
       <View style={styles.secHdr}>
-        <Text style={styles.secHdrText}>Live Market</Text>
+        <Text style={styles.secHdrText}>{t('market.liveMarket')}</Text>
         <LinearGradient
           colors={['rgba(0,255,136,0.2)', 'transparent']}
           start={{ x: 0, y: 0 }}
@@ -139,7 +139,7 @@ const MarketScreen: React.FC = () => {
                 <View style={styles.coinInfo}>
                   <Text style={styles.coinName}>{crypto.name}</Text>
                   <Text style={styles.coinTicker}>
-                    {crypto.symbol}{crypto.id === 'cryptocoin' ? ' · GENESIS CHAIN' : ''}
+                    {crypto.symbol}{crypto.id === 'cryptocoin' ? ` · ${t('market.genesisChainSuffix')}` : ''}
                   </Text>
                 </View>
 
@@ -189,7 +189,7 @@ const MarketScreen: React.FC = () => {
 
                 {/* Sell section */}
                 <View style={[styles.sellCard, isAIAutonomous && { opacity: 0.5 }]}>
-                  <Text style={styles.sellTitle}>{isAIAutonomous ? '🤖 AI controls all trading' : '💰 SELL COINS'}</Text>
+                  <Text style={styles.sellTitle}>{isAIAutonomous ? t('market.aiControlsTrading') : t('market.sellCoinsTitle')}</Text>
                   <Text style={styles.sliderPct}>{amountPercent}%</Text>
                   <View style={styles.sliderContainer}>
                     <View
@@ -216,7 +216,7 @@ const MarketScreen: React.FC = () => {
                           activeOpacity={0.7}
                         >
                           <Text style={[styles.qBtnText, isActive && styles.qBtnActiveText]}>
-                            {v === 100 ? 'MAX' : `${v}%`}
+                            {v === 100 ? t('market.max') : `${v}%`}
                           </Text>
                         </TouchableOpacity>
                       );
@@ -225,17 +225,17 @@ const MarketScreen: React.FC = () => {
                   <View style={styles.earnBox}>
                     <Text style={styles.earnAmount}>{formatUSD(sellPreviewMoney)}</Text>
                     <Text style={styles.earnSub}>
-                      YOU'LL EARN · PRICE {formatUSD(getCryptoCoin()?.currentValue ?? 0)} PER CC
+                      {t('market.youllEarn').replace('{price}', formatUSD(getCryptoCoin()?.currentValue ?? 0))}
                     </Text>
                   </View>
                   {isAIAutonomous ? null : sellConfirming ? (
                     <View style={styles.confirmRow}>
                       <TouchableOpacity style={styles.cancelButton} onPress={clearSellConfirm}>
-                        <Text style={styles.cancelButtonText}>✕ Cancel</Text>
+                        <Text style={styles.cancelButtonText}>{t('market.cancel')}</Text>
                       </TouchableOpacity>
                       <TouchableOpacity style={styles.confirmSellButton} onPress={handleSellConfirm}>
                         <Text style={styles.confirmSellButtonText}>
-                          ✓ Sell {formatUSD(sellPreviewMoney)}
+                          {t('market.confirmSell').replace('{amount}', formatUSD(sellPreviewMoney))}
                         </Text>
                       </TouchableOpacity>
                     </View>
@@ -247,7 +247,7 @@ const MarketScreen: React.FC = () => {
                         end={{ x: 1, y: 1 }}
                         style={styles.sellButton}
                       >
-                        <Text style={styles.sellButtonText}>⚡ EXECUTE SELL ORDER</Text>
+                        <Text style={styles.sellButtonText}>{t('market.executeSellOrder')}</Text>
                       </LinearGradient>
                     </TouchableOpacity>
                   )}

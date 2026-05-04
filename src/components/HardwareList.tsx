@@ -127,7 +127,7 @@ const HardwareList: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <SectionHeader label="Mining Rigs" />
+      <SectionHeader label={t('hardwareList.miningRigs')} />
 
       {gameState.hardware
         .filter((hardware) => isHardwareUnlocked(gameState, hardware))
@@ -206,7 +206,7 @@ const HardwareList: React.FC = () => {
                       {hardware.owned}
                     </Text>
                     <Text style={[styles.ownedLbl, !hasUnits && styles.ownedLblDim, isDisabled && styles.ownedLblOff]}>
-                      {isDisabled ? t('hardware.toggleOff') : 'OWNED'}
+                      {isDisabled ? t('hardware.toggleOff') : t('hardwareList.owned')}
                     </Text>
                   </View>
                   {hasUnits && feeActive && !isAIAutonomous && (
@@ -225,7 +225,7 @@ const HardwareList: React.FC = () => {
               <View style={styles.metricsGrid}>
                 <MetricCell
                   noBorder
-                  label="Hash Rate"
+                  label={t('hardwareList.metricHashRate')}
                   value={formatNumber(hashRate)}
                   unit="H/s"
                   delta={`+${formatNumber(deltaHashRate)}`}
@@ -233,7 +233,7 @@ const HardwareList: React.FC = () => {
                   deltaType="pos"
                 />
                 <MetricCell
-                  label="Mine Spd"
+                  label={t('hardwareList.metricMineSpd')}
                   value={formatNumber(miningSpeed)}
                   unit="blk/s"
                   delta={`+${formatNumber(deltaMiningSpeed)}`}
@@ -241,7 +241,7 @@ const HardwareList: React.FC = () => {
                   deltaType="pos"
                 />
                 <MetricCell
-                  label="Coins/s"
+                  label={t('hardwareList.metricCoinsPerSec')}
                   value={formatNumber(coinsPerSecond)}
                   unit="CC/s"
                   delta={`+${formatNumber(deltaCoinsPerSec)}`}
@@ -249,7 +249,7 @@ const HardwareList: React.FC = () => {
                   deltaType="pos"
                 />
                 <MetricCell
-                  label="Power"
+                  label={t('hardwareList.metricPower')}
                   value={electricityCost > 0 ? `-${formatNumber(electricityCost)}` : '0'}
                   unit="kW/h"
                   delta={deltaElectricity > 0 ? `-${formatNumber(deltaElectricity)}` : '0'}
@@ -261,7 +261,7 @@ const HardwareList: React.FC = () => {
               {/* Footer */}
               <View style={styles.footer}>
                 <View style={styles.costRow}>
-                  <Text style={styles.costLabel}>PURCHASE COST</Text>
+                  <Text style={styles.costLabel}>{t('hardwareList.purchaseCost')}</Text>
                   <Text style={[styles.costValue, !canAfford && styles.costValueRed]}>
                     {formatUSDCompact(cost)}
                   </Text>
@@ -273,7 +273,7 @@ const HardwareList: React.FC = () => {
                   activeOpacity={0.75}
                 >
                   <Text style={[styles.buyBtnText, (!canAfford || isAIAutonomous) && styles.buyBtnTextDim]}>
-                    {isAIAutonomous ? '🤖 AI CONTROLLED' : canAfford ? '⬡ BUY UNIT' : '⊘ INSUFFICIENT FUNDS'}
+                    {isAIAutonomous ? t('hardwareList.aiControlled') : canAfford ? t('hardwareList.buyUnit') : t('hardwareList.insufficientFunds')}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -312,12 +312,12 @@ const HardwareList: React.FC = () => {
                 <View style={styles.titleGroup}>
                   <Text style={styles.hwName}>{t(hardware.nameKey) || hardware.name}</Text>
                   <Text style={styles.hwDesc}>{t(hardware.descriptionKey)}</Text>
-                  <Text style={styles.aiBadge}>🤖 AI-DESIGNED</Text>
+                  <Text style={styles.aiBadge}>{t('hardwareList.aiDesigned')}</Text>
                 </View>
                 <View style={styles.ownedToggleCol}>
                   <View style={[styles.ownedBadge, styles.ownedBadgeAI]}>
                     <Text style={[styles.ownedNum, styles.ownedNumAI]}>{hardware.owned}</Text>
-                    <Text style={[styles.ownedLbl, styles.ownedLblAI]}>OWNED</Text>
+                    <Text style={[styles.ownedLbl, styles.ownedLblAI]}>{t('hardwareList.owned')}</Text>
                   </View>
                 </View>
               </View>
@@ -326,7 +326,7 @@ const HardwareList: React.FC = () => {
               <View style={styles.metricsGrid}>
                 <MetricCell
                   noBorder
-                  label="Hash Rate"
+                  label={t('hardwareList.metricHashRate')}
                   value={formatNumber(hashRate)}
                   unit="H/s"
                   delta={`+${formatNumber(deltaHashRate)}`}
@@ -334,7 +334,7 @@ const HardwareList: React.FC = () => {
                   deltaType="pos"
                 />
                 <MetricCell
-                  label="Mine Spd"
+                  label={t('hardwareList.metricMineSpd')}
                   value={formatNumber(miningSpeed)}
                   unit="blk/s"
                   delta={`+${formatNumber(deltaMiningSpeed)}`}
@@ -342,7 +342,7 @@ const HardwareList: React.FC = () => {
                   deltaType="pos"
                 />
                 <MetricCell
-                  label="Coins/s"
+                  label={t('hardwareList.metricCoinsPerSec')}
                   value={formatNumber(coinsPerSecond)}
                   unit="CC/s"
                   delta={`+${formatNumber(deltaCoinsPerSec)}`}
@@ -350,7 +350,7 @@ const HardwareList: React.FC = () => {
                   deltaType="pos"
                 />
                 <MetricCell
-                  label="Power"
+                  label={t('hardwareList.metricPower')}
                   value={electricityCost > 0 ? `-${formatNumber(electricityCost)}` : '0'}
                   unit="kW/h"
                   delta={deltaElectricity > 0 ? `-${formatNumber(deltaElectricity)}` : '0'}
@@ -362,7 +362,7 @@ const HardwareList: React.FC = () => {
               {/* Footer */}
               <View style={styles.footer}>
                 <View style={styles.costRow}>
-                  <Text style={styles.costLabel}>PURCHASE COST</Text>
+                  <Text style={styles.costLabel}>{t('hardwareList.purchaseCost')}</Text>
                   <Text style={[styles.costValue, styles.costValueAI]}>
                     {formatUSDCompact(cost)}
                   </Text>
@@ -373,7 +373,7 @@ const HardwareList: React.FC = () => {
                   activeOpacity={0.75}
                 >
                   <Text style={[styles.buyBtnText, styles.buyBtnTextAI]}>
-                    🤖 AI CONTROLLED
+                    {t('hardwareList.aiControlled')}
                   </Text>
                 </TouchableOpacity>
               </View>

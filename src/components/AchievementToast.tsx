@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import { Achievement } from '../types/game';
 import { formatNumber, formatUSD } from '../utils/gameLogic';
+import { useGame } from '../contexts/GameContext';
 import { colors, fonts } from '../config/theme';
 
 interface AchievementToastProps {
@@ -33,6 +34,7 @@ const withAlpha = (hex: string, alpha: number) => {
 };
 
 const AchievementToast: React.FC<AchievementToastProps> = ({ achievement, displayName, onDismiss }) => {
+  const { t } = useGame();
   const insets = useSafeAreaInsets();
   const slideY = useRef(new Animated.Value(-140)).current;
   const progress = useRef(new Animated.Value(1)).current;
@@ -177,7 +179,7 @@ const AchievementToast: React.FC<AchievementToastProps> = ({ achievement, displa
 
         {/* Text content */}
         <View style={styles.textWrap}>
-          <Text style={styles.label}>ACHIEVEMENT UNLOCKED</Text>
+          <Text style={styles.label}>{t('achievements.toastUnlocked')}</Text>
           <Text style={styles.name} numberOfLines={1}>{displayName}</Text>
           {rewardText !== '' && (
             <Text style={[styles.reward, { color: themeColor }]}>{rewardText}</Text>

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native
 import Svg, { Path, Defs, LinearGradient, Stop, Circle, Line as SvgLine, Text as SvgText } from 'react-native-svg';
 import { colors, fonts } from '../config/theme';
 import { formatNumber, formatUSD } from '../utils/gameLogic';
+import { useGame } from '../contexts/GameContext';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -26,10 +27,16 @@ const formatAxisPrice = (price: number): string => {
 
 type TimeRange = '5m' | '15m' | '30m';
 
-const RANGE_CONFIG: Record<TimeRange, { points: number; labels: [string, string, string] }> = {
-  '5m':  { points: 20,  labels: ['5m ago', '2m ago', 'Now'] },
-  '15m': { points: 60,  labels: ['15m ago', '7m ago', 'Now'] },
-  '30m': { points: 120, labels: ['30m ago', '15m ago', 'Now'] },
+const RANGE_POINTS: Record<TimeRange, number> = {
+  '5m': 20,
+  '15m': 60,
+  '30m': 120,
+};
+
+const RANGE_AGO_MINUTES: Record<TimeRange, [number, number]> = {
+  '5m': [5, 2],
+  '15m': [15, 7],
+  '30m': [30, 15],
 };
 
 interface PriceChartProps {
@@ -37,9 +44,18 @@ interface PriceChartProps {
 }
 
 const PriceChart: React.FC<PriceChartProps> = ({ priceHistory }) => {
+  const { t } = useGame();
   const [chartWidth, setChartWidth] = useState(300);
   const [timeRange, setTimeRange] = useState<TimeRange>('5m');
   const pulseAnim = useRef(new Animated.Value(0)).current;
+
+  const buildAgoLabel = (minutes: number) => t('chart.minutesAgo').replace('{n}', String(minutes));
+  const xLabels: [string, string, string] = [
+    buildAgoLabel(RANGE_AGO_MINUTES[timeRange][0]),
+    buildAgoLabel(RANGE_AGO_MINUTES[timeRange][1]),
+    t('chart.now'),
+  ];
+  const rangePoints = RANGE_POINTS[timeRange];
 
   useEffect(() => {
     const loop = Animated.loop(
@@ -55,13 +71,12 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceHistory }) => {
   if (!priceHistory || priceHistory.length < 2) {
     return (
       <View style={styles.container}>
-        <Text style={styles.noDataText}>Waiting for price data...</Text>
+        <Text style={styles.noDataText}>{t('chart.waitingData')}</Text>
       </View>
     );
   }
 
   // Slice history based on selected time range
-  const { points: rangePoints, labels: xLabels } = RANGE_CONFIG[timeRange];
   const visibleHistory = priceHistory.length <= rangePoints
     ? priceHistory
     : priceHistory.slice(-rangePoints);

@@ -67,7 +67,7 @@ const PrestigeScreen: React.FC = () => {
     dispatch({ type: 'DO_PRESTIGE' });
     setConfirmModalVisible(false);
     setConfirmText('');
-    showToast(`✨ Prestige Level ${gameState.prestigeLevel + 1}! +1 skill point`, 'success');
+    showToast(t('prestigeScreen.toastSuccess').replace('{level}', String(gameState.prestigeLevel + 1)), 'success');
   };
 
   const handleCancelConfirm = () => {
@@ -161,20 +161,20 @@ const PrestigeScreen: React.FC = () => {
       {/* What You'll Keep */}
       <View style={[styles.card, styles.keepCard]}>
         <Text style={styles.keepTitle}>{t('prestige.willKeep')}</Text>
-        <Text style={styles.keepItem}>- Prestige Level (+1)</Text>
-        <Text style={styles.keepItem}>- Production multiplier (+10%)</Text>
-        <Text style={styles.keepItem}>- Click multiplier (+5%)</Text>
-        <Text style={styles.keepItem}>- Badges and run history</Text>
+        <Text style={styles.keepItem}>{t('prestigeScreen.keepLevel')}</Text>
+        <Text style={styles.keepItem}>{t('prestigeScreen.keepProduction')}</Text>
+        <Text style={styles.keepItem}>{t('prestigeScreen.keepClick')}</Text>
+        <Text style={styles.keepItem}>{t('prestigeScreen.keepBadges')}</Text>
       </View>
 
       {/* What You'll Lose */}
       <View style={[styles.card, styles.loseCard]}>
         <Text style={styles.loseTitle}>{t('prestige.willLose')}</Text>
-        <Text style={styles.loseItem}>- All CryptoCoins ({formatNumber(gameState.cryptoCoins)})</Text>
-        <Text style={styles.loseItem}>- All Real Money ({formatUSD(gameState.realMoney)})</Text>
-        <Text style={styles.loseItem}>- All Hardware (except Manual Mining)</Text>
-        <Text style={styles.loseItem}>- All Upgrades</Text>
-        <Text style={styles.loseItem}>- Unlocked tabs (reset)</Text>
+        <Text style={styles.loseItem}>{t('prestigeScreen.loseAllCC').replace('{amount}', formatNumber(gameState.cryptoCoins))}</Text>
+        <Text style={styles.loseItem}>{t('prestigeScreen.loseAllMoney').replace('{amount}', formatUSD(gameState.realMoney))}</Text>
+        <Text style={styles.loseItem}>{t('prestigeScreen.loseAllHardware')}</Text>
+        <Text style={styles.loseItem}>{t('prestigeScreen.loseAllUpgrades')}</Text>
+        <Text style={styles.loseItem}>{t('prestigeScreen.loseUnlockedTabs')}</Text>
       </View>
 
       {/* Requirement */}
@@ -182,7 +182,9 @@ const PrestigeScreen: React.FC = () => {
         <View style={styles.requirementCard}>
           <Text style={styles.requirementText}>{t('prestige.requireBlocks')}</Text>
           <Text style={styles.requirementProgress}>
-            {formatNumber(gameState.blocksMined)} / {formatNumber(PRESTIGE_CONFIG.requirements.minBlocks)} blocks
+            {t('prestigeScreen.requirementBlocks')
+              .replace('{current}', formatNumber(gameState.blocksMined))
+              .replace('{required}', formatNumber(PRESTIGE_CONFIG.requirements.minBlocks))}
           </Text>
         </View>
       )}
@@ -206,19 +208,19 @@ const PrestigeScreen: React.FC = () => {
       <View style={styles.card}>
         <Text style={styles.cardTitle}>{t('prestige.currentRun')}</Text>
         <View style={styles.statRow}>
-          <Text style={styles.statLabel}>Blocks Mined</Text>
+          <Text style={styles.statLabel}>{t('blockStatus.blocksMined')}</Text>
           <Text style={styles.statValue}>{formatNumber(gameState.blocksMined)}</Text>
         </View>
         <View style={styles.statRow}>
-          <Text style={styles.statLabel}>Coins Earned</Text>
+          <Text style={styles.statLabel}>{t('prestigeScreen.coinsEarned')}</Text>
           <Text style={styles.statValue}>{formatNumber(gameState.totalCryptoCoins)}</Text>
         </View>
         <View style={styles.statRow}>
-          <Text style={styles.statLabel}>Money Earned</Text>
+          <Text style={styles.statLabel}>{t('prestigeScreen.moneyEarned')}</Text>
           <Text style={styles.statValue}>{formatUSD(gameState.totalRealMoneyEarned)}</Text>
         </View>
         <View style={styles.statRow}>
-          <Text style={styles.statLabel}>Hardware Owned</Text>
+          <Text style={styles.statLabel}>{t('prestigeScreen.hardwareOwned')}</Text>
           <Text style={styles.statValue}>
             {gameState.hardware.reduce((sum, hw) => sum + hw.owned, 0)}
           </Text>
@@ -234,23 +236,23 @@ const PrestigeScreen: React.FC = () => {
         prestigeHistory.slice().reverse().map((run: PrestigeRun) => (
           <View key={run.runNumber} style={styles.historyCard}>
             <View style={styles.historyHeader}>
-              <Text style={styles.historyRunNumber}>Run #{run.runNumber}</Text>
+              <Text style={styles.historyRunNumber}>{t('prestigeScreen.runNumber').replace('{n}', String(run.runNumber))}</Text>
               <Text style={styles.historyDuration}>{formatDuration(run.duration)}</Text>
             </View>
             <View style={styles.statRow}>
-              <Text style={styles.statLabel}>Prestige Level At End</Text>
+              <Text style={styles.statLabel}>{t('prestigeScreen.prestigeLevelAtEnd')}</Text>
               <Text style={styles.statValue}>{run.prestigeLevel}</Text>
             </View>
             <View style={styles.statRow}>
-              <Text style={styles.statLabel}>Blocks Mined</Text>
+              <Text style={styles.statLabel}>{t('blockStatus.blocksMined')}</Text>
               <Text style={styles.statValue}>{formatNumber(run.blocksMined)}</Text>
             </View>
             <View style={styles.statRow}>
-              <Text style={styles.statLabel}>Total Coins</Text>
+              <Text style={styles.statLabel}>{t('prestigeScreen.totalCoins')}</Text>
               <Text style={styles.statValue}>{formatNumber(run.totalCoinsEarned)}</Text>
             </View>
             <View style={styles.statRow}>
-              <Text style={styles.statLabel}>Money Earned</Text>
+              <Text style={styles.statLabel}>{t('prestigeScreen.moneyEarned')}</Text>
               <Text style={styles.statValue}>{formatUSD(run.totalMoneyEarned)}</Text>
             </View>
           </View>
@@ -283,7 +285,7 @@ const PrestigeScreen: React.FC = () => {
                 </Text>
               )}
               {!isUnlocked && !isHidden && (
-                <Text style={styles.badgeLocked}>Locked</Text>
+                <Text style={styles.badgeLocked}>{t('achievements.locked')}</Text>
               )}
             </View>
           );
@@ -345,9 +347,9 @@ const PrestigeScreen: React.FC = () => {
             <Text style={styles.modalWarning}>{t('prestige.confirmWarning')}</Text>
 
             <View style={styles.modalLoseList}>
-              <Text style={styles.modalLoseItem}>All CryptoCoins: {formatNumber(gameState.cryptoCoins)}</Text>
-              <Text style={styles.modalLoseItem}>All Real Money: {formatUSD(gameState.realMoney)}</Text>
-              <Text style={styles.modalLoseItem}>All Hardware and Upgrades</Text>
+              <Text style={styles.modalLoseItem}>{t('prestigeScreen.allCryptoCoins').replace('{amount}', formatNumber(gameState.cryptoCoins))}</Text>
+              <Text style={styles.modalLoseItem}>{t('prestigeScreen.allRealMoney').replace('{amount}', formatUSD(gameState.realMoney))}</Text>
+              <Text style={styles.modalLoseItem}>{t('prestigeScreen.allHardwareUpgrades')}</Text>
             </View>
 
             <Text style={styles.modalTypeLabel}>{t('prestige.typeToConfirm')}</Text>
