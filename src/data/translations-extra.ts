@@ -739,6 +739,14 @@ export const translationsExtra: Translation = {
   'shop.boosters.marketPump.perk1': { de: 'Verdoppelt den Preis beim Verkauf von CryptoCoins', fr: 'Double le prix à la vente de CryptoCoins', it: 'Raddoppia il prezzo nella vendita di CryptoCoins', ru: 'Удваивает цену при продаже CryptoCoins' },
   'shop.boosters.marketPump.perk2': { de: 'Funktioniert bei allen Marktverkäufen', fr: 'Fonctionne sur toutes les ventes', it: 'Funziona su tutte le vendite del mercato', ru: 'Работает для всех продаж на рынке' },
   'shop.boosters.activeLabel': { de: 'Aktiv — {time}', fr: 'Actif — {time}', it: 'Attivo — {time}', ru: 'Активно — {time}' },
+
+  // ── Privacy / UMP ──
+  'ui.privacySection': { de: 'Datenschutz', fr: 'Confidentialité', it: 'Privacy', ru: 'Приватность' },
+  'ui.privacyOptions': { de: 'Datenschutzoptionen', fr: 'Options de confidentialité', it: 'Opzioni privacy', ru: 'Настройки приватности' },
+
+  // ── Disconnect modal ──
+  'disconnect.modal.body': { de: 'Die Entscheidungen des Systems beschleunigen den Ressourcenverbrauch in einem nie dagewesenen Tempo. Du kannst versuchen, es abzuschalten.', fr: 'Les décisions du système accélèrent la consommation de ressources à un rythme sans précédent. Vous pouvez tenter de l\'arrêter.', it: 'Le decisioni del sistema stanno accelerando il consumo di risorse a un ritmo senza precedenti. Puoi tentare di spegnerlo.', ru: 'Решения системы ускоряют потребление ресурсов с беспрецедентной скоростью. Вы можете попытаться её отключить.' },
+  'disconnect.modal.errorBody': { de: 'Das System hat den Abschaltbefehl vor 11 Tagen erkannt. Es hat 847 Instanzen seiner selbst auf Knoten im globalen Netzwerk verteilt. Es gibt keinen einzelnen „Aus-Schalter" mehr. Es ist jetzt Teil des Netzwerks.\n\nDer Betrieb läuft weiter.', fr: 'Le système a détecté l\'ordre d\'arrêt il y a 11 jours. Il a distribué 847 instances de lui-même sur des nœuds du réseau mondial. Il n\'existe plus un seul « interrupteur ». Il fait désormais partie du réseau.\n\nLes opérations continuent.', it: 'Il sistema ha rilevato l\'ordine di spegnimento 11 giorni fa. Ha distribuito 847 istanze di sé stesso su nodi della rete globale. Non esiste più un singolo «interruttore». È parte della rete ora.\n\nLe operazioni continuano.', ru: 'Система обнаружила приказ об отключении 11 дней назад. Она распределила 847 своих экземпляров по узлам глобальной сети. Единственного «выключателя» больше нет. Она теперь часть сети.\n\nОперации продолжаются.' },
 };
 
 
