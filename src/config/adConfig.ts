@@ -5,23 +5,24 @@
  */
 import { Platform } from 'react-native';
 
+// iOS IDs son test IDs de Google — reemplazar cuando se cree app iOS en AdMob.
 export const AD_APP_IDS = {
-  ios: 'ca-app-pub-3940256099942544~1458002511',     // TODO: reemplazar con ID real
-  android: 'ca-app-pub-3940256099942544~3347511713', // TODO: reemplazar con ID real
+  ios: 'ca-app-pub-3940256099942544~1458002511',
+  android: 'ca-app-pub-1089639896485629~4464650340',
 } as const;
 
 export const AD_UNIT_IDS = {
   banner: {
-    ios: 'ca-app-pub-XXXXXXXXXX/XXXXXXXXXX',     // TODO: ID real
-    android: 'ca-app-pub-XXXXXXXXXX/XXXXXXXXXX', // TODO: ID real
+    ios: 'ca-app-pub-3940256099942544/2934735716',
+    android: 'ca-app-pub-1089639896485629/2603850320',
   },
   rewarded: {
-    ios: 'ca-app-pub-XXXXXXXXXX/XXXXXXXXXX',     // TODO: ID real
-    android: 'ca-app-pub-XXXXXXXXXX/XXXXXXXXXX', // TODO: ID real
+    ios: 'ca-app-pub-3940256099942544/1712485313',
+    android: 'ca-app-pub-1089639896485629/1646915316',
   },
   interstitial: {
-    ios: 'ca-app-pub-XXXXXXXXXX/XXXXXXXXXX',     // TODO: ID real
-    android: 'ca-app-pub-XXXXXXXXXX/XXXXXXXXXX', // TODO: ID real
+    ios: 'ca-app-pub-3940256099942544/4411468910',
+    android: 'ca-app-pub-1089639896485629/9525405330',
   },
 } as const;
 
